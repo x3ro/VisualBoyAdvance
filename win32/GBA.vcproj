@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include\zlib,include\png"
+				AdditionalIncludeDirectories="include\zlib,include\png,include\cxImage"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;OEMRESOURCE;MMX;FINAL_VERSION;BKPT_SUPPORT;DEV_VERSION"
 				StringPooling="TRUE"
 				BasicRuntimeChecks="0"
@@ -42,7 +42,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpngMD.lib zlibMD.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
+				AdditionalDependencies="libpngMD.lib zlibMD.lib CxImage.lib jpeg.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
 				OutputFile="Release/VisualBoyAdvance.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -87,7 +87,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include\zlib,include\png"
+				AdditionalIncludeDirectories="include\zlib,include\png,include\cxImage"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;OEMRESOURCE;MMX;DEV_VERSION;BKPT_SUPPORT"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -105,7 +105,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpngMD.lib zlibMD.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
+				AdditionalDependencies="libpngMD.lib zlibMD.lib CxImage.lib jpeg.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
 				OutputFile="Debug/VisualBoyAdvance.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -151,7 +151,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="include\zlib,include\png"
+				AdditionalIncludeDirectories="include\zlib,include\png,include\cxImage"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;OEMRESOURCE;MMX;FINAL_VERSION;BKPT_SUPPORT"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -169,7 +169,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libpngMD.lib zlibMD.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
+				AdditionalDependencies="libpngMD.lib zlibMD.lib CxImage.lib jpeg.lib d3dx8.lib wsock32.lib ddraw.lib dxguid.lib winmm.lib dinput.lib vfw32.lib opengl32.lib"
 				OutputFile="ReleaseNoDev/VisualBoyAdvance.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -917,6 +917,12 @@
 		</File>
 		<File
 			RelativePath=".\lib\win32\zlibMD.lib">
+		</File>
+		<File
+			RelativePath=".\lib\win32\CxImage.lib">
+		</File>
+		<File
+			RelativePath=".\lib\win32\jpeg.lib">
 		</File>
 	</Files>
 	<Globals>
