@@ -9,7 +9,7 @@
  * Adapted from original gzio.c from zlib library by Forgotten
  */
 
-/* @(#) $Id: memgzio.c,v 1.2 2003/11/04 14:11:52 forgotten Exp $ */
+/* @(#) $Id: memgzio.c,v 1.3 2004/01/17 23:07:32 kxu Exp $ */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -17,7 +17,7 @@
 
 #include "memgzio.h"
 
-struct internal_state {int dummy;}; /* for buggy compilers */
+/*struct internal_state {int dummy;};*/ /* for buggy compilers */
 
 #ifndef Z_BUFSIZE
 #  ifdef MAXSEG_64K
