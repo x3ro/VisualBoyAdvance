@@ -72,8 +72,10 @@ VBA_MMX = @VBA_MMX@
 VERSION = @VERSION@
 YACC = @YACC@
 
-AUTOMAKE_OPTIONS = gnu
+AUTOMAKE_OPTIONS = gnu dist-zip
 SUBDIRS = src win32
+
+EXTRA_DIST = README-win.txt
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -222,9 +224,14 @@ dist: distdir
 	-chmod -R a+r $(distdir)
 	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
 	-rm -rf $(distdir)
+dist-zip: distdir
+	-chmod -R a+r $(distdir)
+	zip -rq $(distdir).zip $(distdir)
+	-rm -rf $(distdir)
 dist-all: distdir
 	-chmod -R a+r $(distdir)
 	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	zip -rq $(distdir).zip $(distdir)
 	-rm -rf $(distdir)
 distdir: $(DISTFILES)
 	-rm -rf $(distdir)
