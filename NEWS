@@ -1,16 +1,19 @@
 Version 1.3:
 
+Core changes:
+- added support for Flash 128K (thanks DesktopMan)
 Windows version:
 - automatically apply IPS patch if it exists
 - removed some test code introduced at version 1.1 that slows down the emulator
 - fixed missing check marks on layers menu
 SDL version:
+- added support for long options
 - added profiling support (GMON format - see README)
 - automatically apply IPS patch if it exists
 - improved search for configuration file: current directory, user directory,
   executable directory (in order) are searched
 - fixed configuration problem with saveType and removeIntros
-Ports:
+Porting:
 - fixed big endian problems in SGB code
 
 Version 1.2:

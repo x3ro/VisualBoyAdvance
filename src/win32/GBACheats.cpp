@@ -69,7 +69,6 @@ public:
 
 class GBACheatListDlg : public Dlg {
   bool restoreValues;
-  int numberType;
   bool duringRefresh;
 protected:
   DECLARE_MESSAGE_MAP()
@@ -89,7 +88,6 @@ public:
   void OnRemoveAll();
   void OnRemove();
   void OnEnable();
-  void OnNumberType(UINT);
   void OnRestore();
 };
 
@@ -130,7 +128,6 @@ public:
 };
 
 class AddCheatDlg : public Dlg {
-  bool freeze;
   int sizeType;
   int numberType;
 protected:
@@ -146,7 +143,6 @@ public:
   void OnCancel();
   void OnNumberType(UINT);
   void OnSizeType(UINT);
-  void OnFreeze();
 };
 
 void winCheatsAddGSACodeDialog(HWND);
@@ -631,7 +627,6 @@ BEGIN_MESSAGE_MAP(GBACheatListDlg, Dlg)
   ON_BN_CLICKED(IDC_REMOVE_ALL, OnRemoveAll)
   ON_BN_CLICKED(IDC_REMOVE, OnRemove)
   ON_BN_CLICKED(IDC_ENABLE, OnEnable)
-  ON_CONTROL_RANGE(BN_CLICKED, IDC_SIGNED, IDC_HEXADECIMAL, OnNumberType)
   ON_BN_CLICKED(IDC_RESTORE, OnRestore)
   ON_NOTIFY(LVN_ITEMCHANGED, IDC_CHEAT_LIST, OnItemChanged)
 END_MESSAGE_MAP()
@@ -666,8 +661,7 @@ void GBACheatListDlg::refresh(HWND lv)
     ListView_SetItemText(lv, i, 1, cheatsList[i].desc);
 
     buffer[0] = (cheatsList[i].status & 2) ? 'E' : 'D';    
-    buffer[1] = (cheatsList[i].status & 1) ? 'F' : ' ';
-    buffer[2] = 0;
+    buffer[1] = 0;
     ListView_SetItemText(lv, i, 2, buffer);
   }
   duringRefresh = false;
@@ -699,11 +693,6 @@ BOOL GBACheatListDlg::OnInitDialog(LPARAM)
 
   ListView_SetExtendedListViewStyle(h, LVS_EX_CHECKBOXES |
                                     LVS_EX_FULLROWSELECT);  
-  
-  numberType = regQueryDwordValue("cheatsNumberType", 2);
-  if(numberType < 0 || numberType > 2)
-    numberType = 2;
-  DoRadio(false, IDC_SIGNED, numberType);
   
   restoreValues = regQueryDwordValue("cheatsRestore", 0) ?
     true : false;
@@ -829,27 +818,6 @@ void GBACheatListDlg::OnEnable()
       }
     }
     refresh(h);
-  }
-}
-
-void GBACheatListDlg::OnNumberType(UINT id)
-{
-  switch(id) {
-  case IDC_SIGNED:
-    numberType = 0;
-    regSetDwordValue("cheatsNumberType", 0);
-    refresh(GetDlgItem(IDC_CHEAT_LIST));
-    break;
-  case IDC_UNSIGNED:
-    numberType = 1;
-    regSetDwordValue("cheatsNumberType", 1);
-    refresh(GetDlgItem(IDC_CHEAT_LIST));
-    break;
-  case IDC_HEXADECIMAL:
-    numberType = 2;
-    regSetDwordValue("cheatsNumberType", 2);
-    refresh(GetDlgItem(IDC_CHEAT_LIST));
-    break;
   }
 }
 
@@ -1016,7 +984,6 @@ BEGIN_MESSAGE_MAP(AddCheatDlg, Dlg)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_SIGNED, IDC_HEXADECIMAL, OnNumberType)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_SIZE_8, IDC_SIZE_32, OnSizeType)
-  ON_BN_CLICKED(IDC_FREEZE, OnFreeze)
 END_MESSAGE_MAP()
 
 AddCheatDlg::AddCheatDlg()
@@ -1089,7 +1056,7 @@ BOOL AddCheatDlg::addCheat()
     break;
   }
   
-  cheatsAdd(code, buffer,address, value,-1, sizeType, freeze);
+  cheatsAdd(code, buffer,address, value,-1, sizeType, false);
   return TRUE;
 }
 
@@ -1116,11 +1083,6 @@ BOOL AddCheatDlg::OnInitDialog(LPARAM lParam)
     sizeType = 0;
   DoRadio(false, IDC_SIZE_8, sizeType);
   
-  freeze = regQueryDwordValue("cheatsFreeze", 0) ?
-    true : false;
-  int fr = (int)freeze;
-  DoCheckbox(false, IDC_FREEZE, fr);
-
   SendMessage(GetDlgItem(IDC_DESC),
               EM_LIMITTEXT,
               32,
@@ -1191,18 +1153,6 @@ void AddCheatDlg::OnSizeType(UINT id)
     regSetDwordValue("cheatsSizeType", 2);
     break;
   }
-}
-
-void AddCheatDlg::OnFreeze()
-{
-  if(SendMessage(GetDlgItem(IDC_FREEZE),
-                 BM_GETCHECK,
-                 0,
-                 0) & BST_CHECKED)
-    freeze = true;
-  else
-    freeze = false;
-  regSetDwordValue("cheatsFreeze", freeze);
 }
 
 void winCheatsListDialog()

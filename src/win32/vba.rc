@@ -219,7 +219,7 @@ BEGIN
     LTEXT           "Enter &value:",IDC_STATIC,3,214,69,8
 END
 
-IDD_ADD_CHEAT DIALOG DISCARDABLE  0, 0, 186, 151
+IDD_ADD_CHEAT DIALOG DISCARDABLE  0, 0, 186, 137
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Add cheat"
 FONT 8, "MS Sans Serif"
@@ -227,26 +227,24 @@ BEGIN
     EDITTEXT        IDC_ADDRESS,60,6,123,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_VALUE,60,24,123,14,ES_AUTOHSCROLL
     EDITTEXT        IDC_DESC,60,42,123,14,ES_AUTOHSCROLL
-    CONTROL         "&Freeze location",IDC_FREEZE,"Button",BS_AUTOCHECKBOX | 
-                    WS_GROUP | WS_TABSTOP,4,63,64,10
     CONTROL         "8-bit",IDC_SIZE_8,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,11,87,29,10
-    CONTROL         "16-bit",IDC_SIZE_16,"Button",BS_AUTORADIOBUTTON,62,87,
+                    WS_GROUP | WS_TABSTOP,11,70,29,10
+    CONTROL         "16-bit",IDC_SIZE_16,"Button",BS_AUTORADIOBUTTON,62,70,
                     33,10
-    CONTROL         "32-bit",IDC_SIZE_32,"Button",BS_AUTORADIOBUTTON,117,87,
+    CONTROL         "32-bit",IDC_SIZE_32,"Button",BS_AUTORADIOBUTTON,117,70,
                     33,10
     CONTROL         "&Signed",IDC_SIGNED,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,11,114,38,10
+                    WS_GROUP | WS_TABSTOP,11,97,38,10
     CONTROL         "&Unsigned",IDC_UNSIGNED,"Button",BS_AUTORADIOBUTTON,62,
-                    115,46,10
+                    98,46,10
     CONTROL         "&Hexadecimal",IDC_HEXADECIMAL,"Button",
-                    BS_AUTORADIOBUTTON,117,115,57,10
-    DEFPUSHBUTTON   "&OK",ID_OK,36,133,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",ID_CANCEL,99,133,50,14
+                    BS_AUTORADIOBUTTON,117,98,57,10
+    DEFPUSHBUTTON   "&OK",ID_OK,36,116,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",ID_CANCEL,99,116,50,14
     LTEXT           "&Value:",IDC_STATIC,3,27,54,8
-    GROUPBOX        "Number format",IDC_STATIC,3,105,180,24
+    GROUPBOX        "Number format",IDC_STATIC,3,88,180,24
     LTEXT           "&Address:",IDC_STATIC,3,9,54,8
-    GROUPBOX        "Size",IDC_STATIC,3,77,180,24
+    GROUPBOX        "Size",IDC_STATIC,3,60,180,24
     LTEXT           "&Description:",IDC_STATIC,3,45,55,8
 END
 
@@ -255,14 +253,8 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Cheat list"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "&Signed",IDC_SIGNED,"Button",BS_AUTORADIOBUTTON | 
-                    WS_GROUP | WS_TABSTOP,14,183,38,10
-    CONTROL         "&Unsigned",IDC_UNSIGNED,"Button",BS_AUTORADIOBUTTON,58,
-                    183,46,10
-    CONTROL         "&Hex",IDC_HEXADECIMAL,"Button",BS_AUTORADIOBUTTON,110,
-                    183,28,10
     CONTROL         "Restore &previous values",IDC_RESTORE,"Button",
-                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,183,92,10
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,5,183,92,10
     PUSHBUTTON      "&Code...",IDC_ADD_CODE,9,208,64,14,WS_GROUP
     PUSHBUTTON      "C&heat...",IDC_ADD_CHEAT,75,208,64,14
     PUSHBUTTON      "&Gameshark...",IDC_ADD_GAMESHARK,141,208,64,14
@@ -273,11 +265,9 @@ BEGIN
     DEFPUSHBUTTON   "&OK",ID_OK,206,230,64,14,WS_GROUP
     CONTROL         "",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | WS_BORDER | 
                     WS_GROUP | WS_TABSTOP,5,15,269,156
-    GROUPBOX        "Number type",IDC_STATIC,5,172,135,25
     LTEXT           "Status legend:",IDC_STATIC,6,3,46,8
-    LTEXT           "E: Enabled",IDC_STATIC,150,3,36,8
-    LTEXT           "D: Disabled",IDC_STATIC,196,3,38,8
-    LTEXT           "F: Frozen",IDC_STATIC,244,3,30,8
+    LTEXT           "E: Enabled",IDC_STATIC,188,3,36,8
+    LTEXT           "D: Disabled",IDC_STATIC,234,3,38,8
     GROUPBOX        "Add",IDC_STATIC,5,199,268,27
 END
 
@@ -905,7 +895,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 179
         TOPMARGIN, 7
-        BOTTOMMARGIN, 144
+        BOTTOMMARGIN, 130
     END
 
     IDD_CHEAT_LIST, DIALOG
