@@ -471,10 +471,12 @@ void remoteWriteWatch(char *p)
   for(int i = 0; i < count; i++) {
     if((address >> 24) == 2)
       freezeWorkRAM[address & 0x3ffff] = 1;
-    else
+    else if (((address >> 24) == 8)  || ((address >> 24) == 9))
+      freezeROM[address & 0x1FFFFFF] = 1;
+	else
       freezeInternalRAM[address & 0x7fff] = 1;
     address++;
-  }  
+  } 
   
   remotePutPacket("OK");
 }

@@ -763,6 +763,9 @@
 #endif
 
 u32 opcode = CPUReadHalfWordQuick(armNextPC);
+u32 address2;
+u32 value2;
+u8 xxx;
 
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
@@ -1349,6 +1352,12 @@ switch(opcode >> 8) {
        // MOV Hd, Rs
        reg[dest+8].I = reg[base].I;
        if(dest == 7) {
+		   if (dlast) {
+			   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+			   for (xxx=0; xxx<18; xxx++){
+				   oldreg[xxx]=reg[xxx].I;
+			   }
+		   }
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
@@ -1359,6 +1368,12 @@ switch(opcode >> 8) {
        // MOV Hd, Hs
        reg[dest+8].I = reg[base+8].I;
        if(dest == 7) {
+       		   if (dlast) {
+				   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+				   for (xxx=0; xxx<18; xxx++){
+					   oldreg[xxx]=reg[xxx].I;
+				   }
+			   }
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
@@ -1374,6 +1389,12 @@ switch(opcode >> 8) {
      switch((opcode >>6) & 3) {
      case 0:
        // BX Rs
+		 if (dlast) {
+			 sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+			 for (xxx=0; xxx<18; xxx++){
+				 oldreg[xxx]=reg[xxx].I;
+			 }
+		 }
        reg[15].I = (reg[base].I) & 0xFFFFFFFE;
        if(reg[base].I & 1) {
          armState = false;
@@ -1388,6 +1409,12 @@ switch(opcode >> 8) {
        break;
      case 1:
        // BX Hs
+		 if (dlast) {
+			 sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+			 for (xxx=0; xxx<18; xxx++){
+				 oldreg[xxx]=reg[xxx].I;
+			 }
+		 }
        reg[15].I = (reg[8+base].I) & 0xFFFFFFFE;
        if(reg[8+base].I & 1) {
          armState = false;
@@ -1409,41 +1436,185 @@ switch(opcode >> 8) {
    // LDR R0,[PC, #Imm]
    reg[0].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[0].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x49:
    // LDR R1,[PC, #Imm]
    reg[1].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[1].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4a:
    // LDR R2,[PC, #Imm]
    reg[2].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[2].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	 if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4b:
    // LDR R3,[PC, #Imm]
    reg[3].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[3].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4c:
    // LDR R4,[PC, #Imm]
    reg[4].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[4].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4d:
    // LDR R5,[PC, #Imm]
    reg[5].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[5].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4e:
    // LDR R6,[PC, #Imm]
    reg[6].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[6].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x4f:
    // LDR R7,[PC, #Imm]
    reg[7].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
                                  ((opcode & 0xFF) << 2));
+	 value2 = reg[7].I;
+	 address2 = ((reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x50:
  case 0x51:
@@ -1577,27 +1748,171 @@ switch(opcode >> 8) {
    break;   
  case 0x98:
    reg[0].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[0].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x99:
    reg[1].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[1].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9a:
    reg[2].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[2].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9b:
    reg[3].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[3].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9c:
    reg[4].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[4].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9d:
    reg[5].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[5].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9e:
    reg[6].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[6].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0x9f:
    reg[7].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+	 value2 = reg[7].I;
+	 address2 = (reg[13].I + ((opcode&255)<<2));
+#ifdef SDL
+	 if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
+    else
+	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
+    else
+	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
+      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
+                        value2,
+                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
+#endif
    break;
  case 0xa0:
    reg[0].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
@@ -1990,6 +2305,12 @@ switch(opcode >> 8) {
    break;
  case 0xd0:
    if(Z_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1998,6 +2319,12 @@ switch(opcode >> 8) {
    break;      
  case 0xd1:
    if(!Z_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2006,6 +2333,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd2:
    if(C_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2014,6 +2347,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd3:
    if(!C_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2022,6 +2361,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd4:
    if(N_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2030,6 +2375,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd5:
    if(!N_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2038,6 +2389,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd6:
    if(V_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2046,6 +2403,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd7:
    if(!V_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2054,6 +2417,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd8:
    if(C_FLAG && !Z_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2062,6 +2431,12 @@ switch(opcode >> 8) {
    break;   
  case 0xd9:
    if(!C_FLAG || Z_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2070,6 +2445,12 @@ switch(opcode >> 8) {
    break;   
  case 0xda:
    if(N_FLAG == V_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2078,6 +2459,12 @@ switch(opcode >> 8) {
    break;   
  case 0xdb:
    if(N_FLAG != V_FLAG) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2086,6 +2473,12 @@ switch(opcode >> 8) {
    break;   
  case 0xdc:
    if(!Z_FLAG && (N_FLAG == V_FLAG)) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2094,6 +2487,12 @@ switch(opcode >> 8) {
    break;   
  case 0xdd:
    if(Z_FLAG || (N_FLAG != V_FLAG)) {
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2114,6 +2513,12 @@ switch(opcode >> 8) {
    {
      // unconditional branch
      int offset = (opcode & 0x3FF) << 1;
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      if(opcode & 0x0400)
        offset |= 0xFFFFF800;
      reg[15].I += offset;
@@ -2128,6 +2533,12 @@ switch(opcode >> 8) {
    {
      // long branch with link
      int offset = (opcode & 0x7FF);
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[14].I = reg[15].I + (offset << 12);
    }
    break;      
@@ -2138,6 +2549,12 @@ switch(opcode >> 8) {
    {
      // long branch with link
      int offset = (opcode & 0x7FF);
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      reg[14].I = reg[15].I + ((offset << 12) | 0xFF800000);
    }
    break;   
@@ -2152,6 +2569,12 @@ switch(opcode >> 8) {
    {
      // long branch with link
      int offset = (opcode & 0x7FF);
+	   if (dlast) {
+		   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4);
+		   for (xxx=0; xxx<18; xxx++){
+			   oldreg[xxx]=reg[xxx].I;
+		   }
+	   }
      u32 temp = reg[15].I-2;
      reg[15].I = (reg[14].I + (offset<<1))&0xFFFFFFFE;
      armNextPC = reg[15].I;

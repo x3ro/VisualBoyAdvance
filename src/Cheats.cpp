@@ -1786,20 +1786,21 @@ extern int *extClockTicks;
 extern int *extTicks;
 extern int cpuSavedTicks;
 
-extern void debuggerBreakOnWrite(u32 *, u32, u32, int); 
+extern void debuggerBreakOnWrite(u32 *, u32, u32, int, u8); 
 
 #define CPU_BREAK_LOOP \
   cpuSavedTicks = cpuSavedTicks - *extCpuLoopTicks;\
   *extCpuLoopTicks = *extClockTicks;\
   *extTicks = *extClockTicks;
 
-void cheatsWriteMemory(u32 *address, u32 value, u32 mask)
+void cheatsWriteMemory(u32 *address, u32 value, u32 mask, u8 readorwrite)
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite(address, *address, value, 2);
+    debuggerBreakOnWrite(address, *address, value, 2, readorwrite);
     CPU_BREAK_LOOP;
+	if (readorwrite == 0)
     *address = value;
     return;
   }
@@ -1823,13 +1824,14 @@ void cheatsWriteMemory(u32 *address, u32 value, u32 mask)
   *address = (*address & finalMask) | (value & (~finalMask));
 }
 
-void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask)
+void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask, u8 readorwrite)
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite((u32 *)address, *address, value, 1);
+    debuggerBreakOnWrite((u32 *)address, *address, value, 1, readorwrite);
     CPU_BREAK_LOOP;
+    if (readorwrite == 0)
     *address = value;
     return;
   }
@@ -1849,16 +1851,17 @@ void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask)
 }
 
 #if defined BKPT_SUPPORT && defined SDL
-void cheatsWriteByte(u8 *address, u8 value)
+void cheatsWriteByte(u8 *address, u8 value, u8 readorwrite)
 #else
-void cheatsWriteByte(u8 *, u8)
+void cheatsWriteByte(u8 *, u8, u8 readorwrite)
 #endif
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite((u32 *)address, *address, value, 0);
+    debuggerBreakOnWrite((u32 *)address, *address, value, 0, readorwrite);
     CPU_BREAK_LOOP;
+	if (readorwrite == 0)
     *address = value;
     return;
   }

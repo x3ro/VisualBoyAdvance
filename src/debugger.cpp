@@ -65,6 +65,7 @@ struct DebuggerCommand {
 
 void debuggerContinueAfterBreakpoint();
 
+void debuggerCow(int,char **);
 void debuggerHelp(int,char **);
 void debuggerNext(int,char **);
 void debuggerContinue(int, char **);
@@ -74,8 +75,10 @@ void debuggerBreakDelete(int, char **);
 void debuggerBreakList(int, char **);
 void debuggerBreakArm(int, char **);
 void debuggerBreakWriteClear(int, char **);
+void debuggerBreakReadClear(int, char **);
 void debuggerBreakThumb(int, char **);
 void debuggerBreakWrite(int, char **);
+void debuggerBreakRead(int, char **);
 void debuggerDebug(int, char **);
 void debuggerDisassemble(int, char **);
 void debuggerDisassembleArm(int, char **);
@@ -84,6 +87,7 @@ void debuggerEditByte(int, char **);
 void debuggerEditHalfWord(int, char **);
 void debuggerEdit(int, char **);
 void debuggerIo(int, char **);
+void debuggerLast(int, char **);
 void debuggerLocals(int, char **);
 void debuggerMemoryByte(int, char **);
 void debuggerMemoryHalfWord(int, char **);
@@ -100,11 +104,14 @@ DebuggerCommand debuggerCommands[] = {
   { "ba", debuggerBreakArm,   "Adds an ARM breakpoint", "<address>" },
   { "bd", debuggerBreakDelete,"Deletes a breakpoint", "<number>" },
   { "bl", debuggerBreakList,  "Lists breakpoints" },
+  { "bpr", debuggerBreakRead, "Break on read", "<address> <size>" },
+  { "bprc", debuggerBreakReadClear, "Clear break on read", NULL },
   { "bpw", debuggerBreakWrite, "Break on write", "<address> <size>" },
   { "bpwc", debuggerBreakWriteClear, "Clear break on write", NULL },
   { "break", debuggerBreak,    "Adds a breakpoint on the given function", "<function>|<line>|<file:line>" },
   { "bt", debuggerBreakThumb, "Adds a THUMB breakpoint", "<address>" },
   { "c", debuggerContinue,    "Continues execution" , NULL },
+  { "cow", debuggerCow,        "Select break on change or break on write", NULL },
   { "d", debuggerDisassemble, "Disassembles instructions", "[<address> [<number>]]" },
   { "da", debuggerDisassembleArm, "Disassembles ARM instructions", "[<address> [<number>]]" },
   { "dt", debuggerDisassembleThumb, "Disassembles THUMB instructions", "[<address> [<number>]]" },
@@ -113,6 +120,7 @@ DebuggerCommand debuggerCommands[] = {
   { "ew", debuggerEdit,       "Modify memory location (word)", "<address> <hex value" },
   { "h", debuggerHelp,        "Shows this help information. Type h <command> for command help", "[<command>]" },
   { "io", debuggerIo,         "Show I/O registers status", "[video|video2|dma|timer|misc]" },
+  { "last", debuggerLast,	  "Trigger the display of the last registers states", NULL}, 
   { "locals", debuggerLocals, "Shows local variables", NULL },
   { "mb", debuggerMemoryByte, "Shows memory contents (bytes)", "<address>" },
   { "mh", debuggerMemoryHalfWord, "Shows memory contents (half-words)", "<address>"},
@@ -662,6 +670,15 @@ void debuggerHelp(int n, char **args)
   }
 }
 
+void debuggerCow(int n, char **args)
+{
+cow = cow ^ 1;
+if (cow)
+printf("Break on Change.\n");
+else
+printf ("Break on Write.\n");
+}
+
 void debuggerDebug(int n, char **args)
 {
   if(n == 2) {
@@ -947,14 +964,19 @@ void debuggerBreakArm(int n, char **args)
     debuggerUsage("ba");
 }
 
-void debuggerBreakOnWrite(u32 *mem, u32 oldvalue, u32 value, int size)
+void debuggerBreakOnWrite(u32 *mem, u32 oldvalue, u32 value, int size, u8 readorwrite)
 {
   u32 address = 0;
   if(mem >= (u32*)&workRAM[0] && mem <= (u32*)&workRAM[0x3ffff])
     address = 0x2000000 + ((u32)mem - (u32)&workRAM[0]);
-  else
+  else if(mem >= (u32*)&rom[0] && mem <= (u32*)&rom[0x1FFFFFF])
+	address = 0x8000000 + ((u32)mem - (u32)&rom[0]); 
+else
     address = 0x3000000 + ((u32)mem - (u32)&internalRAM[0]);
-
+  if  ((readorwrite == 4) && (value != oldvalue))
+	  readorwrite = 0;
+  if (readorwrite == 0)
+  {
   if(size == 2)
     printf("Breakpoint (on write) address %08x old:%08x new:%08x\n", 
            address, oldvalue, value);
@@ -964,6 +986,18 @@ void debuggerBreakOnWrite(u32 *mem, u32 oldvalue, u32 value, int size)
   else
     printf("Breakpoint (on write) address %08x old:%02x new:%02x\n", 
            address, (u8)oldvalue, (u8)value);
+  }
+  else
+  if(readorwrite == 0x3)
+    printf("Breakpoint (on read) address %08x word:%08x\n", 
+           address,value);
+  else if(readorwrite == 0x2)
+    printf("Breakpoint (on read) address %08x halfword:%04x\n", 
+           address, (u16)value);
+  else if (readorwrite == 0x1)
+    printf("Breakpoint (on read) address %08x byte:%02x\n", 
+           address, (u8)value);
+  if (readorwrite !=4)
   debugger = true;
 }
 
@@ -971,7 +1005,16 @@ void debuggerBreakWriteClear(int n, char **args)
 {
   memset(freezeWorkRAM, false, 0x40000);
   memset(freezeInternalRAM, false, 0x8000);
+  memset(freezeROM, false, 0x2000000);
   printf("Cleared all break on write\n");
+}
+
+void debuggerBreakReadClear(int n, char **args)
+{
+  memset(freezeRWorkRAM, false, 0x40000);
+  memset(freezeRInternalRAM, false, 0x8000);
+  memset(freezeRROM, false, 0x2000000);
+  printf("Cleared all break on read\n");
 }
 
 void debuggerBreakWrite(int n, char **args)
@@ -986,16 +1029,10 @@ void debuggerBreakWrite(int n, char **args)
     int n = 0;
     sscanf(args[2], "%d", &n);
     
-    if(address < 0x2000000 || address > 0x3007fff) {
+    if(!((address > 0x1ffffff && address < 0x2040000) || (address > 0x2ffffff && address < 0x3008000) || (address > 0x7ffffff && address < 0x0A000000))) {
       printf("Invalid address: %08x\n", address);
       return;
     }
-    
-    if(address > 0x203ffff && address < 0x3000000) {
-      printf("Invalid address: %08x\n", address);
-      return;
-    }
-
     u32 final = address + n;
 
     if(address < 0x2040000 && final > 0x2040000) {
@@ -1004,17 +1041,62 @@ void debuggerBreakWrite(int n, char **args)
     } else if(address < 0x3008000 && final > 0x3008000) {
       printf("Invalid byte count: %d\n", n);
       return;
+    } else if (address <0xA000000 && final >0x0A000000) {
+		printf("Invalid byte count: %d\n", n);
+		      return;
     }
     printf("Added break on write at %08x for %d bytes\n", address, n);
     for(int i = 0; i < n; i++) {
       if((address >> 24) == 2)
         freezeWorkRAM[address & 0x3ffff] = true;
-      else
+      else if( ((address >> 24) == 8) || ((address >> 24) == 9))
+		freezeROM[address & 0x1FFFFFF] = true;
+	else
         freezeInternalRAM[address & 0x7fff] = true;
       address++;
     }
   } else
     debuggerUsage("bpw");    
+}
+
+void debuggerBreakRead(int n, char **args)
+{
+  if(n == 3) {
+    if(cheatsNumber != 0) {
+      printf("Cheats are enabled. Cannot continue.\n");
+      return;
+    }
+    u32 address = 0;
+    sscanf(args[1], "%x", &address);
+    int n = 0;
+    sscanf(args[2], "%d", &n);
+    if(!((address > 0x1ffffff && address < 0x2040000) || (address > 0x2ffffff && address < 0x3008000) || (address > 0x7ffffff && address < 0x0A000000))) {
+      printf("Invalid address: %08x\n", address);
+      return;
+    }
+    u32 final = address + n;
+    if(address < 0x2040000 && final > 0x203FFFF) {
+      printf("Invalid byte count: %d\n", n);
+      return;
+    } else if(address < 0x3008000 && final > 0x3007FFF) {
+      printf("Invalid byte count: %d\n", n);
+      return;
+    } else if (address <0xA000000 && final >0x09FFFFFF) {
+		printf("Invalid byte count: %d\n", n);
+		      return;
+    }
+    printf("Added break on read at %08x for %d bytes\n", address, n);
+    for(int i = 0; i < n; i++) {
+      if((address >> 24) == 2)
+        freezeRWorkRAM[address & 0x3ffff] = true;
+     else if( ((address >> 24) == 8) || ((address >> 24) == 9))
+		freezeRROM[address & 0x1FFFFFF] = true;
+	else
+        freezeRInternalRAM[address & 0x7fff] = true;
+      address++;
+    }
+  } else
+    debuggerUsage("bpr");    
 }
 
 void debuggerDisassembleArm(int n, char **args)
@@ -1103,7 +1185,22 @@ void debuggerRegisters(int, char **)
 {
   char *command[3];
   char buffer[10];
-
+  if (dlast)
+  {
+    printf("R00=%08x R04=%08x R08=%08x R12=%08x\n",
+         oldreg[0], oldreg[4], oldreg[8], oldreg[12]);
+  printf("R01=%08x R05=%08x R09=%08x R13=%08x\n",
+         oldreg[1], oldreg[5], oldreg[9], oldreg[13]);
+  printf("R02=%08x R06=%08x R10=%08x R14=%08x\n",
+         oldreg[2], oldreg[6], oldreg[10], oldreg[14]);
+  printf("R03=%08x R07=%08x R11=%08x R15=%08x\n",
+         oldreg[3], oldreg[7], oldreg[11], oldreg[15]);
+  command[0]="m";
+  command[1]=oldbuffer;
+  command[2]="1";
+  debuggerDisassemble(3, command);
+ printf("\n");
+  }
   printf("R00=%08x R04=%08x R08=%08x R12=%08x\n",
          reg[0].I, reg[4].I, reg[8].I, reg[12].I);
   printf("R01=%08x R05=%08x R09=%08x R13=%08x\n",
@@ -1127,6 +1224,15 @@ void debuggerRegisters(int, char **)
   command[1]=buffer;
   command[2]="1";
   debuggerDisassemble(3, command);
+}
+
+void debuggerLast(int n, char **args)
+{
+ dlast =!dlast;
+ if (dlast == true)
+ printf ("Last registers will be shown\n");
+ else
+ printf ("Last registers wont be shown\n");
 }
 
 void debuggerIoVideo()

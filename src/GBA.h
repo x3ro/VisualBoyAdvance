@@ -77,6 +77,16 @@ extern bool armState;
 extern int armMode;
 extern void (*cpuSaveGameFunc)(u32,u8);
 
+extern bool dlast;
+extern int  oldreg[17];
+extern u32 debuggerBreakpointRegisterList[10];
+extern int debuggerNumOfBreakRegister;
+extern char oldbuffer[10];
+extern u8 cow;
+extern bool freezeROM[0x2000000];
+extern bool freezeRWorkRAM[0x40000];
+extern bool freezeRInternalRAM[0x8000];
+extern bool freezeRROM[0x2000000];
 extern bool freezeWorkRAM[0x40000];
 extern bool freezeInternalRAM[0x8000];
 extern bool CPUReadGSASnapshot(char *);

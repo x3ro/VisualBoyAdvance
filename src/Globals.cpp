@@ -18,6 +18,11 @@
  */
 #include "GBA.h"
 
+int  oldreg[17];
+u32 debuggerBreakpointRegisterList[10];
+int debuggerNumOfBreakRegister = 0;
+u8 cow = 0;
+char oldbuffer[10];
 reg_pair reg[45];
 memoryMap map[256];
 bool ioReadable[0x400];
