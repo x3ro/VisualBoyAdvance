@@ -17,8 +17,8 @@ Support
 -------
 
 Please support VisualBoyAdvance by making a donation. You can donate money
-using PayPal (www.paypal.com). Send donations to vb@emuhq.com. If you want
-to make other kind of donations (hardware, etc...), please contact me.
+using PayPal (www.paypal.com). Use the contact form to find how you can
+send donations.
 
 Default keys (can be edited in the Options menu)
 ------------------------------------------------
@@ -175,5 +175,5 @@ supported. Also remember I am not paid to work on VisualBoyAdvance.
 
 This is just a hobby.
 
-Forgotten (vb@emuhq.com)
+Forgotten (http://vboy.emuhq.com/contact.shtml)
 http://vboy.emuhq.com
