@@ -25,6 +25,7 @@
 #include "WinResUtil.h"
 #include "resource.h"
 #include "IUpdate.h"
+#include "CommDlg.h"
 
 #define CPUReadByteQuick(addr) \
   ::map[(addr)>>24].address[(addr) & ::map[(addr)>>24].mask]
@@ -46,6 +47,9 @@ extern int emulating;
 
 extern void winAddUpdateListener(IUpdateListener *);
 extern void winRemoveUpdateListener(IUpdateListener *);
+extern char *winLoadFilter(int id);
+
+class MemoryViewerDlg;
 
 class MemoryViewer : public Wnd {
   u32 address;
@@ -62,12 +66,14 @@ class MemoryViewer : public Wnd {
   int beginAscii;
   int beginHex;
   bool editAscii;
+  MemoryViewerDlg *dlg;
 
   static bool isRegistered;
 protected:
   DECLARE_MESSAGE_MAP()
 public:
   void beep();
+  void setDialog(MemoryViewerDlg *);
   BOOL OnEditInput(UINT c);
   LRESULT OnWMChar(WPARAM wParam, LPARAM lParam);
   
@@ -81,6 +87,7 @@ public:
 
   void readData(u32,int,u8 *);
   void setAddress(u32);
+  u32 getCurrentAddress() { return editAddress; }
   void setSize(int);
   int getSize() { return dataSize; }
   void updateScrollInfo(int lines);
@@ -112,8 +119,30 @@ public:
   void OnAddressesSelChange();
   void OnRefresh();
   void OnAutoUpdate();
+  void OnSave();
+  void OnLoad();
+
+  void setCurrentAddress(u32);
 
   virtual void update();
+};
+
+class MemoryViewerAddressSize : public Dlg {
+  u32 address;
+  int size;
+protected:
+  DECLARE_MESSAGE_MAP()
+public:
+  MemoryViewerAddressSize();
+  
+  void setAddress(u32 a) { address = a; }
+  void setSize(int s) { size = s; }
+  u32 getAddress() { return address; }
+  int getSize() { return size; }
+
+  virtual BOOL OnInitDialog(LPARAM);  
+  void OnOk();
+  void OnCancel();
 };
 
 bool MemoryViewer::isRegistered = false;
@@ -144,6 +173,12 @@ MemoryViewer::MemoryViewer()
   fontSize.cx = fontSize.cy = 0;
   beginAscii = 0;
   beginHex = 0;
+  dlg = NULL;
+}
+
+void MemoryViewer::setDialog(MemoryViewerDlg *d)
+{
+  dlg = d;
 }
 
 void MemoryViewer::readData(u32 address, int len, u8 *data)
@@ -388,6 +423,9 @@ void MemoryViewer::setCaretPos()
     return;
   }
 
+  if(dlg)
+    dlg->setCurrentAddress(editAddress);
+  
   if(editAddress < address || editAddress > (-1+address + (displayedLines<<4))) {
     destroyEditCaret();
     return;
@@ -678,6 +716,8 @@ BEGIN_MESSAGE_MAP(MemoryViewerDlg, ResizeDlg)
   ON_BN_CLICKED(IDC_32_BIT, On32Bit)
   ON_BN_CLICKED(IDC_GO, OnGo)
   ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
+  ON_BN_CLICKED(IDC_SAVE, OnSave)
+  ON_BN_CLICKED(IDC_LOAD, OnLoad)
   ON_CONTROL(CBN_SELCHANGE, IDC_ADDRESSES, OnAddressesSelChange)
 END_MESSAGE_MAP()
 
@@ -694,7 +734,11 @@ BOOL MemoryViewerDlg::OnInitDialog(LPARAM)
     DIALOG_SIZER_ENTRY( IDC_VIEWER, DS_SizeX | DS_SizeY )
     DIALOG_SIZER_ENTRY( IDC_REFRESH, DS_MoveY)
     DIALOG_SIZER_ENTRY( IDC_CLOSE, DS_MoveY)
+    DIALOG_SIZER_ENTRY( IDC_LOAD, DS_MoveY)
+    DIALOG_SIZER_ENTRY( IDC_SAVE, DS_MoveY)
     DIALOG_SIZER_ENTRY( IDC_AUTO_UPDATE, DS_MoveY)
+    DIALOG_SIZER_ENTRY( IDC_CURRENT_ADDRESS_LABEL, DS_MoveY | DS_MoveX)
+    DIALOG_SIZER_ENTRY( IDC_CURRENT_ADDRESS, DS_MoveY | DS_MoveX)
     DIALOG_SIZER_END()
     SetData(sz,
             TRUE,
@@ -703,6 +747,7 @@ BOOL MemoryViewerDlg::OnInitDialog(LPARAM)
             NULL);
   
   viewer.Attach(GetDlgItem(IDC_VIEWER));
+  viewer.setDialog(this);
   ShowScrollBar(viewer.getHandle(), SB_VERT, TRUE);
   EnableScrollBar(viewer.getHandle(), SB_VERT, ESB_ENABLE_BOTH);
 
@@ -757,6 +802,10 @@ BOOL MemoryViewerDlg::OnInitDialog(LPARAM)
     size = 0;
   viewer.setSize(size);
   DoRadio(false, IDC_8_BIT, size);
+
+  HFONT font = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
+  
+  ::SendMessage(GetDlgItem(IDC_CURRENT_ADDRESS), WM_SETFONT, (WPARAM)font, 0);
   
   return TRUE;
 }
@@ -855,6 +904,111 @@ void MemoryViewerDlg::OnAddressesSelChange()
   }
 }
 
+void MemoryViewerDlg::setCurrentAddress(u32 address)
+{
+  char buffer[20];
+
+  sprintf(buffer, "0x%08X", address);
+  ::SetWindowText(GetDlgItem(IDC_CURRENT_ADDRESS), buffer);
+}
+
+void MemoryViewerDlg::OnSave()
+{
+  MemoryViewerAddressSize dlg;
+  char buffer[2048];
+
+  dlg.setAddress(viewer.getCurrentAddress());
+
+  char *exts[] = { ".dmp" };
+  
+  if(dlg.DoModal(IDD_ADDR_SIZE,
+                 getHandle())) {
+    buffer[0] = 0;
+    FileDlg file(getHandle(),
+                 buffer,
+                 2048,
+                 (char *)winLoadFilter(IDS_FILTER_DUMP),
+                 0,
+                 "DMP",
+                 exts,
+                 NULL,
+                 (char *)winResLoadString(IDS_SELECT_DUMP_FILE),
+                 TRUE);
+    if(file.DoModal()) {
+      FILE *f = fopen(buffer, "wb");
+      
+      if(f == NULL) {
+        systemMessage(IDS_ERROR_CREATING_FILE, buffer);
+        return;
+      }
+
+      int size = dlg.getSize();
+      u32 addr = dlg.getAddress();
+
+      for(int i = 0; i < size; i++) {
+        fputc(CPUReadByteQuick(addr), f);
+        addr++;
+      }
+
+      fclose(f);
+    }
+  }
+}
+
+void MemoryViewerDlg::OnLoad()
+{
+  char buffer[2048];
+  buffer[0] = 0;
+  char *exts[] = { ".dmp" };
+  
+  FileDlg file(getHandle(),
+               buffer,
+               2048,
+               (char *)winLoadFilter(IDS_FILTER_DUMP),
+               0,
+               "DMP",
+               exts,
+               NULL,
+               (char *)winResLoadString(IDS_SELECT_DUMP_FILE),
+               FALSE);
+  
+  if(file.DoModal()) {
+    FILE *f = fopen(buffer, "rb");
+    if(f == NULL) {
+      systemMessage(IDS_CANNOT_OPEN_FILE,
+                    "Cannot open file %s",
+                    buffer);
+      return;
+    }
+    
+    MemoryViewerAddressSize dlg;    
+
+    fseek(f, 0, SEEK_END);
+    int size = ftell(f);
+
+    fseek(f, 0, SEEK_SET);
+    
+    dlg.setAddress(viewer.getCurrentAddress());
+    dlg.setSize(size);
+    
+    if(dlg.DoModal(IDD_ADDR_SIZE,
+                   getHandle())) {
+      int size = dlg.getSize();
+      u32 addr = dlg.getAddress();
+
+      for(int i = 0; i < size; i++) {
+        int c = fgetc(f);
+        if(c == -1)
+          break;
+        CPUWriteByteQuick(addr, c);
+        addr++;
+      }
+      OnRefresh();
+    }
+    fclose(f);    
+  }  
+}
+
 void toolsMemoryViewer()
 {
   MemoryViewerDlg *dlg = new MemoryViewerDlg();
@@ -862,4 +1016,66 @@ void toolsMemoryViewer()
   dlg->MakeDialog(hInstance,
                   IDD_MEM_VIEWER,
                   hWindow);
+}
+
+// Address and size selection
+
+BEGIN_MESSAGE_MAP(MemoryViewerAddressSize, Dlg)
+  ON_WM_CLOSE()
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+END_MESSAGE_MAP()
+
+MemoryViewerAddressSize::MemoryViewerAddressSize()
+  : Dlg()
+{
+  address = 0xffffffff;
+  size = -1;
+}
+  
+BOOL MemoryViewerAddressSize::OnInitDialog(LPARAM)
+{
+  char buffer[20];
+  if(address != 0xFFFFFFFF) {
+    sprintf(buffer, "%08X", address);
+    ::SetWindowText(GetDlgItem(IDC_ADDRESS), buffer);
+  }
+  if(size != -1) {
+    sprintf(buffer, "%08X", size);
+    ::SetWindowText(GetDlgItem(IDC_SIZE_CONTROL), buffer);
+    ::EnableWindow(GetDlgItem(IDC_SIZE_CONTROL), FALSE);
+  }
+
+  if(size == -1 && address != 0xFFFFFFFF)
+    ::SetFocus(GetDlgItem(IDC_SIZE_CONTROL));
+  
+  ::SendMessage(GetDlgItem(IDC_ADDRESS), EM_LIMITTEXT, 9, 0);
+  ::SendMessage(GetDlgItem(IDC_SIZE_CONTROL), EM_LIMITTEXT, 9, 0);
+
+  return TRUE;
+}
+
+void MemoryViewerAddressSize::OnOk()
+{
+  char buffer[10];
+
+  ::GetWindowText(GetDlgItem(IDC_ADDRESS), buffer, 10);
+  if(strlen(buffer) == 0) {
+    ::SetFocus(GetDlgItem(IDC_ADDRESS));
+    return;
+  }
+  sscanf(buffer, "%x", &address);
+  
+  ::GetWindowText(GetDlgItem(IDC_SIZE_CONTROL), buffer, 10);
+  if(strlen(buffer) == 0) {
+    ::SetFocus(GetDlgItem(IDC_SIZE_CONTROL));
+    return;
+  }
+  sscanf(buffer, "%x", &size);
+  EndDialog(TRUE);
+}
+
+void MemoryViewerAddressSize::OnCancel()
+{
+  EndDialog(FALSE);
 }

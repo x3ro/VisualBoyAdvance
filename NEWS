@@ -4,6 +4,8 @@ Core changes:
 - added support for Flash 128K (thanks DesktopMan)
 Windows version:
 - automatically apply IPS patch if it exists
+- added save/load support in the memory viewer
+- memory viewer now displays current edit address
 - removed some test code introduced at version 1.1 that slows down the emulator
 - fixed missing check marks on layers menu
 - fixed bug showing maker code/name from some old games

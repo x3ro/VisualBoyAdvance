@@ -1,5 +1,7 @@
 2002-11-25  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/win32/MemoryViewer.cpp (setCaretPos): show current edit address
+	* src/win32/MemoryViewer.cpp (OnLoad): added load/save memory support
 	* src/win32/RomInfo.cpp (OnInitDialog): fixed bug showing maker code/name in some old GB roms
 
 2002-11-24  Forgotten  <forgotten@users.sourceforge.net>

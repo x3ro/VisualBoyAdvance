@@ -78,6 +78,7 @@
 #define IDD_GDB_WAITING                 136
 #define IDD_LOGGING                     137
 #define IDD_EXPORT_SPS                  138
+#define IDD_ADDR_SIZE                   139
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -333,7 +334,9 @@
 #define IDS_ERROR_NOT_GBA_IMAGE         1122
 #define IDS_EEPROM_NOT_SUPPORTED        1123
 #define IDC_MAP_VIEW                    1124
+#define IDS_FILTER_DUMP                 1124
 #define IDC_PALETTE_VIEW                1125
+#define IDS_SELECT_DUMP_FILE            1125
 #define IDC_PALETTE_VIEW_OBJ            1126
 #define IDC_REFRESH                     1126
 #define IDC_SAVE                        1127
@@ -431,7 +434,11 @@
 #define IDC_XY                          1231
 #define IDC_VERBOSE_DMA3                1232
 #define IDC_TITLE                       1234
+#define IDC_CURRENT_ADDRESS             1235
 #define IDC_NOTES                       1236
+#define IDC_CURRENT_ADDRESS_LABEL       1236
+#define IDC_LOAD                        1238
+#define IDC_SIZE_CONTROL                1240
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -597,9 +604,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_RESOURCE_VALUE        140
 #define _APS_NEXT_COMMAND_VALUE         40176
-#define _APS_NEXT_CONTROL_VALUE         1235
+#define _APS_NEXT_CONTROL_VALUE         1240
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
