@@ -44,17 +44,43 @@ public:
 
   enum ECartridge
   {
-    NO_CARTRIDGE,
-    GB_CARTRIDGE,
-    GBA_CARTRIDGE
+    CartridgeNone,
+    CartridgeGB,
+    CartridgeGBA
   };
+
+  // GB/GBA screen sizes
+  const int m_iGBScreenWidth;
+  const int m_iGBScreenHeight;
+  const int m_iSGBScreenWidth;
+  const int m_iSGBScreenHeight;
+  const int m_iGBAScreenWidth;
+  const int m_iGBAScreenHeight;
 
   void vDrawScreen();
   void vComputeFrameskip(int _iRate);
+  void vShowSpeed(int _iSpeed);
   inline u32 uiReadJoypad() { return m_uiJoypadState; }
   inline ECartridge eGetCartridge() { return m_eCartridge; }
 
 protected:
+  enum EShowSpeed
+  {
+    ShowSpeedNone,
+    ShowSpeedPercentage,
+    ShowSpeedDetailed
+  };
+
+  enum ESaveType
+  {
+    SaveTypeAuto,
+    SaveTypeEEPROM,
+    SaveTypeSRAM,
+    SaveTypeFlash,
+    SaveTypeEEPROMSensor,
+    SaveTypeNone
+  };
+
   virtual void vOnFileOpen();
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
@@ -63,8 +89,11 @@ protected:
   virtual void vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue);
   virtual void vOnThrottleToggled(Gtk::CheckMenuItem * _poCMI, int _iPercent);
   virtual void vOnThrottleOther(Gtk::CheckMenuItem * _poCMI);
-  virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
   virtual void vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale);
+  virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
+  virtual void vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed);
+  virtual void vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType);
+  virtual void vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize);
   virtual void vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x);
   virtual void vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB);
 #ifdef MMX
@@ -79,6 +108,22 @@ protected:
 private:
   Window(GtkWindow * _pstWindow,
          const Glib::RefPtr<Gnome::Glade::Xml> & _poXml);
+
+  // Config limits
+  const int m_iFrameskipMin;
+  const int m_iFrameskipMax;
+  const int m_iThrottleMin;
+  const int m_iThrottleMax;
+  const int m_iScaleMin;
+  const int m_iScaleMax;
+  const int m_iShowSpeedMin;
+  const int m_iShowSpeedMax;
+  const int m_iSaveTypeMin;
+  const int m_iSaveTypeMax;
+  const int m_iFilter2xMin;
+  const int m_iFilter2xMax;
+  const int m_iFilterIBMin;
+  const int m_iFilterIBMax;
 
   static Window * m_poInstance;
 
@@ -109,6 +154,7 @@ private:
   int            m_iThrottle;
   u32            m_uiThrottleLastTime;
   u32            m_uiThrottleDelay;
+  EShowSpeed     m_eShowSpeed;
 
   void vInitSystem();
   void vInitSDL();
@@ -119,6 +165,7 @@ private:
   void vLoadKeymap();
   void vUpdateScreen();
   void vDrawDefaultScreen();
+  void vSetDefaultTitle();
   bool bLoadROM(const std::string & _rsFilename);
   void vLoadBattery();
   void vSaveBattery();

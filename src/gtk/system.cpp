@@ -41,6 +41,9 @@ u16 systemColorMap16[0x10000];
 u16 systemGbPalette[24];
 bool systemSoundOn;
 
+int systemRenderedFrames;
+int systemFPS;
+
 int emulating;
 bool debugger;
 int RGB_LOW_BITS_MASK;
@@ -67,6 +70,7 @@ void systemMessage(int _iId, const char * _csFormat, ...)
 void systemDrawScreen()
 {
   gui()->vDrawScreen();
+  systemRenderedFrames++;
 }
 
 bool systemReadJoypads()
@@ -81,9 +85,10 @@ u32 systemReadJoypad(int)
 
 void systemShowSpeed(int _iSpeed)
 {
-  char csTitle[50];
-  snprintf(csTitle, 50, "VisualBoyAdvance-%d%%", _iSpeed);
-  gui()->set_title(csTitle);
+  systemFPS = systemRenderedFrames;
+  systemRenderedFrames = 0;
+
+  gui()->vShowSpeed(_iSpeed);
 }
 
 void system10Frames(int _iRate)

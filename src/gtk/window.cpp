@@ -31,6 +31,8 @@
 #include "tools.h"
 #include "intl.h"
 
+extern int systemRenderedFrames;
+extern int systemFPS;
 extern bool debugger;
 extern int RGB_LOW_BITS_MASK;
 
@@ -45,35 +47,36 @@ using Gnome::Glade::Xml;
 
 Window * Window::m_poInstance = NULL;
 
-// GB/GBA screen sizes
-const int iGBScreenWidth   = 160;
-const int iGBScreenHeight  = 144;
-const int iSGBScreenWidth  = 256;
-const int iSGBScreenHeight = 224;
-const int iGBAScreenWidth  = 240;
-const int iGBAScreenHeight = 160;
-
-// Config limits
-const int iFrameskipMin = 0;
-const int iFrameskipMax = 9;
-const int iThrottleMin  = 5;
-const int iThrottleMax  = 1000;
-const int iScaleMin     = 1;
-const int iScaleMax     = 6;
-const int iFilter2xMin  = (int)FirstFilter;
-const int iFilter2xMax  = (int)LastFilter;
-const int iFilterIBMin  = (int)FirstFilterIB;
-const int iFilterIBMax  = (int)LastFilterIB;
-
 Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
-  Gtk::Window(_pstWindow),
-  m_poXml(_poXml),
-  m_poFileOpenDialog(NULL),
-  m_iScreenWidth(iGBAScreenWidth),
-  m_iScreenHeight(iGBAScreenHeight),
-  m_eCartridge(NO_CARTRIDGE),
-  m_uiJoypadState(0)
+  Gtk::Window       (_pstWindow),
+  m_iGBScreenWidth  (160),
+  m_iGBScreenHeight (144),
+  m_iSGBScreenWidth (256),
+  m_iSGBScreenHeight(224),
+  m_iGBAScreenWidth (240),
+  m_iGBAScreenHeight(160),
+  m_iFrameskipMin   (0),
+  m_iFrameskipMax   (9),
+  m_iThrottleMin    (5),
+  m_iThrottleMax    (1000),
+  m_iScaleMin       (1),
+  m_iScaleMax       (6),
+  m_iShowSpeedMin   (ShowSpeedNone),
+  m_iShowSpeedMax   (ShowSpeedDetailed),
+  m_iSaveTypeMin    (SaveTypeAuto),
+  m_iSaveTypeMax    (SaveTypeNone),
+  m_iFilter2xMin    (FirstFilter),
+  m_iFilter2xMax    (LastFilter),
+  m_iFilterIBMin    (FirstFilterIB),
+  m_iFilterIBMax    (LastFilterIB)
 {
+  m_poXml            = _poXml;
+  m_poFileOpenDialog = NULL;
+  m_iScreenWidth     = m_iGBAScreenWidth;
+  m_iScreenHeight    = m_iGBAScreenHeight;
+  m_eCartridge       = CartridgeNone;
+  m_uiJoypadState    = 0;
+
   vInitSystem();
   vInitSDL();
 
@@ -265,6 +268,89 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                       poCMI, astLayer[i].m_iLayer));
   }
 
+  // Show speed menu
+  //
+  struct
+  {
+    const char *     m_csName;
+    const EShowSpeed m_eShowSpeed;
+  }
+  astShowSpeed[] =
+  {
+    { "ShowSpeedNone",       ShowSpeedNone       },
+    { "ShowSpeedPercentage", ShowSpeedPercentage },
+    { "ShowSpeedDetailed",   ShowSpeedDetailed   }
+  };
+  EShowSpeed eDefaultShowSpeed = (EShowSpeed)m_poDisplayConfig->oGetKey<int>("show_speed");
+  for (guint i = 0; i < sizeof(astShowSpeed) / sizeof(astShowSpeed[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astShowSpeed[i].m_csName));
+    if (astShowSpeed[i].m_eShowSpeed == eDefaultShowSpeed)
+    {
+      poCMI->set_active();
+      vOnShowSpeedToggled(poCMI, eDefaultShowSpeed);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnShowSpeedToggled),
+                                      poCMI, astShowSpeed[i].m_eShowSpeed));
+  }
+
+  // Save type menu
+  //
+  struct
+  {
+    const char *    m_csName;
+    const ESaveType m_eSaveType;
+  }
+  astSaveType[] =
+  {
+    { "SaveTypeAutomatic",    SaveTypeAuto         },
+    { "SaveTypeEeprom",       SaveTypeEEPROM       },
+    { "SaveTypeSram",         SaveTypeSRAM         },
+    { "SaveTypeFlash",        SaveTypeFlash        },
+    { "SaveTypeEepromSensor", SaveTypeEEPROMSensor },
+    { "SaveTypeNone",         SaveTypeNone         }
+  };
+  ESaveType eDefaultSaveType = (ESaveType)m_poCoreConfig->oGetKey<int>("save_type");
+  for (guint i = 0; i < sizeof(astSaveType) / sizeof(astSaveType[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSaveType[i].m_csName));
+    if (astSaveType[i].m_eSaveType == eDefaultSaveType)
+    {
+      poCMI->set_active();
+      vOnSaveTypeToggled(poCMI, eDefaultSaveType);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnSaveTypeToggled),
+                                      poCMI, astSaveType[i].m_eSaveType));
+  }
+
+  // Flash size menu
+  //
+  struct
+  {
+    const char * m_csName;
+    const int    m_iFlashSize;
+  }
+  astFlashSize[] =
+  {
+    { "SaveTypeFlash64K",   64 },
+    { "SaveTypeFlash128K", 128 }
+  };
+  int iDefaultFlashSize = m_poCoreConfig->oGetKey<int>("flash_size");
+  for (guint i = 0; i < sizeof(astFlashSize) / sizeof(astFlashSize[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFlashSize[i].m_csName));
+    if (astFlashSize[i].m_iFlashSize == iDefaultFlashSize)
+    {
+      poCMI->set_active();
+      vOnFlashSizeToggled(poCMI, iDefaultFlashSize);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnFlashSizeToggled),
+                                      poCMI, astFlashSize[i].m_iFlashSize));
+  }
+
   // Filter menu
   //
   struct
@@ -393,6 +479,9 @@ void Window::vInitSystem()
   systemFrameSkip = 0;
   systemSoundOn = false;
 
+  systemRenderedFrames = 0;
+  systemFPS = 0;
+
   emulating = 0;
   debugger = true;
 
@@ -440,25 +529,28 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey("frameskip",    "auto" );
-  m_poCoreConfig->vSetKey("throttle",     0      );
-  m_poCoreConfig->vSetKey("layer_bg0",    true   );
-  m_poCoreConfig->vSetKey("layer_bg1",    true   );
-  m_poCoreConfig->vSetKey("layer_bg2",    true   );
-  m_poCoreConfig->vSetKey("layer_bg3",    true   );
-  m_poCoreConfig->vSetKey("layer_obj",    true   );
-  m_poCoreConfig->vSetKey("layer_win0",   true   );
-  m_poCoreConfig->vSetKey("layer_win1",   true   );
-  m_poCoreConfig->vSetKey("layer_objwin", true   );
+  m_poCoreConfig->vSetKey     ("frameskip",    "auto"       );
+  m_poCoreConfig->vSetKey     ("throttle",     0            );
+  m_poCoreConfig->vSetKey     ("layer_bg0",    true         );
+  m_poCoreConfig->vSetKey     ("layer_bg1",    true         );
+  m_poCoreConfig->vSetKey     ("layer_bg2",    true         );
+  m_poCoreConfig->vSetKey     ("layer_bg3",    true         );
+  m_poCoreConfig->vSetKey     ("layer_obj",    true         );
+  m_poCoreConfig->vSetKey     ("layer_win0",   true         );
+  m_poCoreConfig->vSetKey     ("layer_win1",   true         );
+  m_poCoreConfig->vSetKey     ("layer_objwin", true         );
+  m_poCoreConfig->vSetKey<int>("save_type",    SaveTypeAuto );
+  m_poCoreConfig->vSetKey<int>("flash_size",   64           );
 
   // Display section
   //
   m_poDisplayConfig = m_oConfig.poAddSection("Display");
-  m_poDisplayConfig->vSetKey     ("scale",               1            );
-  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone   );
-  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone );
+  m_poDisplayConfig->vSetKey     ("scale",               1                   );
+  m_poDisplayConfig->vSetKey<int>("show_speed",          ShowSpeedPercentage );
+  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone          );
+  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone        );
 #ifdef MMX
-  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false        );
+  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false               );
 #endif // MMX
 }
 
@@ -467,10 +559,12 @@ void Window::vCheckConfig()
   int iValue;
   int iAdjusted;
 
+  // Core section
+  //
   if (m_poCoreConfig->sGetKey("frameskip") != "auto")
   {
     iValue = m_poCoreConfig->oGetKey<int>("frameskip");
-    iAdjusted = CLAMP(iValue, iFrameskipMin, iFrameskipMax);
+    iAdjusted = CLAMP(iValue, m_iFrameskipMin, m_iFrameskipMax);
     if (iValue != iAdjusted)
     {
       m_poCoreConfig->vSetKey("frameskip", iAdjusted);
@@ -480,29 +574,54 @@ void Window::vCheckConfig()
   iValue = m_poCoreConfig->oGetKey<int>("throttle");
   if (iValue != 0)
   {
-    iAdjusted = CLAMP(iValue, iThrottleMin, iThrottleMax);
+    iAdjusted = CLAMP(iValue, m_iThrottleMin, m_iThrottleMax);
     if (iValue != iAdjusted)
     {
       m_poCoreConfig->vSetKey("throttle", iAdjusted);
     }
   }
 
+  iValue = m_poCoreConfig->oGetKey<int>("save_type");
+  if (iValue != 0)
+  {
+    iAdjusted = CLAMP(iValue, m_iSaveTypeMin, m_iSaveTypeMax);
+    if (iValue != iAdjusted)
+    {
+      m_poCoreConfig->vSetKey("save_type", iAdjusted);
+    }
+  }
+
+  iValue = m_poCoreConfig->oGetKey<int>("flash_size");
+  if (iValue != 64 && iValue != 128)
+  {
+    m_poCoreConfig->vSetKey("flash_size", 64);
+  }
+
+  // Display section
+  //
   iValue = m_poDisplayConfig->oGetKey<int>("scale");
-  iAdjusted = CLAMP(iValue, iScaleMin, iScaleMax);
+  iAdjusted = CLAMP(iValue, m_iScaleMin, m_iScaleMax);
   if (iValue != iAdjusted)
   {
     m_poDisplayConfig->vSetKey("scale", iAdjusted);
   }
 
+  iValue = m_poDisplayConfig->oGetKey<int>("show_speed");
+  iAdjusted = CLAMP(iValue, m_iShowSpeedMin, m_iShowSpeedMax);
+  if (iValue != iAdjusted)
+  {
+    m_poDisplayConfig->vSetKey("show_speed", iAdjusted);
+  }
+
   iValue = m_poDisplayConfig->oGetKey<int>("filter2x");
-  iAdjusted = CLAMP(iValue, iFilter2xMin, iFilter2xMax);
+  iAdjusted = CLAMP(iValue, m_iFilter2xMin, m_iFilter2xMax);
   if (iValue != iAdjusted)
   {
     m_poDisplayConfig->vSetKey("filter2x", iAdjusted);
   }
 
   iValue = m_poDisplayConfig->oGetKey<int>("filterIB");
-  iAdjusted = CLAMP(iValue, iFilterIBMin, iFilterIBMax);
+  iAdjusted = CLAMP(iValue, m_iFilterIBMin, m_iFilterIBMax);
   if (iValue != iAdjusted)
   {
     m_poDisplayConfig->vSetKey("filterIB", iAdjusted);
@@ -590,6 +709,28 @@ void Window::vDrawScreen()
 void Window::vDrawDefaultScreen()
 {
   m_poScreenArea->vDrawColor(0x000000); // Black
+}
+
+void Window::vSetDefaultTitle()
+{
+  set_title("VBA");
+}
+
+void Window::vShowSpeed(int _iSpeed)
+{
+  char csTitle[50];
+
+  if (m_eShowSpeed == ShowSpeedPercentage)
+  {
+    snprintf(csTitle, 50, "VBA - %d%%", _iSpeed);
+    set_title(csTitle);
+  }
+  else if (m_eShowSpeed == ShowSpeedDetailed)
+  {
+    snprintf(csTitle, 50, "VBA - %3d%% (%d, %d fps)",
+             _iSpeed, systemFrameSkip, systemFPS);
+    set_title(csTitle);
+  }
 }
 
 void Window::vComputeFrameskip(int _iRate)
@@ -691,7 +832,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     bLoaded = gbLoadRom(csFilename);
     if (bLoaded)
     {
-      m_eCartridge = GB_CARTRIDGE;
+      m_eCartridge = CartridgeGB;
       m_stEmulator = GBSystem;
 
       //if(sdlAutoIPS) {
@@ -706,17 +847,17 @@ bool Window::bLoadROM(const std::string & _rsFilename)
 
       if (gbBorderOn)
       {
-        m_iScreenWidth     = iSGBScreenWidth;
-        m_iScreenHeight    = iSGBScreenHeight;
-        gbBorderLineSkip   = iSGBScreenWidth;
-        gbBorderColumnSkip = (iSGBScreenWidth - iGBScreenWidth) / 2;
-        gbBorderRowSkip    = (iSGBScreenHeight - iGBScreenHeight) / 2;
+        m_iScreenWidth     = m_iSGBScreenWidth;
+        m_iScreenHeight    = m_iSGBScreenHeight;
+        gbBorderLineSkip   = m_iSGBScreenWidth;
+        gbBorderColumnSkip = (m_iSGBScreenWidth - m_iGBScreenWidth) / 2;
+        gbBorderRowSkip    = (m_iSGBScreenHeight - m_iGBScreenHeight) / 2;
       }
       else
       {
-        m_iScreenWidth     = iGBScreenWidth;
-        m_iScreenHeight    = iGBScreenHeight;
-        gbBorderLineSkip   = iGBScreenWidth;
+        m_iScreenWidth     = m_iGBScreenWidth;
+        m_iScreenHeight    = m_iGBScreenHeight;
+        gbBorderLineSkip   = m_iGBScreenWidth;
         gbBorderColumnSkip = 0;
         gbBorderRowSkip    = 0;
       }
@@ -730,7 +871,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     {
       //sdlApplyPerImagePreferences();
 
-      m_eCartridge = GBA_CARTRIDGE;
+      m_eCartridge = CartridgeGBA;
       m_stEmulator = GBASystem;
 
       // TODO
@@ -747,8 +888,8 @@ bool Window::bLoadROM(const std::string & _rsFilename)
       //  }
       //}
 
-      m_iScreenWidth  = iGBAScreenWidth;
-      m_iScreenHeight = iGBAScreenHeight;
+      m_iScreenWidth  = m_iGBAScreenWidth;
+      m_iScreenHeight = m_iGBAScreenHeight;
     }
   }
 
@@ -863,7 +1004,7 @@ void Window::vOnFileOpen()
 {
   if (m_poFileOpenDialog == NULL)
   {
-    m_poFileOpenDialog = new Gtk::FileSelection(_("Open a ROM"));
+    m_poFileOpenDialog = new Gtk::FileSelection(_("Open"));
     m_poFileOpenDialog->set_transient_for(*this);
   }
 
@@ -908,7 +1049,7 @@ void Window::vOnFileClose()
     vDrawDefaultScreen();
     vSaveBattery();
     m_stEmulator.emuCleanUp();
-    m_eCartridge = NO_CARTRIDGE;
+    m_eCartridge = CartridgeNone;
     emulating = 0;
   }
 }
@@ -1025,6 +1166,50 @@ void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
     "layer_objwin"
   };
   m_poCoreConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
+}
+
+void Window::vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  m_eShowSpeed = (EShowSpeed)_iShowSpeed;
+  if (m_eShowSpeed == ShowSpeedNone)
+  {
+    vSetDefaultTitle();
+  }
+  m_poDisplayConfig->vSetKey("show_speed", _iShowSpeed);
+}
+
+void Window::vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  cpuSaveType = _iSaveType;
+  m_poCoreConfig->vSetKey("save_type", _iSaveType);
+}
+
+void Window::vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  if (_iFlashSize == 64)
+  {
+    flashSetSize(0x10000);
+  }
+  else
+  {
+    flashSetSize(0x20000);
+  }
+  m_poCoreConfig->vSetKey("flash_size", _iFlashSize);
 }
 
 void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
