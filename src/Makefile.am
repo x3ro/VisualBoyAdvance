@@ -28,7 +28,7 @@ TestEmu_SOURCES = \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
 
 TestEmu_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
-TestEmu_LDFLAGS = `sdl-config --libs`
+TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
 	gp i386 win32 VisualBoyAdvance.cfg \

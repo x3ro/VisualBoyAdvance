@@ -1,5 +1,9 @@
 2002-11-06  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/elf.cpp: fix wrong usage of CPUReadMemory
+	* src/admame.cpp: fixed incorrect #ifdef usage
+	* configure.in: added test for socklen_t type
+	* src/remote.cpp: fix problem compiling in some systems
 	* src/GBA.cpp (CPULoop): added support for movement sensor
 	* src/GBA.cpp (CPUReset): added support for selecting save type available
 

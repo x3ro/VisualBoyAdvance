@@ -25,6 +25,9 @@
 #include "elf.h"
 #include "NLS.h"
 
+#define elfReadMemory(addr) \
+  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+
 #define DW_TAG_array_type             0x01
 #define DW_TAG_enumeration_type       0x04
 #define DW_TAG_formal_parameter       0x05
@@ -621,8 +624,6 @@ ELFFrameState *elfGetFrameState(ELFfde *fde, u32 address)
   return state;
 }
 
-extern u32 CPUReadMemory(u32);
-
 void elfPrintCallChain(u32 address)
 {
   int count = 1;
@@ -663,7 +664,7 @@ void elfPrintCallChain(u32 address)
           newRegs[i].I = regs[i].I;
           break;
         case REG_OFFSET:
-          newRegs[i].I = CPUReadMemory(regs[state->cfaRegister].I +
+          newRegs[i].I = elfReadMemory(regs[state->cfaRegister].I +
                                        state->cfaOffset +
                                        r->offset);
           break;

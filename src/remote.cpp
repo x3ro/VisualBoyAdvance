@@ -24,11 +24,14 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #else
-#define socketlen_t int
-#endif // HAVE_ARPA_INET_H
+#define socklen_t int
+#endif
 #else
 #include <winsock.h>
 #include <io.h>

@@ -59,13 +59,24 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
+AS = @AS@
 CC = @CC@
 CXX = @CXX@
+DLLTOOL = @DLLTOOL@
 LEX = @LEX@
+LIBTOOL = @LIBTOOL@
+LN_S = @LN_S@
 MAKEINFO = @MAKEINFO@
 NASM = @NASM@
+OBJDUMP = @OBJDUMP@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
+SDL_CFLAGS = @SDL_CFLAGS@
+SDL_CONFIG = @SDL_CONFIG@
+SDL_LIBS = @SDL_LIBS@
+SMPEG_CFLAGS = @SMPEG_CFLAGS@
+SMPEG_CONFIG = @SMPEG_CONFIG@
+SMPEG_LIBS = @SMPEG_LIBS@
 VBA_EXTRA = @VBA_EXTRA@
 VBA_GP = @VBA_GP@
 VBA_MMX = @VBA_MMX@
@@ -104,7 +115,7 @@ TestEmu_SOURCES = \
 
 
 TestEmu_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
-TestEmu_LDFLAGS = `sdl-config --libs`
+TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
 	gp i386 win32 VisualBoyAdvance.cfg \
@@ -182,8 +193,8 @@ install-binPROGRAMS: $(bin_PROGRAMS)
 	$(mkinstalldirs) $(DESTDIR)$(bindir)
 	@list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  if test -f $$p; then \
-	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	  else :; fi; \
 	done
 

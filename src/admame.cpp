@@ -39,6 +39,7 @@
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
+#endif
 
 /* Suggested in "Intel Optimization" for Pentium II */
 #define ASM_JUMP_ALIGN ".p2align 4\n"
@@ -103,6 +104,7 @@ static void internal_scale2x_16_def(u16 *dst0, u16* dst1, const u16* src0, const
         dst1[1] =src1[0];
 }
 
+#ifdef MMX
 static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16* src1, const u16* src2, unsigned count) {
 	/* always do the first and last run */
 	count -= 2*4;
