@@ -863,15 +863,15 @@ BEGIN
     LTEXT           "Size:",IDC_STATIC,7,29,65,8
 END
 
-IDD_MODES DIALOG DISCARDABLE  0, 0, 208, 201
+IDD_MODES DIALOG DISCARDABLE  0, 0, 208, 129
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select video mode"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LISTBOX         IDC_MODES,7,18,194,153,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+    LISTBOX         IDC_MODES,7,18,194,80,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",ID_OK,45,180,50,14
-    PUSHBUTTON      "Cancel",ID_CANCEL,112,180,50,14
+    DEFPUSHBUTTON   "OK",ID_OK,45,108,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,112,108,50,14
     LTEXT           "Available video modes:",IDC_STATIC,7,7,194,8
 END
 
@@ -1118,7 +1118,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 201
         TOPMARGIN, 7
-        BOTTOMMARGIN, 194
+        BOTTOMMARGIN, 122
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1203,6 +1203,8 @@ BEGIN
     BEGIN
         POPUP "&Frame skip"
         BEGIN
+            MENUITEM "&Automatic",                  ID_OPTIONS_FRAMESKIP_AUTOMATIC
+
             MENUITEM "&0",                          ID_OPTIONS_VIDEO_FRAMESKIP_0
 
             MENUITEM "&1",                          ID_OPTIONS_VIDEO_FRAMESKIP_1
@@ -1291,8 +1293,18 @@ BEGIN
 
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
 
-            MENUITEM "Show speed",                  ID_OPTIONS_EMULATOR_SHOWSPEED
+            POPUP "Show speed"
+            BEGIN
+                MENUITEM "None",                        ID_OPTIONS_EMULATOR_SHOWSPEED_NONE
 
+                MENUITEM "Percentage",                  ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE
+
+                MENUITEM "Detailed",                    ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED
+
+                MENUITEM SEPARATOR
+                MENUITEM "Transparent",                 ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT
+
+            END
             POPUP "Save Type"
             BEGIN
                 MENUITEM "&Automatic",                  ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC

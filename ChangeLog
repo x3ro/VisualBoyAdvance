@@ -1,3 +1,9 @@
+2003-01-13  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp: show detailed speed data
+	               added auto frameskip support
+	               CTRL+F to toggle fullscreen
+
 2003-01-12  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp: added some debugging for DDRAW and DINPUT

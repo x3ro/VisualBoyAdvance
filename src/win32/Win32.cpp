@@ -95,7 +95,9 @@ BOOL aviRecording = FALSE;
 CAVIFile *aviRecorder = NULL;
 char aviRecordName[2048];
 
-BOOL showSpeed = TRUE;
+BOOL autoFrameSkip = TRUE;
+int showSpeed = 1;
+BOOL showSpeedTransparent = TRUE;
 BOOL recentFreeze = FALSE;
 BOOL speedupToggle = FALSE;
 BOOL removeIntros = FALSE;
@@ -103,6 +105,7 @@ BOOL autoIPS = TRUE;
 BOOL soundInitialized = FALSE;
 BOOL iconic = FALSE;
 BOOL paused = FALSE;
+BOOL wasPaused = FALSE;
 BOOL winPauseNextFrame = FALSE;
 BOOL vsync = FALSE;
 BOOL menuToggle = TRUE;
@@ -150,6 +153,11 @@ int emulating = 0;
 bool debugger = false;
 int winFlashSize = 0x10000;
 
+int frameskipadjust = 0;
+int renderedFrames = 0;
+int showRenderedFrames = 0;
+
+int systemFrameSkip = 0;
 int systemSpeed = 0;
 bool systemSoundOn = false;
 u32 systemColorMap32[0x10000];
@@ -1332,6 +1340,8 @@ void updateFrameSkipMenu(HMENU menu)
     CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_9,
                   CHECKMENUSTATE(gbFrameSkip == 9));
   }
+  CheckMenuItem(menu, ID_OPTIONS_FRAMESKIP_AUTOMATIC,
+                CHECKMENUSTATE(autoFrameSkip));
 }
 
 void updateLayersMenu(HMENU menu)
@@ -1451,17 +1461,29 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(autoIPS));
   EnableMenuItem(menu, ID_OPTIONS_EMULATOR_USEBIOSFILE,
                  ENABLEMENU(biosFileName[0]));
-  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED,
-                CHECKMENUSTATE(showSpeed));
 
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_PNGFORMAT,
                 CHECKMENUSTATE(captureFormat == 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_BMPFORMAT,
                 CHECKMENUSTATE(captureFormat != 0));
 
-  HMENU sub = GetSubMenu(menu, 7);
-  if(sub == NULL)
-    sub = GetSubMenu(menu, 8);
+  HMENU sub = GetSubMenu(menu, 8);
+  if(sub != NULL) {
+    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_NONE,
+                  CHECKMENUSTATE(showSpeed == 0));
+    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE,
+                  CHECKMENUSTATE(showSpeed == 1));
+    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED,
+                  CHECKMENUSTATE(showSpeed == 2));
+    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT,
+                  CHECKMENUSTATE(showSpeedTransparent));
+  }
+
+  if(sub == NULL) {
+    sub = GetSubMenu(menu, 7);
+    if(sub == NULL)
+      sub = GetSubMenu(menu, 8);
+  }
   if(sub == NULL)
     sub = GetSubMenu(menu, 9);
 
@@ -1769,6 +1791,18 @@ void updateCheatsMenu(HMENU menu)
                  ENABLEMENU(emulating));
   EnableMenuItem(menu, ID_CHEATS_SAVECHEATLIST,
                  ENABLEMENU(emulating));
+}
+
+void updateFrameSkip()
+{
+  switch(cartridgeType) {
+  case 0:
+    systemFrameSkip = frameSkip;
+    break;
+  case 1:
+    systemFrameSkip = gbFrameSkip;
+    break;
+  }
 }
 
 int axisNumber = 0;
@@ -2146,6 +2180,8 @@ void systemDrawScreen()
      ddsPrimary == NULL)
     return;
 
+  renderedFrames++;
+
   for(std::list<IUpdateListener *>::iterator it = updateList.begin();
       it != updateList.end(); ) {
     IUpdateListener *up = *it;
@@ -2459,12 +2495,24 @@ void systemDrawScreen()
     }
     if(videoOption > VIDEO_4X && showSpeed) {
       char buffer[30];
-      sprintf(buffer, "%d%%", systemSpeed);
-      fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
-                              ddsDesc.lPitch,
-                              rect.left+10,
-                              rect.bottom-10,
-                              buffer);
+      if(showSpeed == 1)
+        sprintf(buffer, "%3d%%", systemSpeed);
+      else
+        sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
+                systemFrameSkip,
+                showRenderedFrames);
+      if(showSpeedTransparent)
+        fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
+                                ddsDesc.lPitch,
+                                rect.left+10,
+                                rect.bottom-10,
+                                buffer);
+      else
+        fontDisplayString((u8*)ddsDesc.lpSurface,
+                          ddsDesc.lPitch,
+                          rect.left+10,
+                          rect.bottom-10,
+                          buffer);        
     }
   } else if(ddrawDebug)
     winlog("Error during lock: %08x\n", hret);    
@@ -3421,8 +3469,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
       PAINTSTRUCT ps;
       BeginPaint(hWnd, &ps);
-      if(emulating)
+      if(emulating) {
         systemDrawScreen();
+        renderedFrames--;
+      }
       EndPaint(hWnd, &ps);
     }
     return TRUE;
@@ -3661,6 +3711,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       paused = !paused;
       if(emulating) {
         if(paused) {
+          wasPaused = TRUE;
           soundPause();
           setScreenSaverEnable(screenSaverState);
         } else {
@@ -3701,6 +3752,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gbFrameSkip = (wParam&0xffff) - ID_OPTIONS_VIDEO_FRAMESKIP_0;
         regSetDwordValue("gbFrameSkip", gbFrameSkip);   
       }
+      if(emulating)
+        updateFrameSkip();
       break;
     case ID_OPTIONS_VIDEO_FRAMESKIP_6:
     case ID_OPTIONS_VIDEO_FRAMESKIP_7:
@@ -3713,6 +3766,14 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gbFrameSkip = 6 + (wParam&0xffff) - ID_OPTIONS_VIDEO_FRAMESKIP_6;
         regSetDwordValue("gbFrameSkip", gbFrameSkip);   
       }
+      if(emulating)
+        updateFrameSkip();      
+      break;
+    case ID_OPTIONS_FRAMESKIP_AUTOMATIC:
+      autoFrameSkip = !autoFrameSkip;
+      regSetDwordValue("autoFrameSkip", autoFrameSkip);
+      if(!autoFrameSkip && emulating)
+        updateFrameSkip();
       break;
     case ID_OPTIONS_VIDEO_VSYNC:
       vsync = !vsync;
@@ -3847,11 +3908,22 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       captureFormat = 1;
       regSetDwordValue("captureFormat", 1);      
       break;
-    case ID_OPTIONS_EMULATOR_SHOWSPEED:
-      showSpeed = !showSpeed;
+    case ID_OPTIONS_EMULATOR_SHOWSPEED_NONE:
+      showSpeed = 0;
+      systemSetTitle("VisualBoyAdvance");
       regSetDwordValue("showSpeed", showSpeed);
-      if(!showSpeed)
-        systemSetTitle("VisualBoyAdvance");
+      break;
+    case ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE:
+      showSpeed = 1;
+      regSetDwordValue("showSpeed", showSpeed);
+      break;
+    case ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED:
+      showSpeed = 2;
+      regSetDwordValue("showSpeed", showSpeed);
+      break;
+    case ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT:
+      showSpeedTransparent = !showSpeedTransparent;
+      regSetDwordValue("showSpeedTransparent", showSpeedTransparent);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC:
       cpuSaveType = 0;
@@ -4781,6 +4853,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   gbFrameSkip = regQueryDwordValue("gbFrameSkip", 0);
   if(gbFrameSkip < 0 || gbFrameSkip > 9)
     gbFrameSkip = 0;
+
+  autoFrameSkip = regQueryDwordValue("autoFrameSkip", TRUE) ? TRUE : FALSE;
   
   vsync = regQueryDwordValue("vsync", 0);
   synchronize = regQueryDwordValue("synchronize", 1) ? true : false;
@@ -4846,7 +4920,12 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   disableStatusMessage = regQueryDwordValue("disableStatus", 0) ? true : false;
 
-  showSpeed = regQueryDwordValue("showSpeed", TRUE) ? TRUE : FALSE;
+  showSpeed = regQueryDwordValue("showSpeed", 1);
+  if(showSpeed < 0 || showSpeed > 2)
+    showSpeed = 1;
+
+  showSpeedTransparent = regQueryDwordValue("showSpeedTransparent", TRUE) ?
+    TRUE : FALSE;
 
   winGbPrinterEnabled = regQueryDwordValue("gbPrinter", 0);
 
@@ -5298,8 +5377,12 @@ BOOL fileOpen()
   addRecentFile(szFile);
 
   updateWindowSize(videoOption);
+
+  updateFrameSkip();
   
   emulating = TRUE;
+  frameskipadjust = 0;
+  renderedFrames = 0;
 
   if(screenSaverState)
     setScreenSaverEnable(FALSE);
@@ -6006,11 +6089,42 @@ void systemSetTitle(char *title)
 void systemShowSpeed(int speed)
 {
   systemSpeed = speed;
+  showRenderedFrames = renderedFrames;
+  renderedFrames = 0;
   if(videoOption <= VIDEO_4X && showSpeed) {
     char buffer[80];
+    if(showSpeed == 1)
+      sprintf(buffer, "VisualBoyAdvance-%3d%%", systemSpeed);
+    else
+      sprintf(buffer, "VisualBoyAdvance-%3d%%(%d, %d fps)", systemSpeed,
+              systemFrameSkip,
+              showRenderedFrames);
 
-    sprintf(buffer, "VisualBoyAdvance - %d%%", speed);
     systemSetTitle(buffer);
+  }
+
+  if(!wasPaused && autoFrameSkip) {
+    if(speed >= 99) {
+      frameskipadjust++;
+
+      if(frameskipadjust >= 3) {
+        frameskipadjust=0;
+        if(systemFrameSkip > 0)
+          systemFrameSkip--;
+      }
+    } else {
+      if(speed  < 80)
+        frameskipadjust -= (90 - speed)/5;
+      else if(systemFrameSkip < 9)
+        frameskipadjust--;
+
+      while(frameskipadjust <= -2) {
+        frameskipadjust += 2;
+        if(systemFrameSkip < 9)
+          systemFrameSkip++;
+      }
+    }
+    wasPaused = FALSE;
   }
 }
 

@@ -2738,7 +2738,7 @@ void gbEmulate(int ticksToStop)
       
       // our counter is off, see what we need to do
       while(gbLcdTicks <= 0) {
-        int framesToSkip = gbFrameSkip;
+        int framesToSkip = systemFrameSkip;
         if(speedup)
           framesToSkip = 9; // try 6 FPS during speedup
         switch(gbLcdMode) {

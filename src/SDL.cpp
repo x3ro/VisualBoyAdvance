@@ -137,6 +137,7 @@ int systemGreenShift = 0;
 int systemColorDepth = 0;
 int systemDebug = 0;
 int systemVerbose = 0;
+int systemFrameSkip = 0;
 
 int srcPitch = 0;
 int srcWidth = 0;
@@ -181,7 +182,14 @@ bool sdlMotionButtons[4] = { false, false, false, false };
 int sdlNumDevices = 0;
 SDL_Joystick **sdlDevices = NULL;
 
+bool wasPaused = false;
+int autoFrameSkip = 0;
+int frameskipadjust = 0;
+int showRenderedFrames = 0;
+int renderedFrames = 0;
+
 int showSpeed = 1;
+int showSpeedTransparent = 1;
 bool disableStatusMessages = false;
 bool paused = false;
 bool pauseNextFrame = false;
@@ -259,6 +267,7 @@ u16 defaultMotion[4] = {
 };
 
 struct option sdlOptions[] = {
+  { "auto-frameskip", no_argument, &autoFrameSkip, 1 },  
   { "bios", required_argument, 0, 'b' },
   { "config", required_argument, 0, 'c' },
   { "debug", no_argument, 0, 'd' },
@@ -285,6 +294,7 @@ struct option sdlOptions[] = {
   { "ifb-motion-blur", no_argument, &ifbType, 1 },
   { "ifb-smart", no_argument, &ifbType, 2 },
   { "ips", required_argument, 0, 'i' },
+  { "no-auto-frameskip", no_argument, &autoFrameSkip, 0 },
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "no-mmx", no_argument, &disableMMX, 1 },
@@ -296,7 +306,8 @@ struct option sdlOptions[] = {
   { "save-sram", no_argument, &cpuSaveType, 2 },
   { "save-flash", no_argument, &cpuSaveType, 3 },
   { "save-sensor", no_argument, &cpuSaveType, 4 },
-  { "show-speed", no_argument, &showSpeed, 1 },
+  { "show-speed-normal", no_argument, &showSpeed, 1 },
+  { "show-speed-detailed", no_argument, &showSpeed, 2 },
   { "verbose", required_argument, 0, 'v' },  
   { "video-1x", no_argument, &sizeOption, 0 },
   { "video-2x", no_argument, &sizeOption, 1 },
@@ -1032,6 +1043,12 @@ soundQuality);
         ifbType = 0;
     } else if(!strcmp(key, "showSpeed")) {
       showSpeed = sdlFromHex(value);
+      if(showSpeed < 0 || showSpeed > 2)
+        showSpeed = 1;
+    } else if(!strcmp(key, "showSpeedTransparent")) {
+      showSpeedTransparent = sdlFromHex(value);
+    } else if(!strcmp(key, "autoFrameSkip")) {
+      autoFrameSkip = sdlFromHex(value);
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1433,10 +1450,24 @@ void sdlPollEvents()
            (event.key.keysym.mod & KMOD_CTRL)) {
           paused = !paused;
           SDL_PauseAudio(paused);
+          if(paused)
+            wasPaused = true;
         }
         break;
       case SDLK_ESCAPE:
         emulating = 0;
+        break;
+      case SDLK_f:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          int flags = 0;
+          fullscreen = !fullscreen;
+          if(fullscreen)
+            flags |= SDL_FULLSCREEN;
+          SDL_SetVideoMode(destWidth, destHeight, systemColorDepth, flags);
+          //          if(SDL_WM_ToggleFullScreen(surface))
+          //            fullscreen = !fullscreen;
+        }
         break;
       case SDLK_F11:
         if(dbgMain != debuggerMain) {
@@ -1585,13 +1616,16 @@ void usage(char *cmd)
         printf("                               128 - DMA 3\n");
         printf("\n");
         printf("Long options only:\n");
+        printf("       --auto-frameskip       Enable auto frameskipping\n");
         printf("       --ifb-none             No interframe blending\n");
         printf("       --ifb-motion-blur      Interframe motion blur\n");
         printf("       --ifb-smart            Smart interframe blending\n");
+        printf("       --no-auto-frameskip    Disable auto frameskipping\n");
         printf("       --no-ips               Do not apply IPS patch\n");
         printf("       --no-mmx               Disable MMX support\n");
         printf("       --no-show-speed        Don't show emulation speed\n");
-        printf("       --show-speed           Show emulation speed\n");
+        printf("       --show-speed-normal    Show emulation speed\n");
+        printf("       --show-speed-detailed  Show detailed speed data\n");
 }
 
 int main(int argc, char **argv)
@@ -2029,6 +2063,7 @@ int main(int argc, char **argv)
   if(cartridgeType == 0) {
     srcWidth = 240;
     srcHeight = 160;
+    systemFrameSkip = frameSkip;
   } else if (cartridgeType == 1) {
     if(gbBorderOn) {
       srcWidth = 256;
@@ -2042,12 +2077,13 @@ int main(int argc, char **argv)
       gbBorderLineSkip = 160;
       gbBorderColumnSkip = 0;
       gbBorderRowSkip = 0;
-    }      
+    }
+    systemFrameSkip = gbFrameSkip;
   } else {
     srcWidth = 320;
     srcHeight = 240;
   }
-
+  
   destWidth = (sizeOption+1)*srcWidth;
   destHeight = (sizeOption+1)*srcHeight;
   
@@ -2252,6 +2288,7 @@ int main(int argc, char **argv)
     ifbFunction = NULL;
   
   emulating = 1;
+  renderedFrames = 0;  
   soundInit();
   
   SDL_WM_SetCaption("VisualBoyAdvance", NULL);
@@ -2272,6 +2309,7 @@ int main(int argc, char **argv)
         SDL_ShowCursor(SDL_DISABLE);
     }
   }
+  
   emulating = 0;
   fprintf(stderr,"Shutting down\n");
   remoteCleanUp();
@@ -2305,6 +2343,8 @@ void systemMessage(int num, char *msg, ...)
 
 void systemDrawScreen()
 {
+  renderedFrames++;
+  
   if(yuv) {
     Draw_Overlay(surface, sizeOption+1);
     return;
@@ -2409,12 +2449,24 @@ void systemDrawScreen()
 
   if(showSpeed && fullscreen) {
     char buffer[50];
-    sprintf(buffer, "%d%%", systemSpeed);
-    fontDisplayStringTransp((u8*)surface->pixels,
-                            surface->pitch,
-                            10,
-                            surface->h - 20,
-                            buffer); 
+    if(showSpeed == 1)
+      sprintf(buffer, "%d%%", systemSpeed);
+    else
+      sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
+              systemFrameSkip,
+              showRenderedFrames);
+    if(showSpeedTransparent)
+      fontDisplayStringTransp((u8*)surface->pixels,
+                              surface->pitch,
+                              10,
+                              surface->h-20,
+                              buffer);
+    else
+      fontDisplayString((u8*)surface->pixels,
+                        surface->pitch,
+                        10,
+                        surface->h-20,
+                        buffer);        
   }  
 
   SDL_UnlockSurface(surface);
@@ -2465,12 +2517,44 @@ void systemShowSpeed(int speed)
 {
   systemSpeed = speed;
 
+  showRenderedFrames = renderedFrames;
+  renderedFrames = 0;  
+
   if(!fullscreen && showSpeed) {
     char buffer[80];
+    if(showSpeed == 1)
+      sprintf(buffer, "VisualBoyAdvance-%3d%%", systemSpeed);
+    else
+      sprintf(buffer, "VisualBoyAdvance-%3d%%(%d, %d fps)", systemSpeed,
+              systemFrameSkip,
+              showRenderedFrames);
 
-    sprintf(buffer, "VisualBoyAdvance - %d%%", speed);
     systemSetTitle(buffer);
   }
+
+  if(!wasPaused && autoFrameSkip) {
+    if(speed >= 99) {
+      frameskipadjust++;
+
+      if(frameskipadjust >= 3) {
+        frameskipadjust=0;
+        if(systemFrameSkip > 0)
+          systemFrameSkip--;
+      }
+    } else {
+      if(speed  < 80)
+        frameskipadjust -= (90 - speed)/5;
+      else if(systemFrameSkip < 9)
+        frameskipadjust--;
+
+      while(frameskipadjust <= -2) {
+        frameskipadjust += 2;
+        if(systemFrameSkip < 9)
+          systemFrameSkip++;
+      }
+    }
+    wasPaused = false;
+  }  
 }
 
 void systemScreenCapture(int a)

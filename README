@@ -337,13 +337,16 @@ Command line options (override settings in configuration file)
                                128 - DMA 3
 
 Long options only:
+       --auto-frameskip       Enable auto frameskipping
        --ifb-none             No interframe blending
        --ifb-motion-blur      Interframe motion blur
        --ifb-smart            Smart interframe blending
+       --no-auto-frameskip    Disable auto frameskipping
        --no-ips               Do not apply IPS patch
        --no-mmx               Disable MMX support
        --no-show-speed        Don't show emulation speed
-       --show-speed           Show emulation speed
+       --show-speed-normal    Show emulation speed
+       --show-speed-detailed  Show detailed speed data
 
 Known bugs
 ----------

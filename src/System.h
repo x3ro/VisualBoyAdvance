@@ -86,5 +86,6 @@ extern int systemBlueShift;
 extern int systemColorDepth;
 extern int systemDebug;
 extern int systemVerbose;
+extern int systemFrameSkip;
 
 #endif //VBA_SYSTEM_H

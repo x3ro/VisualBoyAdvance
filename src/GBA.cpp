@@ -3529,7 +3529,7 @@ void CPULoop(int ticks)
             CPUCompareVCOUNT();
           }
         } else {
-          int framesToSkip = frameSkip;
+          int framesToSkip = systemFrameSkip;
           if(speedup)
             framesToSkip = 9; // try 6 FPS during speedup
           
