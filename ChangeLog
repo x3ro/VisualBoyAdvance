@@ -1,5 +1,6 @@
 2002-11-29  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/Sound.cpp (soundMix): respect sound rations for CGB and DS
 	* src/GBA.cpp (CPULoadRom): fill memory to simulate no cartridge connected
 
 2002-11-28  Forgotten  <forgotten@users.sourceforge.net>

@@ -909,7 +909,10 @@ void soundMix()
   int res = 0;
   int cgbRes = 0;
   int channelsOn = 0;
-
+  int ratio = ioMem[0x82] & 3;
+  int dsaRatio = ioMem[0x82] & 4;
+  int dsbRatio = ioMem[0x82] & 8;
+  
   if(soundBalance & 16) {
     cgbRes = ((s8)soundBuffer[0][soundIndex]);
     channelsOn++;
@@ -935,8 +938,26 @@ void soundMix()
   
   if((soundControl & 0x2000) && (soundEnableFlag & 0x200))
     res += ((s8)soundBuffer[5][soundIndex]);
+  
+  res = (res * 125);
+  cgbRes = (cgbRes * 150 * soundLevel1);
 
-  res = ((res*250)>>1) + ((cgbRes*150*soundLevel1)>>1);
+  switch(ratio) {
+  case 0:
+  case 3: // prohibited, but 25%    
+    cgbRes >>= 2;
+    break;
+  case 1:
+    cgbRes >>= 1;
+    break;
+  case 2:
+    break;
+  }
+
+  if(!dsaRatio)
+    res >>= 1;
+  
+  res += cgbRes;
 
   if(soundEcho) {
     res *= 2;
@@ -968,7 +989,7 @@ void soundMix()
   res = 0;
   cgbRes = 0;
   channelsOn = 0;
-
+  
   if(soundBalance & 1) {
     cgbRes = ((s8)soundBuffer[0][soundIndex]);
     channelsOn++;
@@ -996,7 +1017,25 @@ void soundMix()
     res += ((s8)soundBuffer[5][soundIndex]);      
   }
 
-  res = ((res*250)>>1) + ((cgbRes*150*soundLevel1)>>1);
+  res = (res * 125);
+  cgbRes = (cgbRes * 150 * soundLevel1);
+  
+  switch(ratio) {
+  case 0:
+  case 3: // prohibited, but 25%
+    cgbRes >>= 2;
+    break;
+  case 1:
+    cgbRes >>= 1;
+    break;
+  case 2:
+    break;
+  }
+
+  if(!dsaRatio)
+    res >>= 1;
+  
+  res += cgbRes;
   
   if(soundEcho) {
     res *= 2;
