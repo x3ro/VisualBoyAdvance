@@ -7109,7 +7109,7 @@ void helpBugReport()
       buffer[4] = 0;
       report.AppendFormat("Game code    : %s\r\n", buffer);
     } else if(cartridgeType == 1) {
-      strncpy(buffer, (const char *)&rom[0x134], 15);
+      strncpy(buffer, (const char *)&gbRom[0x134], 15);
       buffer[15] = 0;
       report.AppendFormat("Game title   : %s\r\n", buffer);
     }
@@ -7130,7 +7130,7 @@ void helpBugReport()
                       winFlashSize, flashSize);
   report.AppendFormat("RTC          : %d (%d)\r\n", winRtcEnable,
                       rtcIsEnabled());
-  report.AppendFormat("Enhanced Det.: %d", cpuEnhancedDetection);
+  report.AppendFormat("Enhanced Det.: %d\r\n", cpuEnhancedDetection);
   report.AppendFormat("AGBPrint     : %d\r\n", agbPrintIsEnabled());
   report.AppendFormat("Speed toggle : %d\r\n", speedupToggle);
   report.AppendFormat("Synchronize  : %d\r\n", synchronize);
