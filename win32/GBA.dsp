@@ -536,6 +536,10 @@ SOURCE=..\src\win32\AVIWrite.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\BugReport.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\CmdAccelOb.cpp
 # End Source File
 # Begin Source File
@@ -677,6 +681,10 @@ SOURCE=..\src\bios.h
 # Begin Source File
 
 SOURCE=..\src\win32\BitmapControl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\BugReport.h
 # End Source File
 # Begin Source File
 
