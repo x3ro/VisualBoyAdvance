@@ -111,6 +111,14 @@ CAVIFile *aviRecorder = NULL;
 CStdString aviRecordName;
 int aviFrameNumber = 0;
 
+bool movieRecording = false;
+bool moviePlaying = false;
+int movieFrame = 0;
+int moviePlayFrame = 0;
+FILE *movieFile = NULL;
+u32 movieLastJoypad = 0;
+u32 movieNextJoypad = 0;
+
 int throttle = 0;
 u32 throttleLastTime = 0;
 
@@ -358,10 +366,14 @@ BOOL fileOpenSelect();
 BOOL fileOpenSelectGB();
 void fileSoundRecord();
 void fileAVIRecord();
-void loadSaveGame();
-void loadSaveGame(int);
-void writeSaveGame();
-void writeSaveGame(int);
+void fileMovieRecord();
+void fileMoviePlay();
+bool loadSaveGame();
+bool loadSaveGame(int);
+bool loadSaveGame(const char *);
+bool writeSaveGame();
+bool writeSaveGame(int);
+bool writeSaveGame(const char *);
 void writeBatteryFile();
 void readBatteryFile();
 BOOL initDisplay();
@@ -1973,31 +1985,32 @@ void updateToolsMenu(HMENU menu)
   EnableMenuItem(menu, ID_TOOLS_CUSTOMIZE,
                  ENABLEMENU(videoOption <= VIDEO_4X));  
 
-  HMENU m = GetSubMenu(menu, 8);
-  if(m == NULL)
-    m = GetSubMenu(menu, 9);
-  if(m != NULL) {
-    EnableMenuItem(m, ID_TOOLS_DEBUG_GDB,
-                   ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
-    EnableMenuItem(m, ID_TOOLS_DEBUG_LOADANDWAIT,
-                   ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
-    EnableMenuItem(m, ID_TOOLS_DEBUG_DISCONNECT,
-                   ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
-    EnableMenuItem(m, ID_TOOLS_DEBUG_BREAK,
-                   ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
-  }
+  EnableMenuItem(menu, ID_TOOLS_DEBUG_GDB,
+                 ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
+  EnableMenuItem(menu, ID_TOOLS_DEBUG_LOADANDWAIT,
+                 ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
+  EnableMenuItem(menu, ID_TOOLS_DEBUG_DISCONNECT,
+                 ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
+  EnableMenuItem(menu, ID_TOOLS_DEBUG_BREAK,
+                 ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
+  
+  EnableMenuItem(menu, ID_OPTIONS_SOUND_STARTRECORDING,
+                 ENABLEMENU(!soundRecording));
+  EnableMenuItem(menu, ID_OPTIONS_SOUND_STOPRECORDING,
+                 ENABLEMENU(soundRecording));
+  EnableMenuItem(menu, ID_TOOLS_RECORD_STARTAVIRECORDING,
+                 ENABLEMENU(!aviRecording));
+  EnableMenuItem(menu, ID_TOOLS_RECORD_STOPAVIRECORDING,
+                 ENABLEMENU(aviRecording));
+  EnableMenuItem(menu, ID_TOOLS_RECORD_STARTMOVIERECORDING,
+                 ENABLEMENU(!movieRecording));
+  EnableMenuItem(menu, ID_TOOLS_RECORD_STOPMOVIERECORDING,
+                 ENABLEMENU(movieRecording));
 
-  m = GetSubMenu(menu, 11);
-  if(m != NULL) {
-    EnableMenuItem(m, ID_OPTIONS_SOUND_STARTRECORDING,
-                   ENABLEMENU(!soundRecording));
-    EnableMenuItem(m, ID_OPTIONS_SOUND_STOPRECORDING,
-                   ENABLEMENU(soundRecording));
-    EnableMenuItem(m, ID_TOOLS_RECORD_STARTAVIRECORDING,
-                   ENABLEMENU(!aviRecording));
-    EnableMenuItem(m, ID_TOOLS_RECORD_STOPAVIRECORDING,
-                   ENABLEMENU(aviRecording));
-  }
+  EnableMenuItem(menu, ID_TOOLS_PLAY_STARTMOVIEPLAYING,
+                 ENABLEMENU(emulating && !moviePlaying));
+  EnableMenuItem(menu, ID_TOOLS_PLAY_STOPMOVIEPLAYING,
+                 ENABLEMENU(emulating && moviePlaying));
 }
 
 void updateSoundChannels(UINT id)
@@ -2348,6 +2361,32 @@ BOOL checkKey(int key)
   return FALSE;
 }
 
+static void movieReadNext()
+{
+  if(movieFile) {
+    bool movieEnd = false;
+
+    if(fread(&moviePlayFrame, 1, sizeof(int), movieFile) == sizeof(int)) {
+      if(fread(&movieNextJoypad, 1, sizeof(u32), movieFile) == sizeof(int)) {
+        // make sure we don't have spurious entries on the movie that can
+        // cause us to play it forever
+        if(moviePlayFrame <= movieFrame)
+          movieEnd = true;
+      } else
+        movieEnd = true;
+    } else
+      movieEnd = true;
+    if(movieEnd) {
+      systemScreenMessage("end of movie");
+      moviePlaying = false;
+      fclose(movieFile);
+      movieFile = NULL;
+      return;
+    }
+  } else 
+    moviePlaying = false;
+}
+
 bool systemReadJoypads()
 {
   bool ok = TRUE;
@@ -2390,10 +2429,6 @@ u32 systemReadJoypad(int which)
   if(checkKey(joypad[i][KEY_BUTTON_L]))
     res |= 512;
   
-  if(checkKey(joypad[i][KEY_BUTTON_SPEED]) || speedupToggle)
-    res |= 1024;
-  if(checkKey(joypad[i][KEY_BUTTON_CAPTURE]))
-    res |= 2048;
   if(checkKey(joypad[i][KEY_BUTTON_GS]))
     res |= 4096;
   res |= skinButtons;
@@ -2409,7 +2444,30 @@ u32 systemReadJoypad(int which)
     res &= ~16;
   if((res & 192) == 192)
     res &= ~128;
-  
+
+  if(movieRecording) {
+    if(i == joypadDefault) {
+      if(res != movieLastJoypad) {
+        fwrite(&movieFrame, 1, sizeof(movieFrame), movieFile);
+        fwrite(&res, 1, sizeof(res), movieFile);
+        movieLastJoypad = res;
+      }
+    }
+  }
+  if(moviePlaying) {
+    if(movieFrame == moviePlayFrame) {
+      movieLastJoypad = movieNextJoypad;
+      movieReadNext();
+    }
+    res = movieLastJoypad;
+  }
+  // we don't record speed up or screen capture buttons
+
+  if(checkKey(joypad[i][KEY_BUTTON_SPEED]) || speedupToggle)
+    res |= 1024;
+  if(checkKey(joypad[i][KEY_BUTTON_CAPTURE]))
+    res |= 2048;
+
   return res;
 }
 
@@ -4598,6 +4656,38 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       aviRecording = FALSE;
       break;
+    case ID_TOOLS_RECORD_STARTMOVIERECORDING:
+      winCheckFullscreen();
+      fileMovieRecord();
+      break;
+    case ID_TOOLS_RECORD_STOPMOVIERECORDING:
+      if(movieRecording) {
+        if(movieFile != NULL) {
+          // record the last joypad change so that the correct time can be
+          // recorded
+          fwrite(&movieFrame, 1, sizeof(int), movieFile);
+          fwrite(&movieLastJoypad, 1, sizeof(u32), movieFile);
+          fclose(movieFile);
+          movieFile = NULL;
+        }
+        movieRecording = false;
+        moviePlaying = false;
+        movieLastJoypad = 0;
+      }
+      break;
+    case ID_TOOLS_PLAY_STARTMOVIEPLAYING:
+      fileMoviePlay();
+      break;
+    case ID_TOOLS_PLAY_STOPMOVIEPLAYING:
+      if(moviePlaying) {
+        if(movieFile != NULL) {
+          fclose(movieFile);
+          movieFile = NULL;
+        }
+        moviePlaying = false;
+        movieLastJoypad = 0;
+      }
+      break;
     case ID_TOOLS_DEBUG_GDB:
       winCheckFullscreen();      
       toolsDebugGDB();
@@ -5335,7 +5425,12 @@ BOOL fileOpen()
   return TRUE;
 }
 
-void loadSaveGame()
+bool loadSaveGame(const char *file)
+{
+  return emuReadState((char *)file);
+}
+
+bool loadSaveGame()
 {
   OPENFILENAME ofn;
 
@@ -5374,15 +5469,17 @@ void loadSaveGame()
   
   if(GetOpenFileName(&ofn) == FALSE) {
     DWORD res = CommDlgExtendedError();
-    return;
+    return false;
   }
 
-  emuReadState(ofn.lpstrFile);
+  bool res = loadSaveGame(ofn.lpstrFile);
   
   systemScreenMessage((char *)winResLoadString(IDS_LOADED_STATE));  
+  
+  return res;
 }
 
-void loadSaveGame(int num)
+bool loadSaveGame(int num)
 {
   char * p = strrchr(filename,'\\');
   if(p)
@@ -5399,14 +5496,21 @@ void loadSaveGame(int num)
   else
     sprintf(szFile, "%s\\%s%d.sgm", saveDir, p, num);
 
-  emuReadState(szFile);
+  bool res = loadSaveGame(szFile);
 
   sprintf(winBuffer, winResLoadString(IDS_LOADED_STATE_N), num);
   
   systemScreenMessage(winBuffer);
+  
+  return res;
 }
 
-void writeSaveGame()
+bool writeSaveGame(const char *file)
+{
+  return emuWriteState((char *)file);
+}
+
+bool writeSaveGame()
 {
   OPENFILENAME ofn;
 
@@ -5445,15 +5549,17 @@ void writeSaveGame()
   
   if(GetSaveFileName(&ofn) == FALSE) {
     DWORD res = CommDlgExtendedError();
-    return;
+    return false;
   }
-
-  emuWriteState(ofn.lpstrFile);
+  
+  bool res = writeSaveGame(ofn.lpstrFile);
 
   systemScreenMessage((char *)winResLoadString(IDS_WROTE_STATE));
+  
+  return res;
 }
 
-void writeSaveGame(int num)
+bool writeSaveGame(int num)
 {
   char * p = strrchr(filename,'\\');
   if(p)
@@ -5470,10 +5576,12 @@ void writeSaveGame(int num)
   else
     sprintf(szFile, "%s\\%s%d.sgm", saveDir, p, num);
 
-  emuWriteState(szFile);
+  bool res = writeSaveGame(szFile);
 
   sprintf(winBuffer, winResLoadString(IDS_WROTE_STATE_N), num);
   systemScreenMessage(winBuffer);
+  
+  return res;
 }
 
 void writeBatteryFile()
@@ -5955,6 +6063,126 @@ void fileAVIRecord()
   regSetStringValue("aviRecordDir", captureBuffer);
 }
 
+void fileMoviePlay()
+{
+  char captureBuffer[2048];
+  captureBuffer[0] = 0;
+  OPENFILENAME ofn;
+  char *capdir = regQueryStringValue("movieRecordDir", NULL);
+  
+  if(!capdir)
+    capdir = getDirFromFile(filename);
+
+  ZeroMemory(&ofn, sizeof(OPENFILENAME));
+  ofn.lStructSize = sizeof(OPENFILENAME);
+  ofn.hwndOwner = hWindow;
+  ofn.lpstrFile = captureBuffer;
+  ofn.nMaxFile = sizeof(captureBuffer);
+  ofn.lpstrFilter =  winLoadFilter(IDS_FILTER_VMV);
+  ofn.nFilterIndex = 0; //selectedFileIndex;
+  ofn.lpstrFileTitle = NULL;
+  ofn.nMaxFileTitle = 0;
+  ofn.lpstrDefExt = "VMV";  
+  ofn.lpstrInitialDir = (const char *)capdir;
+  ofn.lpstrTitle = winResLoadString(IDS_SELECT_MOVIE_NAME);
+  ofn.Flags = OFN_PATHMUSTEXIST;
+
+  if(videoOption == VIDEO_320x240) {
+    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
+    ofn.Flags |= OFN_ENABLETEMPLATE;
+  }
+  
+  if(GetOpenFileName(&ofn) == FALSE) {
+    DWORD res = CommDlgExtendedError();
+    return;
+  }
+
+  CStdString movieName = captureBuffer;
+  
+  movieFile = fopen(movieName, "rb");
+  if(!movieFile) {
+    systemMessage(IDS_CANNOT_OPEN_FILE, "Cannot open file %s", 
+                  (const char *)movieName);
+    return;
+  }
+  movieName = movieName.Left(movieName.GetLength()-3)+"VM0";
+  if(loadSaveGame(movieName)) {
+    moviePlaying = true;
+    movieFrame = 0;
+    moviePlayFrame = 0;
+    movieLastJoypad = 0;
+    movieReadNext();
+  } else {
+    systemMessage(IDS_CANNOT_OPEN_FILE, "Cannot open file %s", 
+                  (const char *)movieName);
+  }
+}
+
+void fileMovieRecord()
+{
+  char captureBuffer[2048];
+  captureBuffer[0] = 0;
+  OPENFILENAME ofn;
+  char *capdir = regQueryStringValue("movieRecordDir", NULL);
+  
+  if(!capdir)
+    capdir = getDirFromFile(filename);
+
+  ZeroMemory(&ofn, sizeof(OPENFILENAME));
+  ofn.lStructSize = sizeof(OPENFILENAME);
+  ofn.hwndOwner = hWindow;
+  ofn.lpstrFile = captureBuffer;
+  ofn.nMaxFile = sizeof(captureBuffer);
+  ofn.lpstrFilter =  winLoadFilter(IDS_FILTER_VMV);
+  ofn.nFilterIndex = 0; //selectedFileIndex;
+  ofn.lpstrFileTitle = NULL;
+  ofn.nMaxFileTitle = 0;
+  ofn.lpstrDefExt = "VMV";  
+  ofn.lpstrInitialDir = (const char *)capdir;
+  ofn.lpstrTitle = winResLoadString(IDS_SELECT_MOVIE_NAME);
+  ofn.Flags = OFN_PATHMUSTEXIST;
+
+  if(videoOption == VIDEO_320x240) {
+    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
+    ofn.Flags |= OFN_ENABLETEMPLATE;
+  }
+  
+  if(GetSaveFileName(&ofn) == FALSE) {
+    DWORD res = CommDlgExtendedError();
+    return;
+  }
+
+  CStdString movieName = captureBuffer;
+  
+  if(ofn.nFileOffset > 0) {
+    captureBuffer[ofn.nFileOffset] = 0;
+  }
+
+  int len = strlen((const char *)captureBuffer);
+  if(len > 3 && captureBuffer[len-1] == '\\')
+    captureBuffer[len-1] = 0;
+  regSetStringValue("movieRecordDir", captureBuffer);
+  
+  movieFile = fopen(movieName, "wb");
+  if(!movieFile) {
+    systemMessage(IDS_CANNOT_OPEN_FILE, "Cannot open file %s", 
+                  (const char *)movieName);
+    return;
+  }
+
+  movieName = movieName.Left(movieName.GetLength()-3) + "VM0";
+
+  if(writeSaveGame(movieName)) {
+    movieFrame = 0;
+    movieLastJoypad = 0;
+    movieRecording = true;
+    moviePlaying = false;
+  } else {
+    systemMessage(IDS_CANNOT_OPEN_FILE, "Cannot open file %s", 
+                  (const char *)movieName);  
+  }
+}
+
 void screenCapture()
 {
   char captureBuffer[2048];
@@ -6098,6 +6326,8 @@ void systemFrame()
 {
   if(aviRecording)
     aviFrameNumber++;
+  if(movieRecording | moviePlaying)
+    movieFrame++;
 }
 
 void system10Frames(int rate)

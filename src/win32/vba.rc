@@ -1896,6 +1896,17 @@ BEGIN
 
             MENUITEM "Stop AVI recording",          ID_TOOLS_RECORD_STOPAVIRECORDING
 
+            MENUITEM "Start movie recording...",    ID_TOOLS_RECORD_STARTMOVIERECORDING
+
+            MENUITEM "Stop movie recording",        ID_TOOLS_RECORD_STOPMOVIERECORDING
+
+        END
+        POPUP "Play"
+        BEGIN
+            MENUITEM "Start playing movie...",      ID_TOOLS_PLAY_STARTMOVIEPLAYING
+
+            MENUITEM "Stop playing movie",          ID_TOOLS_PLAY_STOPMOVIEPLAYING
+
         END
         MENUITEM SEPARATOR
         MENUITEM "Customize...",                ID_TOOLS_CUSTOMIZE
@@ -2171,6 +2182,8 @@ BEGIN
                             "Invalid throttle value. Please enter a number between 5 and 1000."
     IDS_FILTER_INI          "Skin INI File_*.INI__"
     IDS_SELECT_SKIN_FILE    "Select the skin file name"
+    IDS_FILTER_VMV          "VisualBoyAdvance Movie_*.VMV__"
+    IDS_SELECT_MOVIE_NAME   "Select movie name"
 END
 
 #endif    // English (U.S.) resources

@@ -358,6 +358,8 @@
 #define IDS_FILTER_INI                  1129
 #define IDS_SELECT_SKIN_FILE            1130
 #define IDC_CLOSE                       1131
+#define IDS_FILTER_VMV                  1131
+#define IDS_SELECT_MOVIE_NAME           1132
 #define IDC_COLOR                       1136
 #define IDC_SAVE_BG                     1137
 #define IDC_SAVE_OBJ                    1138
@@ -680,13 +682,17 @@
 #define ID_OPTIONS_EMULATOR_REALTIMECLOCK 40248
 #define ID_OPTIONS_GAMEBOY_SGB2         40249
 #define ID_SYSTEM_MINIMIZE              40250
+#define ID_TOOLS_RECORD_STARTMOVIERECORDING 40251
+#define ID_TOOLS_RECORD_STOPMOVIERECORDING 40252
+#define ID_TOOLS_PLAY_STARTMOVIEPLAYING 40253
+#define ID_TOOLS_PLAY_STOPMOVIEPLAYING  40254
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         40251
+#define _APS_NEXT_COMMAND_VALUE         40255
 #define _APS_NEXT_CONTROL_VALUE         1248
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
