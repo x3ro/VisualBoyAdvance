@@ -118,6 +118,10 @@
 #define GSA_8_BIT_GS_WRITE2    12
 #define GSA_16_BIT_GS_WRITE2   13
 #define GSA_32_BIT_GS_WRITE2   14
+#define GSA_16_BIT_ROM_PATCH2  15
+#define GSA_8_BIT_SLIDE        16
+#define GSA_16_BIT_SLIDE       17
+#define GSA_32_BIT_SLIDE       18
 
 CheatSearch cheatSearch;
 CheatsData cheatsList[100];
@@ -235,6 +239,66 @@ void cheatsCheckKeys(u32 keys, u32 extended)
         }
       }
       break;
+    case GSA_16_BIT_ROM_PATCH2:
+      i++;
+      if(i < cheatsNumber) {
+        if(cheatsList[i-1].value == 0xFFFFFFFF) {
+          u32 addr = ((cheatsList[i-1].address & 0x00FFFFFF) << 1) + 0x8000000;
+          cheatsList[i-1].oldValue = CPUReadHalfWord(addr);
+          cheatsList[i-1].address = addr;
+          cheatsList[i-1].value = cheatsList[i].address & 0xFFFF;
+          CHEAT_PATCH_ROM_16BIT(addr,cheatsList[i].address & 0xFFFF);
+        }
+      }
+      break;
+    case GSA_8_BIT_SLIDE:
+      i++;
+      if(i < cheatsNumber) {
+        u32 addr = cheatsList[i-1].address;
+        u8 value = cheatsList[i].address;
+        int vinc = (cheatsList[i].value >> 24) & 255;
+        int count = (cheatsList[i].value >> 16) & 255;
+        int ainc = (cheatsList[i].value & 0xffff);
+        while(count > 0) {
+          CPUWriteByte(addr, value);
+          value += vinc;
+          addr += ainc;
+          count--;
+        }
+      }
+      break;
+    case GSA_16_BIT_SLIDE:
+      i++;
+      if(i < cheatsNumber) {
+        u32 addr = cheatsList[i-1].address;
+        u16 value = cheatsList[i].address;
+        int vinc = (cheatsList[i].value >> 24) & 255;
+        int count = (cheatsList[i].value >> 16) & 255;
+        int ainc = (cheatsList[i].value & 0xffff)*2;
+        while(count > 0) {
+          CPUWriteHalfWord(addr, value);
+          value += vinc;
+          addr += ainc;
+          count--;
+        }
+      }
+      break;
+    case GSA_32_BIT_SLIDE:
+      i++;
+      if(i < cheatsNumber) {
+        u32 addr = cheatsList[i-1].address;
+        u32 value = cheatsList[i].address;
+        int vinc = (cheatsList[i].value >> 24) & 255;
+        int count = (cheatsList[i].value >> 16) & 255;
+        int ainc = (cheatsList[i].value & 0xffff)*4;
+        while(count > 0) {
+          CPUWriteMemory(addr, value);
+          value += vinc;
+          addr += ainc;
+          count--;
+        }
+      }
+      break;
     }
   }
 }
@@ -269,9 +333,13 @@ void cheatsAdd(char *codeStr,
 
     // don't do anything in case of multi line codes
     switch(code) {
-    case 7: // press xxx codes
-    case 8: // if equal codes
-    case 9: // slide codes
+    case CBA_IF_KEYS_PRESSED: // press xxx codes
+    case CBA_IF_TRUE: // if equal codes
+    case CBA_IF_FALSE: // slide codes
+    case GSA_8_BIT_GS_WRITE2:
+    case GSA_16_BIT_GS_WRITE2:
+    case GSA_32_BIT_GS_WRITE2:
+    case GSA_16_BIT_ROM_PATCH2:
       normalCode = false;
       break;
     }
@@ -714,7 +782,7 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
     switch(type) {
     case 0:
       if(address == 0) {
-        type = (value >> 24) & 244;
+        type = (value >> 24) & 255;
         addr = (value & 0x00F00000) << 4 | (value & 0x000FFFFF);
         switch(type) {
         case 0x10:
@@ -723,8 +791,22 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
         case 0x12:
           cheatsAdd(code, desc, addr, 0, 256, GSA_16_BIT_GS_WRITE2, true);
         case 0x14:
-          break;
           cheatsAdd(code, desc, addr, 0, 256, GSA_32_BIT_GS_WRITE2, true);
+          break;
+        case 0x18:
+        case 0x1A:
+        case 0x1C:
+        case 0x1E:
+          cheatsAdd(code, desc, value & 0x00FFFFFF, 0xFFFFFFFF, 256, GSA_16_BIT_ROM_PATCH2, true);
+          break;
+        case 0x80:
+          cheatsAdd(code, desc, addr, 0, 256, GSA_8_BIT_SLIDE, true);
+          break;
+        case 0x82:
+          cheatsAdd(code, desc, addr, 0, 256, GSA_16_BIT_SLIDE, true);
+          break;
+        case 0x84:
+          cheatsAdd(code, desc, addr, 0, 256, GSA_32_BIT_SLIDE, true);
           break;
         default:
           cheatsAdd(code, desc, address & 0x00FFFFFF, value, 256, UNKNOWN_CODE,
