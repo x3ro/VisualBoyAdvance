@@ -679,14 +679,15 @@
 #define ID_OPTIONS_EMULATOR_AGBPRINT    40247
 #define ID_OPTIONS_EMULATOR_REALTIMECLOCK 40248
 #define ID_OPTIONS_GAMEBOY_SGB2         40249
+#define ID_SYSTEM_MINIMIZE              40250
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         40250
+#define _APS_NEXT_COMMAND_VALUE         40251
 #define _APS_NEXT_CONTROL_VALUE         1248
-#define _APS_NEXT_SYMED_VALUE           102
+#define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

@@ -21,6 +21,15 @@
 #include "resource.h"
 #include <afxres.h>
 
+#include <map>
+
+#ifndef CMapStringToWord
+typedef std::map< CStdString, WORD > CMapStringToWord;
+#endif
+
+static CMapStringToWord winAccelStrings;
+static bool initialized = false;
+
 struct {
   char *command;
   UINT id;
@@ -199,8 +208,33 @@ struct {
   { "ToolsRecordAVIStartRecording", ID_TOOLS_RECORD_STARTAVIRECORDING },
   { "ToolsRecordAVIStopRecording", ID_TOOLS_RECORD_STOPAVIRECORDING },
   { "ToolsCustomize", ID_TOOLS_CUSTOMIZE },
-  { "HelpAbout", ID_HELP_ABOUT }
+  { "HelpAbout", ID_HELP_ABOUT },
+  { "SystemMinimize", ID_SYSTEM_MINIMIZE }
 };
+
+bool winAccelGetID(const char *command, WORD& id)
+{
+  if(!initialized) {
+    int count = sizeof(winAccelCommands)/sizeof(winAccelCommands[0]);
+    
+    for(int i = 0; i < count; i++) {
+      winAccelStrings.
+	insert(CMapStringToWord::
+	       value_type((char *)winAccelCommands[i].command, 
+			  winAccelCommands[i].id));      
+    }
+    initialized = true;
+  }
+  
+  CMapStringToWord::iterator it = winAccelStrings.find((char *)command);
+
+  if(it == winAccelStrings.end())
+    return false;
+  
+  id = it->second;
+
+  return true;
+}
 
 void winAccelAddCommands(CAcceleratorManager& mgr)
 {
