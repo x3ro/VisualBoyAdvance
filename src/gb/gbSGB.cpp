@@ -257,16 +257,18 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
       u16 c = gbPalette[palette + color];
       if(!color)
         c = gbPalette[0];
-      switch(systemColorDepth) {
-      case 16:
-        gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
-        break;
-      case 24:
-        gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
-        break;
-      case 32:
-        gbSgbDraw32Bit(dest32 + yyy*(256+1)+xxx, c);
-        break;
+      if((yy < 40 || yy >= 284) || (xx < 48 || xx >= 208)) {
+        switch(systemColorDepth) {
+        case 16:
+          gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
+          break;
+        case 24:
+          gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
+          break;
+        case 32:
+          gbSgbDraw32Bit(dest32 + yyy*(256+1)+xxx, c);
+          break;
+        }
       }
 
       mask >>= 1;
@@ -308,20 +310,21 @@ void gbSgbPicture()
     gbPalette[i] = READ16LE(paletteAddr++);
   }
 
-  if(gbBorderAutomatic && !gbBorderOn) {
+  gbSgbCGBSupport |= 4;
+
+  if(gbBorderAutomatic && !gbBorderOn && gbSgbCGBSupport > 4) {
     gbBorderOn = 1;
     systemGbBorderOn();
   }
 
-  gbSgbCGBSupport |= 4;
-
-  if(gbBorderOn && gbSgbCGBSupport > 4) 
+  if(gbBorderOn && !gbSgbMask) 
     gbSgbRenderBorder();
   
   if(gbSgbMode && gbCgbMode && gbSgbCGBSupport > 4) {
     gbSgbCGBSupport = 0;
     gbSgbMode = 0;
     gbSgbMask = 0;
+    gbSgbRenderBorder();
     gbReset();
   }
 
@@ -337,12 +340,14 @@ void gbSgbSetPalette(int a,int b,u16 *p)
   for(i = 1; i < 4; i++) {
     gbPalette[a*4+i] = READ16LE(p++);
   }
-  gbPalette[a*4] = bit00;
   
   for(i = 1; i < 4; i++) {
     gbPalette[b*4+i] = READ16LE(p++);
   }
-  gbPalette[b*4] = bit00;
+  
+  gbPalette[0] = gbPalette[4] = gbPalette[8] = gbPalette[12] = bit00;
+  if(gbBorderOn && !gbSgbMask)
+    gbSgbRenderBorder();
 }
 
 void gbSgbScpPalette()
@@ -364,8 +369,11 @@ void gbSgbSetATF(int n)
     n = 44;
   memcpy(gbSgbATF,&gbSgbATFList[n * 20 * 18], 20 * 18);
 
-  if(gbSgbPacket[1] & 0x40)
+  if(gbSgbPacket[1] & 0x40) {
     gbSgbMask = 0;
+    if(gbBorderOn)
+      gbSgbRenderBorder();
+  }
 }
 
 void gbSgbSetPalette()
@@ -388,8 +396,11 @@ void gbSgbSetPalette()
     gbSgbSetATF(atf & 0x3f);
   }
   
-  if(atf & 0x40)
+  if(atf & 0x40) {
     gbSgbMask = 0;
+    if(gbBorderOn)
+      gbSgbRenderBorder();
+  }
 }
 
 void gbSgbAttributeBlock()
@@ -628,6 +639,10 @@ void gbSgbMaskEnable()
     gbSgbFillScreen(gbPalette[0]);
     break;
   }
+  if(!gbSgbMask) {
+    if(gbBorderOn)
+      gbSgbRenderBorder();
+  }
 }
 
 void gbSgbChrTransfer()
@@ -643,18 +658,19 @@ void gbSgbChrTransfer()
   
   memcpy(&gbSgbBorderChar[address], gbSgbScreenBuffer, 128 * 32);
 
-  if(gbBorderAutomatic && !gbBorderOn) {
+  if(gbBorderAutomatic && !gbBorderOn && gbSgbCGBSupport > 4) {
     gbBorderOn = 1;
     systemGbBorderOn();
   }
 
-  if(gbBorderOn && gbSgbCGBSupport > 4)
+  if(gbBorderOn && !gbSgbMask)
     gbSgbRenderBorder();
 
   if(gbSgbMode && gbCgbMode && gbSgbCGBSupport == 7) {
     gbSgbCGBSupport = 0;
     gbSgbMode = 0;
     gbSgbMask = 0;
+    gbSgbRenderBorder();
     gbReset();
   }  
 
