@@ -57,10 +57,12 @@ int systemFPS;
 
 // Sound stuff
 //
-static SDL_cond *  pstSoundCond  = NULL;
-static SDL_mutex * pstSoundMutex = NULL;
-static u8          auiSoundBuffer[4096];
-static int         iSoundLen = 0;
+const  int         iSoundSamples  = 2048;
+const  int         iSoundTotalLen = iSoundSamples * 4;
+static u8          auiSoundBuffer[iSoundTotalLen];
+static int         iSoundLen;
+static SDL_cond *  pstSoundCond;
+static SDL_mutex * pstSoundMutex;
 
 inline VBA::Window * GUI()
 {
@@ -77,8 +79,6 @@ void systemMessage(int _iId, const char * _csFormat, ...)
   Gtk::MessageDialog oDialog(*GUI(), csMsg,
                              Gtk::MESSAGE_ERROR,
                              Gtk::BUTTONS_OK);
-  oDialog.show(); // TEST
-  oDialog.grab_focus(); // TEST
   oDialog.run();
   free(csMsg);
 }
@@ -136,7 +136,7 @@ void systemWriteDataToSoundBuffer()
   while (bWait && ! speedup && GUI()->iGetThrottle() == 0)
   {
     SDL_mutexP(pstSoundMutex);
-    if (iSoundLen < 2048 * 2)
+    if (iSoundLen < iSoundTotalLen)
     {
       bWait = false;
     }
@@ -145,12 +145,12 @@ void systemWriteDataToSoundBuffer()
 
   int iLen = soundBufferLen;
   int iCopied = 0;
-  if (iSoundLen + iLen >= 2048 * 2)
+  if (iSoundLen + iLen >= iSoundTotalLen)
   {
-    iCopied = 2048 * 2 - iSoundLen;
+    iCopied = iSoundTotalLen - iSoundLen;
     memcpy(&auiSoundBuffer[iSoundLen], soundFinalWave, iCopied);
 
-    iSoundLen = 2048 * 2;
+    iSoundLen = iSoundTotalLen;
     SDL_CondSignal(pstSoundCond);
 
     bWait = true;
@@ -159,7 +159,7 @@ void systemWriteDataToSoundBuffer()
       while(bWait)
       {
         SDL_mutexP(pstSoundMutex);
-        if (iSoundLen < 2048 * 2)
+        if (iSoundLen < iSoundTotalLen)
         {
           bWait = false;
         }
@@ -194,7 +194,7 @@ static void vSoundCallback(void * _pvUserData, u8 * _puiStream, int _iLen)
   SDL_mutexP(pstSoundMutex);
   if (! speedup && GUI()->iGetThrottle() == 0)
   {
-    while (iSoundLen < 2048 * 2 && emulating)
+    while (iSoundLen < iSoundTotalLen && emulating)
     {
       SDL_CondWait(pstSoundCond, pstSoundMutex);
     }
@@ -229,7 +229,7 @@ bool systemSoundInit()
 
   stAudio.format   = AUDIO_S16SYS;
   stAudio.channels = 2;
-  stAudio.samples  = 1024;
+  stAudio.samples  = iSoundSamples;
   stAudio.callback = vSoundCallback;
   stAudio.userdata = NULL;
 
