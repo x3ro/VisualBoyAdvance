@@ -42,9 +42,6 @@ public:
 
   inline static Window * poGetInstance() { return m_poInstance; }
 
-  void vDrawScreen();
-  inline u32 uiReadJoypad() { return m_uiJoypadState; }
-
   enum ECartridge
   {
     NO_CARTRIDGE,
@@ -52,21 +49,27 @@ public:
     GBA_CARTRIDGE
   };
 
+  void vDrawScreen();
+  void vComputeFrameskip(int _iRate);
+  inline u32 uiReadJoypad() { return m_uiJoypadState; }
   inline ECartridge eGetCartridge() { return m_eCartridge; }
 
 protected:
   virtual void vOnFileOpen();
-  virtual void vOnFilePauseToggled();
+  virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
   virtual void vOnFileClose();
   virtual void vOnFileExit();
-  virtual void vOnFrameskipSelected(int _iValue);
-  virtual void vOnThrottleSelected(int _iPercent);
-  virtual void vOnThrottleOther();
+  virtual void vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue);
+  virtual void vOnThrottleToggled(Gtk::CheckMenuItem * _poCMI, int _iPercent);
+  virtual void vOnThrottleOther(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
-  virtual void vOnVideoScaleSelected(int _iScale);
-  virtual void vOnFilter2xSelected(EFilter2x _eFilter2x);
-  virtual void vOnFilterIBSelected(EFilterIB _eFilterIB);
+  virtual void vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale);
+  virtual void vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x);
+  virtual void vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB);
+#ifdef MMX
+  virtual void vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI);
+#endif // MMX
   virtual void vOnHelpAbout();
   virtual bool bOnEmuIdle();
 
@@ -90,6 +93,7 @@ private:
 
   SigC::Connection m_oEmuSig;
 
+  bool           m_bPaused;
   std::string    m_sRomFile;
   ECartridge     m_eCartridge;
   EmulatedSystem m_stEmulator;
@@ -116,7 +120,6 @@ private:
   void vStartEmu();
   void vStopEmu();
   void vSetThrottle(int _iPercent);
-  void vSetLayer(int _iLayer, bool _bVisible);
 };
 
 } // namespace VBA

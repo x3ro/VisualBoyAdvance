@@ -34,6 +34,10 @@
 extern bool debugger;
 extern int RGB_LOW_BITS_MASK;
 
+#ifdef MMX
+extern "C" bool cpu_mmx;
+#endif // MMX
+
 namespace VBA
 {
 
@@ -94,7 +98,10 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   // File menu
   //
   m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
-  m_poFilePauseItem->signal_toggled().connect(SigC::slot(*this, &Window::vOnFilePauseToggled));
+  m_poFilePauseItem->set_active(false);
+  m_poFilePauseItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                                SigC::slot(*this, &Window::vOnFilePauseToggled),
+                                                m_poFilePauseItem));
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileOpen"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
@@ -137,13 +144,15 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   }
   for (guint i = 0; i < sizeof(astFrameskip) / sizeof(astFrameskip[0]); i++)
   {
-    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFrameskip[i].m_csName));
-    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnFrameskipSelected),
-                                                    astFrameskip[i].m_iFrameskip));
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFrameskip[i].m_csName));
     if (astFrameskip[i].m_iFrameskip == iDefaultFrameskip)
     {
-      poMI->activate();
+      poCMI->set_active();
+      vOnFrameskipToggled(poCMI, iDefaultFrameskip);
     }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnFrameskipToggled),
+                                      poCMI, astFrameskip[i].m_iFrameskip));
   }
 
   // Throttle menu
@@ -162,20 +171,23 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Throttle150",        150 },
     { "Throttle200",        200 }
   };
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("ThrottleOther"));
-  poMI->activate();
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnThrottleOther));
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("ThrottleOther"));
+  poCMI->set_active();
+  poCMI->signal_activate().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                     SigC::slot(*this, &Window::vOnThrottleOther),
+                                     poCMI));
 
   int iDefaultThrottle = m_poScreenConfig->oGetKey<int>("throttle");
   for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
   {
-    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astThrottle[i].m_csName));
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astThrottle[i].m_csName));
     if (astThrottle[i].m_iThrottle == iDefaultThrottle)
     {
-      poMI->activate();
+      poCMI->set_active();
     }
-    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnThrottleSelected),
-                                                    astThrottle[i].m_iThrottle));
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnThrottleToggled),
+                                      poCMI, astThrottle[i].m_iThrottle));
   }
   vSetThrottle(iDefaultThrottle);
 
@@ -198,13 +210,15 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   int iDefaultScale = m_poScreenConfig->oGetKey<int>("scale");
   for (guint i = 0; i < sizeof(astVideoScale) / sizeof(astVideoScale[0]); i++)
   {
-    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astVideoScale[i].m_csName));
-    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnVideoScaleSelected),
-                                                    astVideoScale[i].m_iScale));
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astVideoScale[i].m_csName));
     if (astVideoScale[i].m_iScale == iDefaultScale)
     {
-      poMI->activate();
+      poCMI->set_active();
+      vOnVideoScaleToggled(poCMI, iDefaultScale);
     }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnVideoScaleToggled),
+                                      poCMI, astVideoScale[i].m_iScale));
   }
 
   // Layers menu
@@ -230,7 +244,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astLayer[i].m_csName));
     poCMI->set_active(astLayer[i].m_bChecked);
-    vSetLayer(astLayer[i].m_iLayer, astLayer[i].m_bChecked);
+    vOnLayerToggled(poCMI, astLayer[i].m_iLayer);
     poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
                                       SigC::slot(*this, &Window::vOnLayerToggled),
                                       poCMI, astLayer[i].m_iLayer));
@@ -263,14 +277,28 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   EFilter2x eDefaultFilter2x = (EFilter2x)m_poScreenConfig->oGetKey<int>("filter2x");
   for (guint i = 0; i < sizeof(astFilter2x) / sizeof(astFilter2x[0]); i++)
   {
-    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFilter2x[i].m_csName));
-    poMI->signal_activate().connect(SigC::bind<EFilter2x>(SigC::slot(*this, &Window::vOnFilter2xSelected),
-                                                          astFilter2x[i].m_eFilter2x));
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilter2x[i].m_csName));
     if (astFilter2x[i].m_eFilter2x == eDefaultFilter2x)
     {
-      poMI->activate();
+      poCMI->set_active();
+      vOnFilter2xToggled(poCMI, eDefaultFilter2x);
     }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnFilter2xToggled),
+                                      poCMI, astFilter2x[i].m_eFilter2x));
   }
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilterDisableMmx"));
+#ifdef MMX
+  poCMI->set_active(m_poScreenConfig->oGetKey<bool>("filter_disable_mmx"));
+  vOnDisableMMXToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnDisableMMXToggled),
+                                    poCMI));
+#else // ! MMX
+  poCMI->set_active();
+  poCMI->set_sensitive(false);
+#endif // ! MMX
 
   // Interframe blending menu
   //
@@ -288,15 +316,19 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   EFilterIB eDefaultFilterIB = (EFilterIB)m_poScreenConfig->oGetKey<int>("filterIB");
   for (guint i = 0; i < sizeof(astFilterIB) / sizeof(astFilterIB[0]); i++)
   {
-    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFilterIB[i].m_csName));
-    poMI->signal_activate().connect(SigC::bind<EFilterIB>(SigC::slot(*this, &Window::vOnFilterIBSelected),
-                                                          astFilterIB[i].m_eFilterIB));
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilterIB[i].m_csName));
     if (astFilterIB[i].m_eFilterIB == eDefaultFilterIB)
     {
-      poMI->activate();
+      poCMI->set_active();
+      vOnFilterIBToggled(poCMI, eDefaultFilterIB);
     }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnFilterIBToggled),
+                                      poCMI, astFilterIB[i].m_eFilterIB));
   }
 
+  // Help menu
+  //
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("HelpAbout"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnHelpAbout));
 
@@ -393,19 +425,22 @@ void Window::vInitConfig()
   m_oConfig.vClear();
 
   m_poScreenConfig = m_oConfig.poAddSection("Screen");
-  m_poScreenConfig->vSetKey     ("frameskip",    "auto"         );
-  m_poScreenConfig->vSetKey     ("throttle",     0              );
-  m_poScreenConfig->vSetKey     ("scale",        1              );
-  m_poScreenConfig->vSetKey     ("layer_bg0",    true           );
-  m_poScreenConfig->vSetKey     ("layer_bg1",    true           );
-  m_poScreenConfig->vSetKey     ("layer_bg2",    true           );
-  m_poScreenConfig->vSetKey     ("layer_bg3",    true           );
-  m_poScreenConfig->vSetKey     ("layer_obj",    true           );
-  m_poScreenConfig->vSetKey     ("layer_win0",   true           );
-  m_poScreenConfig->vSetKey     ("layer_win1",   true           );
-  m_poScreenConfig->vSetKey     ("layer_objwin", true           );
-  m_poScreenConfig->vSetKey<int>("filter2x",     FilterNone     );
-  m_poScreenConfig->vSetKey<int>("filterIB",     FilterIBNone   );
+  m_poScreenConfig->vSetKey     ("frameskip",           "auto"         );
+  m_poScreenConfig->vSetKey     ("throttle",            0              );
+  m_poScreenConfig->vSetKey     ("scale",               1              );
+  m_poScreenConfig->vSetKey     ("layer_bg0",           true           );
+  m_poScreenConfig->vSetKey     ("layer_bg1",           true           );
+  m_poScreenConfig->vSetKey     ("layer_bg2",           true           );
+  m_poScreenConfig->vSetKey     ("layer_bg3",           true           );
+  m_poScreenConfig->vSetKey     ("layer_obj",           true           );
+  m_poScreenConfig->vSetKey     ("layer_win0",          true           );
+  m_poScreenConfig->vSetKey     ("layer_win1",          true           );
+  m_poScreenConfig->vSetKey     ("layer_objwin",        true           );
+  m_poScreenConfig->vSetKey<int>("filter2x",            FilterNone     );
+  m_poScreenConfig->vSetKey<int>("filterIB",            FilterIBNone   );
+#ifdef MMX
+  m_poScreenConfig->vSetKey     ("filter_disable_mmx",  false          );
+#endif // MMX
 }
 
 void Window::vLoadConfig(const std::string & _sFilename)
@@ -491,6 +526,70 @@ void Window::vDrawScreen()
 void Window::vDrawDefaultScreen()
 {
   m_poScreenArea->vDrawColor(0x000000); // Black
+}
+
+void Window::vComputeFrameskip(int _iRate)
+{
+#if 0
+  u32 time = SDL_GetTicks();
+  if(!wasPaused && autoFrameSkip && !throttle) {
+    u32 diff = time - autoFrameSkipLastTime;
+    int speed = 100;
+
+    if(diff)
+      speed = (1000000/rate)/diff;
+    
+    if(speed >= 98) {
+      frameskipadjust++;
+
+      if(frameskipadjust >= 3) {
+        frameskipadjust=0;
+        if(systemFrameSkip > 0)
+          systemFrameSkip--;
+      }
+    } else {
+      if(speed  < 80)
+        frameskipadjust -= (90 - speed)/5;
+      else if(systemFrameSkip < 9)
+        frameskipadjust--;
+
+      if(frameskipadjust <= -2) {
+        frameskipadjust += 2;
+        if(systemFrameSkip < 9)
+          systemFrameSkip++;
+      }
+    }    
+  }
+  if(!wasPaused && throttle) {
+    if(!speedup) {
+      u32 diff = time - throttleLastTime;
+      
+      int target = (1000000/(rate*throttle));
+      int d = (target - diff);
+      
+      if(d > 0) {
+        SDL_Delay(d);
+      }
+    }
+    throttleLastTime = systemGetClock();
+  }
+  if(rewindMemory) {
+    if(++rewindCounter >= rewindTimer) {
+      rewindSaveNeeded = true;
+      rewindCounter = 0;
+    }
+  }
+
+  if(systemSaveUpdateCounter) {
+    if(--systemSaveUpdateCounter <= SYSTEM_SAVE_NOT_UPDATED) {
+      sdlWriteBattery();
+      systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+    }
+  }
+
+  wasPaused = false;
+  autoFrameSkipLastTime = time;
+#endif // 0
 }
 
 bool Window::bLoadROM(const std::string & _rsFilename)
@@ -651,33 +750,6 @@ void Window::vSetThrottle(int _iPercent)
   m_poScreenConfig->vSetKey("throttle", _iPercent);
 }
 
-void Window::vSetLayer(int _iLayer, bool _bVisible)
-{
-  int iMask = (0x0100 << _iLayer);
-  if (_bVisible)
-  {
-    layerSettings |= iMask;
-  }
-  else
-  {
-    layerSettings &= ~iMask;
-  }
-  layerEnable = DISPCNT & layerSettings;
-
-  const char * acsLayers[] =
-  {
-    "layer_bg0",
-    "layer_bg1",
-    "layer_bg2",
-    "layer_bg3",
-    "layer_obj",
-    "layer_win0",
-    "layer_win1",
-    "layer_objwin"
-  };
-  m_poScreenConfig->vSetKey(acsLayers[_iLayer], _bVisible);
-}
-
 void Window::vOnFileOpen()
 {
   if (m_poFileOpenDialog == NULL)
@@ -686,8 +758,6 @@ void Window::vOnFileOpen()
     m_poFileOpenDialog->set_transient_for(*this);
   }
 
-  m_poFileOpenDialog->show();
-
   while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
   {
     if (bLoadROM(m_poFileOpenDialog->get_filename()))
@@ -695,15 +765,14 @@ void Window::vOnFileOpen()
       break;
     }
   }
-
   m_poFileOpenDialog->hide();
 }
 
-void Window::vOnFilePauseToggled()
+void Window::vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI)
 {
   if (emulating)
   {
-    if (m_poFilePauseItem->get_active())
+    if (_poCMI->get_active())
     {
       vStopEmu();
     }
@@ -726,15 +795,13 @@ void Window::vOnFileClose()
 {
   if (emulating)
   {
+    vStopEmu();
+    vDrawDefaultScreen();
     vSaveBattery();
     m_stEmulator.emuCleanUp();
+    m_eCartridge = NO_CARTRIDGE;
     emulating = 0;
   }
-
-  m_eCartridge = NO_CARTRIDGE;
-
-  vStopEmu();
-  vDrawDefaultScreen();
 }
 
 void Window::vOnFileExit()
@@ -742,8 +809,13 @@ void Window::vOnFileExit()
   hide();
 }
 
-void Window::vOnFrameskipSelected(int _iValue)
+void Window::vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue)
 {
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
   if (_iValue >= 0 && _iValue <= 9)
   {
     m_poScreenConfig->vSetKey("frameskip", _iValue);
@@ -758,46 +830,101 @@ void Window::vOnFrameskipSelected(int _iValue)
   }
 }
 
-void Window::vOnThrottleSelected(int _iPercent)
+void Window::vOnThrottleToggled(Gtk::CheckMenuItem * _poCMI, int _iPercent)
 {
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
   vSetThrottle(_iPercent);
 }
 
-void Window::vOnThrottleOther()
+void Window::vOnThrottleOther(Gtk::CheckMenuItem * _poCMI)
 {
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
   // TODO
 }
 
-void Window::vOnVideoScaleSelected(int _iScale)
+void Window::vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale)
 {
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
   m_poScreenConfig->vSetKey("scale", _iScale);
   vUpdateScreen();
 }
 
 void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
 {
-  vSetLayer(_iLayer, _poCMI->get_active());
+  int iMask = (0x0100 << _iLayer);
+  if (_poCMI->get_active())
+  {
+    layerSettings |= iMask;
+  }
+  else
+  {
+    layerSettings &= ~iMask;
+  }
+  layerEnable = DISPCNT & layerSettings;
+
+  const char * acsLayers[] =
+  {
+    "layer_bg0",
+    "layer_bg1",
+    "layer_bg2",
+    "layer_bg3",
+    "layer_obj",
+    "layer_win0",
+    "layer_win1",
+    "layer_objwin"
+  };
+  m_poScreenConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
 }
 
-void Window::vOnFilter2xSelected(EFilter2x _eFilter2x)
+void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
 {
-  m_poScreenArea->vSetFilter2x(_eFilter2x);
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  m_poScreenArea->vSetFilter2x((EFilter2x)_iFilter2x);
   if (emulating)
   {
     vDrawScreen();
   }
-  m_poScreenConfig->vSetKey<int>("filter2x", _eFilter2x);
+  m_poScreenConfig->vSetKey("filter2x", _iFilter2x);
 }
 
-void Window::vOnFilterIBSelected(EFilterIB _eFilterIB)
+void Window::vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB)
 {
-  m_poScreenArea->vSetFilterIB(_eFilterIB);
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  m_poScreenArea->vSetFilterIB((EFilterIB)_iFilterIB);
   if (emulating)
   {
     vDrawScreen();
   }
-  m_poScreenConfig->vSetKey<int>("filterIB", _eFilterIB);
+  m_poScreenConfig->vSetKey("filterIB", _iFilterIB);
 }
+
+#ifdef MMX
+void Window::vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  cpu_mmx = ! _poCMI->get_active();
+  m_poScreenConfig->vSetKey("filter_disable_mmx", _poCMI->get_active());
+}
+#endif // MMX
 
 void Window::vOnHelpAbout()
 {
@@ -815,11 +942,7 @@ void Window::vOnHelpAbout()
 
 bool Window::bOnEmuIdle()
 {
-  if (emulating)
-  {
-    m_stEmulator.emuMain(m_stEmulator.emuCount);
-  }
-
+  m_stEmulator.emuMain(m_stEmulator.emuCount);
   return true;
 }
 

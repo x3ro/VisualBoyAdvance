@@ -82,12 +82,13 @@ u32 systemReadJoypad(int)
 void systemShowSpeed(int _iSpeed)
 {
   char csTitle[50];
-  snprintf(csTitle, 50, "VisualBoyAdvance-%.3d%%", _iSpeed);
+  snprintf(csTitle, 50, "VisualBoyAdvance-%d%%", _iSpeed);
   gui()->set_title(csTitle);
 }
 
 void system10Frames(int _iRate)
 {
+  gui()->vComputeFrameskip(_iRate);
 }
 
 void systemFrame()
