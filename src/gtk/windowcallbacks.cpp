@@ -612,6 +612,11 @@ void Window::vOnFileScreenCapture()
   oDialog.add_filter(oPngFilter);
   oDialog.add_filter(oBmpFilter);
 
+  if (m_poCoreConfig->sGetKey("screenshot_format") == "bmp")
+  {
+    oDialog.set_filter(oBmpFilter);
+  }
+
 #endif // ! GTKMM20
 
   while (oDialog.run() == Gtk::RESPONSE_OK)
@@ -621,7 +626,7 @@ void Window::vOnFileScreenCapture()
 
 #ifdef GTKMM20
 
-    sExt = ".png";
+    sExt = "." + m_poCoreConfig->sGetKey("screenshot_format");
 
 #else // ! GTKMM20
 
@@ -1034,6 +1039,16 @@ void Window::vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize)
   m_poCoreConfig->vSetKey("flash_size", _iFlashSize);
 }
 
+void Window::vOnScreenshotFormatToggled(Gtk::CheckMenuItem * _poCMI, std::string _sFormat)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  m_poCoreConfig->vSetKey("screenshot_format", _sFormat);
+}
+
 void Window::vOnSoundStatusToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundStatus)
 {
   if (! _poCMI->get_active())
@@ -1221,6 +1236,62 @@ void Window::vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI)
 }
 #endif // MMX
 
+void Window::vOnJoypadConfigure(int _iJoypad)
+{
+  Glib::RefPtr<Xml> poXml;
+  poXml = Xml::create(PKGDATADIR "/vba.glade", "JoypadConfigDialog");
+
+  JoypadConfigDialog * poDialog = NULL;
+  poXml->get_widget_derived<JoypadConfigDialog>("JoypadConfigDialog", poDialog);
+  poDialog->set_transient_for(*this);
+  poDialog->vSetConfig(m_oJoypads[_iJoypad - 1]);
+
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    m_oJoypads[_iJoypad - 1] = poDialog->stGetConfig();
+    if (_iJoypad == m_poInputConfig->oGetKey<int>("active_joypad"))
+    {
+      if (m_poKeymap != NULL)
+      {
+        delete m_poKeymap;
+      }
+      m_poKeymap = m_oJoypads[_iJoypad - 1].poCreateKeymap();
+    }
+  }
+
+  delete poDialog;
+}
+
+void Window::vOnJoypadToggled(Gtk::CheckMenuItem * _poCMI, int _iJoypad)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  if (m_poKeymap != NULL)
+  {
+    delete m_poKeymap;
+  }
+  m_poKeymap = m_oJoypads[_iJoypad - 1].poCreateKeymap();
+
+  m_poInputConfig->vSetKey("active_joypad", _iJoypad);
+}
+
+void Window::vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, std::string _sKey,
+                                u32 _uiKeyFlag)
+{
+  if (_poCMI->get_active())
+  {
+    m_uiAutofireState |= _uiKeyFlag;
+  }
+  else
+  {
+    m_uiAutofireState &= ~_uiKeyFlag;
+  }
+  m_poInputConfig->vSetKey(_sKey, _poCMI->get_active());
+}
+
 void Window::vOnHelpAbout()
 {
   Glib::RefPtr<Xml> poXml;
@@ -1284,7 +1355,7 @@ bool Window::on_key_press_event(GdkEventKey * _pstEvent)
   EKey eKey;
 
   if ((_pstEvent->state & Gtk::AccelGroup::get_default_mod_mask())
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
+      || (eKey = m_poKeymap->eGetKey(_pstEvent->hardware_keycode)) == KeyNone)
   {
     return Gtk::Window::on_key_press_event(_pstEvent);
   }
@@ -1342,7 +1413,7 @@ bool Window::on_key_release_event(GdkEventKey * _pstEvent)
   EKey eKey;
 
   if ((_pstEvent->state & Gtk::AccelGroup::get_default_mod_mask())
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
+      || (eKey = m_poKeymap->eGetKey(_pstEvent->hardware_keycode)) == KeyNone)
   {
     return Gtk::Window::on_key_release_event(_pstEvent);
   }

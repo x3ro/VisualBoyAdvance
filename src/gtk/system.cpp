@@ -120,6 +120,7 @@ void systemSetTitle(const char * _csTitle)
 
 void systemScreenCapture(int _iNum)
 {
+  GUI()->vCaptureScreen(_iNum);
 }
 
 void systemWriteDataToSoundBuffer()

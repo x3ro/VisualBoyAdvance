@@ -79,7 +79,9 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   m_iFilter2xMin    (FirstFilter),
   m_iFilter2xMax    (LastFilter),
   m_iFilterIBMin    (FirstFilterIB),
-  m_iFilterIBMax    (LastFilterIB)
+  m_iFilterIBMax    (LastFilterIB),
+  m_iJoypadMin      (1),
+  m_iJoypadMax      (4)
 {
   m_poXml            = _poXml;
   m_poFileOpenDialog = NULL;
@@ -120,7 +122,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   }
 
   vLoadHistoryFromConfig();
-  vLoadKeymap();
+  vLoadJoypadsFromConfig();
 
   Gtk::MenuItem *      poMI;
   Gtk::CheckMenuItem * poCMI;
@@ -466,6 +468,32 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                       poCMI, astFlashSize[i].m_iFlashSize));
   }
 
+  // Screenshot format menu
+  //
+  struct
+  {
+    const char * m_csName;
+    const char * m_csScreenshotFormat;
+  }
+  astScreenshotFormat[] =
+  {
+    { "ScreenshotFormatPNG", "png" },
+    { "ScreenshotFormatBMP", "bmp" }
+  };
+  std::string sDefaultScreenshotFormat = m_poCoreConfig->sGetKey("screenshot_format");
+  for (guint i = 0; i < sizeof(astScreenshotFormat) / sizeof(astScreenshotFormat[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astScreenshotFormat[i].m_csName));
+    if (astScreenshotFormat[i].m_csScreenshotFormat == sDefaultScreenshotFormat)
+    {
+      poCMI->set_active();
+      vOnScreenshotFormatToggled(poCMI, sDefaultScreenshotFormat);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, std::string>(
+                                      SigC::slot(*this, &Window::vOnScreenshotFormatToggled),
+                                      poCMI, std::string(astScreenshotFormat[i].m_csScreenshotFormat)));
+  }
+
   // Sound menu
   //
   std::string sDefaultSoundStatus = m_poSoundConfig->sGetKey("status");
@@ -723,6 +751,66 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                       poCMI, astFilterIB[i].m_eFilterIB));
   }
 
+  // Joypad menu
+  //
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("JoypadConfigure1"));
+  poMI->signal_activate().connect(SigC::bind<int>(
+                                    SigC::slot(*this, &Window::vOnJoypadConfigure), 1));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("JoypadConfigure2"));
+  poMI->signal_activate().connect(SigC::bind<int>(
+                                    SigC::slot(*this, &Window::vOnJoypadConfigure), 2));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("JoypadConfigure3"));
+  poMI->signal_activate().connect(SigC::bind<int>(
+                                    SigC::slot(*this, &Window::vOnJoypadConfigure), 3));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("JoypadConfigure4"));
+  poMI->signal_activate().connect(SigC::bind<int>(
+                                    SigC::slot(*this, &Window::vOnJoypadConfigure), 4));
+
+  int iDefaultJoypad = m_poInputConfig->oGetKey<int>("active_joypad");
+  for (int i = m_iJoypadMin; i <= m_iJoypadMax; i++)
+  {
+    char csName[20];
+    snprintf(csName, sizeof(csName), "Joypad%d", i);
+
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(csName));
+    if (i == iDefaultJoypad)
+    {
+      poCMI->set_active();
+      vOnJoypadToggled(poCMI, iDefaultJoypad);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnJoypadToggled),
+                                      poCMI, i));
+  }
+
+  // Autofire menu
+  //
+  struct
+  {
+    const char *   m_csKey;
+    const char *   m_csName;
+    const EKeyFlag m_eKeyFlag;
+  }
+  astAutofire[] =
+  {
+    { "autofire_A", "AutofireA", KeyFlagA },
+    { "autofire_B", "AutofireB", KeyFlagB },
+    { "autofire_L", "AutofireL", KeyFlagL },
+    { "autofire_R", "AutofireR", KeyFlagR }
+  };
+  for (guint i = 0; i < sizeof(astAutofire) / sizeof(astAutofire[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astAutofire[i].m_csName));
+    poCMI->set_active(m_poInputConfig->oGetKey<bool>(astAutofire[i].m_csKey));
+    vOnAutofireToggled(poCMI, astAutofire[i].m_csName, astAutofire[i].m_eKeyFlag);
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, std::string, u32>(
+                                      SigC::slot(*this, &Window::vOnAutofireToggled),
+                                      poCMI, astAutofire[i].m_csKey, astAutofire[i].m_eKeyFlag));
+  }
+
   // Help menu
   //
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("HelpAbout"));
@@ -750,11 +838,17 @@ Window::~Window()
 {
   vOnFileClose();
   vSaveHistoryToConfig();
+  vSaveJoypadsToConfig();
   vSaveConfig(m_sConfigFile);
 
   if (m_poFileOpenDialog != NULL)
   {
     delete m_poFileOpenDialog;
+  }
+
+  if (m_poKeymap != NULL)
+  {
+    delete m_poKeymap;
   }
 
   m_poInstance = NULL;
@@ -865,24 +959,25 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey("load_game_auto", false        );
-  m_poCoreConfig->vSetKey("frameskip",      "auto"       );
-  m_poCoreConfig->vSetKey("throttle",       0            );
-  m_poCoreConfig->vSetKey("layer_bg0",      true         );
-  m_poCoreConfig->vSetKey("layer_bg1",      true         );
-  m_poCoreConfig->vSetKey("layer_bg2",      true         );
-  m_poCoreConfig->vSetKey("layer_bg3",      true         );
-  m_poCoreConfig->vSetKey("layer_obj",      true         );
-  m_poCoreConfig->vSetKey("layer_win0",     true         );
-  m_poCoreConfig->vSetKey("layer_win1",     true         );
-  m_poCoreConfig->vSetKey("layer_objwin",   true         );
-  m_poCoreConfig->vSetKey("use_bios_file",  false        );
-  m_poCoreConfig->vSetKey("bios_file",      ""           );
-  m_poCoreConfig->vSetKey("save_type",      SaveAuto     );
-  m_poCoreConfig->vSetKey("flash_size",     64           );
-  m_poCoreConfig->vSetKey("gb_border",      true         );
-  m_poCoreConfig->vSetKey("gb_printer",     false        );
-  m_poCoreConfig->vSetKey("emulator_type",  EmulatorAuto );
+  m_poCoreConfig->vSetKey("load_game_auto",    false        );
+  m_poCoreConfig->vSetKey("frameskip",         "auto"       );
+  m_poCoreConfig->vSetKey("throttle",          0            );
+  m_poCoreConfig->vSetKey("layer_bg0",         true         );
+  m_poCoreConfig->vSetKey("layer_bg1",         true         );
+  m_poCoreConfig->vSetKey("layer_bg2",         true         );
+  m_poCoreConfig->vSetKey("layer_bg3",         true         );
+  m_poCoreConfig->vSetKey("layer_obj",         true         );
+  m_poCoreConfig->vSetKey("layer_win0",        true         );
+  m_poCoreConfig->vSetKey("layer_win1",        true         );
+  m_poCoreConfig->vSetKey("layer_objwin",      true         );
+  m_poCoreConfig->vSetKey("use_bios_file",     false        );
+  m_poCoreConfig->vSetKey("bios_file",         ""           );
+  m_poCoreConfig->vSetKey("save_type",         SaveAuto     );
+  m_poCoreConfig->vSetKey("flash_size",        64           );
+  m_poCoreConfig->vSetKey("gb_border",         true         );
+  m_poCoreConfig->vSetKey("gb_printer",        false        );
+  m_poCoreConfig->vSetKey("emulator_type",     EmulatorAuto );
+  m_poCoreConfig->vSetKey("screenshot_format", "png"        );
 
   // Display section
   //
@@ -911,6 +1006,35 @@ void Window::vInitConfig()
   m_poSoundConfig->vSetKey("channel_B",      true     );
   m_poSoundConfig->vSetKey("quality",        Sound22K );
   m_poSoundConfig->vSetKey("volume",         Sound100 );
+
+  // Input section
+  //
+  JoypadConfig oJoypadConfig;
+  oJoypadConfig.vSetDefault();
+  m_poInputConfig = m_oConfig.poAddSection("Input");
+  m_poInputConfig->vSetKey("active_joypad", m_iJoypadMin );
+  for (int i = m_iJoypadMin; i <= m_iJoypadMax; i++)
+  {
+    char csPrefix[20];
+    snprintf(csPrefix, sizeof(csPrefix), "joypad%d_", i);
+    std::string sPrefix(csPrefix);
+    m_poInputConfig->vSetKey(sPrefix + "up",      oJoypadConfig.m_uiUp      );
+    m_poInputConfig->vSetKey(sPrefix + "down",    oJoypadConfig.m_uiDown    );
+    m_poInputConfig->vSetKey(sPrefix + "left",    oJoypadConfig.m_uiLeft    );
+    m_poInputConfig->vSetKey(sPrefix + "right",   oJoypadConfig.m_uiRight   );
+    m_poInputConfig->vSetKey(sPrefix + "A",       oJoypadConfig.m_uiA       );
+    m_poInputConfig->vSetKey(sPrefix + "B",       oJoypadConfig.m_uiB       );
+    m_poInputConfig->vSetKey(sPrefix + "L",       oJoypadConfig.m_uiL       );
+    m_poInputConfig->vSetKey(sPrefix + "R",       oJoypadConfig.m_uiR       );
+    m_poInputConfig->vSetKey(sPrefix + "select",  oJoypadConfig.m_uiSelect  );
+    m_poInputConfig->vSetKey(sPrefix + "start",   oJoypadConfig.m_uiStart   );
+    m_poInputConfig->vSetKey(sPrefix + "speed",   oJoypadConfig.m_uiSpeed   );
+    m_poInputConfig->vSetKey(sPrefix + "capture", oJoypadConfig.m_uiCapture );
+  }
+  m_poInputConfig->vSetKey("autofire_A", false );
+  m_poInputConfig->vSetKey("autofire_B", false );
+  m_poInputConfig->vSetKey("autofire_L", false );
+  m_poInputConfig->vSetKey("autofire_R", false );
 }
 
 void Window::vCheckConfig()
@@ -1002,6 +1126,12 @@ void Window::vCheckConfig()
     m_poCoreConfig->vSetKey("emulator_type", iAdjusted);
   }
 
+  sValue = m_poCoreConfig->sGetKey("screenshot_format");
+  if (sValue != "png" && sValue != "bmp")
+  {
+    sValue = "png";
+  }
+
   // Display section
   //
   iValue = m_poDisplayConfig->oGetKey<int>("scale");
@@ -1052,6 +1182,15 @@ void Window::vCheckConfig()
   if (iValue != iAdjusted)
   {
     m_poSoundConfig->vSetKey("volume", iAdjusted);
+  }
+
+  // Input section
+  //
+  iValue = m_poInputConfig->oGetKey<int>("active_joypad");
+  iAdjusted = CLAMP(iValue, m_iJoypadMin, m_iJoypadMax);
+  if (iValue != iAdjusted)
+  {
+    m_poInputConfig->vSetKey("active_joypad", iAdjusted);
   }
 }
 
@@ -1157,26 +1296,55 @@ void Window::vUpdateHistoryMenu()
   }
 }
 
-void Window::vLoadKeymap()
+void Window::vLoadJoypadsFromConfig()
 {
-  // TODO : load from prefs
+  m_oJoypads.clear();
 
-  m_oKeymap.vRegister(GDK_z,            KeyA);
-  m_oKeymap.vRegister(GDK_Z,            KeyA);
-  m_oKeymap.vRegister(GDK_x,            KeyB);
-  m_oKeymap.vRegister(GDK_X,            KeyB);
-  m_oKeymap.vRegister(GDK_BackSpace,    KeySelect);
-  m_oKeymap.vRegister(GDK_Return,       KeyStart);
-  m_oKeymap.vRegister(GDK_Right,        KeyRight);
-  m_oKeymap.vRegister(GDK_Left,         KeyLeft);
-  m_oKeymap.vRegister(GDK_Up,           KeyUp);
-  m_oKeymap.vRegister(GDK_Down,         KeyDown);
-  m_oKeymap.vRegister(GDK_s,            KeyR);
-  m_oKeymap.vRegister(GDK_S,            KeyR);
-  m_oKeymap.vRegister(GDK_a,            KeyL);
-  m_oKeymap.vRegister(GDK_A,            KeyL);
-  m_oKeymap.vRegister(GDK_space,        KeySpeed);
-  m_oKeymap.vRegister(GDK_F12,          KeyCapture);
+  for (int i = m_iJoypadMin; i <= m_iJoypadMax; i++)
+  {
+    char csPrefix[20];
+    snprintf(csPrefix, sizeof(csPrefix), "joypad%d_", i);
+    std::string sPrefix(csPrefix);
+
+    JoypadConfig oJoypadConfig;
+    oJoypadConfig.m_uiUp      = m_poInputConfig->oGetKey<guint>(sPrefix + "up");
+    oJoypadConfig.m_uiDown    = m_poInputConfig->oGetKey<guint>(sPrefix + "down");
+    oJoypadConfig.m_uiLeft    = m_poInputConfig->oGetKey<guint>(sPrefix + "left");
+    oJoypadConfig.m_uiRight   = m_poInputConfig->oGetKey<guint>(sPrefix + "right");
+    oJoypadConfig.m_uiA       = m_poInputConfig->oGetKey<guint>(sPrefix + "A");
+    oJoypadConfig.m_uiB       = m_poInputConfig->oGetKey<guint>(sPrefix + "B");
+    oJoypadConfig.m_uiL       = m_poInputConfig->oGetKey<guint>(sPrefix + "L");
+    oJoypadConfig.m_uiR       = m_poInputConfig->oGetKey<guint>(sPrefix + "R");
+    oJoypadConfig.m_uiSelect  = m_poInputConfig->oGetKey<guint>(sPrefix + "select");
+    oJoypadConfig.m_uiStart   = m_poInputConfig->oGetKey<guint>(sPrefix + "start");
+    oJoypadConfig.m_uiSpeed   = m_poInputConfig->oGetKey<guint>(sPrefix + "speed");
+    oJoypadConfig.m_uiCapture = m_poInputConfig->oGetKey<guint>(sPrefix + "capture");
+
+    m_oJoypads.push_back(oJoypadConfig);
+  }
+}
+
+void Window::vSaveJoypadsToConfig()
+{
+  for (int i = m_iJoypadMin; i <= m_iJoypadMax; i++)
+  {
+    char csPrefix[20];
+    snprintf(csPrefix, sizeof(csPrefix), "joypad%d_", i);
+    std::string sPrefix(csPrefix);
+
+    m_poInputConfig->vSetKey(sPrefix + "up",      m_oJoypads[i - 1].m_uiUp      );
+    m_poInputConfig->vSetKey(sPrefix + "down",    m_oJoypads[i - 1].m_uiDown    );
+    m_poInputConfig->vSetKey(sPrefix + "left",    m_oJoypads[i - 1].m_uiLeft    );
+    m_poInputConfig->vSetKey(sPrefix + "right",   m_oJoypads[i - 1].m_uiRight   );
+    m_poInputConfig->vSetKey(sPrefix + "A",       m_oJoypads[i - 1].m_uiA       );
+    m_poInputConfig->vSetKey(sPrefix + "B",       m_oJoypads[i - 1].m_uiB       );
+    m_poInputConfig->vSetKey(sPrefix + "L",       m_oJoypads[i - 1].m_uiL       );
+    m_poInputConfig->vSetKey(sPrefix + "R",       m_oJoypads[i - 1].m_uiR       );
+    m_poInputConfig->vSetKey(sPrefix + "select",  m_oJoypads[i - 1].m_uiSelect  );
+    m_poInputConfig->vSetKey(sPrefix + "start",   m_oJoypads[i - 1].m_uiStart   );
+    m_poInputConfig->vSetKey(sPrefix + "speed",   m_oJoypads[i - 1].m_uiSpeed   );
+    m_poInputConfig->vSetKey(sPrefix + "capture", m_oJoypads[i - 1].m_uiCapture );
+  }
 }
 
 void Window::vUpdateScreen()
@@ -1367,6 +1535,52 @@ void Window::vComputeFrameskip(int _iRate)
   m_uiThrottleLastTime = uiTime;
 }
 
+void Window::vCaptureScreen(int _iNum)
+{
+  std::string sBaseName;
+  std::string sCaptureDir = m_poDirConfig->sGetKey("captures");
+  if (sCaptureDir == "")
+  {
+    sBaseName = sCutSuffix(m_sRomFile);
+  }
+  else
+  {
+    sBaseName = sCaptureDir + "/" + sCutSuffix(Glib::path_get_basename(m_sRomFile));
+  }
+  std::string sFormat = m_poCoreConfig->sGetKey("screenshot_format");
+
+  char * csFile = g_strdup_printf("%s_%02d.%s",
+                                  sBaseName.c_str(),
+                                  _iNum,
+                                  sFormat.c_str());
+  if (sFormat == "png")
+  {
+    m_stEmulator.emuWritePNG(csFile);
+  }
+  else
+  {
+    m_stEmulator.emuWriteBMP(csFile);
+  }
+  g_free(csFile);
+}
+
+u32 Window::uiReadJoypad()
+{
+  u32 uiJoypad = m_uiJoypadState;
+
+  if (m_uiAutofireState != 0)
+  {
+    uiJoypad &= ~m_uiAutofireState;
+    if (m_bAutofireToggle)
+    {
+      uiJoypad |= m_uiAutofireState;
+    }
+    m_bAutofireToggle = ! m_bAutofireToggle;
+  }
+
+  return uiJoypad;
+}
+
 bool Window::bLoadROM(const std::string & _rsFile)
 {
   vOnFileClose();
@@ -1377,7 +1591,7 @@ bool Window::bLoadROM(const std::string & _rsFile)
   IMAGE_TYPE eType = utilFindType(csFile);
   if (eType == IMAGE_UNKNOWN)
   {
-    systemMessage(0, _("Unknown file type %s"), csFile);
+    vPopupError(_("Unknown file type %s"), csFile);
     return false;
   }
 

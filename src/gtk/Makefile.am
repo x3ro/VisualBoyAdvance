@@ -10,6 +10,8 @@ gvba_SOURCES = \
 	input.cpp		\
 	input.h			\
 	intl.h			\
+	joypadconfig.cpp	\
+	joypadconfig.h		\
 	main.cpp		\
 	menuitem.h		\
 	screenarea.cpp		\

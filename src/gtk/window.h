@@ -31,6 +31,7 @@
 #endif // ! GTKMM20
 
 #include <string>
+#include <vector>
 #include <list>
 
 #include "../System.h"
@@ -39,6 +40,7 @@
 #include "screenarea.h"
 #include "filters.h"
 #include "input.h"
+#include "joypadconfig.h"
 
 namespace VBA
 {
@@ -72,12 +74,16 @@ public:
   void vDrawScreen();
   void vComputeFrameskip(int _iRate);
   void vShowSpeed(int _iSpeed);
+  void vCaptureScreen(int _iNum);
+  u32  uiReadJoypad();
 
-  inline u32        uiReadJoypad()  const { return m_uiJoypadState; }
   inline ECartridge eGetCartridge() const { return m_eCartridge; }
   inline int        iGetThrottle()  const { return m_iThrottle; }
 
 protected:
+  Window(GtkWindow * _pstWindow,
+         const Glib::RefPtr<Gnome::Glade::Xml> & _poXml);
+
   enum EShowSpeed
   {
     ShowNone,
@@ -161,6 +167,7 @@ protected:
   virtual void vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed);
   virtual void vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType);
   virtual void vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize);
+  virtual void vOnScreenshotFormatToggled(Gtk::CheckMenuItem * _poCMI, std::string _sFormat);
   virtual void vOnSoundStatusToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundStatus);
   virtual void vOnSoundEchoToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnSoundLowPassToggled(Gtk::CheckMenuItem * _poCMI);
@@ -176,6 +183,9 @@ protected:
 #ifdef MMX
   virtual void vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI);
 #endif // MMX
+  virtual void vOnJoypadConfigure(int _iJoypad);
+  virtual void vOnJoypadToggled(Gtk::CheckMenuItem * _poCMI, int _iJoypad);
+  virtual void vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, std::string _sKey, u32 _uiKeyFlag);
   virtual void vOnHelpAbout();
   virtual bool bOnEmuIdle();
 
@@ -185,9 +195,6 @@ protected:
   virtual bool on_key_release_event(GdkEventKey * _pstEvent);
 
 private:
-  Window(GtkWindow * _pstWindow,
-         const Glib::RefPtr<Gnome::Glade::Xml> & _poXml);
-
   // Config limits
   const int m_iFrameskipMin;
   const int m_iFrameskipMax;
@@ -209,6 +216,8 @@ private:
   const int m_iFilter2xMax;
   const int m_iFilterIBMin;
   const int m_iFilterIBMax;
+  const int m_iJoypadMin;
+  const int m_iJoypadMax;
 
   static Window * m_poInstance;
 
@@ -222,6 +231,7 @@ private:
   Config::Section * m_poCoreConfig;
   Config::Section * m_poDisplayConfig;
   Config::Section * m_poSoundConfig;
+  Config::Section * m_poInputConfig;
 
 #ifdef GTKMM20
   Gtk::FileSelection * m_poFileOpenDialog;
@@ -254,14 +264,18 @@ private:
 
   SigC::Connection m_oEmuSig;
 
+  std::vector<JoypadConfig> m_oJoypads;
+  Keymap * m_poKeymap;
+
   int m_iScreenWidth;
   int m_iScreenHeight;
 
   std::string    m_sRomFile;
   ECartridge     m_eCartridge;
   EmulatedSystem m_stEmulator;
-  Keymap         m_oKeymap;
   u32            m_uiJoypadState;
+  u32            m_uiAutofireState;
+  bool           m_bAutofireToggle;
   bool           m_bPaused;
   bool           m_bWasEmulating;
   bool           m_bAutoFrameskip;
@@ -282,7 +296,8 @@ private:
   void vHistoryAdd(const std::string & _rsFile);
   void vClearHistoryMenu();
   void vUpdateHistoryMenu();
-  void vLoadKeymap();
+  void vLoadJoypadsFromConfig();
+  void vSaveJoypadsToConfig();
   void vUpdateScreen();
   void vDrawDefaultScreen();
   void vSetDefaultTitle();
