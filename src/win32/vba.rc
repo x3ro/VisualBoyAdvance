@@ -1265,6 +1265,8 @@ BEGIN
 
             MENUITEM "Remove intros (GBA)",         ID_OPTIONS_EMULATOR_REMOVEINTROSGBA
 
+            MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
+
             POPUP "Save Type"
             BEGIN
                 MENUITEM "&Automatic",                  ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC

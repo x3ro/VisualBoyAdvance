@@ -1,3 +1,8 @@
+2002-11-27  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (fileOpen): add option for no IPS patching
+	* src/SDL.cpp (main): add option for no IPS patching
+
 2002-11-26  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/GBA.cpp (CPULoadRom): check for memory allocation error

@@ -89,6 +89,7 @@ CWaveSoundWrite *soundRecorder = NULL;
 BOOL recentFreeze = FALSE;
 BOOL speedupToggle = FALSE;
 BOOL removeIntros = FALSE;
+BOOL autoIPS = TRUE;
 BOOL soundInitialized = FALSE;
 BOOL iconic = FALSE;
 BOOL paused = FALSE;
@@ -1389,6 +1390,8 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(speedupToggle));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_REMOVEINTROSGBA,
                 CHECKMENUSTATE(removeIntros));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH,
+                CHECKMENUSTATE(autoIPS));
   EnableMenuItem(menu, ID_OPTIONS_EMULATOR_USEBIOSFILE,
                  ENABLEMENU(biosFileName[0]));  
 
@@ -1397,7 +1400,9 @@ void updateEmulatorMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_BMPFORMAT,
                 CHECKMENUSTATE(captureFormat != 0));
 
-  menu = GetSubMenu(menu, 7);
+  HMENU sub = GetSubMenu(menu, 7);
+  if(sub == NULL)
+    sub = GetSubMenu(menu, 8);
 
   updateSaveTypeMenu(menu);
 }
@@ -3543,6 +3548,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       removeIntros = !removeIntros;
       regSetDwordValue("removeIntros", removeIntros);
       break;
+    case ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH:
+      autoIPS = !autoIPS;
+      regSetDwordValue("autoIPS", autoIPS);
+      break;
     case ID_OPTIONS_EMULATOR_USEBIOSFILE:
       if(biosFileName[0]) {
         useBiosFile = !useBiosFile;
@@ -4486,6 +4495,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   recentFreeze = regQueryDwordValue("recentFreeze", 0);
 
+  autoIPS = regQueryDwordValue("autoIPS", 1);
+
   cpuSaveType = regQueryDwordValue("saveType", 0);
   if(cpuSaveType < 0 || cpuSaveType > 4)
     cpuSaveType = 0;
@@ -4843,7 +4854,8 @@ BOOL fileOpen()
 #else
     emuCount = 1000;
 #endif
-    utilApplyIPS(ipsname, gbRom);
+    if(autoIPS)
+      utilApplyIPS(ipsname, gbRom);
   } else {
     if(!CPULoadRom(szFile))
       return FALSE;
@@ -4866,7 +4878,8 @@ BOOL fileOpen()
     if(removeIntros && rom != NULL) {
       *((u32 *)rom)= 0xea00002e;
     }
-    utilApplyIPS(ipsname, rom);
+    if(autoIPS)
+      utilApplyIPS(ipsname, rom);
   }
     
   if(soundInitialized) {

@@ -171,6 +171,7 @@ bool yuv = false;
 int yuvType = 0;
 bool removeIntros = false;
 int sdlFlashSize = 0;
+int sdlAutoIPS = 1;
 
 extern void debuggerSignal(int,int);
 
@@ -257,6 +258,7 @@ struct option sdlOptions[] = {
   { "gdb", required_argument, 0, 'G' },
   { "help", no_argument, &sdlPrintUsage, 1 },
   { "no-debug", no_argument, 0, 'N' },
+  { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "profile", optional_argument, 0, 'p' },
   { "save-type", required_argument, 0, 't' },
   { "save-auto", no_argument, &cpuSaveType, 0 },
@@ -1537,6 +1539,9 @@ void usage(char *cmd)
         printf("                                32 - DMA 1\n");
         printf("                                64 - DMA 2\n");
         printf("                               128 - DMA 3\n");
+        printf("\n");
+        printf("Long options only:\n");
+        printf("       --no-ips               Do not apply IPS patch\n");  
 }
 
 int main(int argc, char **argv)
@@ -1879,7 +1884,8 @@ int main(int argc, char **argv)
         emuUpdateCPSR = NULL;
         emuHasDebugger = false;
         emuCount = 70000/4;
-        utilApplyIPS(ipsname, gbRom);
+        if(sdlAutoIPS)
+          utilApplyIPS(ipsname, gbRom);
       }
     } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
       failed = !CPULoadRom(szFile);
@@ -1904,7 +1910,8 @@ int main(int argc, char **argv)
         
         CPUInit(biosFileName, useBios);
         CPUReset();
-        utilApplyIPS(ipsname, rom);
+        if(sdlAutoIPS)
+          utilApplyIPS(ipsname, rom);
       }
 #ifdef GP_EMULATION
     } else if(GPIsGPImage(szFile) || cartridgeType == 2) {

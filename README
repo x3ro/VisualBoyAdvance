@@ -335,6 +335,9 @@ Command line options (override settings in configuration file)
                                 64 - DMA 2
                                128 - DMA 3
 
+Long options only:
+       --no-ips               Do not apply IPS patch
+
 Known bugs
 ----------
 
