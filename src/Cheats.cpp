@@ -778,12 +778,12 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
   
   if(v3) {
     int type = (address >> 24) & 255;
-    u32 addr = (address & 0x00F00000) << 4 | (address & 0x000FFFFF);
+    u32 addr = (address & 0x00F00000) << 4 | (address & 0x0003FFFF);
     switch(type) {
     case 0:
       if(address == 0) {
         type = (value >> 24) & 255;
-        addr = (value & 0x00F00000) << 4 | (value & 0x000FFFFF);
+        addr = (value & 0x00F00000) << 4 | (value & 0x0003FFFF);
         switch(type) {
         case 0x10:
           cheatsAdd(code, desc, addr, 0, 256, GSA_8_BIT_GS_WRITE2, true);
