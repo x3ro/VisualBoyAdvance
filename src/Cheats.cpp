@@ -436,7 +436,8 @@ int cheatsCheckKeys(u32 keys, u32 extended)
 {
 	bool onoff = true;
   int ticks = 0;
-  for (int i = 0; i<4; i++)
+  int i;
+  for (i = 0; i<4; i++)
 	  if (rompatch2addr [i] != 0){
 		  CHEAT_PATCH_ROM_16BIT(rompatch2addr [i],rompatch2oldval [i]);
 		  rompatch2addr [i] = 0;
