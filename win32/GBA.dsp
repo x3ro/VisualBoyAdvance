@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
+# ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /nodefaultlib:"libm" /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
 
 !ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
 
@@ -520,15 +520,6 @@ SOURCE=..\src\win32\Throttle.cpp
 # Begin Source File
 
 SOURCE=..\src\win32\vba.rc
-
-!IF  "$(CFG)" == "GBA - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
-
-!ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
