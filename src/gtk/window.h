@@ -109,6 +109,16 @@ protected:
     Sound50
   };
 
+  enum EEmulatorType
+  {
+    EmulatorAuto,
+    EmulatorCGB,
+    EmulatorSGB,
+    EmulatorGB,
+    EmulatorGBA,
+    EmulatorSGB2
+  };
+
   virtual void vOnFileOpen();
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
@@ -131,6 +141,9 @@ protected:
   virtual void vOnSoundChannelToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundChannel);
   virtual void vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQuality);
   virtual void vOnSoundVolumeToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundVolume);
+  virtual void vOnGBBorderToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnGBPrinterToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnEmulatorTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iEmulatorType);
   virtual void vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x);
   virtual void vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB);
 #ifdef MMX
@@ -161,6 +174,8 @@ private:
   const int m_iSoundQualityMax;
   const int m_iSoundVolumeMin;
   const int m_iSoundVolumeMax;
+  const int m_iEmulatorTypeMin;
+  const int m_iEmulatorTypeMax;
   const int m_iFilter2xMin;
   const int m_iFilter2xMax;
   const int m_iFilterIBMin;

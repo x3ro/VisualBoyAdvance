@@ -26,6 +26,7 @@
 #include "../GBA.h"
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
+#include "../gb/gbPrinter.h"
 #include "../Sound.h"
 #include "../Util.h"
 
@@ -70,6 +71,8 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   m_iSoundQualityMax(Sound11K),
   m_iSoundVolumeMin (Sound100),
   m_iSoundVolumeMax (Sound50),
+  m_iEmulatorTypeMin(EmulatorAuto),
+  m_iEmulatorTypeMax(EmulatorSGB2),
   m_iFilter2xMin    (FirstFilter),
   m_iFilter2xMax    (LastFilter),
   m_iFilterIBMin    (FirstFilterIB),
@@ -507,6 +510,50 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                       poCMI, astSoundVolume[i].m_eSoundVolume));
   }
 
+  // Gameboy menu
+  //
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("GameboyBorder"));
+  poCMI->set_active(m_poCoreConfig->oGetKey<bool>("gb_border"));
+  vOnGBBorderToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnGBBorderToggled),
+                                    poCMI));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("GameboyPrinter"));
+  poCMI->set_active(m_poCoreConfig->oGetKey<bool>("gb_printer"));
+  vOnGBPrinterToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnGBPrinterToggled),
+                                    poCMI));
+
+  struct
+  {
+    const char *        m_csName;
+    const EEmulatorType m_eEmulatorType;
+  }
+  astEmulatorType[] =
+  {
+    { "GameboyAutomatic", EmulatorAuto },
+    { "GameboyGba",       EmulatorGBA  },
+    { "GameboyCgb",       EmulatorCGB  },
+    { "GameboySgb",       EmulatorSGB  },
+    { "GameboySgb2",      EmulatorSGB2 },
+    { "GameboyGb",        EmulatorGB   }
+  };
+  EEmulatorType eDefaultEmulatorType = (EEmulatorType)m_poCoreConfig->oGetKey<int>("emulator_type");
+  for (guint i = 0; i < sizeof(astEmulatorType) / sizeof(astEmulatorType[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astEmulatorType[i].m_csName));
+    if (astEmulatorType[i].m_eEmulatorType == eDefaultEmulatorType)
+    {
+      poCMI->set_active();
+      vOnEmulatorTypeToggled(poCMI, eDefaultEmulatorType);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnEmulatorTypeToggled),
+                                      poCMI, astEmulatorType[i].m_eEmulatorType));
+  }
+
   // Filter menu
   //
   struct
@@ -658,7 +705,14 @@ void Window::vInitSystem()
   }
 
   gbFrameSkip = 0;
-  // TODO : GB init and 16-bit color map (?)
+
+  for (int i = 0; i < 24; )
+  {
+    systemGbPalette[i++] = (0x1f) | (0x1f << 5) | (0x1f << 10);
+    systemGbPalette[i++] = (0x15) | (0x15 << 5) | (0x15 << 10);
+    systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
+    systemGbPalette[i++] = 0;
+  }
 }
 
 void Window::vInitSDL()
@@ -686,30 +740,33 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey     ("frameskip",     "auto"   );
-  m_poCoreConfig->vSetKey     ("throttle",      0        );
-  m_poCoreConfig->vSetKey     ("layer_bg0",     true     );
-  m_poCoreConfig->vSetKey     ("layer_bg1",     true     );
-  m_poCoreConfig->vSetKey     ("layer_bg2",     true     );
-  m_poCoreConfig->vSetKey     ("layer_bg3",     true     );
-  m_poCoreConfig->vSetKey     ("layer_obj",     true     );
-  m_poCoreConfig->vSetKey     ("layer_win0",    true     );
-  m_poCoreConfig->vSetKey     ("layer_win1",    true     );
-  m_poCoreConfig->vSetKey     ("layer_objwin",  true     );
-  m_poCoreConfig->vSetKey     ("use_bios_file", false    );
-  m_poCoreConfig->vSetKey     ("bios_file",     ""       );
-  m_poCoreConfig->vSetKey<int>("save_type",     SaveAuto );
-  m_poCoreConfig->vSetKey<int>("flash_size",    64       );
+  m_poCoreConfig->vSetKey("frameskip",     "auto"       );
+  m_poCoreConfig->vSetKey("throttle",      0            );
+  m_poCoreConfig->vSetKey("layer_bg0",     true         );
+  m_poCoreConfig->vSetKey("layer_bg1",     true         );
+  m_poCoreConfig->vSetKey("layer_bg2",     true         );
+  m_poCoreConfig->vSetKey("layer_bg3",     true         );
+  m_poCoreConfig->vSetKey("layer_obj",     true         );
+  m_poCoreConfig->vSetKey("layer_win0",    true         );
+  m_poCoreConfig->vSetKey("layer_win1",    true         );
+  m_poCoreConfig->vSetKey("layer_objwin",  true         );
+  m_poCoreConfig->vSetKey("use_bios_file", false        );
+  m_poCoreConfig->vSetKey("bios_file",     ""           );
+  m_poCoreConfig->vSetKey("save_type",     SaveAuto     );
+  m_poCoreConfig->vSetKey("flash_size",    64           );
+  m_poCoreConfig->vSetKey("gb_border",     true         );
+  m_poCoreConfig->vSetKey("gb_printer",    false        );
+  m_poCoreConfig->vSetKey("emulator_type", EmulatorAuto );
 
   // Display section
   //
   m_poDisplayConfig = m_oConfig.poAddSection("Display");
-  m_poDisplayConfig->vSetKey     ("scale",               1              );
-  m_poDisplayConfig->vSetKey<int>("show_speed",          ShowPercentage );
-  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone     );
-  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone   );
+  m_poDisplayConfig->vSetKey("scale",              1              );
+  m_poDisplayConfig->vSetKey("show_speed",         ShowPercentage );
+  m_poDisplayConfig->vSetKey("filter2x",           FilterNone     );
+  m_poDisplayConfig->vSetKey("filterIB",           FilterIBNone   );
 #ifdef MMX
-  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false          );
+  m_poDisplayConfig->vSetKey("filter_disable_mmx", false          );
 #endif // MMX
 
   // Sound section
@@ -781,6 +838,13 @@ void Window::vCheckConfig()
   if (iValue != 64 && iValue != 128)
   {
     m_poCoreConfig->vSetKey("flash_size", 64);
+  }
+
+  iValue = m_poCoreConfig->oGetKey<int>("emulator_type");
+  iAdjusted = CLAMP(iValue, m_iEmulatorTypeMin, m_iEmulatorTypeMax);
+  if (iValue != iAdjusted)
+  {
+    m_poCoreConfig->vSetKey("emulator_type", iAdjusted);
   }
 
   // Display section
@@ -872,26 +936,51 @@ void Window::vLoadKeymap()
 {
   // TODO : load from prefs
 
-  m_oKeymap.vRegister(GDK_z,            KEY_A);
-  m_oKeymap.vRegister(GDK_Z,            KEY_A);
-  m_oKeymap.vRegister(GDK_x,            KEY_B);
-  m_oKeymap.vRegister(GDK_X,            KEY_B);
-  m_oKeymap.vRegister(GDK_BackSpace,    KEY_SELECT);
-  m_oKeymap.vRegister(GDK_Return,       KEY_START);
-  m_oKeymap.vRegister(GDK_Right,        KEY_RIGHT);
-  m_oKeymap.vRegister(GDK_Left,         KEY_LEFT);
-  m_oKeymap.vRegister(GDK_Up,           KEY_UP);
-  m_oKeymap.vRegister(GDK_Down,         KEY_DOWN);
-  m_oKeymap.vRegister(GDK_s,            KEY_R);
-  m_oKeymap.vRegister(GDK_S,            KEY_R);
-  m_oKeymap.vRegister(GDK_a,            KEY_L);
-  m_oKeymap.vRegister(GDK_A,            KEY_L);
-  m_oKeymap.vRegister(GDK_space,        KEY_SPEED);
-  m_oKeymap.vRegister(GDK_F12,          KEY_CAPTURE);
+  m_oKeymap.vRegister(GDK_z,            KeyA);
+  m_oKeymap.vRegister(GDK_Z,            KeyA);
+  m_oKeymap.vRegister(GDK_x,            KeyB);
+  m_oKeymap.vRegister(GDK_X,            KeyB);
+  m_oKeymap.vRegister(GDK_BackSpace,    KeySelect);
+  m_oKeymap.vRegister(GDK_Return,       KeyStart);
+  m_oKeymap.vRegister(GDK_Right,        KeyRight);
+  m_oKeymap.vRegister(GDK_Left,         KeyLeft);
+  m_oKeymap.vRegister(GDK_Up,           KeyUp);
+  m_oKeymap.vRegister(GDK_Down,         KeyDown);
+  m_oKeymap.vRegister(GDK_s,            KeyR);
+  m_oKeymap.vRegister(GDK_S,            KeyR);
+  m_oKeymap.vRegister(GDK_a,            KeyL);
+  m_oKeymap.vRegister(GDK_A,            KeyL);
+  m_oKeymap.vRegister(GDK_space,        KeySpeed);
+  m_oKeymap.vRegister(GDK_F12,          KeyCapture);
 }
 
 void Window::vUpdateScreen()
 {
+  if (m_eCartridge == CartridgeGB)
+  {
+    if (gbBorderOn)
+    {
+      m_iScreenWidth     = m_iSGBScreenWidth;
+      m_iScreenHeight    = m_iSGBScreenHeight;
+      gbBorderLineSkip   = m_iSGBScreenWidth;
+      gbBorderColumnSkip = (m_iSGBScreenWidth - m_iGBScreenWidth) / 2;
+      gbBorderRowSkip    = (m_iSGBScreenHeight - m_iGBScreenHeight) / 2;
+    }
+    else
+    {
+      m_iScreenWidth     = m_iGBScreenWidth;
+      m_iScreenHeight    = m_iGBScreenHeight;
+      gbBorderLineSkip   = m_iGBScreenWidth;
+      gbBorderColumnSkip = 0;
+      gbBorderRowSkip    = 0;
+    }
+  }
+  else if (m_eCartridge == CartridgeGBA)
+  {
+    m_iScreenWidth  = m_iGBAScreenWidth;
+    m_iScreenHeight = m_iGBAScreenHeight;
+  }
+
   g_return_if_fail(m_iScreenWidth >= 1 && m_iScreenHeight >= 1);
 
   m_poScreenArea->vSetSize(m_iScreenWidth, m_iScreenHeight);
@@ -1052,23 +1141,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
       //    gbReset();
       //  }
       //}
-
-      if (gbBorderOn)
-      {
-        m_iScreenWidth     = m_iSGBScreenWidth;
-        m_iScreenHeight    = m_iSGBScreenHeight;
-        gbBorderLineSkip   = m_iSGBScreenWidth;
-        gbBorderColumnSkip = (m_iSGBScreenWidth - m_iGBScreenWidth) / 2;
-        gbBorderRowSkip    = (m_iSGBScreenHeight - m_iGBScreenHeight) / 2;
-      }
-      else
-      {
-        m_iScreenWidth     = m_iGBScreenWidth;
-        m_iScreenHeight    = m_iGBScreenHeight;
-        gbBorderLineSkip   = m_iGBScreenWidth;
-        gbBorderColumnSkip = 0;
-        gbBorderRowSkip    = 0;
-      }
     }
   }
   else if (eType == IMAGE_GBA)
@@ -1101,9 +1173,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
       //    CPUReset();
       //  }
       //}
-
-      m_iScreenWidth  = m_iGBAScreenWidth;
-      m_iScreenHeight = m_iGBAScreenHeight;
     }
   }
 
@@ -1300,6 +1369,7 @@ void Window::vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue)
   else
   {
     m_poCoreConfig->vSetKey("frameskip", "auto");
+    gbFrameSkip      = 0;
     systemFrameSkip  = 0;
     m_bAutoFrameskip = true;
   }
@@ -1583,6 +1653,36 @@ void Window::vOnSoundVolumeToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundVolum
   m_poSoundConfig->vSetKey("volume", _iSoundVolume);
 }
 
+void Window::vOnGBBorderToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  gbBorderOn = _poCMI->get_active();
+  if (emulating && m_eCartridge == CartridgeGB && _poCMI->get_active())
+  {
+    gbSgbRenderBorder();
+  }
+  vUpdateScreen();
+  m_poCoreConfig->vSetKey("gb_border", _poCMI->get_active());
+}
+
+void Window::vOnGBPrinterToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  if (_poCMI->get_active())
+  {
+    gbSerialFunction = gbPrinterSend;
+  }
+  else
+  {
+    gbSerialFunction = NULL;
+  }
+  m_poCoreConfig->vSetKey("gb_printer", _poCMI->get_active());
+}
+
+void Window::vOnEmulatorTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iEmulatorType)
+{
+  gbEmulatorType = _iEmulatorType;
+  m_poCoreConfig->vSetKey("emulator_type", _iEmulatorType);
+}
+
 void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
 {
   if (! _poCMI->get_active())
@@ -1660,54 +1760,54 @@ bool Window::on_key_press_event(GdkEventKey * _pstEvent)
   EKey eKey;
 
   if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KEY_NONE)
+      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
   {
     return Gtk::Window::on_key_press_event(_pstEvent);
   }
 
   switch (eKey)
   {
-  case KEY_A:
-    m_uiJoypadState |= KEYFLAG_A;
+  case KeyA:
+    m_uiJoypadState |= KeyFlagA;
     break;
-  case KEY_B:
-    m_uiJoypadState |= KEYFLAG_B;
+  case KeyB:
+    m_uiJoypadState |= KeyFlagB;
     break;
-  case KEY_SELECT:
-    m_uiJoypadState |= KEYFLAG_SELECT;
+  case KeySelect:
+    m_uiJoypadState |= KeyFlagSelect;
     break;
-  case KEY_START:
-    m_uiJoypadState |= KEYFLAG_START;
+  case KeyStart:
+    m_uiJoypadState |= KeyFlagStart;
     break;
-  case KEY_RIGHT:
-    m_uiJoypadState |= KEYFLAG_RIGHT;
-    m_uiJoypadState &= ~KEYFLAG_LEFT;
+  case KeyRight:
+    m_uiJoypadState |= KeyFlagRight;
+    m_uiJoypadState &= ~KeyFlagLeft;
     break;
-  case KEY_LEFT:
-    m_uiJoypadState |= KEYFLAG_LEFT;
-    m_uiJoypadState &= ~KEYFLAG_RIGHT;
+  case KeyLeft:
+    m_uiJoypadState |= KeyFlagLeft;
+    m_uiJoypadState &= ~KeyFlagRight;
     break;
-  case KEY_UP:
-    m_uiJoypadState |= KEYFLAG_UP;
-    m_uiJoypadState &= ~KEYFLAG_DOWN;
+  case KeyUp:
+    m_uiJoypadState |= KeyFlagUp;
+    m_uiJoypadState &= ~KeyFlagDown;
     break;
-  case KEY_DOWN:
-    m_uiJoypadState |= KEYFLAG_DOWN;
-    m_uiJoypadState &= ~KEYFLAG_UP;
+  case KeyDown:
+    m_uiJoypadState |= KeyFlagDown;
+    m_uiJoypadState &= ~KeyFlagUp;
     break;
-  case KEY_R:
-    m_uiJoypadState |= KEYFLAG_R;
+  case KeyR:
+    m_uiJoypadState |= KeyFlagR;
     break;
-  case KEY_L:
-    m_uiJoypadState |= KEYFLAG_L;
+  case KeyL:
+    m_uiJoypadState |= KeyFlagL;
     break;
-  case KEY_SPEED:
-    m_uiJoypadState |= KEYFLAG_SPEED;
+  case KeySpeed:
+    m_uiJoypadState |= KeyFlagSpeed;
     break;
-  case KEY_CAPTURE:
-    m_uiJoypadState |= KEYFLAG_CAPTURE;
+  case KeyCapture:
+    m_uiJoypadState |= KeyFlagCapture;
     break;
-  case KEY_NONE:
+  case KeyNone:
     break;
   }
   return true;
@@ -1718,50 +1818,50 @@ bool Window::on_key_release_event(GdkEventKey * _pstEvent)
   EKey eKey;
 
   if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KEY_NONE)
+      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
   {
     return Gtk::Window::on_key_release_event(_pstEvent);
   }
 
   switch (eKey)
   {
-  case KEY_A:
-    m_uiJoypadState &= ~KEYFLAG_A;
+  case KeyA:
+    m_uiJoypadState &= ~KeyFlagA;
     break;
-  case KEY_B:
-    m_uiJoypadState &= ~KEYFLAG_B;
+  case KeyB:
+    m_uiJoypadState &= ~KeyFlagB;
     break;
-  case KEY_SELECT:
-    m_uiJoypadState &= ~KEYFLAG_SELECT;
+  case KeySelect:
+    m_uiJoypadState &= ~KeyFlagSelect;
     break;
-  case KEY_START:
-    m_uiJoypadState &= ~KEYFLAG_START;
+  case KeyStart:
+    m_uiJoypadState &= ~KeyFlagStart;
     break;
-  case KEY_RIGHT:
-    m_uiJoypadState &= ~KEYFLAG_RIGHT;
+  case KeyRight:
+    m_uiJoypadState &= ~KeyFlagRight;
     break;
-  case KEY_LEFT:
-    m_uiJoypadState &= ~KEYFLAG_LEFT;
+  case KeyLeft:
+    m_uiJoypadState &= ~KeyFlagLeft;
     break;
-  case KEY_UP:
-    m_uiJoypadState &= ~KEYFLAG_UP;
+  case KeyUp:
+    m_uiJoypadState &= ~KeyFlagUp;
     break;
-  case KEY_DOWN:
-    m_uiJoypadState &= ~KEYFLAG_DOWN;
+  case KeyDown:
+    m_uiJoypadState &= ~KeyFlagDown;
     break;
-  case KEY_R:
-    m_uiJoypadState &= ~KEYFLAG_R;
+  case KeyR:
+    m_uiJoypadState &= ~KeyFlagR;
     break;
-  case KEY_L:
-    m_uiJoypadState &= ~KEYFLAG_L;
+  case KeyL:
+    m_uiJoypadState &= ~KeyFlagL;
     break;
-  case KEY_SPEED:
-    m_uiJoypadState &= ~KEYFLAG_SPEED;
+  case KeySpeed:
+    m_uiJoypadState &= ~KeyFlagSpeed;
     break;
-  case KEY_CAPTURE:
-    m_uiJoypadState &= ~KEYFLAG_CAPTURE;
+  case KeyCapture:
+    m_uiJoypadState &= ~KeyFlagCapture;
     break;
-  case KEY_NONE:
+  case KeyNone:
     break;
   }
   return true;

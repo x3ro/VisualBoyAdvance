@@ -1087,7 +1087,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkRadioMenuItem" id="GameBoyGba">
+				<widget class="GtkRadioMenuItem" id="GameboyGba">
 				  <property name="visible">True</property>
 				  <property name="label" translatable="yes">_GBA</property>
 				  <property name="use_underline">True</property>

@@ -27,39 +27,39 @@ namespace VBA
 
 enum EKey
 {
-  KEY_NONE,
+  KeyNone,
   // GBA keys
-  KEY_A,
-  KEY_B,
-  KEY_SELECT,
-  KEY_START,
-  KEY_RIGHT,
-  KEY_LEFT,
-  KEY_UP,
-  KEY_DOWN,
-  KEY_R,
-  KEY_L,
+  KeyA,
+  KeyB,
+  KeySelect,
+  KeyStart,
+  KeyRight,
+  KeyLeft,
+  KeyUp,
+  KeyDown,
+  KeyR,
+  KeyL,
   // VBA extension
-  KEY_SPEED,
-  KEY_CAPTURE
+  KeySpeed,
+  KeyCapture
 };
 
 enum EKeyFlag
 {
   // GBA keys
-  KEYFLAG_A       = 1 << 0,
-  KEYFLAG_B       = 1 << 1,
-  KEYFLAG_SELECT  = 1 << 2,
-  KEYFLAG_START   = 1 << 3,
-  KEYFLAG_RIGHT   = 1 << 4,
-  KEYFLAG_LEFT    = 1 << 5,
-  KEYFLAG_UP      = 1 << 6,
-  KEYFLAG_DOWN    = 1 << 7,
-  KEYFLAG_R       = 1 << 8,
-  KEYFLAG_L       = 1 << 9,
+  KeyFlagA       = 1 << 0,
+  KeyFlagB       = 1 << 1,
+  KeyFlagSelect  = 1 << 2,
+  KeyFlagStart   = 1 << 3,
+  KeyFlagRight   = 1 << 4,
+  KeyFlagLeft    = 1 << 5,
+  KeyFlagUp      = 1 << 6,
+  KeyFlagDown    = 1 << 7,
+  KeyFlagR       = 1 << 8,
+  KeyFlagL       = 1 << 9,
   // VBA extension
-  KEYFLAG_SPEED   = 1 << 10,
-  KEYFLAG_CAPTURE = 1 << 11,
+  KeyFlagSpeed   = 1 << 10,
+  KeyFlagCapture = 1 << 11,
 };
 
 class Keymap
