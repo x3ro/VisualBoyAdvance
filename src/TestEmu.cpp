@@ -98,6 +98,7 @@ int captureFormat = 0;
 
 int emulating = 0;
 int RGB_LOW_BITS_MASK=0x821;
+int systemFrameSkip = 0;
 u32 systemColorMap32[0x10000];
 u16 systemColorMap16[0x10000];
 u16 systemGbPalette[24];
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
 
   int op = -1;
 
-  frameSkip = 2;
+  systemFrameSkip = frameSkip = 2;
   gbBorderOn = 0;
 
   parseDebug = true;
@@ -414,9 +415,22 @@ void systemDrawScreen()
 {
 }
 
-u32 systemReadJoypad()
+bool systemReadJoypads()
+{
+  return true;
+}
+
+u32 systemReadJoypad(int)
 {
   return 0;
+}
+
+void systemShowSpeed(int speed)
+{
+}
+
+void system10Frames(int rate)
+{
 }
 
 void systemSetTitle(char *title)

@@ -764,7 +764,7 @@ fi
 
 PACKAGE=VisualBoyAdvance
 
-VERSION=1.3
+VERSION=1.4
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
@@ -920,7 +920,7 @@ fi
 echo "$ac_t""$ac_cv_use_mmx" 1>&6
 
 PACKAGE=VisualBoyAdvance
-VERSION=1.2
+VERSION=1.4
 CCC="gcc  c++ g++ CC cxx cc++ cl"
 # Extract the first word of "gcc", so it can be a program name with args.
 set dummy gcc; ac_word=$2
