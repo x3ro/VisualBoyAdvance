@@ -1,6 +1,6 @@
-# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
-# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
 # gives unlimited permission to copy and/or distribute it,
 # with or without modifications, as long as this notice is preserved.
@@ -88,41 +88,19 @@ SUBDIRS = gb @VBA_EXTRA@
 EXTRA_SUBDIRS = gp i386 prof
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
-VisualBoyAdvance_SOURCES = \
-	SDL.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
-	simple2x.cpp bilinear.cpp interframe.cpp Font.cpp unzip.cpp \
-	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
-	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
-	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
-	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp \
-	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
-	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
-	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
-	thumb.h
+VisualBoyAdvance_SOURCES =  	SDL.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp 	simple2x.cpp bilinear.cpp interframe.cpp Font.cpp unzip.cpp 	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp 	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp 	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp 	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp 	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h 	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp 	getopt.c getopt1.c getopt.h
 
 
 VisualBoyAdvance_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
 
-TestEmu_SOURCES = \
-	TestEmu.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
-	simple2x.cpp Font.cpp unzip.cpp \
-	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
-	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
-	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
-	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp \
-	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
-	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
-	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
-	thumb.h
+TestEmu_SOURCES =  	TestEmu.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp 	simple2x.cpp Font.cpp unzip.cpp 	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp 	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp 	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp 	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp 	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h 	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp
 
 
 TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
-EXTRA_DIST = \
-	gp i386 win32 prof VisualBoyAdvance.cfg \
-	expr.l expr.y getopt.c getopt1.c getopt.h qt
+EXTRA_DIST =  	gp i386 win32 prof VisualBoyAdvance.cfg 	expr.l expr.y qt
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -137,13 +115,14 @@ VisualBoyAdvance_OBJECTS =  SDL.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o bilinear.o interframe.o Font.o unzip.o Cheats.o \
 EEprom.o Flash.o GBA.o Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o \
 Mode4.o Mode5.o Sound.o Sram.o Util.o armdis.o bios.o elf.o expr.o \
-expr-lex.o exprNode.o debugger.o remote.o
+expr-lex.o exprNode.o debugger.o remote.o RTC.o agbprint.o scanline.o \
+getopt.o getopt1.o
 VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a
 TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
 Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
 Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
-debugger.o remote.o
+debugger.o remote.o RTC.o agbprint.o scanline.o
 TestEmu_DEPENDENCIES =  gb/libgb.a
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -163,11 +142,13 @@ GZIP_ENV = --best
 DEP_FILES =  .deps/2xSaI.P .deps/Cheats.P .deps/EEprom.P .deps/Flash.P \
 .deps/Font.P .deps/GBA.P .deps/Gfx.P .deps/Globals.P .deps/Mode0.P \
 .deps/Mode1.P .deps/Mode2.P .deps/Mode3.P .deps/Mode4.P .deps/Mode5.P \
-.deps/SDL.P .deps/Sound.P .deps/Sram.P .deps/TestEmu.P .deps/Util.P \
-.deps/admame.P .deps/armdis.P .deps/bilinear.P .deps/bios.P \
-.deps/debugger.P .deps/elf.P .deps/expr-lex.P .deps/expr.P \
-.deps/exprNode.P .deps/interframe.P .deps/motionblur.P .deps/pixel.P \
-.deps/remote.P .deps/simple2x.P .deps/tvmode.P .deps/unzip.P
+.deps/RTC.P .deps/SDL.P .deps/Sound.P .deps/Sram.P .deps/TestEmu.P \
+.deps/Util.P .deps/admame.P .deps/agbprint.P .deps/armdis.P \
+.deps/bilinear.P .deps/bios.P .deps/debugger.P .deps/elf.P \
+.deps/expr-lex.P .deps/expr.P .deps/exprNode.P .deps/getopt.P \
+.deps/getopt1.P .deps/interframe.P .deps/motionblur.P .deps/pixel.P \
+.deps/remote.P .deps/scanline.P .deps/simple2x.P .deps/tvmode.P \
+.deps/unzip.P
 SOURCES = $(VisualBoyAdvance_SOURCES) $(TestEmu_SOURCES)
 OBJECTS = $(VisualBoyAdvance_OBJECTS) $(TestEmu_OBJECTS)
 
@@ -269,7 +250,7 @@ maintainer-clean-recursive:
 	dot_seen=no; \
 	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
 	  rev="$$subdir $$rev"; \
-	  test "$$subdir" != "." || dot_seen=yes; \
+	  test "$$subdir" = "." && dot_seen=yes; \
 	done; \
 	test "$$dot_seen" = "no" && rev=". $$rev"; \
 	target=`echo $@ | sed s/-recursive//`; \
@@ -335,7 +316,7 @@ distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \

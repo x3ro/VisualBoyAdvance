@@ -54,6 +54,9 @@
 #define HAVE_DECL_GETOPT 0
 #define __STDC__ 1
 #include "getopt.h"
+#else
+#define HAVE_DECL_GETOPT 1
+#include "getopt.h"
 #endif
 
 #ifdef MMX

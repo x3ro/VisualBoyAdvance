@@ -433,6 +433,10 @@ void system10Frames(int rate)
 {
 }
 
+void systemFrame()
+{
+}
+
 void systemSetTitle(char *title)
 {
 }
