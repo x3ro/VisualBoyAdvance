@@ -1120,6 +1120,15 @@ bool Window::bLoadROM(const std::string & _rsFilename)
   m_bWasEmulating = false;
   m_uiThrottleDelay = 0;
 
+  if (m_eCartridge == CartridgeGBA)
+  {
+    soundSetQuality(m_eSoundQuality);
+  }
+  else
+  {
+    gbSoundSetQuality(m_eSoundQuality);
+  }
+
   if (m_poFilePauseItem->get_active())
   {
     m_poFilePauseItem->set_active(false);
@@ -1551,6 +1560,7 @@ void Window::vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQual
     return;
   }
 
+  m_eSoundQuality = (ESoundQuality)_iSoundQuality;
   if (m_eCartridge == CartridgeGBA)
   {
     soundSetQuality(_iSoundQuality);
@@ -1558,10 +1568,6 @@ void Window::vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQual
   else if (m_eCartridge == CartridgeGB)
   {
     gbSoundSetQuality(_iSoundQuality);
-  }
-  else
-  {
-    soundQuality = _iSoundQuality;
   }
   m_poSoundConfig->vSetKey("quality", _iSoundQuality);
 }

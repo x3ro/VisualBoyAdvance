@@ -199,6 +199,7 @@ private:
   u32            m_uiThrottleLastTime;
   u32            m_uiThrottleDelay;
   EShowSpeed     m_eShowSpeed;
+  ESoundQuality  m_eSoundQuality;
 
   void vInitSystem();
   void vInitSDL();
