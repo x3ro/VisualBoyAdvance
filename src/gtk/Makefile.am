@@ -13,6 +13,7 @@ gvba_SOURCES = \
 	main.cpp		\
 	screenarea.cpp		\
 	screenarea.h		\
+	sigccompat.h		\
 	system.cpp		\
 	tools.cpp		\
 	tools.h			\
@@ -25,7 +26,8 @@ gvba_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
 gvba_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)\"			\
 	-DLOCALEDIR=\"$(datadir)/locale\"		\
-	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
+	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"	\
+	$(GTKMM_CPPFLAGS)
 
 gvba_CXXFLAGS = @GTKMM_CFLAGS@ @SDL_CFLAGS@
 

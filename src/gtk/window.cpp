@@ -1008,6 +1008,9 @@ void Window::vLoadConfig(const std::string & _sFilename)
   {
     Gtk::MessageDialog oDialog(*this,
                                e.what(),
+#ifndef GTKMM20
+                               false,
+#endif // ! GTKMM20
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_CLOSE);
     oDialog.run();
@@ -1024,6 +1027,9 @@ void Window::vSaveConfig(const std::string & _sFilename)
   {
     Gtk::MessageDialog oDialog(*this,
                                e.what(),
+#ifndef GTKMM20
+                               false,
+#endif // ! GTKMM20
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_CLOSE);
     oDialog.run();

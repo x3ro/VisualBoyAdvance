@@ -22,6 +22,10 @@
 
 #include <sys/types.h>
 
+#ifndef GTKMM20
+# include "sigccompat.h"
+#endif // ! GTKMM20
+
 #include <libglademm.h>
 #include <gtkmm.h>
 

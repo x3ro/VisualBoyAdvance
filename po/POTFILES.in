@@ -1,4 +1,5 @@
 # List of source files which containing translatable strings.
 
 src/gtk/vba.glade
+src/gtk/windowcallbacks.cpp
 src/gtk/window.cpp

@@ -77,6 +77,9 @@ void systemMessage(int _iId, const char * _csFormat, ...)
   va_end(args);
 
   Gtk::MessageDialog oDialog(*GUI(), csMsg,
+#ifndef GTKMM20
+                             false,
+#endif // ! GTKMM20
                              Gtk::MESSAGE_ERROR,
                              Gtk::BUTTONS_OK);
   oDialog.run();

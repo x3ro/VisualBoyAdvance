@@ -44,6 +44,9 @@ int main(int argc, char * argv[])
   catch (const Xml::Error & e)
   {
     Gtk::MessageDialog oDialog(e.what(),
+#ifndef GTKMM20
+                               false,
+#endif // ! GTKMM20
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_CLOSE);
     oDialog.run();

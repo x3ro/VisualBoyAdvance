@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE LIBICONV LTLIBICONV INTLLIBS LIBINTL LTLIBINTL POSUB GETTEXT_PACKAGE YACC LEX LEXLIB LEX_OUTPUT_ROOT CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB NASM CPP EGREP SDL_CONFIG SDL_CFLAGS SDL_LIBS PKG_CONFIG GTKMM_CFLAGS GTKMM_LIBS VBA_EXTRA VBA_LIBS LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot MKINSTALLDIRS USE_NLS MSGFMT GMSGFMT XGETTEXT MSGMERGE CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE LIBICONV LTLIBICONV INTLLIBS LIBINTL LTLIBINTL POSUB GETTEXT_PACKAGE YACC LEX LEXLIB LEX_OUTPUT_ROOT CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB NASM CPP EGREP SDL_CONFIG SDL_CFLAGS SDL_LIBS PKG_CONFIG GTKMM_CFLAGS GTKMM_LIBS GTKMM_CPPFLAGS VBA_EXTRA VBA_LIBS LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -865,7 +865,7 @@ Optional Features:
   --enable-c-core         enable C core (default is no on x86 targets)
   --enable-profiling      enable profiling (default is yes)
   --enable-sdl            build the SDL frontend (default is yes)
-  --enable-gtk            build the GTK+ frontend (default is no)
+  --enable-gtk=VERSION  build the GTK+ frontend (default is no)
   --enable-dev            enable development features (default is yes)
   --disable-nls           do not use Native Language Support
   --disable-dependency-tracking Speeds up one-time builds
@@ -1869,8 +1869,19 @@ fi;
 if test "${enable_gtk+set}" = set; then
   enableval="$enable_gtk"
 
+if test "x$enable_gtk" != xno; then
+  enable_gtk=yes
+  if test "x$enableval" = xyes; then
+    gtk_version=2.0
+  else
+    gtk_version=$enableval
+  fi
+fi
+
 else
-  enable_gtk=no
+
+enable_gtk=no
+
 fi;
 
 # Check whether --enable-dev or --disable-dev was given.
@@ -8185,7 +8196,8 @@ echo "$as_me: error: *** Couldn't find nasm program." >&2;}
   VBA_LIBS="$VBA_LIBS ../i386/lib386.a"
 fi
 
-SDL_VERSION=1.2.2
+if test "x$enable_sdl" = xyes || test "x$enable_gtk" = xyes; then
+  SDL_VERSION=1.2.2
 
 # Check whether --with-sdl-prefix or --without-sdl-prefix was given.
 if test "${with_sdl_prefix+set}" = set; then
@@ -8471,7 +8483,7 @@ rm -f conftest.err conftest.$ac_objext \
      SDL_CFLAGS=""
      SDL_LIBS=""
 
-{ { echo "$as_me:$LINENO: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&5
+  { { echo "$as_me:$LINENO: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&5
 echo "$as_me: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&2;}
    { (exit 1); exit 1; }; }
 
@@ -8480,6 +8492,7 @@ echo "$as_me: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >
 
   rm -f conf.sdltest
 
+fi
 
 if test "x$enable_sdl" = xyes; then
   VBA_EXTRA="$VBA_EXTRA sdl"
@@ -8689,23 +8702,23 @@ fi
   else
      PKG_CONFIG_MIN_VERSION=0.9.0
      if $PKG_CONFIG --atleast-pkgconfig-version $PKG_CONFIG_MIN_VERSION; then
-        echo "$as_me:$LINENO: checking for gtkmm-2.0 libglademm-2.0 >= 2.1.0" >&5
-echo $ECHO_N "checking for gtkmm-2.0 libglademm-2.0 >= 2.1.0... $ECHO_C" >&6
+        echo "$as_me:$LINENO: checking for gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0" >&5
+echo $ECHO_N "checking for gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0... $ECHO_C" >&6
 
-        if $PKG_CONFIG --exists "gtkmm-2.0 libglademm-2.0 >= 2.1.0" ; then
+        if $PKG_CONFIG --exists "gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0" ; then
             echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
             succeeded=yes
 
             echo "$as_me:$LINENO: checking GTKMM_CFLAGS" >&5
 echo $ECHO_N "checking GTKMM_CFLAGS... $ECHO_C" >&6
-            GTKMM_CFLAGS=`$PKG_CONFIG --cflags "gtkmm-2.0 libglademm-2.0 >= 2.1.0"`
+            GTKMM_CFLAGS=`$PKG_CONFIG --cflags "gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0"`
             echo "$as_me:$LINENO: result: $GTKMM_CFLAGS" >&5
 echo "${ECHO_T}$GTKMM_CFLAGS" >&6
 
             echo "$as_me:$LINENO: checking GTKMM_LIBS" >&5
 echo $ECHO_N "checking GTKMM_LIBS... $ECHO_C" >&6
-            GTKMM_LIBS=`$PKG_CONFIG --libs "gtkmm-2.0 libglademm-2.0 >= 2.1.0"`
+            GTKMM_LIBS=`$PKG_CONFIG --libs "gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0"`
             echo "$as_me:$LINENO: result: $GTKMM_LIBS" >&5
 echo "${ECHO_T}$GTKMM_LIBS" >&6
         else
@@ -8713,7 +8726,7 @@ echo "${ECHO_T}$GTKMM_LIBS" >&6
             GTKMM_LIBS=""
             ## If we have a custom action on failure, don't print errors, but
             ## do set a variable so people can do so.
-            GTKMM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gtkmm-2.0 libglademm-2.0 >= 2.1.0"`
+            GTKMM_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0"`
             echo $GTKMM_PKG_ERRORS
         fi
 
@@ -8728,12 +8741,16 @@ echo "${ECHO_T}$GTKMM_LIBS" >&6
   if test $succeeded = yes; then
      :
   else
-     { { echo "$as_me:$LINENO: error: Library requirements (gtkmm-2.0 libglademm-2.0 >= 2.1.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&5
-echo "$as_me: error: Library requirements (gtkmm-2.0 libglademm-2.0 >= 2.1.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&2;}
+     { { echo "$as_me:$LINENO: error: Library requirements (gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&5
+echo "$as_me: error: Library requirements (gtkmm-$gtk_version >= 2.0.0 libglademm-$gtk_version >= 2.1.0) not met; consider adjusting the PKG_CONFIG_PATH environment variable if your libraries are in a nonstandard prefix so pkg-config can find them." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
 
+
+  if test "x$gtk_version" = x2.0; then
+    GTKMM_CPPFLAGS="-DGTKMM20"
+  fi
 
   VBA_EXTRA="$VBA_EXTRA gtk"
 fi
@@ -9525,6 +9542,7 @@ s,@SDL_LIBS@,$SDL_LIBS,;t t
 s,@PKG_CONFIG@,$PKG_CONFIG,;t t
 s,@GTKMM_CFLAGS@,$GTKMM_CFLAGS,;t t
 s,@GTKMM_LIBS@,$GTKMM_LIBS,;t t
+s,@GTKMM_CPPFLAGS@,$GTKMM_CPPFLAGS,;t t
 s,@VBA_EXTRA@,$VBA_EXTRA,;t t
 s,@VBA_LIBS@,$VBA_LIBS,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
