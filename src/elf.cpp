@@ -243,6 +243,7 @@ int elfSymbolsCount = 0;
 ELFSectionHeader **elfSectionHeaders = NULL;
 char *elfSectionHeadersStringTable = NULL;
 int elfSectionHeadersCount = 0;
+char *elfFileData = NULL;
 
 CompileUnit *elfCompileUnits = NULL;
 DebugInfo *elfDebugInfo = NULL;
@@ -2800,27 +2801,27 @@ bool elfRead(const char *name, int& siz, FILE *f)
 {
   fseek(f, 0, SEEK_END);
   long size = ftell(f);
-  u8 *filedata = (u8 *)malloc(size);
+  elfFileData = (u8 *)malloc(size);
   fseek(f, 0, SEEK_SET);
-  fread(filedata, 1, size, f);
+  fread(elfFileData, 1, size, f);
   fclose(f);
   
-  ELFHeader *header = (ELFHeader *)filedata;
+  ELFHeader *header = (ELFHeader *)elfFileData;
   
   if(READ32LE(&header->magic) != 0x464C457F ||
      READ16LE(&header->e_machine) != 40 ||
      header->clazz != 1) {
     systemMessage(0, "Not a valid ELF file %s", name);
-    free(filedata);
+    free(elfFileData);
+    elfFileData = NULL;
     return false;
   }
 
-  if(!elfReadProgram(header, filedata, siz, parseDebug)) {
-    free(filedata);
+  if(!elfReadProgram(header, elfFileData, siz, parseDebug)) {
+    free(elfFileData);
+    elfFileData = NULL;
     return false;
   }
-  free(filedata);
-  //  systemMessage(0, "Done");
   
   return true;
 }
@@ -2987,5 +2988,10 @@ void elfCleanUp()
     ELFcie *next = cie->next;
     free(cie);
     cie = next;
+  }
+
+  if(elfFileData) {
+    free(elfFileData);
+    elfFileData = NULL;
   }
 }
