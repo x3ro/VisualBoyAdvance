@@ -2011,7 +2011,7 @@ void updateToolsMenu(HMENU menu)
   EnableMenuItem(menu, ID_TOOLS_TILEVIEWER,
                  ENABLEMENU(videoOption <= VIDEO_4X));
   EnableMenuItem(menu, ID_TOOLS_CUSTOMIZE,
-                 ENABLEMENU(videoOption <= VIDEO_4X));  
+                 ENABLEMENU(videoOption != VIDEO_320x240));  
 
   EnableMenuItem(menu, ID_TOOLS_DEBUG_GDB,
                  ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
