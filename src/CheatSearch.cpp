@@ -136,12 +136,13 @@ s32 cheatSearchSignedRead(u8 *data, int off, int size)
   switch(size) {
   case BITS_8:
     res <<= 24;
-    return (s32)res;
+    return ((s32)res) >> 24;
   case BITS_16:
     res |= ((u32)data[off++])<<8;
     res <<= 16;
     return ((s32)res) >> 16;
   case BITS_32:
+    res |= ((u32)data[off++])<<8;
     res |= ((u32)data[off++])<<16;
     res |= ((u32)data[off++])<<24;
     return (s32)res;
@@ -155,6 +156,7 @@ u32 cheatSearchRead(u8 *data, int off, int size)
   if(size == BITS_16)
     res |= ((u32)data[off++])<<8;
   else if(size == BITS_32) {
+    res |= ((u32)data[off++])<<8;
     res |= ((u32)data[off++])<<16;
     res |= ((u32)data[off++])<<24;
   }
@@ -177,12 +179,12 @@ void cheatSearch(const CheatSearchData *cs, int compare, int size,
 
     for(int i = 0; i < cs->count; i++) {
       CheatSearchBlock *block = &cs->blocks[i];
-      int size = block->size;
+      int size2 = block->size;
       u8 *bits = block->bits;
       u8 *data = block->data;
       u8 *saved = block->saved;
       
-      for(int j = 0; j < size; j += inc) {
+      for(int j = 0; j < size2; j += inc) {
 	if(IS_BIT_SET(bits, j)) {
 	  s32 a = cheatSearchSignedRead(data, j, size);
 	  s32 b = cheatSearchSignedRead(saved,j, size);
@@ -204,12 +206,12 @@ void cheatSearch(const CheatSearchData *cs, int compare, int size,
 
     for(int i = 0; i < cs->count; i++) {
       CheatSearchBlock *block = &cs->blocks[i];
-      int size = block->size;
+      int size2 = block->size;
       u8 *bits = block->bits;
       u8 *data = block->data;
       u8 *saved = block->saved;
       
-      for(int j = 0; j < size; j += inc) {
+      for(int j = 0; j < size2; j += inc) {
 	if(IS_BIT_SET(bits, j)) {
 	  u32 a = cheatSearchRead(data, j, size);
 	  u32 b = cheatSearchRead(saved,j, size);
@@ -245,12 +247,11 @@ void cheatSearchValue(const CheatSearchData *cs, int compare, int size,
 
     for(int i = 0; i < cs->count; i++) {
       CheatSearchBlock *block = &cs->blocks[i];
-      int size = block->size;
+      int size2 = block->size;
       u8 *bits = block->bits;
       u8 *data = block->data;
-      u8 *saved = block->saved;
       
-      for(int j = 0; j < size; j += inc) {
+      for(int j = 0; j < size2; j += inc) {
 	if(IS_BIT_SET(bits, j)) {
 	  s32 a = cheatSearchSignedRead(data, j, size);
 	  s32 b = (s32)value;
@@ -272,12 +273,11 @@ void cheatSearchValue(const CheatSearchData *cs, int compare, int size,
 
     for(int i = 0; i < cs->count; i++) {
       CheatSearchBlock *block = &cs->blocks[i];
-      int size = block->size;
+      int size2 = block->size;
       u8 *bits = block->bits;
       u8 *data = block->data;
-      u8 *saved = block->saved;
       
-      for(int j = 0; j < size; j += inc) {
+      for(int j = 0; j < size2; j += inc) {
 	if(IS_BIT_SET(bits, j)) {
 	  u32 a = cheatSearchRead(data, j, size);
 
@@ -308,9 +308,9 @@ int cheatSearchGetCount(const CheatSearchData *cs, int size)
   for(int i = 0; i < cs->count; i++) {
     CheatSearchBlock *block = &cs->blocks[i];
     
-    int size = block->size;
+    int size2 = block->size;
     u8 *bits = block->bits;
-    for(int j = 0; j < size; j++) {
+    for(int j = 0; j < size2; j += inc) {
       if(IS_BIT_SET(bits, j))
 	res++;
     }
