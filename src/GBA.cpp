@@ -67,6 +67,10 @@ bool intState = false;
 bool stopState = false;
 bool holdState = false;
 int holdType = 0;
+bool cpuSramEnabled = true;
+bool cpuFlashEnabled = true;
+bool cpuEEPROMEnabled = true;
+bool cpuEEPROMSensorEnabled = false;
 
 bool freezeWorkRAM[0x40000];
 bool freezeInternalRAM[0x8000];
@@ -2690,13 +2694,19 @@ void CPUWriteHalfWord(u32 address, u16 value)
     *((u16 *)&oam[address & 0x3fe]) = TO16LE(value);
     break;
   case 13:
-    eepromWrite(address, (u8)value);    
-    break;
+    if(cpuEEPROMEnabled) {
+      eepromWrite(address, (u8)value);
+      break;
+    }
+    goto unwritable;
   case 14:
-    if(!eepromInUse)
+    if(!eepromInUse | cpuSramEnabled | cpuFlashEnabled) {
       (*cpuSaveGameFunc)(address, (u8)value);
-    break;
+      break;
+    }
+    goto unwritable;
   default:
+  unwritable:
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_ILLEGAL_WRITE) {
       log("Illegal halfword write: %04x to %08x from %08x\n",
@@ -2808,13 +2818,19 @@ void CPUWriteByte(u32 address, u8 b)
     *((u16 *)&oam[address & 0x3FE]) = (b << 8) | b;
     break;    
   case 13:
-    eepromWrite(address, b);    
-    break;
+    if(cpuEEPROMEnabled) {
+      eepromWrite(address, b);
+      break;
+    }
+    goto unwritable;
   case 14:
-    if(!eepromInUse)
+    if(!eepromInUse | cpuSramEnabled | cpuFlashEnabled) {
       (*cpuSaveGameFunc)(address, b);
-    break;
+      break;
+    }
+    // default
   default:
+  unwritable:
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_ILLEGAL_WRITE) {
       log("Illegal byte write: %02x to %08x from %08x\n",
@@ -3148,6 +3164,41 @@ void CPUReset()
       BIOS_RegisterRamReset(0xfe);
   }
 
+  switch(cpuSaveType) {
+  case 0: // automatic
+    cpuSramEnabled = true;
+    cpuFlashEnabled = true;
+    cpuEEPROMEnabled = true;
+    cpuEEPROMSensorEnabled = false;
+    break;
+  case 1: // EEPROM
+    cpuSramEnabled = false;
+    cpuFlashEnabled = false;
+    cpuEEPROMEnabled = true;
+    cpuEEPROMSensorEnabled = false;
+    break;
+  case 2: // SRAM
+    cpuSramEnabled = true;
+    cpuFlashEnabled = false;
+    cpuEEPROMEnabled = false;
+    cpuEEPROMSensorEnabled = false;
+    cpuSaveGameFunc = sramWrite;
+    break;
+  case 3: // FLASH
+    cpuSramEnabled = false;
+    cpuFlashEnabled = true;
+    cpuEEPROMEnabled = false;
+    cpuEEPROMSensorEnabled = false;
+    cpuSaveGameFunc = flashWrite;
+    break;
+  case 4: // EEPROM+Sensor
+    cpuSramEnabled = false;
+    cpuFlashEnabled = false;
+    cpuEEPROMEnabled = true;
+    cpuEEPROMSensorEnabled = true;
+    break;
+  } 
+  
   lastTime = systemGetClock();
 }
 
@@ -3349,6 +3400,8 @@ void CPULoop(int ticks)
               }
               
               P1 = 0x03FF ^ systemReadJoypad();
+              if(cpuEEPROMSensorEnabled)
+                systemUpdateMotionSensor();              
               UPDATE_REG(0x130, P1);
               u16 P1CNT = FROM16LE(*((u16 *)&ioMem[0x132]));
               if(P1CNT & 0x4000) {

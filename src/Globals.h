@@ -50,6 +50,7 @@ extern bool parseDebug;
 extern int layerSettings;
 extern int layerEnable;
 extern bool speedHack;
+extern int cpuSaveType;
 
 extern u8 *bios;
 extern u8 *rom;

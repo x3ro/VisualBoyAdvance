@@ -86,7 +86,7 @@ static int CALLBACK browseCallbackProc(HWND hWnd, UINT msg,
 
 char *DirectoriesDlg::browseForDir(char *title)
 {
-  char buffer[1024];
+  static char buffer[1024];
   LPMALLOC pMalloc;
   LPITEMIDLIST pidl;
   

@@ -1,3 +1,12 @@
+2002-11-06  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPULoop): added support for movement sensor
+	* src/GBA.cpp (CPUReset): added support for selecting save type available
+
+2002-11-05  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/DirectoriesDlg.cpp (browseForDir): fix bug when changing directory using the Browse button
+
 2002-11-04  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/GBA.cpp (CPUUpdateRegister): do not change timer data when writting to register TMxD. Only a restart or overflow will change the value

@@ -6,6 +6,8 @@ Core changes:
 - added support for higher frameskip (up to 9)
 - added C core for portability
 - added big endian support
+- added support for movement sensor
+- added support for selecting save type available
 - fixed another value for the bios protection
 - fixed sound envelope reload bug (user contribution)
 - fixed timer counter (not changing the value of the counter unless the timer
@@ -18,6 +20,7 @@ Windows changes:
 - added freeze recent list option
 - added 800x600 support
 - support to export GamesharkAdvance save games
+- fixed bug when changing directories in the Directories... dialog
 SDL version:
 - fixed crash when printing void * variables
 - fixed crash when -b specified incorrectly

@@ -1341,6 +1341,23 @@ void updateVideoMenu(HMENU menu)
     updateLayersMenu(menu);
 }
 
+void updateSaveTypeMenu(HMENU menu)
+{
+  if(menu == NULL)
+    return;
+
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC,
+                CHECKMENUSTATE(cpuSaveType == 0));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROM,
+                CHECKMENUSTATE(cpuSaveType == 1));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_SRAM,
+                CHECKMENUSTATE(cpuSaveType == 2));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH,
+                CHECKMENUSTATE(cpuSaveType == 3));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR,
+                CHECKMENUSTATE(cpuSaveType == 4));
+}
+
 void updateEmulatorMenu(HMENU menu)
 {
   menu = GetSubMenu(menu, MENU_OPTIONS_EMULATOR);
@@ -1364,12 +1381,16 @@ void updateEmulatorMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_REMOVEINTROSGBA,
                 CHECKMENUSTATE(removeIntros));
   EnableMenuItem(menu, ID_OPTIONS_EMULATOR_USEBIOSFILE,
-                 ENABLEMENU(biosFileName[0]));
+                 ENABLEMENU(biosFileName[0]));  
 
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_PNGFORMAT,
                 CHECKMENUSTATE(captureFormat == 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_BMPFORMAT,
                 CHECKMENUSTATE(captureFormat != 0));
+
+  menu = GetSubMenu(menu, 7);
+
+  updateSaveTypeMenu(menu);
 }
 
 void updateSoundMenu(HMENU menu)
@@ -3530,6 +3551,26 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       captureFormat = 1;
       regSetDwordValue("captureFormat", 1);      
       break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC:
+      cpuSaveType = 0;
+      regSetDwordValue("saveType", 0);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_EEPROM:
+      cpuSaveType = 1;
+      regSetDwordValue("saveType", 1);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_SRAM:
+      cpuSaveType = 2;
+      regSetDwordValue("saveType", 2);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH:
+      cpuSaveType = 3;
+      regSetDwordValue("saveType", 3);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR:
+      cpuSaveType = 4;
+      regSetDwordValue("saveType", 4);
+      break;
     case ID_OPTIONS_SOUND_OFF:
       soundOffFlag = true;
       soundShutdown();
@@ -4420,6 +4461,10 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   removeIntros = regQueryDwordValue("removeIntros", 0);
 
   recentFreeze = regQueryDwordValue("recentFreeze", 0);
+
+  cpuSaveType = regQueryDwordValue("saveType", 0);
+  if(cpuSaveType < 0 || cpuSaveType > 4)
+    cpuSaveType = 0;
 
   if(!initDirectDraw()) {
     if(videoOption >= VIDEO_320x240)

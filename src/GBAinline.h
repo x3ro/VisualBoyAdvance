@@ -22,6 +22,11 @@
 #include "System.h"
 #include "Port.h"
 
+extern bool cpuSramEnabled;
+extern bool cpuFlashEnabled;
+extern bool cpuEEPROMEnabled;
+extern bool cpuEEPROMSensorEnabled;
+
 #define CPUReadByteQuick(addr) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
 
@@ -92,11 +97,15 @@ u32 inline CPUReadMemory(u32 address)
     value = FROM32LE(*((u32 *)&rom[address&0x1FFFFFC]));
     break;    
   case 13:
-    // no need to swap this
-    return eepromRead(address);
+    if(cpuEEPROMEnabled)
+      // no need to swap this
+      return eepromRead(address);
+    goto unreadable;
   case 14:
-    // no need to swap this
-    return flashRead(address);
+    if(cpuFlashEnabled | cpuSramEnabled)
+      // no need to swap this
+      return flashRead(address);
+    // default
   default:
   unreadable:
 #ifdef DEV_VERSION
@@ -201,11 +210,15 @@ u32 inline CPUReadHalfWord(u32 address)
     value = FROM16LE(*((u16 *)&rom[address & 0x1FFFFFE]));
     break;    
   case 13:
-    // no need to swap this
-    return  eepromRead(address);
+    if(cpuEEPROMEnabled)
+      // no need to swap this
+      return  eepromRead(address);
+    goto unreadable;
   case 14:
-    // no need to swap this
-    return flashRead(address);
+    if(cpuFlashEnabled | cpuSramEnabled)
+      // no need to swap this
+      return flashRead(address);
+    // default
   default:
   unreadable:
 #ifdef DEV_VERSION
@@ -279,9 +292,25 @@ u8 inline CPUReadByte(u32 address)
   case 12:
     return rom[address & 0x1FFFFFF];        
   case 13:
-    return eepromRead(address);
+    if(cpuEEPROMEnabled)
+      return eepromRead(address);
+    goto unreadable;
   case 14:
-    return flashRead(address);
+    if(cpuSramEnabled | cpuFlashEnabled)
+      return flashRead(address);
+    if(cpuEEPROMSensorEnabled) {
+      switch(address & 0x00008f00) {
+      case 0x8200:
+        return systemGetSensorX() & 255;
+      case 0x8300:
+        return (systemGetSensorX() >> 8)|0x80;
+      case 0x8400:
+        return systemGetSensorY() & 255;
+      case 0x8500:
+        return systemGetSensorY() >> 8;
+      }
+    }
+    // default
   default:
   unreadable:
 #ifdef DEV_VERSION
@@ -352,13 +381,19 @@ void inline CPUWriteMemory(u32 address, u32 value)
     *((u32 *)&oam[address & 0x3fc]) = TO32LE(value);
     break;
   case 0x0D:
-    eepromWrite(address, value);
-    break;
+    if(cpuEEPROMEnabled) {
+      eepromWrite(address, value);
+      break;
+    }
+    goto unwritable;
   case 0x0E:
-    if(!eepromInUse)
+    if(!eepromInUse | cpuSramEnabled | cpuFlashEnabled) {
       (*cpuSaveGameFunc)(address, (u8)value);
-    break;
+      break;
+    }
+    // default
   default:
+  unwritable:
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_ILLEGAL_WRITE) {
       log("Illegal word write: %08x to %08x from %08x\n",
