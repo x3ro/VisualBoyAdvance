@@ -6219,11 +6219,15 @@ void fileAVIRecord()
 
 void fileMoviePlay()
 {
-  if(MessageBox(hWindow,
-                winResLoadString(IDS_MOVIE_PLAY),
-                winResLoadString(IDS_CONFIRM_ACTION),
-                MB_OKCANCEL) == IDCANCEL)
-    return;
+  static bool moviePlayMessage = false;
+  if(!moviePlayMessage) {
+    moviePlayMessage = true;
+    if(MessageBox(hWindow,
+                  winResLoadString(IDS_MOVIE_PLAY),
+                  winResLoadString(IDS_CONFIRM_ACTION),
+                  MB_OKCANCEL) == IDCANCEL)
+      return;
+  }
 
   char captureBuffer[2048];
   captureBuffer[0] = 0;
