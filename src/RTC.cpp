@@ -127,7 +127,7 @@ bool rtcWrite(u32 address, u16 value)
                 
                 rtcClockData.dataLen = 7;
                 rtcClockData.data[0] = toBCD(newtime->tm_year);
-                rtcClockData.data[1] = toBCD(newtime->tm_mon);
+                rtcClockData.data[1] = toBCD(newtime->tm_mon+1);
                 rtcClockData.data[2] = toBCD(newtime->tm_mday);
                 rtcClockData.data[3] = 0;
                 rtcClockData.data[4] = toBCD(newtime->tm_hour);
