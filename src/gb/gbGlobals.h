@@ -59,6 +59,7 @@ extern int emulating;
 extern int gbBorderLineSkip;
 extern int gbBorderRowSkip;
 extern int gbBorderColumnSkip;
+extern int gbDmaTicks;
 
 extern void gbRenderLine();
 extern void gbDrawSprites();

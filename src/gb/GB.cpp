@@ -161,25 +161,27 @@ int gbBattery = 0;
 int gbCaptureNumber = 0;
 bool gbCapture = false;
 bool gbCapturePrevious = false;
-int gbJoymask = 0;
+int gbJoymask[4] = { 0, 0, 0, 0 };
 
-int gbRomSizes[8] = { 0x00008000, // 32K
-                      0x00010000, // 64K
-                      0x00020000, // 128K
-                      0x00040000, // 256K
-                      0x00080000, // 512K
-                      0x00100000, // 1024K
-                      0x00200000, // 2048K
-                      0x00400000  // 4096K
+int gbRomSizes[] = { 0x00008000, // 32K
+                     0x00010000, // 64K
+                     0x00020000, // 128K
+                     0x00040000, // 256K
+                     0x00080000, // 512K
+                     0x00100000, // 1024K
+                     0x00200000, // 2048K
+                     0x00400000, // 4096K
+                     0x00800000  // 8192K
 };
-int gbRomSizesMasks[8] = { 0x00007fff,
-                           0x0000ffff,
-                           0x0001ffff,
-                           0x0003ffff,
-                           0x0007ffff,
-                           0x000fffff,
-                           0x001fffff,
-                           0x003fffff
+int gbRomSizesMasks[] = { 0x00007fff,
+                          0x0000ffff,
+                          0x0001ffff,
+                          0x0003ffff,
+                          0x0007ffff,
+                          0x000fffff,
+                          0x001fffff,
+                          0x003fffff,
+                          0x007fffff
 };
 
 int gbRamSizes[6] = { 0x00000000, // 0K
@@ -625,7 +627,7 @@ void gbCompareLYToLYC()
     register_STAT |= 4;
     
     // check if we need an interrupt
-    if(register_STAT & 0x40 && register_IE & 2)
+    if((register_STAT & 0x40) && (register_IE & 2))
       gbInterrupt |= 2;
   } else // no match
     register_STAT &= 0xfb;
@@ -785,8 +787,6 @@ void  gbWriteMemory(register u16 address, register u8 value)
   case 0x40: {
     int lcdChange = (register_LCDC & 0x80) ^ (value & 0x80);
 
-    register_LCDC = value;
-
     if(lcdChange) {
       if(value & 0x80) {
         gbLcdTicks = GBLCD_MODE_1_CLOCK_TICKS;
@@ -801,6 +801,13 @@ void  gbWriteMemory(register u16 address, register u8 value)
       }
       //      compareLYToLYC();
     }
+    // don't draw the window if it was not enabled and not being drawn before
+    if(!(register_LCDC & 0x20) && (value & 0x20) && gbWindowLine == -1 &&
+       register_LY > register_WY)
+      gbWindowLine = 144;
+
+    register_LCDC = value;
+
     return;
   }
 
@@ -809,6 +816,9 @@ void  gbWriteMemory(register u16 address, register u8 value)
     //register_STAT = (register_STAT & 0x87) |
     //      (value & 0x7c);
     register_STAT = (value & 0xf8) | (register_STAT & 0x07); // fix ?
+    // GB bug from Devrs FAQ
+    if(!gbCgbMode && (register_LCDC & 0x80) && gbLcdMode < 2)
+      gbInterrupt |= 2;
     return;
   }
 
@@ -833,7 +843,9 @@ void  gbWriteMemory(register u16 address, register u8 value)
   // LYC
   case 0x45: {
     register_LYC = value;
-    gbCompareLYToLYC();
+    if((register_LCDC & 0x80)) {
+      gbCompareLYToLYC();
+    }
     return;
   }
   
@@ -979,6 +991,14 @@ void  gbWriteMemory(register u16 address, register u8 value)
           if(gbLcdMode == 0)
             gbDoHdma();
         } else {
+          // we need to take the time it takes to complete the transfer into
+          // account... according to GB DEV FAQs, the setup time is the same
+          // for single and double speed, but the actual transfer takes the
+          // same time
+          if(gbSpeed)
+            gbDmaTicks = 231 + 16 * (value & 0x7f);
+          else
+            gbDmaTicks = 231 + 8 * (value & 0x7f);
           gbCopyMemory(gbHdmaDestination,
                        gbHdmaSource,
                        gbHdmaBytes);
@@ -1234,7 +1254,7 @@ u8 gbReadMemory(register u16 address)
               joy = 0;
             }
           }
-          int joystate = gbJoymask;
+          int joystate = gbJoymask[joy];
           if(!(joystate & 128))
             b |= 0x08;
           if(!(joystate & 64))
@@ -1267,7 +1287,7 @@ u8 gbReadMemory(register u16 address)
               joy = 0;
             }
           }
-          int joystate = gbJoymask;
+          int joystate = gbJoymask[joy];
           if(!(joystate & 8))
             b |= 0x08;
           if(!(joystate & 4))
@@ -1553,7 +1573,7 @@ void gbReset()
   gbTimerMode = 0;
   //  gbSynchronizeTicks = GBSYNCHRONIZE_CLOCK_TICKS;
   gbSpeed = 0;
-  gbJoymask = 0;
+  gbJoymask[0] = gbJoymask[1] = gbJoymask[2] = gbJoymask[3] = 0;
   
   if(gbCgbMode) {
     gbSpeed = 0;
@@ -1564,6 +1584,8 @@ void gbReset()
     gbWramBank = 1;
     register_LY = 0x90;
     gbLcdMode = 1;
+    for(int i = 0; i < 64; i++)
+      gbPalette[i] = 0x7fff;
   }
 
   if(gbSgbMode) {
@@ -2426,12 +2448,15 @@ bool gbLoadRom(const char *szFile)
 
 bool gbUpdateSizes()
 {
-  if(gbRom[0x148] > 7) {
+  if(gbRom[0x148] > 8) {
     systemMessage(MSG_UNSUPPORTED_ROM_SIZE,
                   "Unsupported rom size %02x", gbRom[0x148]);
     return false;
   }
 
+  if(gbRomSize < gbRomSizes[gbRom[0x148]]) {
+    gbRom = (u8 *)realloc(gbRom, gbRomSizes[gbRom[0x148]]);
+  }
   gbRomSize = gbRomSizes[gbRom[0x148]];
   gbRomSizeMask = gbRomSizesMasks[gbRom[0x148]];
 
@@ -2446,7 +2471,7 @@ bool gbUpdateSizes()
 
   if(gbRamSize) {
     gbRam = (u8 *)malloc(gbRamSize);
-    memset(gbRam, 0, gbRamSize);
+    memset(gbRam, 0xFF, gbRamSize);
   }
 
   int type = gbRom[0x147];
@@ -2579,6 +2604,7 @@ void gbEmulate(int ticksToStop)
   s8 offset;
   
   int clockTicks = 0;
+  gbDmaTicks = 0;
 
   register int opcode = 0;
   
@@ -2639,6 +2665,11 @@ void gbEmulate(int ticksToStop)
     if(!emulating)
       return;
 
+    if(gbDmaTicks) {
+      clockTicks += gbDmaTicks;
+      gbDmaTicks = 0;
+    }
+
     if(gbSgbMode) {
       if(gbSgbPacketTimeout) {
         gbSgbPacketTimeout -= clockTicks;
@@ -2669,15 +2700,15 @@ void gbEmulate(int ticksToStop)
           if(register_LY < 153) {
             register_LY++;
             
+            gbCompareLYToLYC();
+            
             if(register_LY >= 153)
               gbLcdLYIncrementTicks = 6;
           } else {
             register_LY = 0x00;
             gbLcdLYIncrementTicks = GBLY_INCREMENT_CLOCK_TICKS * 2;
+            gbCompareLYToLYC();
           }
-          
-          // LYC == LY?
-          gbCompareLYToLYC();
         }
       }
       
@@ -2689,7 +2720,6 @@ void gbEmulate(int ticksToStop)
         switch(gbLcdMode) {
         case 0:
           // H-Blank
-
           register_LY++;
 
           gbCompareLYToLYC();
@@ -2703,7 +2733,7 @@ void gbEmulate(int ticksToStop)
             gbLcdMode = 1;
             if(register_LCDC & 0x80) {
               gbInterrupt |= 1; // V-Blank interrupt
-              gbInterruptWait = 2;
+              gbInterruptWait = 6;
               if(register_STAT & 0x10)
                 gbInterrupt |= 2;
             }
@@ -2726,11 +2756,23 @@ void gbEmulate(int ticksToStop)
               gbFrameCount = 0;       
             }
             u32 joy = 0;
-            if(systemReadJoypads())
-              // read default joystick
-              joy = systemReadJoypad(-1);
-            gbJoymask = joy;
-            int newmask = gbJoymask & 255;
+            if(systemReadJoypads()) {
+              // read joystick
+              if(gbSgbMode && gbSgbMultiplayer) {
+                if(gbSgbFourPlayers) {
+                  gbJoymask[0] = systemReadJoypad(0);
+                  gbJoymask[1] = systemReadJoypad(1);
+                  gbJoymask[2] = systemReadJoypad(2);
+                  gbJoymask[3] = systemReadJoypad(3);
+                } else {
+                  gbJoymask[0] = systemReadJoypad(0);
+                  gbJoymask[1] = systemReadJoypad(1);
+                }
+              } else {
+                gbJoymask[0] = systemReadJoypad(-1);
+              }             
+            }
+            int newmask = gbJoymask[0] & 255;
 
             if(gbRom[0x147] == 0x22) {
               systemUpdateMotionSensor();
@@ -2740,7 +2782,7 @@ void gbEmulate(int ticksToStop)
               gbInterrupt |= 16;
             }
 
-            newmask = (joy >> 10);
+            newmask = (gbJoymask[0] >> 10);
             
             speedup = (newmask & 1) ? true : false;
             gbCapture = (newmask & 2) ? true : false;
@@ -2760,8 +2802,13 @@ void gbEmulate(int ticksToStop)
             // go the the OAM being accessed mode
             gbLcdTicks += GBLCD_MODE_2_CLOCK_TICKS;
             gbLcdMode = 2;
-            if(register_STAT & 0x20)
-              gbInterrupt |= 2;
+
+            // only one LCD interrupt per line. may need to generalize...
+            if(!(register_STAT & 0x40) ||
+               (register_LY != register_LYC)) {
+              if((register_STAT & 0x28) == 0x20)
+                gbInterrupt |= 2;
+            }
           }
           break;
         case 1:
@@ -2769,10 +2816,11 @@ void gbEmulate(int ticksToStop)
           // next mode is OAM being accessed mode
           gbLcdTicks += GBLCD_MODE_2_CLOCK_TICKS;
           gbLcdMode = 2;
-          if(register_STAT & 0x20)
-            gbInterrupt |= 2;
-          register_LY = 0;
-          //      compareLYToLYC();
+          if(!(register_STAT & 0x40) ||
+             (register_LY != register_LYC)) {
+            if((register_STAT & 0x28) == 0x20)
+              gbInterrupt |= 2;
+          }
           break;
         case 2:
           // OAM being accessed mode
@@ -2780,6 +2828,10 @@ void gbEmulate(int ticksToStop)
           // next mode is OAM and VRAM in use
           gbLcdTicks += GBLCD_MODE_3_CLOCK_TICKS;
           gbLcdMode = 3;
+          break;
+        case 3:
+          // OAM and VRAM in use
+          // next mode is H-Blank
           if(register_LY < 144) {
             if(!gbSgbMask) {
               if(gbFrameSkipCount >= framesToSkip) {
@@ -2889,19 +2941,19 @@ void gbEmulate(int ticksToStop)
                       *dest++ = systemColorMap32[gbLineMix[x++]];
                     }
                   }
+                  break;
                 }
-                break;
               }
             }
           }
-          break;
-        case 3:
-          // OAM and VRAM in use
-          // next mode is H-Blank
           gbLcdTicks += GBLCD_MODE_0_CLOCK_TICKS;
           gbLcdMode = 0;
-          if(register_STAT & 0x08)
-            gbInterrupt |= 2;
+          // only one LCD interrupt per line. may need to generalize...
+          if(!(register_STAT & 0x40) ||
+             (register_LY != register_LYC)) {
+            if(register_STAT & 0x08)
+              gbInterrupt |= 2;
+          }
           if(gbHdmaOn) {
             gbDoHdma();
           }
@@ -3029,7 +3081,7 @@ void gbEmulate(int ticksToStop)
       gbInterruptWait = 0;
     } else if(gbInterrupt) {
       if(gbInterruptWait == 0) {
-        gbInterruptWait = 0;
+        //        gbInterruptWait = 0;
 
         if(IFF & 0x01) {
           if((gbInterrupt & 1) && (register_IE & 1)) {
@@ -3066,8 +3118,22 @@ void gbEmulate(int ticksToStop)
 
     if(ticksToStop <= 0) {
       if(!(register_LCDC & 0x80)) {
-        if(systemReadJoypads())
-          gbJoymask = systemReadJoypad(-1);
+        if(systemReadJoypads()) {
+          // read joystick
+          if(gbSgbMode && gbSgbMultiplayer) {
+            if(gbSgbFourPlayers) {
+              gbJoymask[0] = systemReadJoypad(0);
+              gbJoymask[1] = systemReadJoypad(1);
+              gbJoymask[2] = systemReadJoypad(2);
+              gbJoymask[3] = systemReadJoypad(3);
+            } else {
+              gbJoymask[0] = systemReadJoypad(0);
+              gbJoymask[1] = systemReadJoypad(1);
+            }
+          } else {
+            gbJoymask[0] = systemReadJoypad(-1);
+          }             
+        }
       }
       return;
     }
