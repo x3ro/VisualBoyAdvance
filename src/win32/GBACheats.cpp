@@ -660,7 +660,7 @@ void GBACheatListDlg::refresh(HWND lv)
 
     ListView_SetItemText(lv, i, 1, cheatsList[i].desc);
 
-    buffer[0] = (cheatsList[i].status & 2) ? 'E' : 'D';    
+    buffer[0] = (cheatsList[i].enabled) ? 'E' : 'D';    
     buffer[1] = 0;
     ListView_SetItemText(lv, i, 2, buffer);
   }
@@ -810,7 +810,7 @@ void GBACheatListDlg::OnEnable()
       if(ListView_GetItem(h,
                           &item)) {
         if(item.state & LVIS_SELECTED) {
-          if(cheatsList[item.lParam].status & 2)
+          if(cheatsList[item.lParam].enabled)
             cheatsDisable(item.lParam);
           else
             cheatsEnable(item.lParam);
