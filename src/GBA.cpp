@@ -839,7 +839,7 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   fwrite(buffer, 1, 4, file);
   fwrite("SharkPortSave", 1, 0x0d, file);
   CPUWriteInt(buffer, 0x000f0000);
-  fwrite(buffer, 1, 4, file); // some flags
+  fwrite(buffer, 1, 4, file); // save type 0x000f0000 = GBA save
   CPUWriteInt(buffer, strlen(title));
   fwrite(buffer, 1, 4, file); // title length
   fwrite(title, 1, strlen(title), file);
@@ -850,18 +850,23 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   fwrite(buffer, 1, 4, file); // notes length
   fwrite(notes, 1, strlen(notes), file);
 
-  CPUWriteInt(buffer, 0x0001001c); // more flags
+  CPUWriteInt(buffer, 0x0001001c); // length of remainder of save - CRC
   fwrite(buffer, 1, 4, file);
 
-  fwrite(&rom[0xa0], 1, 16, file); // write ROM internal name
-  memset(buffer, 0, 12);
-  buffer[2] = rom[0xbd]; // complement check
-  buffer[3] = rom[0xb0]; // maker
-  buffer[4] = 1; // 1 save in the file?
-  fwrite(buffer, 1, 12, file); // more flags... unknown
-
-  fwrite(flashSaveMemory, 1, 0x10000, file); // write save
-  memset(buffer, 0, 4);
+  char temp[0x1001c];
+  memset(temp, 0, 28);
+  memcpy(temp, &rom[0xa0], 16); // copy internal name
+  temp[0x12] = rom[0xbd]; // complement check
+  temp[0x13] = rom[0xb0]; // maker
+  temp[0x14] = 1; // 1 save ?
+  memcpy(&temp[0x1c], flashSaveMemory, 0x10000); // copy save
+  fwrite(temp, 1, 0x1001c, file); // write save + header
+  u32 crc = 0;
+  for(int i = 0; i < 0x1001c; i++) {
+    crc += ((u32)temp[i] << (crc % 0x18));
+  }
+  
+  CPUWriteInt(buffer, crc);
   fwrite(buffer, 1, 4, file); // CRC?
   
   fclose(file);

@@ -1,3 +1,7 @@
+2002-11-02  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPUWriteGSASnapshot): Compute CRC of save
+
 2002-10-31  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/GBA.cpp (CPUWriteGSASnapshot): fixed a few bytes in the snapshot
