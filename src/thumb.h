@@ -2272,7 +2272,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;
+     clockTicks += 2;
    }
    break;      
  case 0xd1:
@@ -2282,7 +2282,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd2:
@@ -2292,7 +2292,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd3:
@@ -2302,7 +2302,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd4:
@@ -2312,7 +2312,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd5:
@@ -2322,7 +2322,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd6:
@@ -2332,7 +2332,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd7:
@@ -2342,7 +2342,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd8:
@@ -2352,7 +2352,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xd9:
@@ -2362,7 +2362,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xda:
@@ -2372,7 +2372,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xdb:
@@ -2382,7 +2382,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xdc:
@@ -2392,7 +2392,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xdd:
@@ -2402,7 +2402,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks = 3;       
+     clockTicks += 2;       
    }
    break;   
  case 0xdf:

@@ -1113,6 +1113,7 @@
       bool C_OUT = C_FLAG;\
       u32 value;\
       \
+      clockTicks++;\
       if(shift) {\
         LOGICAL_LSL_REG\
       } else {\
@@ -1150,6 +1151,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_LSR_REG\
       } else {\
@@ -1189,6 +1191,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ASR_REG\
       } else {\
@@ -1233,6 +1236,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ROR_REG\
       } else {\
@@ -1264,7 +1268,7 @@
   case BASE+1:\
     {\
        /* OP Rd,Rb,Rm LSL Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -1309,7 +1313,7 @@
   case BASE+3:\
     {\
        /* OP Rd,Rb,Rm LSR Rs */ \
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -1354,7 +1358,7 @@
   case BASE+5:\
     {\
        /* OP Rd,Rb,Rm ASR Rs */ \
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -1401,7 +1405,7 @@
   case BASE+7:\
     {\
        /* OP Rd,Rb,Rm ROR Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -1464,6 +1468,7 @@
       int dest = (opcode >> 12) & 0x0F;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ROR_IMM\
       } else {\
@@ -1502,6 +1507,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       \
       if(shift) {\
         LOGICAL_LSL_REG\
@@ -1539,6 +1545,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_LSR_REG\
       } else {\
@@ -1577,6 +1584,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ASR_REG\
       } else {\
@@ -1620,6 +1628,7 @@
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ROR_REG\
       } else {\
@@ -1651,7 +1660,7 @@
   case BASE+1:\
     {\
        /* OP Rd,Rb,Rm LSL Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
@@ -1695,7 +1704,7 @@
   case BASE+3:\
     {\
        /* OP Rd,Rb,Rm LSR Rs */ \
-      clockTicks++;\
+      clockTicks+=2;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
@@ -1739,7 +1748,7 @@
   case BASE+5:\
     {\
        /* OP Rd,Rb,Rm ASR Rs */ \
-      clockTicks++;\
+      clockTicks+=2;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
@@ -1785,7 +1794,7 @@
   case BASE+7:\
     {\
        /* OP Rd,Rb,Rm ROR Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
       bool C_OUT = C_FLAG;\
@@ -1846,6 +1855,7 @@
       int dest = (opcode >> 12) & 0x0F;\
       bool C_OUT = C_FLAG;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         LOGICAL_ROR_IMM\
       } else {\
@@ -1884,6 +1894,7 @@
       int shift = (opcode >> 7) & 0x1F;\
       int dest = (opcode>>12) & 15;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         ARITHMETIC_LSL_REG\
       } else {\
@@ -1920,6 +1931,7 @@
       int shift = (opcode >> 7) & 0x1F;\
       int dest = (opcode>>12) & 15;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         ARITHMETIC_LSR_REG\
       } else {\
@@ -1956,6 +1968,7 @@
       int shift = (opcode >> 7) & 0x1F;\
       int dest = (opcode>>12) & 15;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         ARITHMETIC_ASR_REG\
       } else {\
@@ -1994,6 +2007,7 @@
       int shift = (opcode >> 7) & 0x1F;\
       int dest = (opcode>>12) & 15;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
          ARITHMETIC_ROR_REG\
       } else {\
@@ -2030,6 +2044,7 @@
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
       u32 value;\
+      clockTicks++;\
       if(shift) {\
         if(shift == 32) {\
           value = 0;\
@@ -2065,7 +2080,7 @@
   case BASE+3:\
     {\
       /* OP Rd,Rb,Rm LSR Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -2105,7 +2120,7 @@
   case BASE+5:\
     {\
       /* OP Rd,Rb,Rm ASR Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -2147,7 +2162,7 @@
   case BASE+7:\
     {\
       /* OP Rd,Rb,Rm ROR Rs */\
-      clockTicks++;\
+      clockTicks+=2;\
       int base = (opcode >> 16) & 0x0F;\
       int shift = reg[(opcode >> 8)&15].B.B0;\
       int dest = (opcode>>12) & 15;\
@@ -2206,6 +2221,7 @@
       int base = (opcode >> 16) & 0x0F;\
       int dest = (opcode >> 12) & 0x0F;\
       u32 value;\
+      clockTicks++;\
       {\
         ARITHMETIC_ROR_IMM\
       }\
@@ -3198,6 +3214,7 @@ if(cond_res) {
   case 0x100:
     // MRS Rd, CPSR
     // TODO: check if right instruction....
+    clockTicks++;
     CPUUpdateCPSR();
     reg[(opcode >> 12) & 0x0F].I = reg[16].I;
     break;
@@ -3208,6 +3225,7 @@ if(cond_res) {
       u32 temp = CPUReadMemory(address);
       CPUWriteMemory(address, reg[opcode&15].I);
       reg[(opcode >> 12) & 15].I = temp;
+      clockTicks++;
     }
     break;
     LOGICAL_DATA_OPCODE(OP_TEQ, OP_TEQ, 0x130);
@@ -3231,6 +3249,7 @@ if(cond_res) {
       CPUSwitchMode(newValue & 0x1f, false);
       reg[16].I = newValue;
       CPUUpdateFlags();
+      clockTicks++;
       if(!armState) { // this should not be allowed, but it seems to work
         THUMB_PREFETCH;
         reg[15].I = armNextPC + 2;
@@ -3262,6 +3281,7 @@ if(cond_res) {
     // MRS Rd, SPSR
     // TODO: check if right instruction...
     reg[(opcode >> 12) & 0x0F].I = reg[17].I;
+    clockTicks++;
     break;
   case 0x149:
     {
@@ -3270,6 +3290,7 @@ if(cond_res) {
       u32 temp = CPUReadByte(address);
       CPUWriteByte(address, reg[opcode&15].B.B0);
       reg[(opcode>>12)&15].I = temp;
+      clockTicks++;
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_CMN, OP_CMN, 0x170);
@@ -3287,6 +3308,7 @@ if(cond_res) {
         if(opcode & 0x00080000)
           reg[17].I = (reg[17].I & 0x00FFFFFF) | (value & 0xFF000000);
       }
+      clockTicks++;
     }
     break;
     LOGICAL_DATA_OPCODE             (OP_ORR,  OP_ORR, 0x180);
@@ -3351,6 +3373,7 @@ if(cond_res) {
         THUMB_PREFETCH;
         reg[15].I = armNextPC + 2;
       }
+      clockTicks++;
     }
     break;
   case 0x360:
@@ -3386,6 +3409,7 @@ if(cond_res) {
         if(opcode & 0x00080000)
           reg[17].I = (reg[17].I & 0x00FFFFFF) | (value & 0xFF000000);
       }
+      clockTicks++;
     }
   break;
   CASE_16(0x400)
