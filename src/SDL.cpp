@@ -150,6 +150,7 @@ int filter = 0;
 u8 *delta = NULL;
 
 int sdlPrintUsage = 0;
+int disableMMX = 0;
 
 int cartridgeType = 3;
 int sizeOption = 0;
@@ -284,6 +285,7 @@ struct option sdlOptions[] = {
   { "ips", required_argument, 0, 'i' },
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
+  { "no-mmx", no_argument, &disableMMX, 1 },
   { "profile", optional_argument, 0, 'p' },
   { "save-type", required_argument, 0, 't' },
   { "save-auto", no_argument, &cpuSaveType, 0 },
@@ -1787,6 +1789,11 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
+#ifdef MMX
+  if(disableMMX)
+    cpu_mmx = 0;
+#endif
+
   if(sdlFlashSize == 0)
     flashSetSize(0x10000);
   else
@@ -2112,7 +2119,7 @@ int main(int argc, char **argv)
     srcPitch = srcWidth * 2+2;
   } else {
     if(systemColorDepth != 32)
-      filter = NULL;
+      filterFunction = NULL;
     RGB_LOW_BITS_MASK = 0x010101;
     if(systemColorDepth == 32) {
       Init_2xSaI(32);
