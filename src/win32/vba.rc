@@ -1511,12 +1511,11 @@ BEGIN
 
             MENUITEM "&Gameshark Snapshot...",      ID_FILE_EXPORT_GAMESHARKSNAPSHOT
 
-            MENUITEM "Settings to INI",             ID_FILE_EXPORT_SETTINGSTOINI
-
         END
         MENUITEM SEPARATOR
         MENUITEM "S&creen capture...",          ID_FILE_SCREENCAPTURE
         MENUITEM "Ro&m information...",         ID_FILE_ROMINFORMATION
+        MENUITEM "&Toggle menu",                ID_FILE_TOGGLEMENU
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_FILE_CLOSE
         MENUITEM SEPARATOR
@@ -1935,8 +1934,8 @@ BEGIN
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "Customize...",                ID_TOOLS_CUSTOMIZE
         MENUITEM "Rewind",                      ID_TOOLS_REWIND
+        MENUITEM "Customize...",                ID_TOOLS_CUSTOMIZE
     END
     POPUP "&Help"
     BEGIN
@@ -1968,6 +1967,7 @@ BEGIN
     "7",            ID_OPTIONS_VIDEO_LAYERS_WIN1, VIRTKEY, CONTROL, NOINVERT
     "8",            ID_OPTIONS_VIDEO_LAYERS_OBJWIN, VIRTKEY, CONTROL, 
                                                     NOINVERT
+    "B",            ID_TOOLS_REWIND,        VIRTKEY, CONTROL, NOINVERT
     "C",            ID_CHEATS_SEARCHFORCHEATS, VIRTKEY, CONTROL, NOINVERT
     "L",            ID_FILE_LOAD,           VIRTKEY, CONTROL, NOINVERT
     "N",            ID_DEBUG_NEXTFRAME,     VIRTKEY, CONTROL, NOINVERT
@@ -1975,6 +1975,7 @@ BEGIN
     "P",            ID_FILE_PAUSE,          VIRTKEY, CONTROL, NOINVERT
     "R",            ID_FILE_RESET,          VIRTKEY, CONTROL, NOINVERT
     "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_ESCAPE,      ID_FILE_TOGGLEMENU,     VIRTKEY, NOINVERT
     VK_F1,          ID_FILE_LOADGAME_SLOT1, VIRTKEY, NOINVERT
     VK_F1,          ID_FILE_MRU_FILE1,      VIRTKEY, CONTROL, NOINVERT
     VK_F1,          ID_FILE_SAVEGAME_SLOT1, VIRTKEY, SHIFT, NOINVERT
@@ -2186,7 +2187,7 @@ BEGIN
     IDS_SAVE_WILL_BE_LOST   "Importing a snapshot file will erase any saved games and reset the emulator. Do you want to continue?"
     IDS_CONFIRM_ACTION      "Please confirm action"
     IDS_CODES_WILL_BE_LOST  "Importing a code file will erase any entered codes. Do you want to continue?"
-    IDS_FILTER_SPC          "Gameshark Code File_*.SPC__"
+    IDS_FILTER_SPC          "Gameshark Code File_*.SPC;*.XPC__"
     IDS_ADD_CBA_CODE        "Add CodeBreakerAdvance code"
     IDS_FILTER_WAV          "Wave file_*.WAV__"
     IDS_SELECT_WAV_NAME     "Select wave file name"
@@ -2223,6 +2224,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_INVALID_INTERVAL_VALUE 
                             "Invalid rewind interval value. Please enter a number between 10 and 600 seconds."
+    IDS_REGISTRY            "VisualBoyAdvance no longer uses the registry to store its settings. Your previous settings have been exported into the file: %s"
 END
 
 #endif    // English (U.S.) resources

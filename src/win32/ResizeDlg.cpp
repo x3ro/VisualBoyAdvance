@@ -91,6 +91,9 @@ struct DialogData       //      dd
   WinHelper::CRect m_rcGrip;
 };
 
+extern bool regEnabled;
+extern const char *regGetINIPath();
+
 long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData )
 {
   TCHAR szBuffer[ 256 ];
@@ -108,6 +111,18 @@ long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD 
         }
       pszBuffer++;
     }
+
+  if(!regEnabled) {
+    if(GetPrivateProfileStruct("Viewer",
+                               lpValueName,
+                               lpData,
+                               *lpcbData,
+                               regGetINIPath())) {
+      *lpType = REG_BINARY;
+      return ERROR_SUCCESS;
+    }
+    return -1;
+  }
   
   bool m_bNeedToCloseKey = false;
   if( pszLast != szBuffer )
@@ -148,6 +163,17 @@ long FASTCALL RegSetValueExRecursive( HKEY hKey, LPCTSTR lpValueName, DWORD Rese
         }
       pszBuffer++;
     }
+
+  if(!regEnabled) {
+    if(WritePrivateProfileStruct("Viewer",
+                                 lpValueName,
+                                 (LPVOID)lpData,
+                                 cbData,
+                                 regGetINIPath())) {
+      return ERROR_SUCCESS;
+    }
+    return -1;
+  }
   
   bool m_bNeedToCloseKey = false;
   if( pszLast != szBuffer )

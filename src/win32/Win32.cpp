@@ -270,6 +270,7 @@ extern void remoteStubMain();
 extern void remoteSetProtocol(int);
 extern void remoteCleanUp();
 extern int remoteSocket;
+extern const char *regGetINIPath();
 
 void winSignal(int,int);
 void winOutput(char *, u32);
@@ -1439,6 +1440,9 @@ void updateFileMenu(HMENU menu)
   
   EnableMenuItem(menu, ID_FILE_ROMINFORMATION,
                  ENABLEMENU(emulating && videoOption != VIDEO_320x240));
+
+  EnableMenuItem(menu, ID_FILE_TOGGLEMENU,
+                 ENABLEMENU(videoOption > VIDEO_4X));
   
   HMENU load = GetSubMenu(menu, 4);
   int offset = 0;
@@ -1726,8 +1730,6 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(captureFormat == 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_BMPFORMAT,
                 CHECKMENUSTATE(captureFormat != 0));
-  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY,
-                CHECKMENUSTATE(regEnabled));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_AGBPRINT,
                 CHECKMENUSTATE(agbPrintIsEnabled()));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_REALTIMECLOCK,
@@ -3110,7 +3112,7 @@ void fileImportGSSnapshot()
                 winResLoadString(IDS_CONFIRM_ACTION),
                 MB_OKCANCEL) == IDCANCEL)
     return;
-  
+
   bool res = false;
   
   if(cartridgeType == 1)
@@ -3246,8 +3248,18 @@ bool fileImportGSACodeFile(char *fileName)
   }
   fclose(f);
 
+  bool v3 = false;
+  
+  char *p = strrchr(fileName, '.');
+
+  if(p) {
+    p++;
+    if(_stricmp(p, "XPC"))
+      v3 = true;
+  }
+
   if(game != -1) {
-    return cheatsImportGSACodeFile(fileName, game);
+    return cheatsImportGSACodeFile(fileName, game, v3);
   }
   
   return true;
@@ -3678,14 +3690,6 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
     }
     break;
-  case WM_KEYDOWN:
-    // Handle any non-accelerated key commands
-    switch (wParam) {
-    case VK_ESCAPE:
-      fileToggleMenu();
-      return 0L;
-    }
-    break;
   case WM_MOUSEMOVE:
     winMouseOn();
     break;
@@ -3824,6 +3828,9 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if(emulating)
         writeSaveGame((wParam&0xffff)+1-ID_FILE_SAVEGAME_SLOT1);
       break;
+    case ID_FILE_TOGGLEMENU:
+      fileToggleMenu();
+      break;
     case ID_FILE_CLOSE:
       if(emulating)
         fileClose();
@@ -3870,9 +3877,6 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_FILE_EXPORT_BATTERYFILE:
       winCheckFullscreen();      
       fileExportBatteryFile();
-      break;
-    case ID_FILE_EXPORT_SETTINGSTOINI:
-      regExportSettingsToINI();
       break;
     case ID_FILE_EXPORT_GAMESHARKSNAPSHOT:
       winCheckFullscreen();      
@@ -4194,10 +4198,6 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_EMULATOR_BMPFORMAT:
       captureFormat = 1;
       regSetDwordValue("captureFormat", 1);      
-      break;
-    case ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY:
-      regEnabled = !regEnabled;
-      regSetDwordValue("regEnabled", regEnabled, true);
       break;
     case ID_OPTIONS_EMULATOR_AGBPRINT:
       agbPrintEnable(!agbPrintIsEnabled());
@@ -4891,6 +4891,13 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   regEnabled = regQueryDwordValue("regEnabled", 1, true) ?
     true : false;
+
+  if(regEnabled) {
+    regSetDwordValue("regEnabled", false);
+    regExportSettingsToINI();
+    systemMessage(IDS_REGISTRY, "VisualBoyAdvance no longer uses the registry."
+                  " Your settings were exported to file: %s", regGetINIPath());
+  }
   
   languageOption = regQueryDwordValue("language", 1);
   if(languageOption < 0 || languageOption > 2)

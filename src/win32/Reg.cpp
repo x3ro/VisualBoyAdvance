@@ -47,6 +47,11 @@ void regShutdown()
   LONG res = RegCloseKey(vbKey);
 }
 
+const char *regGetINIPath()
+{
+  return regVbaPath;
+}
+
 char *regQueryStringValue(char * key, char *def)
 {
   if(regEnabled) {
@@ -272,54 +277,67 @@ bool regAssociateType(char *type, char *desc, char *application)
   return false;
 }
 
-void regExportSettingsToINI()
+static void regExportSettingsToINI(HKEY key, const char *section)
 {
   char valueName[256];
-  
-  if(vbKey != NULL) {
-    int index = 0;
-    while(1) {
-      DWORD nameSize = 256;
-      DWORD size = 2048;
-      DWORD type;
-      LONG res = RegEnumValue(vbKey,
-                              index,
-                              valueName,
-                              &nameSize,
-                              NULL,
-                              &type,
-                              (LPBYTE)buffer,
-                              &size);
+  int index = 0;
+  while(1) {
+    DWORD nameSize = 256;
+    DWORD size = 2048;
+    DWORD type;
+    LONG res = RegEnumValue(key,
+                            index,
+                            valueName,
+                            &nameSize,
+                            NULL,
+                            &type,
+                            (LPBYTE)buffer,
+                            &size);
       
-      if(res == ERROR_SUCCESS) {
-        switch(type) {
-        case REG_DWORD:
-          {
-            char temp[256];
-            wsprintf(temp, "%u", *((DWORD *)buffer));
-            WritePrivateProfileString(VBA_PREF,
-                                      valueName,
-                                      temp,
-                                      regVbaPath);
-          }
-          break;
-        case REG_SZ:
-          WritePrivateProfileString(VBA_PREF,
+    if(res == ERROR_SUCCESS) {
+      switch(type) {
+      case REG_DWORD:
+        {
+          char temp[256];
+          wsprintf(temp, "%u", *((DWORD *)buffer));
+          WritePrivateProfileString(section,
                                     valueName,
-                                    buffer,
+                                    temp,
                                     regVbaPath);
-          break;
-        case REG_BINARY:
-          WritePrivateProfileStruct(VBA_PREF,
-                                    valueName,
-                                    buffer,
-                                    size,
-                                    regVbaPath);
-          break;
         }
-        index++;
-      } else
         break;
-    }
+      case REG_SZ:
+        WritePrivateProfileString(section,
+                                  valueName,
+                                  buffer,
+                                  regVbaPath);
+        break;
+      case REG_BINARY:
+        WritePrivateProfileStruct(section,
+                                  valueName,
+                                  buffer,
+                                  size,
+                                  regVbaPath);
+        break;
+      }
+      index++;
+    } else
+      break;
+  }
+}
+
+void regExportSettingsToINI()
+{ 
+  if(vbKey != NULL) {
+    regExportSettingsToINI(vbKey, VBA_PREF);
+  }
+
+  HKEY key;
+
+  if(RegOpenKey(HKEY_CURRENT_USER, 
+                "Software\\Emulators\\VisualBoyAdvance\\Viewer", &key) ==
+     ERROR_SUCCESS) {
+    regExportSettingsToINI(key, "Viewer");
+    RegCloseKey(key);
   }
 }

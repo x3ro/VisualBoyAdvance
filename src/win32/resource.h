@@ -367,6 +367,7 @@
 #define IDC_COLOR                       1136
 #define IDS_INVALID_INTERVAL_VALUE      1136
 #define IDC_SAVE_BG                     1137
+#define IDS_REGISTRY                    1137
 #define IDC_SAVE_OBJ                    1138
 #define IDC_MAP_VIEW_ZOOM               1138
 #define IDC_VIEWER                      1140
@@ -700,13 +701,14 @@
 #define ID_HELP_BUGREPORT               40260
 #define ID_HELP_FAQ                     40261
 #define ID_OPTIONS_EMULATOR_REWINDINTERVAL 40262
+#define ID_FILE_TOGGLEMENU              40263
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        151
-#define _APS_NEXT_COMMAND_VALUE         40263
+#define _APS_NEXT_COMMAND_VALUE         40264
 #define _APS_NEXT_CONTROL_VALUE         1249
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
