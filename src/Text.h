@@ -16,5 +16,5 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-extern void fontDisplayString(u8 *, int, int, int, char *);
-extern void fontDisplayStringTransp(u8 *, int, int, int, char *);
+extern void drawText(u8 *, int, int, int, const char *);
+extern void drawTextTransp(u8 *, int, int, int, const char *);

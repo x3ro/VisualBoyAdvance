@@ -26,7 +26,6 @@
 #include "AutoBuild.h"
 
 #include "GBA.h"
-#include "Font.h"
 #include "debugger.h"
 #include "Sound.h"
 #include "unzip.h"

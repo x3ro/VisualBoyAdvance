@@ -30,10 +30,10 @@
 #include "agbprint.h"
 #include "Flash.h"
 #include "Port.h"
-#include "Font.h"
 #include "debugger.h"
 #include "RTC.h"
 #include "Sound.h"
+#include "Text.h"
 #include "unzip.h"
 #include "Util.h"
 #include "gb/GB.h"
@@ -2669,8 +2669,8 @@ void systemDrawScreen()
     if(((systemGetClock() - screenMessageTime) < 3000) &&
        !disableStatusMessages) {
       int pitch = srcPitch;
-      fontDisplayString(pix, srcPitch, 10, srcHeight - 20,
-                        screenMessageBuffer); 
+      drawText(pix, srcPitch, 10, srcHeight - 20,
+               screenMessageBuffer); 
     } else {
       screenMessage = false;
     }
@@ -2761,17 +2761,17 @@ void systemDrawScreen()
               systemFrameSkip,
               showRenderedFrames);
     if(showSpeedTransparent)
-      fontDisplayStringTransp((u8*)surface->pixels,
-                              surface->pitch,
-                              10,
-                              surface->h-20,
-                              buffer);
+      drawTextTransp((u8*)surface->pixels,
+                     surface->pitch,
+                     10,
+                     surface->h-20,
+                     buffer);
     else
-      fontDisplayString((u8*)surface->pixels,
-                        surface->pitch,
-                        10,
-                        surface->h-20,
-                        buffer);        
+      drawText((u8*)surface->pixels,
+               surface->pitch,
+               10,
+               surface->h-20,
+               buffer);        
   }  
 
   SDL_UnlockSurface(surface);
