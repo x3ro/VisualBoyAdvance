@@ -388,7 +388,7 @@ class MainWnd : public CWnd
   afx_msg void OnMouseMove(UINT nFlags, CPoint point);
   afx_msg void OnInitMenu(CMenu* pMenu);
   afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
-#ifdef _MSC_VER <= 1200
+#if _MSC_VER <= 1200
   afx_msg void OnActivateApp(BOOL bActive, HTASK hTask);
 #else
   afx_msg void OnActivateApp(BOOL bActive, DWORD hTask);
