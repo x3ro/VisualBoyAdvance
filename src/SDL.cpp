@@ -782,8 +782,10 @@ FILE *sdlFindPreferences()
           fclose(f);
           sprintf(path2, "%s%cVisualBoyAdvance.cfg", tok, FILE_SEP);
           f = fopen(path2, "r");
-          if(f)
+          if(f) {
+            fprintf(stderr, "Found at %s\n", path2);
             return f;
+          }
         }
         tok = strtok(NULL, PATH_SEP);
       }

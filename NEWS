@@ -4,6 +4,8 @@ Windows version:
 - automatically apply IPS patch if it exists
 SDL version:
 - automatically apply IPS patch if it exists
+- improved search for configuration file: current directory, user directory,
+  executable directory (in order) are searched
 - fixed configuration problem with saveType and removeIntros
 
 Version 1.2:

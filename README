@@ -206,9 +206,14 @@ Options configuration
 ---------------------
 
 All configurable options are accessible from the configuration file
-VisualBoyAdvance.cfg. This file should be placed in the same directory
-as the emulator or it should reside in the current directory where the
-emulator is started from.
+VisualBoyAdvance.cfg.
+
+This file is searched in this order:
+
+- current directory
+- user home directory (defined by HOME environment variable)
+- user profile directory (Windows only defined by USERPROFILE directory)
+- executable directory (either relative or defined by PATH variable)
 
 All options are documented in the file supplied with this distribution.
 
