@@ -304,6 +304,7 @@ Command line options (override settings in configuration file)
                                3 - YUY2
                                4 - IYUV
   -b , --bios=BIOS            Use given bios file
+  -c,  --config=FILE          Read the given configuration file
   -d , --debug                Enter debugger
   -f , --filter=FILTER        Select filter:
        --filter-normal         0 - normal mode
@@ -315,6 +316,7 @@ Command line options (override settings in configuration file)
        --filter-motion-blur    6 - Motion Blur
        --filter-advmame        7 - AdvanceMAME Scale2x
        --filter-simple2x       8 - Simple2x
+  -h , --help                 Print this help
   -p , --profile=[HERTZ]      Enable profiling
   -s , --frameskip=FRAMESKIP  Set frame skip (0...9)
   -t , --save-type=TYPE       Set the available save type

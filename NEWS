@@ -8,6 +8,7 @@ Windows version:
 - fixed missing check marks on layers menu
 SDL version:
 - added support for long options
+- added support for passing configuration file name
 - added profiling support (GMON format - see README)
 - automatically apply IPS patch if it exists
 - improved search for configuration file: current directory, user directory,

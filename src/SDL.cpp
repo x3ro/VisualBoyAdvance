@@ -132,6 +132,8 @@ int sensorY = 2047;
 int filter = 0;
 u8 *delta = NULL;
 
+int sdlPrintUsage = 0;
+
 int cartridgeType = 3;
 int sizeOption = 0;
 int captureFormat = 0;
@@ -235,6 +237,7 @@ u16 defaultMotion[4] = {
 
 struct option sdlOptions[] = {
   { "bios", required_argument, 0, 'b' },
+  { "config", required_argument, 0, 'c' },
   { "debug", no_argument, 0, 'd' },
   { "filter", required_argument, 0, 'f' },
   { "filter-normal", no_argument, &filter, 0 },
@@ -252,6 +255,7 @@ struct option sdlOptions[] = {
   { "frameskip", required_argument, 0, 's' },
   { "fullscreen", no_argument, &fullscreen, 1 },
   { "gdb", required_argument, 0, 'G' },
+  { "help", no_argument, &sdlPrintUsage, 1 },
   { "no-debug", no_argument, 0, 'N' },
   { "profile", optional_argument, 0, 'p' },
   { "save-type", required_argument, 0, 't' },
@@ -1503,6 +1507,7 @@ void usage(char *cmd)
         printf("                               3 - YUY2\n");
         printf("                               4 - IYUV\n");
         printf("  -b , --bios=BIOS            Use given bios file\n");
+        printf("  -c,  --config=FILE          Read the given configuration file\n");
         printf("  -d , --debug                Enter debugger\n");        
         printf("  -f , --filter=FILTER        Select filter:\n");
         printf("       --filter-normal         0 - normal mode\n");
@@ -1514,6 +1519,7 @@ void usage(char *cmd)
         printf("       --filter-motion-blur    6 - Motion Blur\n");
         printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
         printf("       --filter-simple2x       8 - Simple2x\n");
+        printf("  -h , --help                 Print this help\n");
         printf("  -p , --profile=[HERTZ]      Enable profiling\n");
         printf("  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)\n");
         printf("  -t , --save-type=TYPE       Set the available save type\n");
@@ -1557,8 +1563,10 @@ int main(int argc, char **argv)
   parseDebug = true;
 
   sdlReadPreferences();
+
+  sdlPrintUsage = 0;
   
-  while((op = getopt_long(argc, argv, "FNY:G:D:b:df:p::s:t:v:1234",
+  while((op = getopt_long(argc, argv, "FNY:G:D:b:c:df:hp::s:t:v:1234",
                           sdlOptions, NULL)) != -1) {
     switch(op) {
     case 0:
@@ -1572,8 +1580,26 @@ int main(int argc, char **argv)
       }
       strcpy(biosFileName, optarg);
       break;
+    case 'c':
+      {
+        if(optarg == NULL) {
+          fprintf(stderr, "Missing config file name\n");
+          exit(-1);
+        }
+        FILE *f = fopen(optarg, "r");
+        if(f == NULL) {
+          fprintf(stderr, "File not found %s\n", optarg);
+          exit(-1);
+        }
+        sdlReadPreferences(f);
+        fclose(f);
+      }
+      break;
     case 'd':
       debugger = true;
+      break;
+    case 'h':
+      sdlPrintUsage = 1;
       break;
     case 'Y':
       yuv = true;
@@ -1699,10 +1725,14 @@ int main(int argc, char **argv)
       sizeOption = 3;
       break;
     case '?':
-      usage(argv[0]);
-      exit(-1);
+      sdlPrintUsage = 1;
       break;
     }
+  }
+
+  if(sdlPrintUsage) {
+    usage(argv[0]);
+    exit(-1);
   }
 
   if(sdlFlashSize == 0)

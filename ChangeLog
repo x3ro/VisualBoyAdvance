@@ -1,3 +1,7 @@
+2002-11-24  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp: added flag for help and configuration file
+
 2002-11-23  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/GBACheats.cpp: cleaned up some unused stuff 
