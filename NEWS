@@ -12,8 +12,23 @@ Core changes:
 - fixed ARM LDRx instructions when base equals dest
 
 Gameboy:
+- added support for 8M roms
+- (re)added support for 2-4 playes in SGB mode
+- added sprite limit emulation (thanks Ricky of KiGB)
+- cancel pending EI when imediately followed by DI
 - implemented DI/HALT bug
+- implemented STAT write bug during VBLANK or HBLANK when in GB mode
+- implemented GDMA delay in GBC mode (thanks TM of GEST)
 - fixed priority between OBJ and Window
+- fixed some SGB border problems
+- fixed window rendering problems in some cases 
+- fixed CGB initial background palette to white
+- fixed initial save memory value to 0xFF instead of 0x00 (thanks TM of GEST)
+- fixed LCD interrupts to only occur once per line
+- fixed incorrect display when BG is off
+- modified interrut delay to 6 clock ticks instead of 2
+- moved scanline update to beginning of HBLANK
+
 
 Windows:
 - added predefined Gameboy palettes (thanks Kojote)
@@ -22,6 +37,7 @@ Windows:
 - added menu entry to save state into oldest slot
 - added option to auto load the most recent save state upon loading
 - added fullscreen max scale option
+- chnaged the bug report option to be a little more friendly
 - enhanced save state submenus to show date/time of when save was made
 - enhanced logging window to capture data even if not being displayed
 - fixed Direct3D/OpenGL "green" bug with Motion Blur Interframe Blending
