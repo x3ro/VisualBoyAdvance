@@ -94,7 +94,8 @@ class VideoDriverSelect : public CDialog
   afx_msg void OnCancel();
   afx_msg void OnOk();
   virtual BOOL OnInitDialog();
-  //}}AFX_MSG
+	afx_msg void OnSelchangeDrivers();
+	//}}AFX_MSG
   DECLARE_MESSAGE_MAP()
     };
 #endif // !defined(AFX_VIDEOMODE_H__074B2426_32EA_4D69_9215_AB5E90F885D0__INCLUDED_)

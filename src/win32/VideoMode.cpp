@@ -327,7 +327,8 @@ BEGIN_MESSAGE_MAP(VideoDriverSelect, CDialog)
   //{{AFX_MSG_MAP(VideoDriverSelect)
   ON_BN_CLICKED(ID_OK, OnOk)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
-  //}}AFX_MSG_MAP
+	ON_LBN_SELCHANGE(IDC_DRIVERS, OnSelchangeDrivers)
+	//}}AFX_MSG_MAP
   END_MESSAGE_MAP()
 
   /////////////////////////////////////////////////////////////////////////////
@@ -356,4 +357,9 @@ BOOL VideoDriverSelect::OnInitDialog()
   
   return TRUE;  // return TRUE unless you set the focus to a control
                 // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void VideoDriverSelect::OnSelchangeDrivers() 
+{
+	GetDlgItem(ID_OK)->EnableWindow(m_drivers.GetCurSel() != -1);
 }
