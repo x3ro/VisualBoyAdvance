@@ -213,16 +213,9 @@ The output will always contain the histogram of PC positions at the specified
 frequency even if the code is not compiled with call graph support.
 
 In order to enable profiling, you need to add a call inside your code
-to start it:
+to start it (download vba.s for a ready to use file for GCC):
 
-void monstart(u32 lowPC, 32 highPC)
-{
-  asm ("mov r0, %0\n"
-       "mov r1, %1\n" // use 0x00fe0000 if in ARM mode
-       "swi 0xfe\n"
-       :
-       : "r" (lowPC), "r" (highPC));
-}
+void monstartup(u32 lowPC, 32 highPC)
 
 This will start profiling for the given address region. If the code was also
 compiled with -pg, call graphs will be recorded.
@@ -233,38 +226,42 @@ Other calls for fine grain control:
 // 0 - stops profiling
 // anyother value starts it
 void moncontrol(int mode)
-{
-  asm ("mov r0, %0\n"
-       "swi 0xfd\n" // use 0x00fd0000 if in ARM mode
-       :
-       : "r" (mode));
-}
 
 // stop profiling and output gmon.out file
 void moncleanup()
-{
-  asm ("swi 0xfc\n" // use 0x00fc0000 if in ARM mode
-       :
-       :);
-}
 
 // record call graph (used by GCC)
 // r12 contains previous caller
 // r14 contains function that was called
 void mcount()
-{
-  asm ("swi 0xfb\n" // use 0x00fb0000 if in ARM mode
-       :
-       :);
-}
 
-Some versions of GCC have a bug where it will output bad code, so you will
-either need to use an hex editor to fix it (search for mov\tip, lr and
-replace \t with spaces - on some versions, you will also need to fix the
-next instruction: .word LP%d and replace it with spaces). Failing to fix the
-bad versions will make it fail to compile with profiling (call graph)
-support. Histograms will still be output even if the code is not compiled
-with call graph support.
+GCC bugs:
+---------
+
+All versions of GCC previous to the working version 3.3 have bugs when
+generating profiling for thumb functions.
+
+The errors are:
+- mov\tip,lr not a valid instruction (typo in gcc/config/arm/arm.h)
+- LPxx undefined when linking (missing . before LP causes the problem)
+
+You can fix these problems by either recompiling GCC (recommended) or by
+modifying cc1.exe to fix the problems.
+
+In the first option, find the given code in gcc/config/arm/arm.h and fix
+the typos (remove the extra blackslash from the mov ip,lr instruction and
+add the missing dot before LP%d) or change THUMB_FUNCTION_PROFILER to call
+ARM_FUNCTION_PROFILER (the recent changes that were performed in CVS).
+
+If you don't want to compile your own GCC, then you can use an hex editor
+to fix the problems. Locate cc1.exe under <dir>/lib/gcc-lib/<config>/<version>
+and find the mov\tip,lr instruction. Change the extra backslash to a space.
+Locate the .LP string just before the mov instruction and change it to
+.P instead (make sure to place 0 after the P). Then find the text .word
+LP%d and change it to .word .P%d.
+
+Histograms will be output even if the code is not compiled with call graph
+support.
 
 Options configuration
 ---------------------
@@ -317,6 +314,7 @@ Command line options (override settings in configuration file)
        --filter-advmame        7 - AdvanceMAME Scale2x
        --filter-simple2x       8 - Simple2x
   -h , --help                 Print this help
+  -i , --ips=PATCH            Apply given IPS patch
   -p , --profile=[HERTZ]      Enable profiling
   -s , --frameskip=FRAMESKIP  Set frame skip (0...9)
   -t , --save-type=TYPE       Set the available save type
