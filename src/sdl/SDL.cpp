@@ -1846,92 +1846,97 @@ void sdlPollEvents()
 
 void usage(char *cmd)
 {
-        printf("%s [options] file-name\n",cmd);
-        printf("  options:\n");
-        printf("  -1 , --video-1x             1x\n");
-        printf("  -2 , --video-2x             2x\n");
-        printf("  -3 , --video-3x             3x\n");
-        printf("  -4 , --video 4x             4x\n");        
-        printf("  -F , --fullscreen           Full screen\n");
-        printf("  -G , --gdb=PROTOCOL         GNU Remote Stub mode:\n");
-        printf("                               tcp      - use TCP at port 55555\n");
-        printf("                               tcp:PORT - use TCP at port PORT\n");
-        printf("                               pipe     - use pipe transport\n");
-        printf("  -N , --no-debug             Don't parse debug information\n");
-        printf("  -S , --flash-size=SIZE      Set the Flash size\n");
-        printf("       --flash-64k             0 -  64K Flash\n");
-        printf("       --flash-128k            1 - 128K Flash\n");
-        printf("  -T , --throttle=THROTTLE    Set the desired throttle (5...1000)\n");
-        printf("  -Y , --yuv=TYPE             Use YUV overlay for drawing:\n");
-        printf("                               0 - YV12\n");
-        printf("                               1 - UYVY\n");
-        printf("                               2 - YVYU\n");
-        printf("                               3 - YUY2\n");
-        printf("                               4 - IYUV\n");
-        printf("  -b , --bios=BIOS            Use given bios file\n");
-        printf("  -c,  --config=FILE          Read the given configuration file\n");
-        printf("  -d , --debug                Enter debugger\n");        
-        printf("  -f , --filter=FILTER        Select filter:\n");
-        printf("       --filter-normal         0 - normal mode\n");
-        printf("       --filter-tv-mode        1 - TV Mode\n");
-        printf("       --filter-2xsai          2 - 2xSaI\n");
-        printf("       --filter-super-2xsai    3 - Super 2xSaI\n");
-        printf("       --filter-super-eagle    4 - Super Eagle\n");
-        printf("       --filter-pixelate       5 - Pixelate\n");
-        printf("       --filter-motion-blur    6 - Motion Blur\n");
-        printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
-        printf("       --filter-simple2x       8 - Simple2x\n");
-        printf("       --filter-bilinear       9 - Bilinear\n");
-        printf("       --filter-bilinear+     10 - Bilinear Plus\n");
-        printf("       --filter-scanlines     11 - Scanlines\n");
-        printf("       --filter-hq2x          12 - hq2x\n");
-        printf("       --filter-lq2x          13 - lq2x\n");
-        printf("  -h , --help                 Print this help\n");
-        printf("  -i , --ips=PATCH            Apply given IPS patch\n");
-        printf("  -p , --profile=[HERTZ]      Enable profiling\n");
-        printf("  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)\n");
-        printf("  -t , --save-type=TYPE       Set the available save type\n");
-        printf("       --save-auto             0 - Automatic (EEPROM, SRAM, FLASH)\n");
-        printf("       --save-eeprom           1 - EEPROM\n");
-        printf("       --save-sram             2 - SRAM\n");
-        printf("       --save-flash            3 - FLASH\n");
-        printf("       --save-sensor           4 - EEPROM+Sensor\n");
-        printf("       --save-none             5 - NONE\n");
-        printf("  -v , --verbose=VERBOSE      Set verbose logging (trace.log)\n");
-        printf("                                 1 - SWI\n");
-        printf("                                 2 - Unaligned memory access\n");
-        printf("                                 4 - Illegal memory write\n");
-        printf("                                 8 - Illegal memory read\n");
-        printf("                                16 - DMA 0\n");
-        printf("                                32 - DMA 1\n");
-        printf("                                64 - DMA 2\n");
-        printf("                               128 - DMA 3\n");
-        printf("                               256 - Undefined instruction\n");
-        printf("                               512 - AGBPrint messages\n");
-        printf("\n");
-        printf("Long options only:\n");
-        printf("       --agb-print              Enable AGBPrint support\n");
-        printf("       --auto-frameskip         Enable auto frameskipping\n");
-        printf("       --ifb-none               No interframe blending\n");
-        printf("       --ifb-motion-blur        Interframe motion blur\n");
-        printf("       --ifb-smart              Smart interframe blending\n");
-        printf("       --no-agb-print           Disable AGBPrint support\n");
-        printf("       --no-auto-frameskip      Disable auto frameskipping\n");
-        printf("       --no-ips                 Do not apply IPS patch\n");
-        printf("       --no-mmx                 Disable MMX support\n");
-        printf("       --no-pause-when-inactive Don't pause when inactive\n");
-        printf("       --no-rtc                 Disable RTC support\n");
-        printf("       --no-show-speed          Don't show emulation speed\n");
-        printf("       --no-throttle            Disable thrrotle\n");
-        printf("       --pause-when-inactive    Pause when inactive\n");
-        printf("       --rtc                    Enable RTC support\n");
-        printf("       --show-speed-normal      Show emulation speed\n");
-        printf("       --show-speed-detailed    Show detailed speed data\n");
+  printf("%s [option ...] file\n", cmd);
+  printf("\
+\n\
+Options:\n\
+  -1, --video-1x               1x\n\
+  -2, --video-2x               2x\n\
+  -3, --video-3x               3x\n\
+  -4, --video-4x               4x\n\
+  -F, --fullscreen             Full screen\n\
+  -G, --gdb=PROTOCOL           GNU Remote Stub mode:\n\
+                                tcp      - use TCP at port 55555\n\
+                                tcp:PORT - use TCP at port PORT\n\
+                                pipe     - use pipe transport\n\
+  -N, --no-debug               Don't parse debug information\n\
+  -S, --flash-size=SIZE        Set the Flash size\n\
+      --flash-64k               0 -  64K Flash\n\
+      --flash-128k              1 - 128K Flash\n\
+  -T, --throttle=THROTTLE      Set the desired throttle (5...1000)\n\
+  -Y, --yuv=TYPE               Use YUV overlay for drawing:\n\
+                                0 - YV12\n\
+                                1 - UYVY\n\
+                                2 - YVYU\n\
+                                3 - YUY2\n\
+                                4 - IYUV\n\
+  -b, --bios=BIOS              Use given bios file\n\
+  -c, --config=FILE            Read the given configuration file\n\
+  -d, --debug                  Enter debugger\n\
+  -f, --filter=FILTER          Select filter:\n\
+      --filter-normal            0 - normal mode\n\
+      --filter-tv-mode           1 - TV Mode\n\
+      --filter-2xsai             2 - 2xSaI\n\
+      --filter-super-2xsai       3 - Super 2xSaI\n\
+      --filter-super-eagle       4 - Super Eagle\n\
+      --filter-pixelate          5 - Pixelate\n\
+      --filter-motion-blur       6 - Motion Blur\n\
+      --filter-advmame           7 - AdvanceMAME Scale2x\n\
+      --filter-simple2x          8 - Simple2x\n\
+      --filter-bilinear          9 - Bilinear\n\
+      --filter-bilinear+        10 - Bilinear Plus\n\
+      --filter-scanlines        11 - Scanlines\n\
+      --filter-hq2x             12 - hq2x\n\
+      --filter-lq2x             13 - lq2x\n\
+  -h, --help                   Print this help\n\
+  -i, --ips=PATCH              Apply given IPS patch\n\
+  -p, --profile=[HERTZ]        Enable profiling\n\
+  -s, --frameskip=FRAMESKIP    Set frame skip (0...9)\n\
+");
+  printf("\
+  -t, --save-type=TYPE         Set the available save type\n\
+      --save-auto               0 - Automatic (EEPROM, SRAM, FLASH)\n\
+      --save-eeprom             1 - EEPROM\n\
+      --save-sram               2 - SRAM\n\
+      --save-flash              3 - FLASH\n\
+      --save-sensor             4 - EEPROM+Sensor\n\
+      --save-none               5 - NONE\n\
+  -v, --verbose=VERBOSE        Set verbose logging (trace.log)\n\
+                                  1 - SWI\n\
+                                  2 - Unaligned memory access\n\
+                                  4 - Illegal memory write\n\
+                                  8 - Illegal memory read\n\
+                                 16 - DMA 0\n\
+                                 32 - DMA 1\n\
+                                 64 - DMA 2\n\
+                                128 - DMA 3\n\
+                                256 - Undefined instruction\n\
+                                512 - AGBPrint messages\n\
+\n\
+Long options only:\n\
+      --agb-print              Enable AGBPrint support\n\
+      --auto-frameskip         Enable auto frameskipping\n\
+      --ifb-none               No interframe blending\n\
+      --ifb-motion-blur        Interframe motion blur\n\
+      --ifb-smart              Smart interframe blending\n\
+      --no-agb-print           Disable AGBPrint support\n\
+      --no-auto-frameskip      Disable auto frameskipping\n\
+      --no-ips                 Do not apply IPS patch\n\
+      --no-mmx                 Disable MMX support\n\
+      --no-pause-when-inactive Don't pause when inactive\n\
+      --no-rtc                 Disable RTC support\n\
+      --no-show-speed          Don't show emulation speed\n\
+      --no-throttle            Disable thrrotle\n\
+      --pause-when-inactive    Pause when inactive\n\
+      --rtc                    Enable RTC support\n\
+      --show-speed-normal      Show emulation speed\n\
+      --show-speed-detailed    Show detailed speed data\n\
+");
 }
 
 int main(int argc, char **argv)
 {
-  fprintf(stderr,"VisualBoyAdvance-SDL version %s\n", VERSION);
+  fprintf(stderr, "VisualBoyAdvance version %s [SDL]\n", VERSION);
 
   arg0 = argv[0];
   

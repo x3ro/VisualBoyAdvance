@@ -69,6 +69,7 @@ public:
   const int m_iGBAScreenWidth;
   const int m_iGBAScreenHeight;
 
+  bool bLoadROM(const std::string & _rsFile);
   void vPopupError(const char * _csFormat, ...);
   void vPopupErrorV(const char * _csFormat, va_list _args);
   void vDrawScreen();
@@ -306,7 +307,6 @@ private:
   void vDrawDefaultScreen();
   void vSetDefaultTitle();
   void vCreateFileOpenDialog();
-  bool bLoadROM(const std::string & _rsFile);
   void vLoadBattery();
   void vSaveBattery();
   void vStartEmu();

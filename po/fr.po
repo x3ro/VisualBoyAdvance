@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VisualBoyAdvance 1.7.2\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-05-17 00:20+0200\n"
-"PO-Revision-Date: 2004-05-11 21:01+0200\n"
+"POT-Creation-Date: 2004-05-21 18:02+0200\n"
+"PO-Revision-Date: 2004-05-21 18:03+0200\n"
 "Last-Translator: Sébastien Guignot <kxu@tsys.org>\n"
 "Language-Team: French <@>\n"
 "MIME-Version: 1.0\n"
@@ -236,6 +236,33 @@ msgstr "Type de cartouche %02x inconnu"
 #: src/gtk/joypadconfig.cpp:257
 msgid "<Undefined>"
 msgstr "<Non défini>"
+
+#: src/gtk/main.cpp:61
+#, c-format
+msgid "Try `%s --help' for more information.\n"
+msgstr "Pour en savoir davantage, faites: `%s --help'.\n"
+
+#: src/gtk/main.cpp:65
+#, c-format
+msgid "Usage: %s [option ...] [file]\n"
+msgstr "Usage: %s [option ...] [fichier]\n"
+
+#: src/gtk/main.cpp:66
+msgid ""
+"\n"
+"Options:\n"
+"      --help            Output this help.\n"
+"  -V, --version         Output version information.\n"
+msgstr ""
+"\n"
+"Options:\n"
+"      --help            Affiche cette aide.\n"
+"  -V, --version         Affiche la version.\n"
+
+#: src/gtk/main.cpp:130
+#, c-format
+msgid "VisualBoyAdvance version %s [GTK+]\n"
+msgstr "VisualBoyAdvance version %s [GTK+]\n"
 
 #: src/gtk/vba.glade:7
 msgid "VBA"
@@ -1045,26 +1072,26 @@ msgstr "BIOS Gameboy Advance"
 msgid "Only GBA images are supported."
 msgstr "Seules les images GBA sont supportées."
 
-#: src/gtk/window.cpp:1619 src/gtk/window.cpp:1633
-msgid "Open"
-msgstr "Ouvrir"
-
-#: src/gtk/window.cpp:1660
-msgid "All Gameboy Advance files"
-msgstr "Tous les fichiers Gameboy Advance"
-
-#: src/gtk/window.cpp:1667
-msgid "Gameboy Advance files"
-msgstr "Fichiers Gameboy Advance"
-
-#: src/gtk/window.cpp:1674
-msgid "Gameboy files"
-msgstr "Fichiers Gameboy"
-
-#: src/gtk/window.cpp:1699
+#: src/gtk/window.cpp:1427
 #, c-format
 msgid "Unknown file type %s"
 msgstr "Type de fichier inconnu %s"
+
+#: src/gtk/window.cpp:1708 src/gtk/window.cpp:1722
+msgid "Open"
+msgstr "Ouvrir"
+
+#: src/gtk/window.cpp:1749
+msgid "All Gameboy Advance files"
+msgstr "Tous les fichiers Gameboy Advance"
+
+#: src/gtk/window.cpp:1756
+msgid "Gameboy Advance files"
+msgstr "Fichiers Gameboy Advance"
+
+#: src/gtk/window.cpp:1763
+msgid "Gameboy files"
+msgstr "Fichiers Gameboy"
 
 #: src/gtk/window.cpp:1793
 msgid "Loaded battery"
@@ -1085,6 +1112,3 @@ msgstr "%d/%m/%Y %H:%M:%S"
 #: src/prof/prof.cpp:143
 msgid "No space for profiling buffer(s)\n"
 msgstr "Pas de place pour le(s) tampon(s) de profil\n"
-
-#~ msgid "_Cheats"
-#~ msgstr "_Cheats"

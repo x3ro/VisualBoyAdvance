@@ -1414,6 +1414,95 @@ void Window::vUpdateScreen()
   }
 }
 
+bool Window::bLoadROM(const std::string & _rsFile)
+{
+  vOnFileClose();
+
+  m_sRomFile = _rsFile;
+  const char * csFile = _rsFile.c_str();
+
+  IMAGE_TYPE eType = utilFindType(csFile);
+  if (eType == IMAGE_UNKNOWN)
+  {
+    vPopupError(_("Unknown file type %s"), csFile);
+    return false;
+  }
+
+  bool bLoaded = false;
+  if (eType == IMAGE_GB)
+  {
+    bLoaded = gbLoadRom(csFile);
+    if (bLoaded)
+    {
+      m_eCartridge = CartridgeGB;
+      m_stEmulator = GBSystem;
+    }
+  }
+  else if (eType == IMAGE_GBA)
+  {
+    int iSize = CPULoadRom(csFile);
+    bLoaded = (iSize > 0);
+    if (bLoaded)
+    {
+      m_eCartridge = CartridgeGBA;
+      m_stEmulator = GBASystem;
+
+      useBios = m_poCoreConfig->oGetKey<bool>("use_bios_file");
+      CPUInit(m_poCoreConfig->sGetKey("bios_file").c_str(), useBios);
+      CPUReset();
+
+      // If the bios file was rejected by CPUInit
+      if (m_poCoreConfig->oGetKey<bool>("use_bios_file") && ! useBios)
+      {
+        m_poUseBiosItem->set_active(false);
+        m_poUseBiosItem->set_sensitive(false);
+        m_poCoreConfig->vSetKey("bios_file", "");
+      }
+    }
+  }
+
+  if (! bLoaded)
+  {
+    return false;
+  }
+
+  vLoadBattery();
+  vUpdateScreen();
+
+  debugger = false; // May cause conflicts
+  emulating = 1;
+  m_bWasEmulating = false;
+  m_uiThrottleDelay = 0;
+
+  if (m_eCartridge == CartridgeGBA)
+  {
+    soundSetQuality(m_eSoundQuality);
+  }
+  else
+  {
+    gbSoundSetQuality(m_eSoundQuality);
+  }
+
+  vUpdateGameSlots();
+  vHistoryAdd(_rsFile);
+
+  for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
+       it != m_listSensitiveWhenPlaying.end();
+       it++)
+  {
+    (*it)->set_sensitive();
+  }
+
+  if (m_poCoreConfig->oGetKey<bool>("load_game_auto"))
+  {
+    vOnLoadGameMostRecent();
+  }
+
+  vStartEmu();
+
+  return true;
+}
+
 void Window::vPopupError(const char * _csFormat, ...)
 {
   va_list args;
@@ -1684,95 +1773,6 @@ void Window::vCreateFileOpenDialog()
 #endif // ! GTKMM20
 
   m_poFileOpenDialog = poDialog;
-}
-
-bool Window::bLoadROM(const std::string & _rsFile)
-{
-  vOnFileClose();
-
-  m_sRomFile = _rsFile;
-  const char * csFile = _rsFile.c_str();
-
-  IMAGE_TYPE eType = utilFindType(csFile);
-  if (eType == IMAGE_UNKNOWN)
-  {
-    vPopupError(_("Unknown file type %s"), csFile);
-    return false;
-  }
-
-  bool bLoaded = false;
-  if (eType == IMAGE_GB)
-  {
-    bLoaded = gbLoadRom(csFile);
-    if (bLoaded)
-    {
-      m_eCartridge = CartridgeGB;
-      m_stEmulator = GBSystem;
-    }
-  }
-  else if (eType == IMAGE_GBA)
-  {
-    int iSize = CPULoadRom(csFile);
-    bLoaded = (iSize > 0);
-    if (bLoaded)
-    {
-      m_eCartridge = CartridgeGBA;
-      m_stEmulator = GBASystem;
-
-      useBios = m_poCoreConfig->oGetKey<bool>("use_bios_file");
-      CPUInit(m_poCoreConfig->sGetKey("bios_file").c_str(), useBios);
-      CPUReset();
-
-      // If the bios file was rejected by CPUInit
-      if (m_poCoreConfig->oGetKey<bool>("use_bios_file") && ! useBios)
-      {
-        m_poUseBiosItem->set_active(false);
-        m_poUseBiosItem->set_sensitive(false);
-        m_poCoreConfig->vSetKey("bios_file", "");
-      }
-    }
-  }
-
-  if (! bLoaded)
-  {
-    return false;
-  }
-
-  vLoadBattery();
-  vUpdateScreen();
-
-  debugger = false; // May cause conflicts
-  emulating = 1;
-  m_bWasEmulating = false;
-  m_uiThrottleDelay = 0;
-
-  if (m_eCartridge == CartridgeGBA)
-  {
-    soundSetQuality(m_eSoundQuality);
-  }
-  else
-  {
-    gbSoundSetQuality(m_eSoundQuality);
-  }
-
-  vUpdateGameSlots();
-  vHistoryAdd(_rsFile);
-
-  for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
-       it != m_listSensitiveWhenPlaying.end();
-       it++)
-  {
-    (*it)->set_sensitive();
-  }
-
-  if (m_poCoreConfig->oGetKey<bool>("load_game_auto"))
-  {
-    vOnLoadGameMostRecent();
-  }
-
-  vStartEmu();
-
-  return true;
 }
 
 void Window::vLoadBattery()
