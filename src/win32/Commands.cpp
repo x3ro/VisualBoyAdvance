@@ -110,6 +110,7 @@ struct {
   { "OptionsEmulatorSaveEEPROMSensor", ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR },
   { "OptionsEmulatorSaveFlash64K", ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K },
   { "OptionsEmulatorSaveFlash128K", ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M },
+  { "OptionsEmulatorAutoIPSPatch", ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH },
   { "OptionsSoundOff", ID_OPTIONS_SOUND_OFF },
   { "OptionsSoundMute", ID_OPTIONS_SOUND_MUTE },
   { "OptionsSoundOn", ID_OPTIONS_SOUND_ON },
