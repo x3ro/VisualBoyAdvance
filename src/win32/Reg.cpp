@@ -18,6 +18,7 @@
  */
 #include <windows.h>
 #include <stdio.h>
+#include "StdString.h"
 
 static char buffer[2048];
 static HKEY vbKey = NULL;
@@ -130,7 +131,14 @@ BOOL regQueryBinaryValue(char * key, char *value, int count)
 
     return FALSE;
   }
-
+  CStdString k = key;
+  k += "Count";
+  int size = GetPrivateProfileInt(VBA_PREF,
+                                  k,
+                                  -1,
+                                  regVbaPath);
+  if(size >= 0 && size < count)
+    count = size;
   return GetPrivateProfileStruct(VBA_PREF,
                                  key,
                                  value,
@@ -183,6 +191,15 @@ void regSetBinaryValue(char *key, char *value, int count)
                              (const UCHAR *)value,
                              count);
   } else {
+    CStdString k = key;
+    k += "Count";
+    wsprintf(buffer, "%u", count);
+    
+    WritePrivateProfileString(VBA_PREF,
+                              k,
+                              buffer,
+                              regVbaPath);
+                           
     WritePrivateProfileStruct(VBA_PREF,
                               key,
                               value,
@@ -313,11 +330,22 @@ static void regExportSettingsToINI(HKEY key, const char *section)
                                   regVbaPath);
         break;
       case REG_BINARY:
-        WritePrivateProfileStruct(section,
-                                  valueName,
-                                  buffer,
-                                  size,
-                                  regVbaPath);
+        {
+          char temp[256];
+          
+          wsprintf(temp, "%u", size);
+          CStdString k = valueName;
+          k += "Count";
+          WritePrivateProfileString(section,
+                                    k,
+                                    temp,
+                                    regVbaPath);
+          WritePrivateProfileStruct(section,
+                                    valueName,
+                                    buffer,
+                                    size,
+                                    regVbaPath);
+        }
         break;
       }
       index++;
