@@ -61,7 +61,7 @@ typedef union {
 extern memoryMap map[256];
 
 extern reg_pair reg[45];
-extern u32 biosProtected;
+extern u8 biosProtected[4];
 
 extern bool N_FLAG;
 extern bool Z_FLAG;

@@ -162,7 +162,7 @@ const int cpuMemoryWait[16] = {
 const bool memory32[16] =
   { false, false, false, true, true, false, false, true, false, false, false, false, false, false, false, false};
 
-u32 biosProtected;
+u8 biosProtected[4];
 
 u32 myROM[] = {
 0xEA000006,
@@ -2857,7 +2857,10 @@ void CPUInit(char *biosFileName, bool useBiosFile)
 
   int i = 0;
 
-  biosProtected = 0xe129f000;
+  biosProtected[0] = 0x00;
+  biosProtected[1] = 0xf0;
+  biosProtected[2] = 0x29;
+  biosProtected[3] = 0xe1;
 
   for(i = 0; i < 256; i++) {
     int count = 0;
@@ -3059,7 +3062,12 @@ void CPUReset()
   // reset internal state
   holdState = false;
   holdType = 0;
-
+  
+  biosProtected[0] = 0x00;
+  biosProtected[1] = 0xf0;
+  biosProtected[2] = 0x29;
+  biosProtected[3] = 0xe1;
+  
   lcdTicks = 960;
   timer0On = false;
   timer0Ticks = 0;
@@ -3159,7 +3167,10 @@ void CPUInterrupt()
   reg[15].I += 4;
 
   //  if(!holdState)
-      biosProtected = 0xe55ec002;
+  biosProtected[0] = 0x02;
+  biosProtected[1] = 0xc0;
+  biosProtected[2] = 0x5e;
+  biosProtected[3] = 0xe5;
 }
 
 #ifdef SDL

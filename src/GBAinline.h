@@ -55,7 +55,7 @@ u32 inline CPUReadMemory(u32 address)
         }
 #endif
         
-        value = biosProtected;
+        value = FROM32LE(*((u32 *)&biosProtected));
       }
       else goto unreadable;
     } else
@@ -254,7 +254,7 @@ u8 inline CPUReadByte(u32 address)
               armNextPC - 4 : armNextPC - 2);
         }
 #endif
-        return (((u8 *)&biosProtected)[address & 3]);
+        return biosProtected[address & 3];
       } else goto unreadable;
     }
     return bios[address & 0x3FFF];
