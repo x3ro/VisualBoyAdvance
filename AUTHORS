@@ -4,11 +4,11 @@ VisualBoy and VisualBoyAdvance original development:
 
 Current maintainer:
 
-- Sébastien Guignot aka kxu (helped and supported by Forgotten)
+- Sébastien Guignot aka kxu
 
 Contributions:
 
 - Costis (costis@gbaemu.com): object mosaic, GP32
 - KVA: ARM/THUMB disassembler
 - Sébastien Guignot aka kxu: GTK+ interface
-- Yann Parmentier aka kohai: icons
+- Yann Parmentier aka kohai: new icons

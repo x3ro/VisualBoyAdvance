@@ -183,6 +183,8 @@ gvba_SOURCES = \
 
 gvba_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
 
+gvba_DEPENDENCIES = libgba.a @VBA_LIBS@
+
 gvba_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)\"			\
 	-DLOCALEDIR=\"$(datadir)/locale\"		\
@@ -299,7 +301,6 @@ am_gvba_OBJECTS = gvba-configfile.$(OBJEXT) gvba-filters.$(OBJEXT) \
 	gvba-system.$(OBJEXT) gvba-tools.$(OBJEXT) \
 	gvba-windowcallbacks.$(OBJEXT) gvba-window.$(OBJEXT)
 gvba_OBJECTS = $(am_gvba_OBJECTS)
-gvba_DEPENDENCIES = libgba.a
 gvba_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir)

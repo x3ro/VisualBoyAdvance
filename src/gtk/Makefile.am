@@ -28,6 +28,8 @@ gvba_SOURCES = \
 
 gvba_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
 
+gvba_DEPENDENCIES = libgba.a @VBA_LIBS@
+
 gvba_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)\"			\
 	-DLOCALEDIR=\"$(datadir)/locale\"		\

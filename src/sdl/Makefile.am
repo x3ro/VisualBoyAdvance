@@ -77,6 +77,8 @@ VisualBoyAdvance_SOURCES = \
 
 VisualBoyAdvance_LDADD = @VBA_LIBS@ @SDL_LIBS@
 
+VisualBoyAdvance_DEPENDENCIES = libgba.a @VBA_LIBS@
+
 TestEmu_SOURCES = \
 	TestEmu.cpp		\
 	debugger.cpp		\

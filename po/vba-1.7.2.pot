@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-05-11 21:01+0200\n"
+"POT-Creation-Date: 2004-05-13 17:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -182,7 +182,7 @@ msgstr ""
 msgid "Invalid cheat to remove %d"
 msgstr ""
 
-#: src/gb/gbCodesCB.h:1284 src/gb/gbCodes.h:1403
+#: src/gb/gbCodesCB.h:1285 src/gb/gbCodes.h:1404
 #, c-format
 msgid "Unknown opcode %02x at %04x"
 msgstr ""
