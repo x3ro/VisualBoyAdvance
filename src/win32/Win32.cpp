@@ -2029,6 +2029,9 @@ void updateToolsMenu(HMENU menu)
                  ENABLEMENU(emulating && !moviePlaying));
   EnableMenuItem(menu, ID_TOOLS_PLAY_STOPMOVIEPLAYING,
                  ENABLEMENU(emulating && moviePlaying));
+
+  EnableMenuItem(menu, ID_TOOLS_REWIND,
+                 ENABLEMENU(rewindMemory != NULL));
 }
 
 void updateSoundChannels(UINT id)
@@ -5340,7 +5343,9 @@ BOOL fileOpen()
     if(!gbLoadRom(szFile))
       return FALSE;
     emuWriteState = gbWriteSaveState;
+    emuWriteMemState = gbWriteMemSaveState;
     emuReadState = gbReadSaveState;
+    emuReadMemState = gbReadMemSaveState;
     emuWriteBattery = gbWriteBatteryFile;
     emuReadBattery = gbReadBatteryFile;
     emuReset = gbReset;

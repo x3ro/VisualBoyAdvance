@@ -2126,6 +2126,26 @@ static bool gbWriteSaveState(gzFile gzFile)
   return true;
 }
 
+bool gbWriteMemSaveState(char *memory, int available)
+{
+  gzFile gzFile = utilMemGzOpen(memory, available, "w");
+
+  if(gzFile == NULL) {
+    return false;
+  }
+
+  bool res = gbWriteSaveState(gzFile);
+
+  long pos = utilGzMemTell(gzFile)+8;
+
+  if(pos >= (available))
+    res = false;
+
+  utilGzClose(gzFile);
+
+  return res;
+}
+
 bool gbWriteSaveState(char *name)
 {
   gzFile gzFile = utilGzOpen(name,"wb");
@@ -2302,6 +2322,17 @@ static bool gbReadSaveState(gzFile gzFile)
     gbCheatsReadGame(gzFile, version);
 
   return true;
+}
+
+bool gbReadMemSaveState(char *memory, int available)
+{
+  gzFile gzFile = utilMemGzOpen(memory, available, "r");
+
+  bool res = gbReadSaveState(gzFile);
+
+  utilGzClose(gzFile);
+
+  return res;
 }
 
 bool gbReadSaveState(char *name)
