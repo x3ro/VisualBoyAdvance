@@ -398,7 +398,7 @@ void GBACheatSearch::addChange(int index, u32 address, u32 oldValue, u32 newValu
   }
 }
 
-BOOL GBACheatSearch::OnValueType(UINT id)
+void GBACheatSearch::OnValueType(UINT id)
 {
   switch(id) {
   case IDC_OLD_VALUE:
@@ -412,10 +412,9 @@ BOOL GBACheatSearch::OnValueType(UINT id)
     regSetDwordValue("cheatsValueType", 1);     
     break;
   }
-  return TRUE;
 }
 
-BOOL GBACheatSearch::OnSearchType(UINT id)
+void GBACheatSearch::OnSearchType(UINT id)
 {
   switch(id) {
   case IDC_EQ:
@@ -443,10 +442,9 @@ BOOL GBACheatSearch::OnSearchType(UINT id)
     regSetDwordValue("cheatsSearchType", 5);
     break;
   }
-  return TRUE;
 }
 
-BOOL GBACheatSearch::OnNumberType(UINT id)
+void GBACheatSearch::OnNumberType(UINT id)
 {
   switch(id) {
   case IDC_SIGNED:
@@ -471,10 +469,9 @@ BOOL GBACheatSearch::OnNumberType(UINT id)
     }
     break;
   }
-  return TRUE;
 }
 
-BOOL GBACheatSearch::OnSizeType(UINT id)
+void GBACheatSearch::OnSizeType(UINT id)
 {
   switch(id) {
   case IDC_SIZE_8:
@@ -499,7 +496,6 @@ BOOL GBACheatSearch::OnSizeType(UINT id)
     }
     break;
   }
-  return TRUE;
 }
 /////////////////////////////////////////////////////////////////////////////
 // AddCheat dialog
@@ -593,7 +589,7 @@ BOOL AddCheat::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-BOOL AddCheat::OnNumberType(UINT id)
+void AddCheat::OnNumberType(UINT id)
 {
   switch(id) {
   case IDC_SIGNED:
@@ -609,10 +605,9 @@ BOOL AddCheat::OnNumberType(UINT id)
     regSetDwordValue("cheatsNumberType", 2);
     break;
   }
-  return TRUE;
 }
 
-BOOL AddCheat::OnSizeType(UINT id)
+void AddCheat::OnSizeType(UINT id)
 {
   switch(id) {
   case IDC_SIZE_8:
@@ -628,7 +623,6 @@ BOOL AddCheat::OnSizeType(UINT id)
     regSetDwordValue("cheatsSizeType", 2);
     break;
   }
-  return TRUE;
 }
 
 bool AddCheat::addCheat()

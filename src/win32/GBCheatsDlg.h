@@ -40,10 +40,10 @@ class GBCheatSearch : public CDialog
 {
   // Construction
  public:
-  afx_msg BOOL OnSizeType(UINT id);
-  afx_msg BOOL OnNumberType(UINT id);
-  afx_msg BOOL OnSearchType(UINT id);
-  afx_msg BOOL OnValueType(UINT id);
+  afx_msg void OnSizeType(UINT id);
+  afx_msg void OnNumberType(UINT id);
+  afx_msg void OnSearchType(UINT id);
+  afx_msg void OnValueType(UINT id);
   void addChanges(bool showMsg);
   void addChange(int index, int bank, u16 address, int offset, u32 oldValue, u32 newValue);
   int getBank(u16 addr, int j);
@@ -95,8 +95,8 @@ class AddGBCheat : public CDialog
 {
   // Construction
  public:
-  afx_msg BOOL OnSizeType(UINT id);
-  afx_msg BOOL OnNumberType(UINT id);
+  afx_msg void OnSizeType(UINT id);
+  afx_msg void OnNumberType(UINT id);
   bool addCheat();
   AddGBCheat(u32 addr, CWnd* pParent = NULL);   // standard constructor
 

@@ -72,11 +72,15 @@ FileDlg::FileDlg(CWnd *parent, LPCTSTR file, LPCTSTR filter,
   GetVersionEx(&info);
   m_file = file;
   int size = sizeof(OPENFILENAME);
-
+  
+  // avoid problems if OPENFILENAME is already defined with the extended fields
+  // needed for the enhanced open/save dialog
+#if _WIN32_WINNT < 0x0500
   if(info.dwPlatformId == VER_PLATFORM_WIN32_NT) {
     if(info.dwMajorVersion >= 5)
       size = sizeof(OPENFILENAMEEX);
   }
+#endif
 
   ZeroMemory(&m_ofn, sizeof(m_ofn));
   m_ofn.lpstrFile = m_file.GetBuffer(MAX_PATH);

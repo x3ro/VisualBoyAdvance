@@ -50,7 +50,6 @@ namespace WinHelper
       inline CSize() {};
       inline explicit CSize( const SIZE &size ) { cx = size.cx; cy = size.cy; }
       inline explicit CSize( long nSizeX, long nSizeY ) { cx = nSizeX; cy = nSizeY; }
-      inline explicit CSize( const CSize& size ) { cx = size.cx; cy = size.cy; };
       inline void Set( long nSizeX, long nSizeY ) { cx = nSizeX; cy = nSizeY; }
       inline operator LPSIZE() { return this; };
 

@@ -100,7 +100,7 @@ BEGIN_MESSAGE_MAP(GBCheatSearch, CDialog)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_SIGNED, IDC_HEXADECIMAL, OnNumberType)
   ON_CONTROL_RANGE(BN_CLICKED, IDC_SIZE_8, IDC_SIZE_32, OnSizeType)
   //}}AFX_MSG_MAP
-  END_MESSAGE_MAP()
+END_MESSAGE_MAP()
 
   /////////////////////////////////////////////////////////////////////////////
 // GBCheatSearch message handlers
@@ -459,7 +459,7 @@ void GBCheatSearch::addChanges(bool showMsg)
   }  
 }
 
-BOOL GBCheatSearch::OnValueType(UINT id)
+void GBCheatSearch::OnValueType(UINT id)
 {
   switch(id) {
   case IDC_OLD_VALUE:
@@ -473,10 +473,9 @@ BOOL GBCheatSearch::OnValueType(UINT id)
     regSetDwordValue("gbCheatsValueType", 1);   
     break;
   }
-  return TRUE;
 }
 
-BOOL GBCheatSearch::OnSearchType(UINT id)
+void GBCheatSearch::OnSearchType(UINT id)
 {
   switch(id) {
   case IDC_EQ:
@@ -504,10 +503,9 @@ BOOL GBCheatSearch::OnSearchType(UINT id)
     regSetDwordValue("gbCheatsSearchType", 5);
     break;
   }
-  return TRUE;
 }
 
-BOOL GBCheatSearch::OnNumberType(UINT id)
+void GBCheatSearch::OnNumberType(UINT id)
 {
   switch(id) {
   case IDC_SIGNED:
@@ -532,10 +530,9 @@ BOOL GBCheatSearch::OnNumberType(UINT id)
     }
     break;
   }
-  return TRUE;
 }
 
-BOOL GBCheatSearch::OnSizeType(UINT id)
+void GBCheatSearch::OnSizeType(UINT id)
 {
   switch(id) {
   case IDC_SIZE_8:
@@ -560,7 +557,6 @@ BOOL GBCheatSearch::OnSizeType(UINT id)
     }
     break;
   }
-  return TRUE;
 }
 /////////////////////////////////////////////////////////////////////////////
 // AddGBCheat dialog
@@ -723,7 +719,7 @@ BOOL AddGBCheat::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-BOOL AddGBCheat::OnNumberType(UINT id)
+void AddGBCheat::OnNumberType(UINT id)
 {
   switch(id) {
   case IDC_SIGNED:
@@ -739,10 +735,9 @@ BOOL AddGBCheat::OnNumberType(UINT id)
     regSetDwordValue("gbCheatsNumberType", 2);
     break;
   }
-  return TRUE;
 }
 
-BOOL AddGBCheat::OnSizeType(UINT id)
+void AddGBCheat::OnSizeType(UINT id)
 {
   switch(id) {
   case IDC_SIZE_8:
@@ -758,7 +753,6 @@ BOOL AddGBCheat::OnSizeType(UINT id)
     regSetDwordValue("gbCheatsSizeType", 2);
     break;
   }
-  return TRUE;
 }
 
 /////////////////////////////////////////////////////////////////////////////

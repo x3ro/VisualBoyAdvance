@@ -535,6 +535,14 @@ void VBA::adjustDestRect()
   dest.bottom = point.y;
   dest.right = point.x;
 
+  // make sure that dest rect lies in the monitor
+  if(videoOption >= VIDEO_320x240) {
+    dest.top -= windowPositionY;
+    dest.left -= windowPositionX;
+    dest.bottom-= windowPositionY;
+    dest.right -= windowPositionX;
+  }
+
   if(skin)
     return;
   
@@ -1387,6 +1395,10 @@ void VBA::loadSettings()
   cheatsEnabled = regQueryDwordValue("cheatsEnabled", true) ? true : false;
 
   fsMaxScale = regQueryDwordValue("fsMaxScale", 0);
+
+  throttle = regQueryDwordValue("throttle", 0);
+  if(throttle < 5 || throttle > 1000)
+    throttle = 0;
 }
 
 void VBA::updateFrameSkip()
@@ -2146,6 +2158,7 @@ void VBA::saveSettings()
   regSetDwordValue("autoLoadMostRecent", autoLoadMostRecent);
   regSetDwordValue("cheatsEnabled", cheatsEnabled);
   regSetDwordValue("fsMaxScale", fsMaxScale);
+  regSetDwordValue("throttle", throttle);
 }
 
 static UINT power_get[3] = {

@@ -40,10 +40,10 @@ class GBACheatSearch : public CDialog
 {
   // Construction
  public:
-  afx_msg BOOL OnSizeType(UINT id);
-  afx_msg BOOL OnNumberType(UINT id);
-  afx_msg BOOL OnSearchType(UINT id);
-  afx_msg BOOL OnValueType(UINT id);
+  afx_msg void OnSizeType(UINT id);
+  afx_msg void OnNumberType(UINT id);
+  afx_msg void OnSearchType(UINT id);
+  afx_msg void OnValueType(UINT id);
   void addChange(int index, u32 address, u32 oldValue, u32 newValue);
   GBACheatSearch(CWnd* pParent = NULL);   // standard constructor
   ~GBACheatSearch();
@@ -96,8 +96,8 @@ class AddCheat : public CDialog
   // Construction
  public:
   bool addCheat();
-  afx_msg BOOL OnSizeType(UINT id);
-  afx_msg BOOL OnNumberType(UINT id);
+  afx_msg void OnSizeType(UINT id);
+  afx_msg void OnNumberType(UINT id);
   u32 address;
   AddCheat(u32 address, CWnd* pParent = NULL);   // standard constructor
 
