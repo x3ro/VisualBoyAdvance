@@ -5637,7 +5637,7 @@ bool systemSoundInit()
   DSBUFFERDESC dsbdesc;
   ZeroMemory(&dsbdesc,sizeof(DSBUFFERDESC));
   dsbdesc.dwSize=sizeof(DSBUFFERDESC);
-  dsbdesc.dwFlags = DSBCAPS_PRIMARYBUFFER | DSBCAPS_CTRLVOLUME;
+  dsbdesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
   
   if((hr=pDirectSound->CreateSoundBuffer(&dsbdesc,
                                          &dsbPrimary,
@@ -5683,7 +5683,7 @@ bool systemSoundInit()
   
   ZeroMemory(&dsbdesc,sizeof(DSBUFFERDESC));  
   dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-  dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_CTRLPOSITIONNOTIFY|DSBCAPS_CTRLVOLUME;
+  dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2|DSBCAPS_CTRLPOSITIONNOTIFY;
   dsbdesc.dwBufferBytes = soundBufferTotalLen;
   dsbdesc.lpwfxFormat = &wfx;
 
@@ -5813,10 +5813,6 @@ void systemWriteDataToSoundBuffer()
 
   if(!pDirectSound)
     return;
-
-  LONG volume = 0;
-
-  dsbPrimary->GetVolume(&volume);
 
   if(soundRecording) {
     if(dsbSecondary) {

@@ -1,10 +1,14 @@
+2002-11-14  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (systemWriteDataToSoundBuffer): remove test code that causes slowdown
+
 2002-11-13  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp (sdlFindPreferences): improve search for configuration file
 
 2002-11-12  Forgotten  <forgotten@users.sourceforge.net>
 
-	* src\SDL.cpp (sdlReadPreferences): fixed incorrect variable being used for saveType
+	* src/SDL.cpp (sdlReadPreferences): fixed incorrect variable being used for saveType
 	(main): removeIntros was not being used
 	(main): apply IPS patch automatically if it exists
 	* src/Util.cpp (utilApplyIPS): added IPS patching code
