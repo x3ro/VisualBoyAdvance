@@ -265,11 +265,6 @@ void mode5RenderLineAll()
       inWindow1 |= (VCOUNT >= v0 || VCOUNT < v1);
   }
   
-  int x00 = WIN0H >> 8;
-  int x01 = WIN0H & 255;
-  int x10 = WIN1H >> 8;
-  int x11 = WIN1H & 255;
-
   u8 inWin0Mask = WININ & 0xFF;
   u8 inWin1Mask = WININ >> 8;
   u8 outMask = WINOUT & 0xFF;

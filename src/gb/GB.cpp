@@ -2767,7 +2767,7 @@ void gbEmulate(int ticksToStop)
               gbLastTime = currentTime;
               gbFrameCount = 0;       
             }
-            u32 joy = 0;
+
             if(systemReadJoypads()) {
               // read joystick
               if(gbSgbMode && gbSgbMultiplayer) {
