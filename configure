@@ -885,9 +885,9 @@ fi
 
 echo "$ac_t""$ac_cv_use_c_core" 1>&6
 
-# Check whether --with-dev or --without-dev was given.
-if test "${with_dev+set}" = set; then
-  withval="$with_dev"
+# Check whether --enable-dev or --disable-dev was given.
+if test "${enable_dev+set}" = set; then
+  enableval="$enable_dev"
   ac_cv_use_dev=$withval
 else
   ac_cv_use_dev=yes
@@ -2840,7 +2840,7 @@ fi
 
 
 
-CXXFLAGS="$CXXFLAGS -DSDL -DPROFILING -DBKPT_SUPPORT -fno-exceptions"
+CXXFLAGS="$CXXFLAGS -DSDL -DBKPT_SUPPORT -fno-exceptions"
 
 if test "${ac_cv_use_c_core}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
