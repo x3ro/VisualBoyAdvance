@@ -451,7 +451,15 @@ void MapView::renderTextScreen(u16 control)
   
   if(control & 0x80) {
     for(int y = 0; y < sizeY; y++) {
-      u16 *screenSource = screenBase + ((y>>3)*32);
+      int yy = y & 255;
+
+      if(y == 256 && sizeY > 256) {
+        screenBase += 0x400;
+        if(sizeX > 256)
+          screenBase += 0x400;
+      }
+      u16 *screenSource = screenBase + ((yy>>3)*32);
+
       for(int x = 0; x < sizeX; x++) {
         u16 data = *screenSource;
       
@@ -478,13 +486,21 @@ void MapView::renderTextScreen(u16 control)
         } else if(tileX == 7)
           screenSource++;
         if(x == 255 && sizeX > 256) {
-          screenSource = screenBase + 0x400 + ((y>>3)*32);
+          screenSource = screenBase + 0x400 + ((yy>>3)*32);
         }
       }
     }
   } else {
     for(int y = 0; y < sizeY; y++) {
-      u16 *screenSource = screenBase + ((y>>3)*32);
+      int yy = y & 255;
+
+      if(y == 256 && sizeY > 256) {
+        screenBase += 0x400;
+        if(sizeX > 256)
+          screenBase += 0x400;
+      }
+      u16 *screenSource = screenBase + ((yy>>3)*32);
+
       for(int x = 0; x < sizeX; x++) {
         u16 data = *screenSource;
         
@@ -519,7 +535,7 @@ void MapView::renderTextScreen(u16 control)
           screenSource++;
 
         if(x == 255 && sizeX > 256) {
-          screenSource = screenBase + 0x400 + ((y>>3)*32);
+          screenSource = screenBase + 0x400 + ((yy>>3)*32);
         }        
       }
     }
@@ -1000,12 +1016,13 @@ void MapView::OnClose()
 
 u32 MapView::GetTextClickAddress(u32 base, int x, int y)
 {
-  if(x >= 255 && y < 256)
+  if(y > 255 & h > 256) {
     base += 0x800;
-  else if(x < 256 && y >= 256)
-    base += 0x1000;
-  else if(x >= 256 && y >= 256)
-    base += 0x1800;
+    if(w > 256)
+      base += 0x800;
+  }
+  if(x >= 256)
+    base += 0x800;
   x &= 255;
   y &= 255;
   base += (x>>3)*2 + 64*(y>>3);
