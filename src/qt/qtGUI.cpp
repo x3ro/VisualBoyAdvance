@@ -21,11 +21,11 @@
 #include <stdarg.h>
 
 #include "qtGUI.h"
-#include <qfiledialog.h>
 #include <qmessagebox.h>
 #include <qimage.h>
 #include <qpainter.h>
 #include <qsettings.h>
+#include <qfiledialog.h>
 
 #include "../GBA.h"
 #include "../Font.h"
@@ -93,6 +93,7 @@ qtGUI::qtGUI()
   paused = false;
   videoOption = 0;
   captureFormat = 0;
+  recentFreeze = false;
 
   readSettings();
 
@@ -102,7 +103,11 @@ qtGUI::qtGUI()
   connect(fileMenu, SIGNAL(aboutToShow()), this, SLOT(updateFileMenu()));  
   menuBar()->insertItem(tr("&File"), fileMenu);
   fileMenu->insertItem(tr("&Open..."), this, SLOT(fileOpen()), QKeySequence(tr("Ctrl+O","File|Open")));
+  fileMenu->insertItem(tr("Open &Gameboy..."), this, SLOT(fileOpenGB()), 0);
   fileMenu->insertSeparator();
+
+  fileMenu->insertItem(tr("&Load..."), this, SLOT(fileLoad()), QKeySequence(tr("Ctrl+L", "File|Load")), 4);
+  fileMenu->insertItem(tr("&Save..."), this, SLOT(fileSave()), QKeySequence(tr("Ctrl+S", "File|Save")), 5);
 
   // Load Game menu
   loadStateMenu = new QPopupMenu(this);
@@ -136,10 +141,19 @@ qtGUI::qtGUI()
 
   fileMenu->insertSeparator();
   fileMenu->insertItem(tr("&Reset"), this, SLOT(fileReset()), QKeySequence(tr("Ctrl+R", "File|Reset")), 0);
-  fileMenu->insertSeparator();
-  fileMenu->insertItem(tr("Scr&een capture..."), this, SLOT(fileScreenCapture()), QKeySequence(), 3);
-  fileMenu->insertSeparator();
   fileMenu->insertItem(tr("&Pause"), this, SLOT(filePause()), QKeySequence(tr("Ctrl+P", "File|Pause")), 1);
+  fileMenu->insertSeparator();
+
+  // Recent menu
+  recentMenu = new QPopupMenu(this);
+  fileMenu->insertItem(tr("Re&cent"), recentMenu);
+
+  recentMenu->insertItem(tr("&Reset"), this, SLOT(fileRecentReset()), QKeySequence());
+  recentMenu->insertItem(tr("&Freeze"), this, SLOT(fileRecentFreeze()), QKeySequence(), 10);
+  recentMenu->insertSeparator();
+  connect(recentMenu, SIGNAL(aboutToShow()), this, SLOT(updateRecentMenu()));
+  fileMenu->insertSeparator();
+  fileMenu->insertItem(tr("Scr&een capture..."), this, SLOT(fileScreenCapture()), QKeySequence(), 3);  
   fileMenu->insertSeparator();
   fileMenu->insertItem(tr("&Close"), this, SLOT(fileClose()), QKeySequence(), 2);
   fileMenu->insertSeparator();
@@ -298,6 +312,16 @@ void qtGUI::readSettings()
   videoOption = settings->readNumEntry("/VisualBoyAdvance/video", 0);
   if(videoOption < 0 || videoOption > 3)
     videoOption = 0;
+
+  recentFreeze = settings->readBoolEntry("/VisualBoyAdvance/recentFreeze",
+                                         false);
+
+  int i;
+  QString buffer;
+  for(i = 0; i < 10; i++) {
+    buffer.sprintf("/VisualBoyAdvance/recent%d", i);
+    recentFiles[i] = settings->readEntry(buffer);
+  }
 }
 
 void qtGUI::windowActivationChange(bool /* oldActive */)
@@ -338,6 +362,7 @@ void qtGUI::fileOpen()
       settings->writeEntry("/VisualBoyAdvance/romdir", dlg.dirPath());
       romdir = (const char *)dlg.dirPath();
       filename = (const char *)fileName;
+      fileinfo.setFile(selected);
       int index = filename.findRev('.');
       if(index != -1)
         filename.truncate(index);
@@ -355,11 +380,113 @@ void qtGUI::fileOpen()
   }
 }
 
+void qtGUI::fileOpenGB()
+{
+  QFileDialog dlg(this);
+  
+  dlg.addFilter(tr("ROMs (*.gba;*.zip)"));
+  QString romdir = settings->readEntry("/VisualBoyAdvance/gbromdir");
+  
+  if(romdir.length() != 0)
+    dlg.setDir(romdir);
+  
+  if(dlg.exec() == QDialog::Accepted) {
+    QString selected = dlg.selectedFile();
+    const char *fileName = selected;
+    bool failed = !CPULoadRom((char *)fileName);
+
+    if(!failed) {
+      settings->writeEntry("/VisualBoyAdvance/gbromdir", dlg.dirPath());
+      romdir = (const char *)dlg.dirPath();
+      filename = (const char *)fileName;
+      fileinfo.setFile(selected);
+      int index = filename.findRev('.');
+      if(index != -1)
+        filename.truncate(index);
+      
+      CPUInit(NULL, useBios);
+      CPUReset();
+
+      readBattery();
+    
+      emulating = 1;
+      timer->start(0);      
+    } else {
+      QMessageBox::warning(this, tr("VisualBoyQt"), tr("Failed to load image"));
+    }
+  }
+}
+
+void qtGUI::fileLoad()
+{
+  QString buffer;
+  QString captureDir = settings->readEntry("/VisualBoyAdvance/saveDir");
+
+  if(captureDir.length() == 0)
+    captureDir = fileinfo.dirPath();
+  
+  buffer.sprintf("%s/%s.sgm", (const char *)captureDir,
+                 (const char *)fileinfo.baseName(TRUE));
+  
+  QString filter = tr("Save Game (*.sgm)");
+  
+  QFileDialog dlg(this);
+  dlg.setCaption(tr("Select save name"));
+  dlg.addFilter(filter);
+  dlg.setDir(captureDir);
+  dlg.setSelection(buffer);
+  dlg.setMode(QFileDialog::AnyFile);
+
+  if(dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+  
+  CPUReadState((char *)((const char *)dlg.selectedFile()));
+
+  systemScreenMessage((char *)((const char *)tr("Loaded state")));  
+}
+
+void qtGUI::fileSave()
+{
+  QString buffer;
+  QString captureDir = settings->readEntry("/VisualBoyAdvance/saveDir");
+
+  if(captureDir.length() == 0)
+    captureDir = fileinfo.dirPath();
+  
+  buffer.sprintf("%s/%s.sgm", (const char *)captureDir,
+                 (const char *)fileinfo.baseName(TRUE));
+  
+  QString filter = tr("Save Game (*.sgm)");
+  
+  QFileDialog dlg(this);
+  dlg.setCaption(tr("Select save name"));
+  dlg.addFilter(filter);
+  dlg.setDir(captureDir);
+  dlg.setSelection(buffer);
+  dlg.setMode(QFileDialog::AnyFile);
+
+  if(dlg.exec() != QDialog::Accepted) {
+    return;
+  }
+  
+  CPUWriteState((char *)((const char *)dlg.selectedFile()));
+
+  systemScreenMessage((char *)((const char *)tr("Wrote state")));  
+}
+
 void qtGUI::fileLoadState(int n)
 {
   QString buffer;
+  QString captureDir = settings->readEntry("/VisualBoyAdvance/saveDir");
 
-  buffer.sprintf("%s%d.sgm", (const char *)filename, n+1);
+  if(captureDir.length() == 0)
+    captureDir = fileinfo.dirPath();  
+
+  buffer.sprintf("%s/%s%d.sgm",
+                 (const char *)captureDir,
+                 (const char *)fileinfo.baseName(TRUE),
+                 n+1);
   CPUReadState((char *)((const char *)buffer));
 
   buffer.sprintf("Loaded state %d",n+1);
@@ -369,12 +496,94 @@ void qtGUI::fileLoadState(int n)
 void qtGUI::fileSaveState(int n)
 {
   QString buffer;
-  
-  buffer.sprintf("%s%d.sgm", (const char *)filename, n+1);
+  QString captureDir = settings->readEntry("/VisualBoyAdvance/saveDir");
+
+  if(captureDir.length() == 0)
+    captureDir = fileinfo.dirPath();  
+
+  buffer.sprintf("%s/%s%d.sgm",
+                 (const char *)captureDir,
+                 (const char *)fileinfo.baseName(TRUE),
+                 n+1);
   CPUWriteState((char *)((const char *)buffer));
 
   buffer.sprintf("Wrote state %d",n+1);
   systemScreenMessage((char *)((const char *)buffer));
+}
+
+void qtGUI::fileRecentReset()
+{
+  int i = 0;
+  for(i = 0; i < 10; i++)
+    recentFiles[i] = QString::null;
+  
+  QString buffer;
+
+  for(i = 0; i < 10; i++) {
+    buffer.sprintf("recent%d", i);
+    settings->removeEntry(buffer);
+  }
+}
+
+void qtGUI::fileRecentFreeze()
+{
+  recentFreeze = !recentFreeze;
+  settings->writeEntry("/VisualBoyAdvance/recentFreeze", recentFreeze);
+}
+
+void qtGUI::addRecentFile(const char *s)
+{
+  // Do not change recent list if frozen
+  if(recentFreeze)
+    return;
+  
+  int i = 0;
+  QString buffer;
+  for(i = 0; i < 10; i++) {
+    if(recentFiles[i].length() == 0)
+      break;
+    
+    if(recentFiles[i] ==  s) {
+      if(i == 0)
+        return;
+      QString p = recentFiles[i];
+      for(int j = i; j > 0; j--) {
+        recentFiles[j] = recentFiles[j-1];
+      }
+      recentFiles[0] = p;
+      for(i = 0; i < 10; i++) {
+        if(recentFiles[i].length() == 0)
+          break;
+        buffer.sprintf("/VisualBoyAdvance/recent%d",i);
+        settings->writeEntry(buffer, recentFiles[i]);
+      }
+      return;
+    }
+  }
+  int num = 0;
+  for(i = 0; i < 10; i++) {
+    if(recentFiles[i].length() != 0)
+      num++;
+  }
+  if(num == 10) {
+    num--;
+  }
+
+  for(i = num; i >= 1; i--) {
+    recentFiles[i] = recentFiles[i-1];
+  }
+  recentFiles[0] = s;
+  for(i = 0; i < 10; i++) {
+    if(recentFiles[i].length() == 0)
+      break;
+    buffer.sprintf("/VisualBoyAdvance/recent%d",i);
+    settings->writeEntry(buffer, recentFiles[i]);
+  }  
+}
+
+void qtGUI::fileRecent(int id)
+{
+
 }
 
 void qtGUI::filePause()
@@ -400,15 +609,15 @@ void qtGUI::fileScreenCapture()
   QString captureDir = settings->readEntry("/VisualBoyAdvance/captureDir");
 
   if(captureDir.length() == 0)
-    captureDir = QFileInfo(filename).dirPath();
+    captureDir = fileinfo.dirPath();
   char *ext = "png";
   if(captureFormat != 0)
     ext = "bmp";
   
   buffer.sprintf("%s/%s.%s", (const char *)captureDir,
-                 (const char *)QFileInfo(filename).fileName(),
+                 (const char *)fileinfo.baseName(TRUE),
                  ext);
-
+  
   QString pngFilter = tr("PNG Image (*.png)");
   
   QFileDialog dlg(this);
@@ -539,6 +748,8 @@ void qtGUI::updateFileMenu()
   fileMenu->setItemChecked(1, paused);
   fileMenu->setItemEnabled(2, emulating);
   fileMenu->setItemEnabled(3, emulating);
+  fileMenu->setItemEnabled(4, emulating);
+  fileMenu->setItemEnabled(5, emulating);
 }
 
 void qtGUI::updateLoadGameMenu()
@@ -551,6 +762,27 @@ void qtGUI::updateSaveGameMenu()
 {
   for(int i = 0; i < 10; i++)
     saveStateMenu->setItemEnabled(i, emulating);
+}
+
+void qtGUI::updateRecentMenu()
+{
+  int i;
+
+  recentMenu->setItemChecked(10, recentFreeze);
+  
+  for(i = 0; i < 10; i++)
+    recentMenu->removeItem(i);
+
+  for(i = 0; i < 10; i++) {
+    if(recentFiles[i].length() == 0)
+      break;
+
+    QFileInfo f(recentFiles[i]);
+    QString buffer;
+    buffer.sprintf("Ctrl+F%d", i+1);
+    recentMenu->insertItem(f.fileName(), this, SLOT(fileRecent(int)),
+                           QKeySequence(buffer), i);
+  }
 }
 
 void qtGUI::updateFrameskipMenu()
@@ -635,7 +867,7 @@ void qtGUI::readBattery()
   if(batteryDir.length() != 0)
     buffer.sprintf("%s/%s.sav",
                    (const char *)batteryDir,
-                   (const char *)QFileInfo(filename).dirPath());
+                   (const char *)fileinfo.baseName(TRUE));
   else 
     buffer.sprintf("%s.sav", (const char *)filename);
   
@@ -655,7 +887,7 @@ void qtGUI::writeBattery()
   if(batteryDir.length() != 0)
     buffer.sprintf("%s/%s.sav",
                    (const char *)batteryDir,
-                   (const char *)QFileInfo(filename).dirPath());
+                   (const char *)fileinfo.baseName(TRUE));
   else 
     buffer.sprintf("%s.sav", (const char *)filename);
   

@@ -24,6 +24,7 @@
 #include <qtimer.h>
 #include <qaction.h>
 #include <qsettings.h>
+#include <qfileinfo.h>
 
 class qtGUI : public QMainWindow {
   Q_OBJECT
@@ -38,8 +39,14 @@ protected:
   
 private slots:
   void fileOpen();
+  void fileOpenGB(); 
+  void fileLoad();
+  void fileSave();
   void fileLoadState(int id);
   void fileSaveState(int id);
+  void fileRecentReset();
+  void fileRecentFreeze();
+  void fileRecent(int id);
   void filePause(); 
   void fileReset();
   void fileScreenCapture();
@@ -59,6 +66,7 @@ private slots:
   void updateFileMenu();
   void updateLoadGameMenu();
   void updateSaveGameMenu();
+  void updateRecentMenu();
   void updateFrameskipMenu();
   void updateVideoMenu();
   void updateLayersMenu();
@@ -71,19 +79,25 @@ private:
   void readBattery();
   void writeBattery();
   void readSettings();
+
+  void addRecentFile(const char *);
   
   QTimer *timer;
   int drawY;
   bool paused;
+  bool recentFreeze;
   int videoOption;
   int captureFormat;
   QString filename;
+  QFileInfo fileinfo;
+  QString recentFiles[10];
 
   QRect destRect;
   
   QPopupMenu *fileMenu;
   QPopupMenu *saveStateMenu;
   QPopupMenu *loadStateMenu;
+  QPopupMenu *recentMenu;
   QPopupMenu *frameskipMenu;
   QPopupMenu *videoMenu;
   QPopupMenu *layersMenu;

@@ -28,7 +28,7 @@
             <x>0</x>
             <y>0</y>
             <width>431</width>
-            <height>500</height>
+            <height>496</height>
         </rect>
     </property>
     <property name="caption">
@@ -44,34 +44,7 @@
         <property name="spacing">
             <number>6</number>
         </property>
-        <widget class="QListView" row="0" column="0">
-            <column>
-                <property name="text">
-                    <string>Column 1</string>
-                </property>
-                <property name="clickable">
-                    <bool>true</bool>
-                </property>
-                <property name="resizeable">
-                    <bool>true</bool>
-                </property>
-            </column>
-        <item>
-            <property name="text">
-                <string>New Item</string>
-            </property>
-            <property name="pixmap">
-                <pixmap></pixmap>
-            </property>
-        </item>
-            <property name="name">
-                <cstring>cheats</cstring>
-            </property>
-            <property name="resizeMode">
-                <enum>AllColumns</enum>
-            </property>
-        </widget>
-        <widget class="QLayoutWidget" row="3" column="0">
+        <widget class="QLayoutWidget" row="4" column="0">
             <property name="name">
                 <cstring>Layout2</cstring>
             </property>
@@ -151,77 +124,147 @@
                 </widget>
             </hbox>
         </widget>
-        <widget class="QButtonGroup" row="2" column="0">
+        <widget class="QButtonGroup" row="3" column="0">
             <property name="name">
                 <cstring>ButtonGroup1</cstring>
             </property>
             <property name="title">
                 <string>Add</string>
             </property>
-            <widget class="QLayoutWidget">
+            <widget class="QPushButton">
                 <property name="name">
-                    <cstring>Layout3</cstring>
+                    <cstring>codeBreakerButton</cstring>
                 </property>
                 <property name="geometry">
                     <rect>
-                        <x>11</x>
-                        <y>21</y>
-                        <width>343</width>
-                        <height>24</height>
+                        <x>276</x>
+                        <y>22</y>
+                        <width>82</width>
+                        <height>25</height>
                     </rect>
                 </property>
-                <grid>
-                    <property name="name">
-                        <cstring>unnamed</cstring>
-                    </property>
-                    <property name="margin">
-                        <number>0</number>
-                    </property>
-                    <property name="spacing">
-                        <number>6</number>
-                    </property>
-                    <widget class="QPushButton" row="0" column="3">
-                        <property name="name">
-                            <cstring>codeBreakerButton</cstring>
-                        </property>
-                        <property name="text">
-                            <string>CodeBreaker...</string>
-                        </property>
-                    </widget>
-                    <widget class="QPushButton" row="0" column="1">
-                        <property name="name">
-                            <cstring>cheatButton</cstring>
-                        </property>
-                        <property name="text">
-                            <string>Cheat...</string>
-                        </property>
-                    </widget>
-                    <widget class="QPushButton" row="0" column="0">
-                        <property name="name">
-                            <cstring>codeButton</cstring>
-                        </property>
-                        <property name="text">
-                            <string>Code...</string>
-                        </property>
-                    </widget>
-                    <widget class="QPushButton" row="0" column="2">
-                        <property name="name">
-                            <cstring>gamesharkButton</cstring>
-                        </property>
-                        <property name="text">
-                            <string>Gameshark...</string>
-                        </property>
-                    </widget>
-                </grid>
+                <property name="text">
+                    <string>CodeBreaker...</string>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>cheatButton</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>100</x>
+                        <y>22</y>
+                        <width>82</width>
+                        <height>25</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Cheat...</string>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>codeButton</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>12</x>
+                        <y>22</y>
+                        <width>82</width>
+                        <height>25</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Code...</string>
+                </property>
+            </widget>
+            <widget class="QPushButton">
+                <property name="name">
+                    <cstring>gamesharkButton</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>188</x>
+                        <y>22</y>
+                        <width>82</width>
+                        <height>25</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Gameshark...</string>
+                </property>
             </widget>
         </widget>
-        <widget class="QCheckBox" row="1" column="0">
+        <widget class="QCheckBox" row="2" column="0">
             <property name="name">
                 <cstring>restore</cstring>
             </property>
             <property name="text">
                 <string>Restore previous value</string>
             </property>
+        </widget>
+        <widget class="QListView" row="1" column="0">
+            <column>
+                <property name="text">
+                    <string>Column 1</string>
+                </property>
+                <property name="clickable">
+                    <bool>true</bool>
+                </property>
+                <property name="resizeable">
+                    <bool>true</bool>
+                </property>
+            </column>
+        <item>
+            <property name="text">
+                <string>New Item</string>
+            </property>
+            <property name="pixmap">
+                <pixmap></pixmap>
+            </property>
+        </item>
+            <property name="name">
+                <cstring>cheats</cstring>
+            </property>
+            <property name="resizeMode">
+                <enum>AllColumns</enum>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="0" column="0">
+            <property name="name">
+                <cstring>Layout3</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QLabel">
+                    <property name="name">
+                        <cstring>TextLabel1</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Status Legend:</string>
+                    </property>
+                </widget>
+                <widget class="QLabel">
+                    <property name="name">
+                        <cstring>TextLabel2</cstring>
+                    </property>
+                    <property name="text">
+                        <string>E: Enabled D: Disabled</string>
+                    </property>
+                    <property name="alignment">
+                        <set>AlignVCenter|AlignRight</set>
+                    </property>
+                </widget>
+            </hbox>
         </widget>
     </grid>
 </widget>
