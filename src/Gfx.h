@@ -1253,7 +1253,8 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 int yyy = realY >> 8;
                 
                 if(xxx < 0 || xxx >= sizeX ||
-                   yyy < 0 || yyy >= sizeY) {
+                   yyy < 0 || yyy >= sizeY ||
+                   sx >= 240) {
                 } else {
                   u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
                                     + ((yyy & 7)<<3) + ((xxx >> 3)<<6) +
@@ -1284,7 +1285,8 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 //                lineOBJ[sx] = 0x001F | prio;
                 //              } else {
                   if(xxx < 0 || xxx >= sizeX ||
-                     yyy < 0 || yyy >= sizeY){
+                     yyy < 0 || yyy >= sizeY ||
+                     sx >= 240){
                   } else {
                     u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
                                      + ((yyy & 7)<<2) + ((xxx >> 3)<<5) +
