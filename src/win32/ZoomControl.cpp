@@ -91,7 +91,7 @@ void ZoomControl::OnPaint()
   CBitmap bitmap;
   bitmap.CreateCompatibleBitmap(&dc, w, h);
 
-  memDC.SelectObject(bitmap);
+  memDC.SelectObject(&bitmap);
   
   int multX = w / 8;
   int multY = h / 8;
@@ -114,7 +114,7 @@ void ZoomControl::OnPaint()
 
   CPen pen;
   pen.CreatePen(PS_SOLID, 1, RGB(192,192,192));
-  CPen *old = (CPen *)memDC.SelectObject(pen);
+  CPen *old = (CPen *)memDC.SelectObject(&pen);
 
   for(i = 0; i < 8; i++) {
     memDC.MoveTo(0, i * multY);
