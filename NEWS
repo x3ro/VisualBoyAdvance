@@ -8,6 +8,7 @@ Core changes:
 - speed up now uses frameskip 9 (6 FPS)
 - added AdvanceMAME Scale2x and Simple 2x filters
 - added support for higher frameskip (up to 9)
+- improved message when BIOS function cannot be emulated
 Windows changes:
 - added freeze recent list option
 - added 800x600 support

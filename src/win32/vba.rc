@@ -1504,7 +1504,7 @@ BEGIN
     IDS_ERROR_OPENING_IMAGE "Error opening image %s"
     IDS_ERROR_READING_IMAGE "Error reading image %s"
     IDS_UNSUPPORTED_BIOS_FUNCTION 
-                            "Unsupported BIOS function %02x called from %08x"
+                            "Unsupported BIOS function %02x called from %08x. A BIOS file is needed in order to get correct behaviour."
     IDS_INVALID_BIOS_FILE_SIZE "Invalid BIOS file size"
     IDS_INVALID_CHEAT_CODE  "Invalid cheat code '%s'. Supported formats are:\nXXXXXXXX:YY, XXXXXXXX:YYYY, XXXXXXXX:YYYYYYYY."
     IDS_UNKNOWN_ARM_OPCDOE  "Unimplemented opcode %08x from %08x"

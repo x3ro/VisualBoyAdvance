@@ -1,5 +1,6 @@
 2002-10-28  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/GBA.cpp (CPUSoftwareInterrupt): improved message about BIOS calls that are not emulated and need a BIOS file
 	* src/GBA.cpp (CPUInit): fix bug setting reable IO positions
 
 2002-10-27  Forgotten  <forgotten@users.sourceforge.net>

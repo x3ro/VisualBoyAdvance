@@ -1608,7 +1608,7 @@ void CPUSoftwareInterrupt(int comment)
     
     if(!disableMessage) {
       systemMessage(MSG_UNSUPPORTED_BIOS_FUNCTION,
-                    "Unsupported BIOS function %02x called from %08x",
+                    "Unsupported BIOS function %02x called from %08x. A BIOS file is needed in order to get correct behaviour.",
                     comment,
                     armMode ? armNextPC - 4: armNextPC - 2);
       disableMessage = true;
