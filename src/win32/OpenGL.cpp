@@ -434,6 +434,7 @@ void OpenGLDisplay::render()
   } else {
     glPixelStorei(GL_UNPACK_ROW_LENGTH, theApp.sizeX+1);
   }
+
   glTexSubImage2D( GL_TEXTURE_2D,0,
                    0,0, mult*theApp.sizeX,mult*theApp.sizeY,
                    GL_RGBA,GL_UNSIGNED_BYTE,data);
@@ -468,6 +469,8 @@ void OpenGLDisplay::render()
   }  
   
   SwapBuffers(dc->GetSafeHdc());
+  
+  theApp.m_pMainWnd->ReleaseDC(dc);
 }
 
 void OpenGLDisplay::resize(int w, int h)
