@@ -194,7 +194,8 @@ LICENSE
 -------
 
     VisualBoyAdvance - a Gameboy and GameboyAdvance emulator
-    Copyright (C) 1999-2003 by Forgotten
+    Copyright (C) 1999-2003 Forgotten
+    Copyright (C) 2004 Forgotten and the VBA development team
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
