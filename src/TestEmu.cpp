@@ -73,6 +73,7 @@ int systemGreenShift = 8;
 int systemColorDepth = 32;
 int systemDebug = 0;
 int systemVerbose = 0;
+int systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
 int cartridgeType = 3;
 int captureFormat = 0;
