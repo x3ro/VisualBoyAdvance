@@ -115,12 +115,6 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   // File menu
   //
-  m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
-  m_poFilePauseItem->set_active(false);
-  m_poFilePauseItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
-                                                SigC::slot(*this, &Window::vOnFilePauseToggled),
-                                                m_poFilePauseItem));
-
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileOpen"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileReset"));
@@ -129,6 +123,12 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileClose));
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileExit"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileExit));
+
+  m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
+  m_poFilePauseItem->set_active(false);
+  m_poFilePauseItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                                SigC::slot(*this, &Window::vOnFilePauseToggled),
+                                                m_poFilePauseItem));
 
   // Frameskip menu
   //
@@ -267,6 +267,21 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                       SigC::slot(*this, &Window::vOnLayerToggled),
                                       poCMI, astLayer[i].m_iLayer));
   }
+
+  // Emulator menu
+  //
+  m_poUseBiosItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("EmulatorUseBios"));
+  m_poUseBiosItem->set_active(m_poCoreConfig->oGetKey<bool>("use_bios_file"));
+  if (m_poCoreConfig->sGetKey("bios_file") == "")
+  {
+    m_poUseBiosItem->set_sensitive(false);
+  }
+  m_poUseBiosItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                              SigC::slot(*this, &Window::vOnUseBiosToggled),
+                                              m_poUseBiosItem));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("EmulatorSelectBios"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnSelectBios));
 
   // Show speed menu
   //
@@ -529,18 +544,20 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey     ("frameskip",    "auto"       );
-  m_poCoreConfig->vSetKey     ("throttle",     0            );
-  m_poCoreConfig->vSetKey     ("layer_bg0",    true         );
-  m_poCoreConfig->vSetKey     ("layer_bg1",    true         );
-  m_poCoreConfig->vSetKey     ("layer_bg2",    true         );
-  m_poCoreConfig->vSetKey     ("layer_bg3",    true         );
-  m_poCoreConfig->vSetKey     ("layer_obj",    true         );
-  m_poCoreConfig->vSetKey     ("layer_win0",   true         );
-  m_poCoreConfig->vSetKey     ("layer_win1",   true         );
-  m_poCoreConfig->vSetKey     ("layer_objwin", true         );
-  m_poCoreConfig->vSetKey<int>("save_type",    SaveTypeAuto );
-  m_poCoreConfig->vSetKey<int>("flash_size",   64           );
+  m_poCoreConfig->vSetKey     ("frameskip",     "auto"       );
+  m_poCoreConfig->vSetKey     ("throttle",      0            );
+  m_poCoreConfig->vSetKey     ("layer_bg0",     true         );
+  m_poCoreConfig->vSetKey     ("layer_bg1",     true         );
+  m_poCoreConfig->vSetKey     ("layer_bg2",     true         );
+  m_poCoreConfig->vSetKey     ("layer_bg3",     true         );
+  m_poCoreConfig->vSetKey     ("layer_obj",     true         );
+  m_poCoreConfig->vSetKey     ("layer_win0",    true         );
+  m_poCoreConfig->vSetKey     ("layer_win1",    true         );
+  m_poCoreConfig->vSetKey     ("layer_objwin",  true         );
+  m_poCoreConfig->vSetKey     ("use_bios_file", false        );
+  m_poCoreConfig->vSetKey     ("bios_file",     ""           );
+  m_poCoreConfig->vSetKey<int>("save_type",     SaveTypeAuto );
+  m_poCoreConfig->vSetKey<int>("flash_size",    64           );
 
   // Display section
   //
@@ -558,6 +575,7 @@ void Window::vCheckConfig()
 {
   int iValue;
   int iAdjusted;
+  std::string sValue;
 
   // Core section
   //
@@ -579,6 +597,16 @@ void Window::vCheckConfig()
     {
       m_poCoreConfig->vSetKey("throttle", iAdjusted);
     }
+  }
+
+  sValue = m_poCoreConfig->sGetKey("bios_file");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_REGULAR))
+  {
+    m_poCoreConfig->vSetKey("bios_file", "");
+  }
+  if (m_poCoreConfig->sGetKey("bios_file") == "")
+  {
+    m_poCoreConfig->vSetKey("use_bios_file", false);
   }
 
   iValue = m_poCoreConfig->oGetKey<int>("save_type");
@@ -727,7 +755,7 @@ void Window::vShowSpeed(int _iSpeed)
   }
   else if (m_eShowSpeed == ShowSpeedDetailed)
   {
-    snprintf(csTitle, 50, "VBA - %3d%% (%d, %d fps)",
+    snprintf(csTitle, 50, "VBA - %d%% (%d, %d fps)",
              _iSpeed, systemFrameSkip, systemFPS);
     set_title(csTitle);
   }
@@ -874,11 +902,17 @@ bool Window::bLoadROM(const std::string & _rsFilename)
       m_eCartridge = CartridgeGBA;
       m_stEmulator = GBASystem;
 
-      // TODO
-      //CPUInit(biosFileName, useBios);
-      useBios = false;
-      CPUInit(NULL, useBios);
+      useBios = m_poCoreConfig->oGetKey<bool>("use_bios_file");
+      CPUInit(m_poCoreConfig->sGetKey("bios_file").c_str(), useBios);
       CPUReset();
+
+      // If the bios file was rejected by CPUInit
+      if (m_poCoreConfig->oGetKey<bool>("use_bios_file") && ! useBios)
+      {
+        m_poUseBiosItem->set_active(false);
+        m_poUseBiosItem->set_sensitive(false);
+        m_poCoreConfig->vSetKey("bios_file", "");
+      }
 
       //if(sdlAutoIPS) {
       //  int size = 0x2000000;
@@ -1166,6 +1200,34 @@ void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
     "layer_objwin"
   };
   m_poCoreConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
+}
+
+void Window::vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  m_poCoreConfig->vSetKey("use_bios_file", _poCMI->get_active());
+}
+
+void Window::vOnSelectBios()
+{
+  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select BIOS file"));
+  poDialog->set_transient_for(*this);
+
+  if (m_poCoreConfig->sGetKey("bios_file") != "")
+  {
+    poDialog->set_filename(m_poCoreConfig->sGetKey("bios_file"));
+  }
+
+  while (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    if (Glib::file_test(poDialog->get_filename(), Glib::FILE_TEST_IS_REGULAR))
+    {
+      m_poCoreConfig->vSetKey("bios_file", poDialog->get_filename());
+      m_poUseBiosItem->set_sensitive();
+      break;
+    }
+  }
+
+  delete poDialog;
 }
 
 void Window::vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed)

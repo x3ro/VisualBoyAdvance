@@ -91,6 +91,8 @@ protected:
   virtual void vOnThrottleOther(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale);
   virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
+  virtual void vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnSelectBios();
   virtual void vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed);
   virtual void vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType);
   virtual void vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize);
@@ -138,6 +140,7 @@ private:
   Gtk::FileSelection * m_poFileOpenDialog;
   ScreenArea *         m_poScreenArea;
   Gtk::CheckMenuItem * m_poFilePauseItem;
+  Gtk::CheckMenuItem * m_poUseBiosItem;
 
   SigC::Connection m_oEmuSig;
 
