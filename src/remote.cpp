@@ -440,7 +440,7 @@ void remoteStepOverRange(char *p)
   remoteSendStatus();
 }
 
-void remoteWriteWatch(char *p)
+void remoteWriteWatch(char *p, int type)
 {
   u32 address;
   int count;
@@ -470,9 +470,9 @@ void remoteWriteWatch(char *p)
 
   for(int i = 0; i < count; i++) {
     if((address >> 24) == 2)
-      freezeWorkRAM[address & 0x3ffff] = 1;
+      freezeWorkRAM[address & 0x3ffff] = type;
     else
-      freezeInternalRAM[address & 0x7fff] = 1;
+      freezeInternalRAM[address & 0x7fff] = type;
     address++;
   }  
   
@@ -663,9 +663,15 @@ void remoteStubMain()
       break;
     case 'Z':
       if(*p++ == '2') {
-        remoteWriteWatch(p);
+        remoteWriteWatch(p,1);
       } else
         remotePutPacket("");
+      break;
+    case 'z':
+      if(*p++ == '2') {
+	remoteWriteWatch(p,0);
+      } else
+	remotePutPacket("");
       break;
     default:
       {
