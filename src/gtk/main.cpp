@@ -22,10 +22,10 @@
 
 #include <list>
 
-#include <libglademm.h>
 #include <gtkmm/main.h>
 #include <gtkmm/window.h>
 #include <gtkmm/messagedialog.h>
+#include <libglademm.h>
 
 #include "images/vba-wm-pixbufs.h"
 

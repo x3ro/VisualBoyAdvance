@@ -23,8 +23,8 @@
 #include <sys/types.h>
 #include <stdarg.h>
 
-#include <libglademm.h>
 #include <gtkmm.h>
+#include <libglademm.h>
 
 #ifndef GTKMM20
 # include "sigccompat.h"
