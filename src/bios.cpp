@@ -70,7 +70,7 @@ void BIOS_ArcTan()
   }
 #endif
 
-  s32 a = -((s32)(reg[0].I * reg[0].I)) >> 14; 
+  s32 a =  -(((s32)(reg[0].I*reg[0].I)) >> 14);
   s32 b = ((0xA9 * a) >> 14) + 0x390;
   b = ((b * a) >> 14) + 0x91C;
   b = ((b * a) >> 14) + 0xFB6;
@@ -78,7 +78,8 @@ void BIOS_ArcTan()
   b = ((b * a) >> 14) + 0x2081;
   b = ((b * a) >> 14) + 0x3651;
   b = ((b * a) >> 14) + 0xA2F9;
-  reg[0].I = (reg[0].I * b) >> 16;
+  a = ((s32)reg[0].I * b) >> 16;
+  reg[0].I = a;
 
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
@@ -101,14 +102,12 @@ void BIOS_ArcTan2()
   
   s16 x = reg[0].I;
   s16 y = reg[1].I;
-  
+  s16 res = 0;
   if (y == 0) {
-    reg[0].I = 0x8000 & x;
-    reg[3].I = 0x170;
+    res = 0x8000 & x;
   } else {
     if (x == 0) {
-      reg[0].I = (0x8000 & y) + 0x4000;
-      reg[3].I = 0x170;
+      res = (0x8000 & y) + 0x4000;
     } else {
       if (abs(x) > abs(y)) {
         reg[1].I = x;
@@ -116,19 +115,18 @@ void BIOS_ArcTan2()
         BIOS_Div();
         BIOS_ArcTan();
         if (x < 0)
-          reg[0].I = 0x8000 + reg[0].I;
+          res = 0x8000 + reg[0].I;
         else
-          reg[0].I = ((y & 0x8000) << 1 ) + reg[0].I;
-        reg[3].I = 0x170;
+          res = ((y & 0x8000) << 1 ) + reg[0].I;
       } else {
         reg[0].I = x << 14;
         BIOS_Div();
         BIOS_ArcTan();
-        reg[0].I = (0x4000 + (y & 0x8000)) - reg[0].I;
-        reg[3].I = 0x170;
+        res = (0x4000 + (y & 0x8000)) - reg[0].I;
       }
     }
   }
+  reg[0].I = ((u32)res) & 0xffff;
   
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
