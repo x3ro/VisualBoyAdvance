@@ -1288,11 +1288,13 @@ int CPULoadRom(const char *szFile)
       workRAM = NULL;
       return 0;
     }
-    if(!elfRead(szFile, size, f)) {
+    bool res = elfRead(szFile, size, f);
+    if(!res || size == 0) {
       free(rom);
       rom = NULL;
       free(workRAM);
       workRAM = NULL;
+      elfCleanUp();
       return 0;
     }
   } else if(!utilLoad(szFile,

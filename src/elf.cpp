@@ -2819,7 +2819,7 @@ bool elfRead(const char *name, int& siz, FILE *f)
     free(filedata);
     return false;
   }
-  
+  free(filedata);
   //  systemMessage(0, "Done");
   
   return true;
