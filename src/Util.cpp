@@ -234,7 +234,7 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
     u8 vres[4];
     u8 colors[4];
     u8 importantcolors[4];
-    u8 pad[2];
+    //    u8 pad[2];
   } bmpheader;
   memset(&bmpheader, 0, sizeof(bmpheader));
 
@@ -243,7 +243,7 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
 
   u32 fsz = sizeof(bmpheader) + w*h*3;
   utilPutDword(bmpheader.filesize, fsz);
-  utilPutDword(bmpheader.dataoffset, 0x38);
+  utilPutDword(bmpheader.dataoffset, 0x36);
   utilPutDword(bmpheader.headersize, 0x28);
   utilPutDword(bmpheader.width, w);
   utilPutDword(bmpheader.height, h);
