@@ -16,14 +16,39 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+#include <list>
+
 #include <libglademm.h>
 #include <gtkmm/main.h>
+#include <gtkmm/window.h>
 #include <gtkmm/messagedialog.h>
+
+#include "images/vba-wm-pixbufs.h"
 
 #include "window.h"
 #include "intl.h"
 
 using Gnome::Glade::Xml;
+
+static void vSetDefaultWindowIcon()
+{
+  const guint8 * apuiInlinePixbuf[] =
+  {
+    stock_vba_wm_16,
+    stock_vba_wm_32,
+    stock_vba_wm_48,
+    stock_vba_wm_64
+  };
+
+  std::list<Glib::RefPtr<Gdk::Pixbuf> > listPixbuf;
+  for (guint i = 0; i < G_N_ELEMENTS(apuiInlinePixbuf); i++)
+  {
+    listPixbuf.push_back(
+      Gdk::Pixbuf::create_from_inline(-1, apuiInlinePixbuf[i]));
+  }
+
+  Gtk::Window::set_default_icon_list(listPixbuf);
+}
 
 int main(int argc, char * argv[])
 {
@@ -35,6 +60,8 @@ int main(int argc, char * argv[])
 #endif // ENABLE_NLS
 
   Gtk::Main oKit(argc, argv);
+
+  vSetDefaultWindowIcon();
 
   Glib::RefPtr<Xml> poXml;
   try

@@ -1,3 +1,5 @@
+SUBDIRS = images
+
 bin_PROGRAMS = gvba
 
 noinst_LIBRARIES = libgba.a

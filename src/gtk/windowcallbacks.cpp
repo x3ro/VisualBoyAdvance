@@ -773,7 +773,7 @@ void Window::vOnDirectories()
     { "captures",  "CapturesDirEntry",  "CapturesDirResetButton",  "CapturesDirSelectButton"  }
   };
 
-  for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astRow); i++)
   {
     Gtk::Entry *  poEntry  = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
     Gtk::Button * poReset  = dynamic_cast<Gtk::Button *>(poXml->get_widget(astRow[i].m_csResetButton));
@@ -794,7 +794,7 @@ void Window::vOnDirectories()
 
   if (poDialog->run() == Gtk::RESPONSE_OK)
   {
-    for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
+    for (guint i = 0; i < G_N_ELEMENTS(astRow); i++)
     {
       Gtk::Entry * poEntry = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
       Glib::ustring sDir = poEntry->get_text();
@@ -900,7 +900,7 @@ void Window::vOnSelectBios()
 
   Gtk::FileFilter oBiosFilter;
   oBiosFilter.set_name(_("Gameboy Advance BIOS"));
-  for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(acsPattern); i++)
   {
     oBiosFilter.add_pattern(acsPattern[i]);
   }
@@ -1400,10 +1400,16 @@ void Window::vOnHelpAbout()
   poXml = Xml::create(PKGDATADIR "/vba.glade", "AboutDialog");
 
   Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("AboutDialog"));
-  Gtk::Label *  poLabel  = dynamic_cast<Gtk::Label *>(poXml->get_widget("VersionLabel"));
-
   poDialog->set_transient_for(*this);
+
+  Gtk::Image oIcon(PKGDATADIR "/vba-64.png");
+  oIcon.show();
+  Gtk::Container * poIconContainer = dynamic_cast<Gtk::Container *>(poXml->get_widget("AboutIconContainer"));
+  poIconContainer->add(oIcon);
+
+  Gtk::Label * poLabel  = dynamic_cast<Gtk::Label *>(poXml->get_widget("VersionLabel"));
   poLabel->set_markup("<b><big>" PACKAGE " " VERSION "</big></b>");
+
   poDialog->run();
   delete poDialog;
 }

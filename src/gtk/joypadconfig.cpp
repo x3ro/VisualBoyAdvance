@@ -97,7 +97,7 @@ void JoypadConfig::vSetDefault()
     GDK_space, GDK_F12
   };
 
-  for (guint i = 0; i < sizeof(auiKeyval) / sizeof(auiKeyval[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(auiKeyval); i++)
   {
     GdkKeymapKey * pstKeys;
     int iKeys;

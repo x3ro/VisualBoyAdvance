@@ -263,7 +263,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   {
     iDefaultFrameskip = m_poCoreConfig->oGetKey<int>("frameskip");
   }
-  for (guint i = 0; i < sizeof(astFrameskip) / sizeof(astFrameskip[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astFrameskip); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFrameskip[i].m_csName));
     if (astFrameskip[i].m_iFrameskip == iDefaultFrameskip)
@@ -299,7 +299,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                      poCMI));
 
   int iDefaultThrottle = m_poCoreConfig->oGetKey<int>("throttle");
-  for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astThrottle); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astThrottle[i].m_csName));
     if (astThrottle[i].m_iThrottle == iDefaultThrottle)
@@ -329,7 +329,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Video6x", 6 }
   };
   int iDefaultScale = m_poDisplayConfig->oGetKey<int>("scale");
-  for (guint i = 0; i < sizeof(astVideoScale) / sizeof(astVideoScale[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astVideoScale); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astVideoScale[i].m_csName));
     if (astVideoScale[i].m_iScale == iDefaultScale)
@@ -347,24 +347,24 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
+    const char * m_csKey;
     const int    m_iLayer;
-    const bool   m_bChecked;
   }
   astLayer[] =
   {
-    { "LayersBg0",    0, m_poCoreConfig->oGetKey<bool>("layer_bg0")    },
-    { "LayersBg1",    1, m_poCoreConfig->oGetKey<bool>("layer_bg1")    },
-    { "LayersBg2",    2, m_poCoreConfig->oGetKey<bool>("layer_bg2")    },
-    { "LayersBg3",    3, m_poCoreConfig->oGetKey<bool>("layer_bg3")    },
-    { "LayersObj",    4, m_poCoreConfig->oGetKey<bool>("layer_obj")    },
-    { "LayersWin0",   5, m_poCoreConfig->oGetKey<bool>("layer_win0")   },
-    { "LayersWin1",   6, m_poCoreConfig->oGetKey<bool>("layer_win1")   },
-    { "LayersObjWin", 7, m_poCoreConfig->oGetKey<bool>("layer_objwin") }
+    { "LayersBg0",    "layer_bg0",    0 },
+    { "LayersBg1",    "layer_bg1",    1 },
+    { "LayersBg2",    "layer_bg2",    2 },
+    { "LayersBg3",    "layer_bg3",    3 },
+    { "LayersObj",    "layer_obj",    4 },
+    { "LayersWin0",   "layer_win0",   5 },
+    { "LayersWin1",   "layer_win1",   6 },
+    { "LayersObjWin", "layer_objwin", 7 }
   };
-  for (guint i = 0; i < sizeof(astLayer) / sizeof(astLayer[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astLayer); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astLayer[i].m_csName));
-    poCMI->set_active(astLayer[i].m_bChecked);
+    poCMI->set_active(m_poCoreConfig->oGetKey<bool>(astLayer[i].m_csKey));
     vOnLayerToggled(poCMI, astLayer[i].m_iLayer);
     poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
                                       SigC::slot(*this, &Window::vOnLayerToggled),
@@ -410,7 +410,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "ShowSpeedDetailed",   ShowDetailed   }
   };
   EShowSpeed eDefaultShowSpeed = (EShowSpeed)m_poDisplayConfig->oGetKey<int>("show_speed");
-  for (guint i = 0; i < sizeof(astShowSpeed) / sizeof(astShowSpeed[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astShowSpeed); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astShowSpeed[i].m_csName));
     if (astShowSpeed[i].m_eShowSpeed == eDefaultShowSpeed)
@@ -440,7 +440,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "SaveTypeNone",         SaveNone         }
   };
   ESaveType eDefaultSaveType = (ESaveType)m_poCoreConfig->oGetKey<int>("save_type");
-  for (guint i = 0; i < sizeof(astSaveType) / sizeof(astSaveType[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astSaveType); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSaveType[i].m_csName));
     if (astSaveType[i].m_eSaveType == eDefaultSaveType)
@@ -466,7 +466,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "SaveTypeFlash128K", 128 }
   };
   int iDefaultFlashSize = m_poCoreConfig->oGetKey<int>("flash_size");
-  for (guint i = 0; i < sizeof(astFlashSize) / sizeof(astFlashSize[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astFlashSize); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFlashSize[i].m_csName));
     if (astFlashSize[i].m_iFlashSize == iDefaultFlashSize)
@@ -492,7 +492,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "ScreenshotFormatBMP", "bmp" }
   };
   std::string sDefaultScreenshotFormat = m_poCoreConfig->sGetKey("screenshot_format");
-  for (guint i = 0; i < sizeof(astScreenshotFormat) / sizeof(astScreenshotFormat[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astScreenshotFormat); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astScreenshotFormat[i].m_csName));
     if (astScreenshotFormat[i].m_csScreenshotFormat == sDefaultScreenshotFormat)
@@ -564,22 +564,22 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
+    const char * m_csKey;
     const int    m_iSoundChannel;
-    const bool   m_bChecked;
   }
   astSoundChannel[] =
   {
-    { "SoundChannel1", 0, m_poSoundConfig->oGetKey<bool>("channel_1") },
-    { "SoundChannel2", 1, m_poSoundConfig->oGetKey<bool>("channel_2") },
-    { "SoundChannel3", 2, m_poSoundConfig->oGetKey<bool>("channel_3") },
-    { "SoundChannel4", 3, m_poSoundConfig->oGetKey<bool>("channel_4") },
-    { "SoundChannelA", 4, m_poSoundConfig->oGetKey<bool>("channel_A") },
-    { "SoundChannelB", 5, m_poSoundConfig->oGetKey<bool>("channel_B") }
+    { "SoundChannel1", "channel_1", 0 },
+    { "SoundChannel2", "channel_2", 1 },
+    { "SoundChannel3", "channel_3", 2 },
+    { "SoundChannel4", "channel_4", 3 },
+    { "SoundChannelA", "channel_A", 4 },
+    { "SoundChannelB", "channel_B", 5 }
   };
-  for (guint i = 0; i < sizeof(astSoundChannel) / sizeof(astSoundChannel[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astSoundChannel); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundChannel[i].m_csName));
-    poCMI->set_active(astSoundChannel[i].m_bChecked);
+    poCMI->set_active(m_poSoundConfig->oGetKey<bool>(astSoundChannel[i].m_csKey));
     vOnSoundChannelToggled(poCMI, astSoundChannel[i].m_iSoundChannel);
     poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
                                       SigC::slot(*this, &Window::vOnSoundChannelToggled),
@@ -598,7 +598,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Sound44Khz", Sound44K }
   };
   ESoundQuality eDefaultSoundQuality = (ESoundQuality)m_poSoundConfig->oGetKey<int>("quality");
-  for (guint i = 0; i < sizeof(astSoundQuality) / sizeof(astSoundQuality[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astSoundQuality); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundQuality[i].m_csName));
     if (astSoundQuality[i].m_eSoundQuality == eDefaultSoundQuality)
@@ -628,7 +628,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Volume400",  Sound400 }
   };
   ESoundVolume eDefaultSoundVolume = (ESoundVolume)m_poSoundConfig->oGetKey<int>("volume");
-  for (guint i = 0; i < sizeof(astSoundVolume) / sizeof(astSoundVolume[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astSoundVolume); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundVolume[i].m_csName));
     if (astSoundVolume[i].m_eSoundVolume == eDefaultSoundVolume)
@@ -672,7 +672,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "GameboyGb",        EmulatorGB   }
   };
   EEmulatorType eDefaultEmulatorType = (EEmulatorType)m_poCoreConfig->oGetKey<int>("emulator_type");
-  for (guint i = 0; i < sizeof(astEmulatorType) / sizeof(astEmulatorType[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astEmulatorType); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astEmulatorType[i].m_csName));
     if (astEmulatorType[i].m_eEmulatorType == eDefaultEmulatorType)
@@ -710,7 +710,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "FilterLq2x",          FilterLq2x         }
   };
   EFilter2x eDefaultFilter2x = (EFilter2x)m_poDisplayConfig->oGetKey<int>("filter2x");
-  for (guint i = 0; i < sizeof(astFilter2x) / sizeof(astFilter2x[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astFilter2x); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilter2x[i].m_csName));
     if (astFilter2x[i].m_eFilter2x == eDefaultFilter2x)
@@ -749,7 +749,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "IFBMotionBlur", FilterIBMotionBlur }
   };
   EFilterIB eDefaultFilterIB = (EFilterIB)m_poDisplayConfig->oGetKey<int>("filterIB");
-  for (guint i = 0; i < sizeof(astFilterIB) / sizeof(astFilterIB[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astFilterIB); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilterIB[i].m_csName));
     if (astFilterIB[i].m_eFilterIB == eDefaultFilterIB)
@@ -801,18 +801,18 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   //
   struct
   {
-    const char *   m_csKey;
     const char *   m_csName;
+    const char *   m_csKey;
     const EKeyFlag m_eKeyFlag;
   }
   astAutofire[] =
   {
-    { "autofire_A", "AutofireA", KeyFlagA },
-    { "autofire_B", "AutofireB", KeyFlagB },
-    { "autofire_L", "AutofireL", KeyFlagL },
-    { "autofire_R", "AutofireR", KeyFlagR }
+    { "AutofireA", "autofire_A", KeyFlagA },
+    { "AutofireB", "autofire_B", KeyFlagB },
+    { "AutofireL", "autofire_L", KeyFlagL },
+    { "AutofireR", "autofire_R", KeyFlagR }
   };
-  for (guint i = 0; i < sizeof(astAutofire) / sizeof(astAutofire[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astAutofire); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astAutofire[i].m_csName));
     poCMI->set_active(m_poInputConfig->oGetKey<bool>(astAutofire[i].m_csKey));
@@ -1660,7 +1660,7 @@ void Window::vCreateFileOpenDialog()
 
   Gtk::FileFilter oAllGBAFilter;
   oAllGBAFilter.set_name(_("All Gameboy Advance files"));
-  for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(acsPattern); i++)
   {
     oAllGBAFilter.add_pattern(acsPattern[i]);
   }
@@ -1854,7 +1854,7 @@ void Window::vSelectBestThrottleItem()
     { "Throttle150",        150 },
     { "Throttle200",        200 }
   };
-  for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
+  for (guint i = 0; i < G_N_ELEMENTS(astThrottle); i++)
   {
     Gtk::CheckMenuItem * poCMI;
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(m_poXml->get_widget(astThrottle[i].m_csName));

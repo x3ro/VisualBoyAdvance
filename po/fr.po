@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VisualBoyAdvance 1.7.2\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-05-11 00:29+0200\n"
-"PO-Revision-Date: 2004-05-11 00:30+0200\n"
+"POT-Creation-Date: 2004-05-11 21:01+0200\n"
+"PO-Revision-Date: 2004-05-11 21:01+0200\n"
 "Last-Translator: Sébastien Guignot <kxu@tsys.org>\n"
 "Language-Team: French <@>\n"
 "MIME-Version: 1.0\n"
@@ -841,117 +841,124 @@ msgstr "À _propos"
 msgid "About VBA"
 msgstr "À propos de VBA"
 
-#: src/gtk/vba.glade:2044
+#: src/gtk/vba.glade:2067
 msgid "An emulator for Gameboy(TM) and GameboyAdvance(TM)."
 msgstr "Émulateur pour Gameboy™ et GameboyAdvance™."
 
-#: src/gtk/vba.glade:2066
+#: src/gtk/vba.glade:2089
+msgid "<i>Special thanks to Yann Parmentier aka \"kohai\" for the icons.</i>"
+msgstr ""
+"<i>Remerciements spéciaux à Yann Parmentier aka \"kohai\" pour les icônes.</"
+"i>"
+
+#: src/gtk/vba.glade:2111
 msgid ""
 "<small>Copyright (C) 2004 Forgotten and the VBA development team</small>"
-msgstr "<small>Copyright © 2004 Forgotten et l'équipe de développement de VBA</small>"
+msgstr ""
+"<small>Copyright © 2004 Forgotten et l'équipe de développement de VBA</small>"
 
-#: src/gtk/vba.glade:2088
+#: src/gtk/vba.glade:2133
 msgid "Throttle"
 msgstr "Vitesse"
 
-#: src/gtk/vba.glade:2167
+#: src/gtk/vba.glade:2212
 msgid "Throttle : "
 msgstr "Vitesse : "
 
-#: src/gtk/vba.glade:2207
+#: src/gtk/vba.glade:2252
 msgid " %"
 msgstr " %"
 
-#: src/gtk/vba.glade:2238
+#: src/gtk/vba.glade:2283
 msgid "Directories"
 msgstr "Répertoires"
 
-#: src/gtk/vba.glade:2308
+#: src/gtk/vba.glade:2353
 msgid "GBA roms : "
 msgstr "Roms GBA : "
 
-#: src/gtk/vba.glade:2338 src/gtk/vba.glade:2494 src/gtk/vba.glade:2597
-#: src/gtk/vba.glade:2700 src/gtk/vba.glade:2779 src/gtk/vba.glade:2919
-#: src/gtk/vba.glade:3205 src/gtk/vba.glade:3227 src/gtk/vba.glade:3249
-#: src/gtk/vba.glade:3271 src/gtk/vba.glade:3293 src/gtk/vba.glade:3315
-#: src/gtk/vba.glade:3337 src/gtk/vba.glade:3359 src/gtk/vba.glade:3381
-#: src/gtk/vba.glade:3403 src/gtk/vba.glade:3425
+#: src/gtk/vba.glade:2383 src/gtk/vba.glade:2539 src/gtk/vba.glade:2642
+#: src/gtk/vba.glade:2745 src/gtk/vba.glade:2824 src/gtk/vba.glade:2964
+#: src/gtk/vba.glade:3250 src/gtk/vba.glade:3272 src/gtk/vba.glade:3294
+#: src/gtk/vba.glade:3316 src/gtk/vba.glade:3338 src/gtk/vba.glade:3360
+#: src/gtk/vba.glade:3382 src/gtk/vba.glade:3404 src/gtk/vba.glade:3426
+#: src/gtk/vba.glade:3448 src/gtk/vba.glade:3470
 msgid "*"
 msgstr "*"
 
-#: src/gtk/vba.glade:2411
+#: src/gtk/vba.glade:2456
 msgid "GB roms : "
 msgstr "Roms GB : "
 
-#: src/gtk/vba.glade:2464
+#: src/gtk/vba.glade:2509
 msgid "Batteries : "
 msgstr "Batteries : "
 
-#: src/gtk/vba.glade:2567
+#: src/gtk/vba.glade:2612
 msgid "Saves : "
 msgstr "Sauvegardes : "
 
-#: src/gtk/vba.glade:2670
+#: src/gtk/vba.glade:2715
 msgid "Captures : "
 msgstr "Captures : "
 
-#: src/gtk/vba.glade:2831
+#: src/gtk/vba.glade:2876
 msgid "Joypad config"
 msgstr "Configuration du joypad"
 
-#: src/gtk/vba.glade:2935
+#: src/gtk/vba.glade:2980
 msgid "Down : "
 msgstr "Bas : "
 
-#: src/gtk/vba.glade:2959
+#: src/gtk/vba.glade:3004
 msgid "Left : "
 msgstr "Gauche : "
 
-#: src/gtk/vba.glade:2983
+#: src/gtk/vba.glade:3028
 msgid "Right : "
 msgstr "Droite : "
 
-#: src/gtk/vba.glade:3007
+#: src/gtk/vba.glade:3052
 msgid "Button A : "
 msgstr "Bouton A : "
 
-#: src/gtk/vba.glade:3031
+#: src/gtk/vba.glade:3076
 msgid "Button B : "
 msgstr "Bouton B : "
 
-#: src/gtk/vba.glade:3055
+#: src/gtk/vba.glade:3100
 msgid "Button L : "
 msgstr "Bouton L : "
 
-#: src/gtk/vba.glade:3079
+#: src/gtk/vba.glade:3124
 msgid "Button R : "
 msgstr "Bouton R : "
 
-#: src/gtk/vba.glade:3103
+#: src/gtk/vba.glade:3148
 msgid "Select : "
 msgstr "Select : "
 
-#: src/gtk/vba.glade:3127
+#: src/gtk/vba.glade:3172
 msgid "Start : "
 msgstr "Start : "
 
-#: src/gtk/vba.glade:3151
+#: src/gtk/vba.glade:3196
 msgid "Speed : "
 msgstr "Speed : "
 
-#: src/gtk/vba.glade:3175
+#: src/gtk/vba.glade:3220
 msgid "Capture : "
 msgstr "Capture : "
 
-#: src/gtk/vba.glade:3441
+#: src/gtk/vba.glade:3486
 msgid "Up : "
 msgstr "Haut : "
 
-#: src/gtk/vba.glade:3475
+#: src/gtk/vba.glade:3520
 msgid "TCP port"
 msgstr "Port TCP"
 
-#: src/gtk/vba.glade:3554
+#: src/gtk/vba.glade:3599
 msgid "Port : "
 msgstr "Port : "
 
@@ -1034,7 +1041,7 @@ msgstr "Tous les fichiers"
 msgid "Gameboy Advance BIOS"
 msgstr "BIOS Gameboy Advance"
 
-#: src/gtk/windowcallbacks.cpp:1319
+#: src/gtk/windowcallbacks.cpp:1336
 msgid "Only GBA images are supported."
 msgstr "Seules les images GBA sont supportées."
 

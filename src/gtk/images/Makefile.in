@@ -20,7 +20,7 @@ VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ../..
+top_builddir = ../../..
 
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
@@ -152,52 +152,62 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-SUFFIXES = .asm
+VBA_WM_IMAGES = \
+	stock-vba-wm-16.png	\
+	stock-vba-wm-32.png	\
+	stock-vba-wm-48.png	\
+	stock-vba-wm-64.png
 
-noinst_LIBRARIES = lib386.a
 
-lib386_a_SOURCES = 2xSaImmx.asm
-subdir = src/i386
+VBA_WM_VARIABLES = \
+	stock_vba_wm_16  $(srcdir)/stock-vba-wm-16.png	\
+	stock_vba_wm_32  $(srcdir)/stock-vba-wm-32.png	\
+	stock_vba_wm_48  $(srcdir)/stock-vba-wm-48.png	\
+	stock_vba_wm_64  $(srcdir)/stock-vba-wm-64.png
+
+
+EXTRA_DIST = $(VBA_WM_IMAGES)
+
+noinst_DATA = vba-wm-pixbufs.h
+
+dist_pkgdata_DATA = vba-64.png
+
+CLEANFILES = $(noinst_DATA)
+subdir = src/gtk/images
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
+DIST_SOURCES =
+DATA = $(dist_pkgdata_DATA) $(noinst_DATA)
 
-lib386_a_AR = $(AR) cru
-lib386_a_LIBADD =
-am_lib386_a_OBJECTS = 2xSaImmx.$(OBJEXT)
-lib386_a_OBJECTS = $(am_lib386_a_OBJECTS)
-
-DEFAULT_INCLUDES =  -I. -I$(srcdir)
-DIST_SOURCES = $(lib386_a_SOURCES)
-DIST_COMMON = $(srcdir)/Makefile.in Makefile.am
-SOURCES = $(lib386_a_SOURCES)
-
+DIST_COMMON = $(dist_pkgdata_DATA) $(srcdir)/Makefile.in Makefile.am
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .asm .o
 $(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  src/i386/Makefile
+	  $(AUTOMAKE) --gnu  src/gtk/images/Makefile
 Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)
-
-AR = ar
-
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
-lib386.a: $(lib386_a_OBJECTS) $(lib386_a_DEPENDENCIES) 
-	-rm -f lib386.a
-	$(lib386_a_AR) lib386.a $(lib386_a_OBJECTS) $(lib386_a_LIBADD)
-	$(RANLIB) lib386.a
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT) core *.core
-
-distclean-compile:
-	-rm -f *.tab.c
 uninstall-info-am:
+dist_pkgdataDATA_INSTALL = $(INSTALL_DATA)
+install-dist_pkgdataDATA: $(dist_pkgdata_DATA)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)
+	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " $(dist_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(pkgdatadir)/$$f"; \
+	  $(dist_pkgdataDATA_INSTALL) $$d$$p $(DESTDIR)$(pkgdatadir)/$$f; \
+	done
+
+uninstall-dist_pkgdataDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_pkgdata_DATA)'; for p in $$list; do \
+	  f="`echo $$p | sed -e 's|^.*/||'`"; \
+	  echo " rm -f $(DESTDIR)$(pkgdatadir)/$$f"; \
+	  rm -f $(DESTDIR)$(pkgdatadir)/$$f; \
+	done
 tags: TAGS
 TAGS:
 
@@ -206,7 +216,7 @@ CTAGS:
 
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
-top_distdir = ../..
+top_distdir = ../../..
 distdir = $(top_distdir)/$(PACKAGE)-$(VERSION)
 
 distdir: $(DISTFILES)
@@ -238,9 +248,10 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(DATA)
 
 installdirs:
+	$(mkinstalldirs) $(DESTDIR)$(pkgdatadir)
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -258,6 +269,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-rm -f $(CONFIG_CLEAN_FILES)
@@ -267,11 +279,11 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
+clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
-distclean-am: clean-am distclean-compile distclean-generic
+distclean-am: clean-am distclean-generic
 
 dvi: dvi-am
 
@@ -281,7 +293,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-dist_pkgdataDATA
 
 install-exec-am:
 
@@ -297,7 +309,7 @@ maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-am
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic
+mostlyclean-am: mostlyclean-generic
 
 pdf: pdf-am
 
@@ -307,21 +319,21 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am
+uninstall-am: uninstall-dist_pkgdataDATA uninstall-info-am
 
-.PHONY: all all-am check check-am clean clean-generic \
-	clean-noinstLIBRARIES distclean distclean-compile \
+.PHONY: all all-am check check-am clean clean-generic distclean \
 	distclean-generic distdir dvi dvi-am info info-am install \
-	install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-info-am
+	install-am install-data install-data-am \
+	install-dist_pkgdataDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_pkgdataDATA uninstall-info-am
 
 
-.asm.o:
-	$(NASM) -f elf -o $@ $<
+$(srcdir)/vba-wm-pixbufs.h: $(VBA_WM_IMAGES) Makefile.am
+	gdk-pixbuf-csource --raw --build-list $(VBA_WM_VARIABLES) > $(@F)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
