@@ -1,3 +1,8 @@
+2003-01-12  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp: added some debugging for DDRAW and DINPUT
+	* src/win32/Win32.cpp: changed rendering when menu is active with triple buffering
+
 2003-01-11  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/GBA.cpp (CPULoop): set emulation speed value

@@ -60,6 +60,9 @@ static u8 COPYRIGHT[] = {
   0x00
 };
 
+int ddrawDebug = 0;
+int joyDebug = 0;
+
 HINSTANCE            ddrawDLL     = NULL;
 HINSTANCE            dinputDLL    = NULL;
 HINSTANCE            dsoundDLL    = NULL;
@@ -134,6 +137,7 @@ HCURSOR arrow = NULL;
 int languageOption = 0;
 HINSTANCE languageModule = NULL;
 char languageName[4];
+FILE *winout = NULL;
 
 bool screenMessage = false;
 char screenMessageBuffer[41];
@@ -319,6 +323,7 @@ void readBatteryFile();
 BOOL initDirectDraw();
 BOOL initDirectInput();
 void winCenterWindow(HWND);
+void winlog(const char *,...);
 
 extern int Init_2xSaI(u32);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
@@ -508,6 +513,10 @@ void releaseAllObjects()
   shutdownDirectDraw();
 
   soundShutdown();
+
+  if(winout != NULL)
+    fclose(winout);
+  winout = NULL;
 
   RedrawWindow(NULL,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
 }
@@ -1850,14 +1859,14 @@ BOOL CALLBACK DIEnumDevicesCallback(LPCDIDEVICEINSTANCE pInst,
       pDevices[numDevices].axis[i].negative = 0x4000;
       pDevices[numDevices].axis[i].positive = 0xc000;
     }
-  }
+  } else if(joyDebug)
+    winlog("Failed to get device capabilities %08x\n", hRet);
 
-  /*
-  if(joydebug) {
+  if(joyDebug) {
     // don't translate. debug only
-    log("Joystick name    : %s\n", pInst->tszProductName);
+    winlog("******************************\n");
+    winlog("Joystick %2d name    : %s\n", numDevices, pInst->tszProductName);
   }
-  */
   
   numDevices++;
 
@@ -1955,20 +1964,23 @@ BOOL initDirectInput()
     axisNumber = 0;
     currentDevice->device->EnumObjects(EnumAxesCallback, NULL, DIDFT_AXIS);
     currentDevice->device->EnumObjects(EnumPovsCallback, NULL, DIDFT_POV);
-    /*
-    if(joydebug) {
+    if(joyDebug) {
       // don't translate. debug only
-      log("*************************\n");
-      log("Joystick buttons : %d\n",    currentDevice->nButtons);
-      log("Joystick center X: %08lx\n", currentDevice->centerX);
-      log("Joystick center Y: %08lx\n", currentDevice->centerY);
-      log("Joystick left    : %08lx\n", currentDevice->thresholdLeft);
-      log("Joystick right   : %08lx\n", currentDevice->thresholdRight);
-      log("Joystick up      : %08lx\n", currentDevice->thresholdUp);
-      log("Joystick down    : %08lx\n", currentDevice->thresholdDown);
-      log("Joystick polled  : %d\n",    currentDevice->isPolled);
+      winlog("Joystick %2d polled  : %d\n",    i, currentDevice->isPolled);
+      winlog("Joystick %2d buttons : %d\n",    i, currentDevice->nButtons);
+      winlog("Joystick %2d povs    : %d\n",    i, currentDevice->nPovs);
+      winlog("Joystick %2d axes    : %d\n",    i, currentDevice->nAxes);
+      for(int j = 0; j < currentDevice->nAxes; j++) {
+        winlog("Axis %2d offset      : %08lx\n", j, currentDevice->axis[j].
+               offset);
+        winlog("Axis %2d center      : %08lx\n", j, currentDevice->axis[j].
+               center);
+        winlog("Axis %2d negative    : %08lx\n",   j, currentDevice->axis[j].
+               negative);
+        winlog("Axis %2d positive    : %08lx\n",   j, currentDevice->axis[j].
+               positive);
+      }
     }
-    */
     
     currentDevice = NULL;
   }
@@ -2454,7 +2466,8 @@ void systemDrawScreen()
                               rect.bottom-10,
                               buffer);
     }
-  }
+  } else if(ddrawDebug)
+    winlog("Error during lock: %08x\n", hret);    
   
   hret = ddsOffscreen->Unlock(NULL);
   
@@ -2465,7 +2478,7 @@ void systemDrawScreen()
       if(hret == DD_OK) {
         if(menuToggle) {
           ddsPrimary->SetClipper(ddsClipper);
-          hret = ddsPrimary->Blt(NULL, ddsFlip, NULL, DDBLT_WAIT, NULL);
+          hret = ddsPrimary->Blt(&dest, ddsFlip, &dest, DDBLT_ASYNC, NULL);
         } else
           hret = ddsPrimary->Flip(NULL, 0);
       }
@@ -2481,7 +2494,8 @@ void systemDrawScreen()
       }
     }
     ddsOffscreen->PageUnlock(0);
-  }
+  } else if(ddrawDebug)
+    winlog("Error during unlock: %08x\n", hret);
 
   if(screenMessage) {
     if(((GetTickCount() - screenMessageTime) < 3000) &&
@@ -2500,10 +2514,8 @@ void systemDrawScreen()
   }
   
   if(hret != DD_OK) {
-    //    if(drawdebug) {
-      // don't translate. Debug only
-    //      log("Error on update screen: %08xl\n", hret);
-    //    }
+    if(ddrawDebug)
+      winlog("Error on update screen: %08xl\n", hret);
   }
 }
 
@@ -4369,7 +4381,7 @@ BOOL initDirectDraw()
                            NULL);
   
   if (!hWindow) {
-    log("Error creating Window %08x\n", GetLastError());
+    winlog("Error creating Window %08x\n", GetLastError());
     //    errorMessage(myLoadString(IDS_ERROR_DISP_FAILED));
     return FALSE;
   }
@@ -4407,7 +4419,7 @@ BOOL initDirectDraw()
                                NULL);
     
   if(hret != DD_OK) {
-    log("Error creating DirectDraw object %08x\n", hret);
+    winlog("Error creating DirectDraw object %08x\n", hret);
     if(ddrawEmulationOnly) {
       // disable emulation only setting in case of failure
       regSetDwordValue("ddrawEmulationOnly", 0);
@@ -4435,7 +4447,7 @@ BOOL initDirectDraw()
                                           flags);
 
   if(hret != DD_OK) {
-    log("Error SetCooperativeLevel %08x\n", hret);    
+    winlog("Error SetCooperativeLevel %08x\n", hret);    
     //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWLEVEL), hret);
     return FALSE;
   }
@@ -4470,7 +4482,7 @@ BOOL initDirectDraw()
   
   hret = pDirectDraw->CreateSurface(&ddsd, &ddsPrimary, NULL);
   if(hret != DD_OK) {
-    log("Error primary CreateSurface %08x\n", hret);    
+    winlog("Error primary CreateSurface %08x\n", hret);    
     //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSURFACE), hret);
     return FALSE;
   }
@@ -4485,7 +4497,7 @@ BOOL initDirectDraw()
     
     hret = ddsPrimary->GetAttachedSurface(&caps, &ddsFlip);
     if(hret != DD_OK) {
-      systemMessage(0, "Failed to get attached surface %08x", hret);
+      winlog("Failed to get attached surface %08x", hret);
       return FALSE;
     }
     winClearFlipSurfaces();
@@ -4523,7 +4535,7 @@ BOOL initDirectDraw()
   hret = pDirectDraw->CreateSurface(&ddsd, &ddsOffscreen, NULL);
 
   if(hret != DD_OK) {
-    log("Error offscreen CreateSurface %08x\n", hret);    
+    winlog("Error offscreen CreateSurface %08x\n", hret);    
     if(ddrawUseVideoMemory) {
       regSetDwordValue("ddrawUseVideoMemory", 0);
     }    
@@ -4543,6 +4555,9 @@ BOOL initDirectDraw()
 
   hret = ddsOffscreen->GetPixelFormat(&px);
 
+  if(ddrawDebug)
+    winlog("Pixel Color Depth: %d\n", px.dwRGBBitCount);
+  
   switch(px.dwRGBBitCount) {
   case 15:
   case 16:
@@ -4559,7 +4574,12 @@ BOOL initDirectDraw()
     systemMessage(IDS_ERROR_DISP_COLOR, "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode.",px.dwRGBBitCount);
     return FALSE;
   }
-
+  if(ddrawDebug) {
+    winlog("R Mask: %08x\n", px.dwRBitMask);
+    winlog("G Mask: %08x\n", px.dwGBitMask);
+    winlog("B Mask: %08x\n", px.dwBBitMask);
+  }
+  
   systemRedShift = ffs(px.dwRBitMask);
   systemGreenShift = ffs(px.dwGBitMask);
   systemBlueShift = ffs(px.dwBBitMask);
@@ -4608,6 +4628,13 @@ BOOL initDirectDraw()
     }
   }
 
+  if(ddrawDebug) {
+    winlog("R shift: %d\n", systemRedShift);
+    winlog("G shift: %d\n", systemGreenShift);
+    winlog("B shift: %d\n", systemBlueShift);
+  }
+
+  
   switch(systemColorDepth) {
   case 16:
     {
@@ -4703,6 +4730,14 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
                                      "debug",
                                      0,
                                      "VBA.ini");
+  ddrawDebug = GetPrivateProfileInt("config",
+                                    "ddrawDebug",
+                                    0,
+                                    "VBA.ini");
+  joyDebug = GetPrivateProfileInt("config",
+                                  "joyDebug",
+                                  0,
+                                  "VBA.ini");
   
   WNDCLASS                    wc;
  
@@ -6410,6 +6445,23 @@ void log(char *defaultMsg, ...)
   vsprintf(buffer, defaultMsg, valist);
 
   toolsLog(buffer);
+
+  va_end(valist);
+}
+
+void winlog(const char *msg, ...)
+{
+  char buffer[2048];
+  va_list valist;
+
+  va_start(valist, msg);
+  vsprintf(buffer, msg, valist);
+  
+  if(winout == NULL) {
+    winout = fopen("vba-trace.log","w");
+  }
+
+  fputs(buffer, winout);
   
   va_end(valist);
 }
