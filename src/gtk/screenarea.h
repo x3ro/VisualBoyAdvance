@@ -21,6 +21,11 @@
 #define __VBA_SCREENAREA_H__
 
 #include <gtkmm/drawingarea.h>
+#include <gdkmm/cursor.h>
+
+#ifndef GTKMM20
+# include "sigccompat.h"
+#endif // ! GTKMM20
 
 #include "filters.h"
 
@@ -42,6 +47,9 @@ public:
 
 protected:
   virtual bool on_expose_event(GdkEventExpose * _pstEvent);
+  virtual bool on_leave_notify_event(GdkEventCrossing * _pstEvent);
+  virtual bool on_motion_notify_event(GdkEventMotion * _pstEvent);
+  virtual bool bOnCursorTimeout();
 
 private:
   int      m_iWidth;
@@ -55,7 +63,13 @@ private:
   Filter2x m_vFilter2x;
   FilterIB m_vFilterIB;
 
+  bool             m_bShowCursor;
+  Gdk::Cursor *    m_poEmptyCursor;
+  SigC::Connection m_oCursorSig;
+
   void vUpdateSize();
+  void vHideCursor();
+  void vShowCursor();
 };
 
 } // namespace VBA

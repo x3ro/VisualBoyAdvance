@@ -185,7 +185,7 @@ protected:
 #endif // MMX
   virtual void vOnJoypadConfigure(int _iJoypad);
   virtual void vOnJoypadToggled(Gtk::CheckMenuItem * _poCMI, int _iJoypad);
-  virtual void vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, std::string _sKey, u32 _uiKeyFlag);
+  virtual void vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, u32 _uiKeyFlag);
   virtual void vOnGDBWait();
   virtual void vOnGDBLoadAndWait();
   virtual void vOnGDBBreak();

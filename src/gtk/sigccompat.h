@@ -49,12 +49,6 @@ slot( T_obj1& _A_obj, T_return (T_obj2::*_A_func)(T_arg1,T_arg2) )
 { return ::sigc::bound_mem_functor2<T_return, T_obj2, T_arg1,T_arg2>
              (dynamic_cast< T_obj1&>(_A_obj), _A_func); }
 
-template <class T_return, class T_arg1,class T_arg2,class T_arg3, class T_obj1, class T_obj2>
-inline Slot3<T_return, T_arg1,T_arg2,T_arg3>
-slot( T_obj1& _A_obj, T_return (T_obj2::*_A_func)(T_arg1,T_arg2,T_arg3) )
-{ return ::sigc::bound_mem_functor3<T_return, T_obj2, T_arg1,T_arg2,T_arg3>
-             (dynamic_cast< T_obj1&>(_A_obj), _A_func); }
-
 } // namespace SigC
 
 

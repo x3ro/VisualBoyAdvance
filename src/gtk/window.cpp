@@ -816,10 +816,10 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astAutofire[i].m_csName));
     poCMI->set_active(m_poInputConfig->oGetKey<bool>(astAutofire[i].m_csKey));
-    vOnAutofireToggled(poCMI, astAutofire[i].m_csKey, astAutofire[i].m_eKeyFlag);
-    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, std::string, u32>(
+    vOnAutofireToggled(poCMI, astAutofire[i].m_eKeyFlag);
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, u32>(
                                       SigC::slot(*this, &Window::vOnAutofireToggled),
-                                      poCMI, astAutofire[i].m_csKey, astAutofire[i].m_eKeyFlag));
+                                      poCMI, astAutofire[i].m_eKeyFlag));
   }
 
   // GDB menu

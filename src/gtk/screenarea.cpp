@@ -27,7 +27,8 @@ ScreenArea::ScreenArea(int _iWidth, int _iHeight, int _iScale) :
   m_puiPixels(NULL),
   m_puiDelta(NULL),
   m_vFilter2x(NULL),
-  m_vFilterIB(NULL)
+  m_vFilterIB(NULL),
+  m_bShowCursor(true)
 {
   g_assert(_iWidth >= 1 && _iHeight >= 1 && _iScale >= 1);
 
@@ -36,7 +37,20 @@ ScreenArea::ScreenArea(int _iWidth, int _iHeight, int _iScale) :
   m_iScale  = _iScale;
   vUpdateSize();
 
-  set_events(Gdk::EXPOSURE_MASK);
+  set_events(Gdk::EXPOSURE_MASK
+             | Gdk::POINTER_MOTION_MASK
+             | Gdk::LEAVE_NOTIFY_MASK);
+
+  char aiEmptyData[8];
+  memset(aiEmptyData, 0, sizeof(aiEmptyData));
+  Glib::RefPtr<Gdk::Bitmap> poSource = Gdk::Bitmap::create(aiEmptyData, 8, 8);
+  Glib::RefPtr<Gdk::Bitmap> poMask = Gdk::Bitmap::create(aiEmptyData, 8, 8);
+  Gdk::Color oFg;
+  Gdk::Color oBg;
+  oFg.set_rgb(0, 0, 0);
+  oBg.set_rgb(0, 0, 0);
+
+  m_poEmptyCursor = new Gdk::Cursor(poSource, poMask, oFg, oBg, 0, 0);
 }
 
 ScreenArea::~ScreenArea()
@@ -49,6 +63,11 @@ ScreenArea::~ScreenArea()
   if (m_puiDelta != NULL)
   {
     delete[] m_puiDelta;
+  }
+
+  if (m_poEmptyCursor != NULL)
+  {
+    delete m_poEmptyCursor;
   }
 }
 
@@ -158,6 +177,42 @@ void ScreenArea::vDrawColor(u32 _uiColor)
   queue_draw_area(0, 0, m_iAreaWidth, m_iAreaHeight);
 }
 
+void ScreenArea::vUpdateSize()
+{
+  if (m_puiPixels != NULL)
+  {
+    delete[] m_puiPixels;
+  }
+
+  if (m_puiDelta != NULL)
+  {
+    delete[] m_puiDelta;
+  }
+
+  m_iAreaWidth  = m_iScale * m_iWidth;
+  m_iAreaHeight = m_iScale * m_iHeight;
+  m_iRowStride  = m_iAreaWidth * 4;
+
+  m_puiPixels = new u32[m_iAreaWidth * m_iAreaHeight];
+
+  m_puiDelta = new u8[(m_iWidth + 2) * (m_iHeight + 2) * 4];
+  memset(m_puiDelta, 255, (m_iWidth + 2) * (m_iHeight + 2) * 4);
+
+  set_size_request(m_iAreaWidth, m_iAreaHeight);
+}
+
+void ScreenArea::vHideCursor()
+{
+  get_window()->set_cursor(*m_poEmptyCursor);
+  m_bShowCursor = false;
+}
+
+void ScreenArea::vShowCursor()
+{
+  get_window()->set_cursor();
+  m_bShowCursor = true;
+}
+
 bool ScreenArea::on_expose_event(GdkEventExpose * _pstEvent)
 {
   if (_pstEvent->area.x + _pstEvent->area.width > m_iAreaWidth
@@ -189,28 +244,30 @@ bool ScreenArea::on_expose_event(GdkEventExpose * _pstEvent)
   return true;
 }
 
-void ScreenArea::vUpdateSize()
+bool ScreenArea::on_motion_notify_event(GdkEventMotion * _pstEvent)
 {
-  if (m_puiPixels != NULL)
+  if (! m_bShowCursor)
   {
-    delete[] m_puiPixels;
+    vShowCursor();
   }
 
-  if (m_puiDelta != NULL)
-  {
-    delete[] m_puiDelta;
-  }
+  m_oCursorSig.disconnect();
+  m_oCursorSig = Glib::signal_timeout().connect(SigC::slot(*this, &ScreenArea::bOnCursorTimeout),
+                                                3000, Glib::PRIORITY_DEFAULT_IDLE);
+  return false;
+}
 
-  m_iAreaWidth  = m_iScale * m_iWidth;
-  m_iAreaHeight = m_iScale * m_iHeight;
-  m_iRowStride  = m_iAreaWidth * 4;
+bool ScreenArea::on_leave_notify_event(GdkEventCrossing * _pstEvent)
+{
+  m_oCursorSig.disconnect();
+  vShowCursor();
+  return false;
+}
 
-  m_puiPixels = new u32[m_iAreaWidth * m_iAreaHeight];
-
-  m_puiDelta = new u8[(m_iWidth + 2) * (m_iHeight + 2) * 4];
-  memset(m_puiDelta, 255, (m_iWidth + 2) * (m_iHeight + 2) * 4);
-
-  set_size_request(m_iAreaWidth, m_iAreaHeight);
+bool ScreenArea::bOnCursorTimeout()
+{
+  vHideCursor();
+  return false;
 }
 
 } // namespace VBA
