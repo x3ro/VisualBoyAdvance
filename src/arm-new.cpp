@@ -1502,58 +1502,63 @@
 
   armNextPC = reg[15].I;
   reg[15].I += 4;
-
-  switch(opcode >> 28) { 
-  case 0x00: // EQ 
-    cond_res = Z_FLAG;
-    break;
-  case 0x01: // NE
-    cond_res = !Z_FLAG;
-    break; 
-  case 0x02: // CS
-    cond_res = C_FLAG;
-    break;
-  case 0x03: // CC
-    cond_res = !C_FLAG;
-    break;
-  case 0x04: // MI
-    cond_res = N_FLAG;
-    break;
-  case 0x05: // PL
-    cond_res = !N_FLAG;
-    break;
-  case 0x06: // VS
-    cond_res = V_FLAG;
-    break;
-  case 0x07: // VC
-    cond_res = !V_FLAG;
-    break;
-  case 0x08: // HI
-    cond_res = C_FLAG && !Z_FLAG;
-    break;
-  case 0x09: // LS
-    cond_res = !C_FLAG || Z_FLAG;
-    break;
-  case 0x0A: // GE
-    cond_res = N_FLAG == V_FLAG;
-    break;
-  case 0x0B: // LT
-    cond_res = N_FLAG != V_FLAG;
-    break;
-  case 0x0C: // GT
-    cond_res = !Z_FLAG &&(N_FLAG == V_FLAG);
-    break;    
-  case 0x0D: // LE
-    cond_res = Z_FLAG || (N_FLAG != V_FLAG);
-    break; 
-  case 0x0E: 
-    cond_res = true; 
-    break;
-  case 0x0F:
-  default:
-    // ???
-    cond_res = false;
-    break;
+  int cond = opcode >> 28;
+  // suggested optimization for frequent cases
+  if(cond == 0x0e) {
+    cond_res = true;
+  } else {
+    switch(cond) { 
+    case 0x00: // EQ 
+      cond_res = Z_FLAG;
+      break;
+    case 0x01: // NE
+      cond_res = !Z_FLAG;
+      break; 
+    case 0x02: // CS
+      cond_res = C_FLAG;
+      break;
+    case 0x03: // CC
+      cond_res = !C_FLAG;
+      break;
+    case 0x04: // MI
+      cond_res = N_FLAG;
+      break;
+    case 0x05: // PL
+      cond_res = !N_FLAG;
+      break;
+    case 0x06: // VS
+      cond_res = V_FLAG;
+      break;
+    case 0x07: // VC
+      cond_res = !V_FLAG;
+      break;
+    case 0x08: // HI
+      cond_res = C_FLAG && !Z_FLAG;
+      break;
+    case 0x09: // LS
+      cond_res = !C_FLAG || Z_FLAG;
+      break;
+    case 0x0A: // GE
+      cond_res = N_FLAG == V_FLAG;
+      break;
+    case 0x0B: // LT
+      cond_res = N_FLAG != V_FLAG;
+      break;
+    case 0x0C: // GT
+      cond_res = !Z_FLAG &&(N_FLAG == V_FLAG);
+      break;    
+    case 0x0D: // LE
+      cond_res = Z_FLAG || (N_FLAG != V_FLAG);
+      break; 
+    case 0x0E: 
+      cond_res = true; 
+      break;
+    case 0x0F:
+    default:
+      // ???
+      cond_res = false;
+      break;
+    }
   }
   
 if(cond_res) {
@@ -5697,4 +5702,3 @@ if(cond_res) {
     // END
   }
 }
-
