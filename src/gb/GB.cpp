@@ -3140,3 +3140,34 @@ void gbEmulate(int ticksToStop)
     }
   }
 }
+
+struct EmulatedSystem GBSystem = {
+  // emuMain
+  gbEmulate,
+  // emuReset
+  gbReset,
+  // emuCleanUp
+  gbCleanUp,
+  // emuReadBattery
+  gbReadBatteryFile,
+  // emuWriteBattery
+  gbWriteBatteryFile,
+  // emuReadState
+  gbReadSaveState,
+  // emuWriteState
+  gbWriteSaveState,
+  // emuReadMemState
+  gbReadMemSaveState,
+  // emuWriteMemState
+  gbWriteMemSaveState,
+  // emuWritePNG
+  gbWritePNGFile,
+  // emuWriteBMP
+  gbWriteBMPFile,
+  // emuCount
+#ifdef FINAL_VERSION
+  70000/4,
+#else
+  1000,
+#endif
+};

@@ -16,6 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef VBA_GB_GB_H
+#define VBA_GB_GB_H
+
 #define C_FLAG 0x10
 #define H_FLAG 0x20
 #define N_FLAG 0x40
@@ -50,3 +53,7 @@ extern void gbSgbRenderBorder();
 extern bool gbWritePNGFile(const char *);
 extern bool gbWriteBMPFile(const char *);
 extern bool gbReadGSASnapshot(const char *);
+
+extern struct EmulatedSystem GBSystem;
+
+#endif

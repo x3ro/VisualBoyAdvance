@@ -217,18 +217,7 @@ void MainWnd::OnToolsDebugGdb()
       pix = (u8 *)calloc(1, 4 * 240 * 160);
       ioMem = (u8 *)calloc(1, 0x400);
       
-      theApp.emuWriteState = CPUWriteState;
-      theApp.emuReadState = CPUReadState;
-      theApp.emuWriteBattery = CPUWriteBatteryFile;
-      theApp.emuReadBattery = CPUReadBatteryFile;
-      theApp.emuReset = CPUReset;
-      theApp.emuCleanUp = CPUCleanUp;
-      theApp.emuWritePNG = CPUWritePNGFile;
-      theApp.emuWriteBMP = CPUWriteBMPFile;
-      theApp.emuMain = CPULoop;
-      //      emuUpdateCPSR = CPUUpdateCPSR;
-      //      emuHasDebugger = true;
-      theApp.emuCount = 50000;    
+      theApp.emulator = GBASystem;
       
       CPUInit(theApp.biosFileName, theApp.useBiosFile ? true : false);
       CPUReset();    
@@ -583,9 +572,9 @@ void MainWnd::OnUpdateToolsPlayStopmovieplaying(CCmdUI* pCmdUI)
 
 void MainWnd::OnToolsRewind() 
 {
-  if(emulating && theApp.emuReadMemState && theApp.rewindMemory && theApp.rewindCount) {
+  if(emulating && theApp.emulator.emuReadMemState && theApp.rewindMemory && theApp.rewindCount) {
     theApp.rewindPos = --theApp.rewindPos & 7;
-    theApp.emuReadMemState(&theApp.rewindMemory[REWIND_SIZE*theApp.rewindPos], REWIND_SIZE);
+    theApp.emulator.emuReadMemState(&theApp.rewindMemory[REWIND_SIZE*theApp.rewindPos], REWIND_SIZE);
     theApp.rewindCount--;
     theApp.rewindCounter = 0;
   }

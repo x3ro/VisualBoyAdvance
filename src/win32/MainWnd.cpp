@@ -436,7 +436,7 @@ bool MainWnd::FileRun()
       winSaveCheatListDefault();
     writeBatteryFile();
     cheatSearchCleanup(&cheatSearchData);
-    theApp.emuCleanUp();
+    theApp.emulator.emuCleanUp();
     remoteCleanUp(); 
     emulating = false;   
   }
@@ -474,22 +474,7 @@ bool MainWnd::FileRun()
   if(type == IMAGE_GB) {
     if(!gbLoadRom(theApp.szFile))
       return false;
-    theApp.emuWriteState = gbWriteSaveState;
-    theApp.emuWriteMemState = gbWriteMemSaveState;
-    theApp.emuReadState = gbReadSaveState;
-    theApp.emuReadMemState = gbReadMemSaveState;
-    theApp.emuWriteBattery = gbWriteBatteryFile;
-    theApp.emuReadBattery = gbReadBatteryFile;
-    theApp.emuReset = gbReset;
-    theApp.emuCleanUp = gbCleanUp;
-    theApp.emuWritePNG = gbWritePNGFile;
-    theApp.emuWriteBMP = gbWriteBMPFile;
-    theApp.emuMain = gbEmulate;
-#ifdef FINAL_VERSION
-    theApp.emuCount = 70000/4;
-#else
-    theApp.emuCount = 1000;
-#endif
+    theApp.emulator = GBSystem;
     gbBorderOn = theApp.winGbBorderOn;
     theApp.romSize = gbRomSize;
     if(theApp.autoIPS) {
@@ -548,23 +533,8 @@ bool MainWnd::FileRun()
                              tempName);
     if(i != (UINT)-1 && (i <= 5))
       cpuSaveType = (int)i;
-
-    theApp.emuWriteState = CPUWriteState;
-    theApp.emuWriteMemState = CPUWriteMemState;
-    theApp.emuReadState = CPUReadState;
-    theApp.emuReadMemState = CPUReadMemState;
-    theApp.emuWriteBattery = CPUWriteBatteryFile;
-    theApp.emuReadBattery = CPUReadBatteryFile;
-    theApp.emuReset = CPUReset;
-    theApp.emuCleanUp = CPUCleanUp;
-    theApp.emuWritePNG = CPUWritePNGFile;
-    theApp.emuWriteBMP = CPUWriteBMPFile;
-    theApp.emuMain = CPULoop;
-#ifdef FINAL_VERSION
-    theApp.emuCount = 250000;
-#else
-    theApp.emuCount = 5000;
-#endif
+    
+    theApp.emulator = GBASystem;
     if(theApp.removeIntros && rom != NULL) {
       *((u32 *)rom)= 0xea00002e;
     }
@@ -864,8 +834,8 @@ void MainWnd::writeBatteryFile()
   else
     filename.Format("%s\\%s.sav", saveDir, buffer);
 
-  if(theApp.emuWriteBattery)
-    theApp.emuWriteBattery(filename);
+  if(theApp.emulator.emuWriteBattery)
+    theApp.emulator.emuWriteBattery(filename);
 }
 
 
@@ -893,8 +863,8 @@ void MainWnd::readBatteryFile()
 
   bool res = false;
 
-  if(theApp.emuReadBattery)
-    res = theApp.emuReadBattery(filename);
+  if(theApp.emulator.emuReadBattery)
+    res = theApp.emulator.emuReadBattery(filename);
 
   if(res)
     systemScreenMessage(winResLoadString(IDS_LOADED_BATTERY));
@@ -910,15 +880,15 @@ CString MainWnd::winLoadFilter(UINT id)
 
 bool MainWnd::loadSaveGame(const char *name)
 {
-  if(theApp.emuReadState)
-    return theApp.emuReadState(name);
+  if(theApp.emulator.emuReadState)
+    return theApp.emulator.emuReadState(name);
   return false;
 }
 
 bool MainWnd::writeSaveGame(const char *name)
 {
-  if(theApp.emuWriteState)
-    return theApp.emuWriteState(name);
+  if(theApp.emulator.emuWriteState)
+    return theApp.emulator.emuWriteState(name);
   return false;
 }
 
@@ -1071,9 +1041,9 @@ void MainWnd::screenCapture(int captureNumber)
                   ext);
 
   if(theApp.captureFormat == 0)
-    theApp.emuWritePNG(buffer);
+    theApp.emulator.emuWritePNG(buffer);
   else
-    theApp.emuWriteBMP(buffer);
+    theApp.emulator.emuWriteBMP(buffer);
 
   CString msg = winResLoadString(IDS_SCREEN_CAPTURE);
   systemScreenMessage(msg);

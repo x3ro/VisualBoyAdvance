@@ -190,18 +190,7 @@ class VBA : public CWinApp
   RECT rect;
   RECT dest;
 
-  bool (*emuWriteMemState)(char *, int);
-  bool (*emuWriteState)(const char *);
-  bool (*emuReadMemState)(char *, int);
-  bool (*emuReadState)(const char *);
-  bool (*emuWriteBattery)(const char *);
-  bool (*emuReadBattery)(const char *);
-  void (*emuReset)();
-  void (*emuCleanUp)();
-  bool (*emuWritePNG)(const char *);
-  bool (*emuWriteBMP)(const char *);
-  void (*emuMain)(int);
-  int emuCount;
+  struct EmulatedSystem emulator;
 
   CString szFile;
   CString filename;

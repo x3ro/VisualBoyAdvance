@@ -267,19 +267,8 @@ VBA::VBA()
   romSize = 0;
   
   updateCount = 0;
-  
-  emuWriteMemState = NULL;
-  emuWriteState = NULL;
-  emuReadMemState = NULL;
-  emuReadState = NULL;
-  emuWriteBattery = NULL;
-  emuReadBattery = NULL;
-  emuReset = NULL;
-  emuCleanUp = NULL;
-  emuWritePNG = NULL;
-  emuWriteBMP = NULL;
-  emuMain = NULL;
-  emuCount = 0;
+
+  ZeroMemory(&emulator, sizeof(emulator));
 
   hAccel = NULL;
 
@@ -338,7 +327,7 @@ VBA::~VBA()
       ((MainWnd *)m_pMainWnd)->winSaveCheatListDefault();
     ((MainWnd *)m_pMainWnd)->writeBatteryFile();
     cheatSearchCleanup(&cheatSearchData);
-    emuCleanUp();
+    emulator.emuCleanUp();
   }
 
   if(input)
@@ -1090,13 +1079,14 @@ BOOL VBA::OnIdle(LONG lCount)
     return !::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE);
   } else if(emulating && active && !paused) {
     for(int i = 0; i < 2; i++) {
-      emuMain(emuCount);
+      emulator.emuMain(emulator.emuCount);
 
-      if(rewindSaveNeeded && rewindMemory && emuWriteMemState) {
+      if(rewindSaveNeeded && rewindMemory && emulator.emuWriteMemState) {
         rewindCount++;
         if(rewindCount > 8)
           rewindCount = 8;
-        if(emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], REWIND_SIZE)) {
+        if(emulator.emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
+                                     REWIND_SIZE)) {
           rewindPos = ++rewindPos & 7;
           if(rewindCount == 8)
             rewindTopPos = ++rewindTopPos & 7;

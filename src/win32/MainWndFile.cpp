@@ -69,7 +69,7 @@ void MainWnd::OnUpdateFilePause(CCmdUI* pCmdUI)
 void MainWnd::OnFileReset() 
 {
   if(emulating) {
-    theApp.emuReset();
+    theApp.emulator.emuReset();
     systemScreenMessage(winResLoadString(IDS_RESET));
   }
 }
@@ -146,7 +146,7 @@ void MainWnd::OnFileClose()
     if(theApp.autoSaveLoadCheatList)
       winSaveCheatListDefault();
     writeBatteryFile();
-    theApp.emuCleanUp();
+    theApp.emulator.emuCleanUp();
     remoteCleanUp();
   }
   emulating = 0;
@@ -368,12 +368,12 @@ void MainWnd::OnFileImportBatteryfile()
   
   bool res = false;
 
-  res = theApp.emuReadBattery(dlg.GetPathName());
+  res = theApp.emulator.emuReadBattery(dlg.GetPathName());
   
   if(!res)
     systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", dlg.GetPathName());
   else {
-    theApp.emuReset();
+    theApp.emulator.emuReset();
   }
 }
 
@@ -483,7 +483,7 @@ void MainWnd::OnFileExportBatteryfile()
   if(theApp.cartridgeType == 1) {
     result = gbWriteBatteryFile(dlg.GetPathName(), false);
   } else
-    result = theApp.emuWriteBattery(dlg.GetPathName());
+    result = theApp.emulator.emuWriteBattery(dlg.GetPathName());
 
   if(!result)
     systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s",
@@ -589,9 +589,9 @@ void MainWnd::OnFileScreencapture()
     return;
   
   if(dlg.getFilterIndex() == 2)
-    theApp.emuWriteBMP(dlg.GetPathName());
+    theApp.emulator.emuWriteBMP(dlg.GetPathName());
   else
-    theApp.emuWritePNG(dlg.GetPathName());
+    theApp.emulator.emuWritePNG(dlg.GetPathName());
 
   systemScreenMessage(winResLoadString(IDS_SCREEN_CAPTURE));
 }

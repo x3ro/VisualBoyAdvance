@@ -113,6 +113,8 @@ extern void cpuProfil(char *buffer, int, u32, int);
 extern void cpuEnableProfiling(int hz);
 #endif
 
+extern struct EmulatedSystem GBASystem;
+
 #define R13_IRQ  18
 #define R14_IRQ  19
 #define SPSR_IRQ 20
