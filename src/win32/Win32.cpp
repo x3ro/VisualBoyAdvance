@@ -4922,6 +4922,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
     regExportSettingsToINI();
     systemMessage(IDS_REGISTRY, "VisualBoyAdvance no longer uses the registry."
                   " Your settings were exported to file: %s", regGetINIPath());
+    regEnabled = false;
   }
   
   languageOption = regQueryDwordValue("language", 1);
@@ -7126,6 +7127,7 @@ void helpBugReport()
   report.AppendFormat("Disable SFX  : %d\r\n", cpuDisableSfx);
   report.AppendFormat("Skip intro   : %d\r\n", removeIntros);
   report.AppendFormat("Throttle     : %d\r\n", throttle);
+  report.AppendFormat("Rewind       : %d\r\n", rewindTimer);
   report.AppendFormat("Auto frame   : %d\r\n", autoFrameSkip);
   report.AppendFormat("Video option : %d\r\n", videoOption);
   report.AppendFormat("Render type  : %d\r\n", renderMethod);
