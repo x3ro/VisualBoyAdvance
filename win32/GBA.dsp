@@ -496,6 +496,10 @@ SOURCE=..\src\win32\ResizeDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\RewindInterval.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\RomInfo.cpp
 # End Source File
 # Begin Source File

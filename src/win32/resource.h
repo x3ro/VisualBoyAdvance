@@ -89,6 +89,7 @@
 #define IDD_GB_MAP_VIEW                 147
 #define IDD_GB_PALETTE_VIEW             148
 #define IDD_MODE_CONFIRM                149
+#define IDD_REWIND_INTERVAL             150
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -364,6 +365,7 @@
 #define IDS_UNSUPPORTED_MOVIE_VERSION   1134
 #define IDS_END_OF_MOVIE                1135
 #define IDC_COLOR                       1136
+#define IDS_INVALID_INTERVAL_VALUE      1136
 #define IDC_SAVE_BG                     1137
 #define IDC_SAVE_OBJ                    1138
 #define IDC_MAP_VIEW_ZOOM               1138
@@ -470,6 +472,7 @@
 #define IDC_BANK_0                      1245
 #define IDC_BANK_1                      1246
 #define IDC_TIMER                       1247
+#define IDC_INTERVAL                    1248
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -696,14 +699,15 @@
 #define ID_OPTIONS_EMULATOR_SKIPBIOS    40259
 #define ID_HELP_BUGREPORT               40260
 #define ID_HELP_FAQ                     40261
+#define ID_OPTIONS_EMULATOR_REWINDINTERVAL 40262
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         40262
-#define _APS_NEXT_CONTROL_VALUE         1248
+#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_COMMAND_VALUE         40263
+#define _APS_NEXT_CONTROL_VALUE         1249
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

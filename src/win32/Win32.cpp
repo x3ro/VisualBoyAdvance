@@ -118,7 +118,7 @@ static int rewindTopPos = 0;
 static int rewindCounter = 0;
 static int rewindCount = 0;
 static bool rewindSaveNeeded = false;
-
+static int rewindTimer = 10*60;
 #define REWIND_SIZE 400000
 
 bool movieRecording = false;
@@ -3489,6 +3489,7 @@ extern void toolsDebugGDBLoad();
 extern void toolsRewind();
 extern void optionsGameboyColors();
 extern int optionsThrottleOther(int);
+extern int optionsRewindInterval(int);
 extern bool winDisplayConfirmMode();
 
 void winCheckFullscreen()
@@ -4257,6 +4258,16 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       flashSetSize(0x20000);
       winFlashSize = 0x20000;
       regSetDwordValue("flashSize", winFlashSize);
+      break;
+    case ID_OPTIONS_EMULATOR_REWINDINTERVAL:
+      {
+        int v = optionsRewindInterval(rewindTimer/60);
+
+        if(v) {
+          rewindTimer = v*60;
+          regSetDwordValue("rewindTimer", v);
+        }
+      }
       break;
     case ID_OPTIONS_SOUND_OFF:
       soundOffFlag = true;
@@ -5144,6 +5155,13 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   regQueryBinaryValue("gbPalette", (char *)systemGbPalette,
                       24*sizeof(u16));
+
+  rewindTimer = regQueryDwordValue("rewindTimer", 10);
+
+  if(rewindTimer < 10 || rewindTimer > 600)
+    rewindTimer = 10;
+
+  rewindTimer *= 60; // convert to frames
 
   rewindMemory = (char *)malloc(8*REWIND_SIZE);
 
@@ -6429,7 +6447,7 @@ void systemFrame()
   if(movieRecording | moviePlaying)
     movieFrame++;
   if(rewindMemory) {
-    if(++rewindCounter == (60*10)) {
+    if(++rewindCounter >= (rewindTimer)) {
       rewindSaveNeeded = true;
       rewindCounter = 0;
     }

@@ -2850,7 +2850,7 @@ void systemShowSpeed(int speed)
 void systemFrame()
 {
   if(rewindMemory) {
-    if(++rewindCounter == rewindTimer) {
+    if(++rewindCounter >= rewindTimer) {
       rewindSaveNeeded = true;
       rewindCounter = 0;
     }

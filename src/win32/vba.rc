@@ -1112,6 +1112,18 @@ BEGIN
     CTEXT           "",IDC_TIMER,7,19,172,8
 END
 
+IDD_REWIND_INTERVAL DIALOG DISCARDABLE  0, 0, 186, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select rewind interval"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_INTERVAL,7,20,172,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",ID_OK,37,42,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,99,42,50,14
+    LTEXT           "Enter rewind interval (10...600) seconds:",IDC_STATIC,7,
+                    7,172,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1421,6 +1433,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 50
     END
+
+    IDD_REWIND_INTERVAL, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1644,13 +1664,13 @@ BEGIN
 
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
 
-            MENUITEM "Store settings in Registry",  ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY
-
             MENUITEM "AGB Print",                   ID_OPTIONS_EMULATOR_AGBPRINT
 
             MENUITEM "Real Time Clock",             ID_OPTIONS_EMULATOR_REALTIMECLOCK
 
             MENUITEM "Auto hide menu",              ID_OPTIONS_EMULATOR_AUTOHIDEMENU
+
+            MENUITEM "Rewind interval...",          ID_OPTIONS_EMULATOR_REWINDINTERVAL
 
             POPUP "Show speed"
             BEGIN
@@ -2197,6 +2217,12 @@ BEGIN
     IDS_BUG_REPORT          "The bug report information is now available on the Windows Clipboard. Please paste it into any bug report made by email or on forums to help solve problems more easily."
     IDS_UNSUPPORTED_MOVIE_VERSION "Unsupported movie version %d."
     IDS_END_OF_MOVIE        "end of movie"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_INVALID_INTERVAL_VALUE 
+                            "Invalid rewind interval value. Please enter a number between 10 and 600 seconds."
 END
 
 #endif    // English (U.S.) resources
