@@ -1227,11 +1227,6 @@ void soundReset()
 
   memset(soundFinalWave, 0, soundBufferLen);
 
-  if(systemSoundOn) {
-    for(int i = 0; i < 5; i++)
-      systemWriteDataToSoundBuffer();
-  }
-
   memset(soundFilter, 0, sizeof(soundFilter));
   soundEchoIndex = 0;
 }
@@ -1275,7 +1270,7 @@ void soundSaveGame(gzFile gzFile)
   utilWriteData(gzFile, soundSaveStruct);
   utilWriteData(gzFile, soundSaveStructV2);
   
-  gzwrite(gzFile, &soundQuality, sizeof(int));
+  utilGzWrite(gzFile, &soundQuality, sizeof(int));
 }
 
 void soundReadGame(gzFile gzFile, int version)
@@ -1294,7 +1289,7 @@ void soundReadGame(gzFile gzFile, int version)
   soundBufferIndex = soundIndex * 2;
   
   int quality = 1;
-  gzread(gzFile, &quality, sizeof(int));
+  utilGzRead(gzFile, &quality, sizeof(int));
   soundSetQuality(quality);
   
   sound1Wave = soundWavePattern[ioMem[NR11] >> 6];

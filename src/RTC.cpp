@@ -20,6 +20,7 @@
 #include "GBA.h"
 #include "Globals.h"
 #include "Port.h"
+#include "Util.h"
 
 #include <time.h>
 #include <memory.h>
@@ -207,10 +208,10 @@ void rtcReset()
 
 void rtcSaveGame(gzFile gzFile)
 {
-  gzwrite(gzFile, &rtcClockData, sizeof(rtcClockData));
+  utilGzWrite(gzFile, &rtcClockData, sizeof(rtcClockData));
 }
 
 void rtcReadGame(gzFile gzFile)
 {
-  gzread(gzFile, &rtcClockData, sizeof(rtcClockData));
+  utilGzRead(gzFile, &rtcClockData, sizeof(rtcClockData));
 }

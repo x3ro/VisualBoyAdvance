@@ -816,10 +816,6 @@ void gbSoundReset()
 
   memset(soundFinalWave, 0x00, soundBufferLen);
 
-  if(systemSoundOn) {
-    for(int i = 0; i < 3; i++)
-      systemWriteDataToSoundBuffer();
-  }
 
   memset(soundFilter, 0, sizeof(soundFilter));
   soundEchoIndex = 0;
@@ -909,9 +905,9 @@ void gbSoundSaveGame(gzFile gzFile)
 {
   utilWriteData(gzFile, gbSoundSaveStruct);
 
-  gzwrite(gzFile, soundBuffer, 4*735);
-  gzwrite(gzFile, soundFinalWave, 2*735);
-  gzwrite(gzFile, &soundQuality, sizeof(int));
+  utilGzWrite(gzFile, soundBuffer, 4*735);
+  utilGzWrite(gzFile, soundFinalWave, 2*735);
+  utilGzWrite(gzFile, &soundQuality, sizeof(int));
 }
 
 void gbSoundReadGame(int version,gzFile gzFile)
@@ -920,12 +916,12 @@ void gbSoundReadGame(int version,gzFile gzFile)
 
   soundBufferIndex = soundIndex * 2;
   
-  gzread(gzFile, soundBuffer, 4*735);
-  gzread(gzFile, soundFinalWave, 2*735);
+  utilGzRead(gzFile, soundBuffer, 4*735);
+  utilGzRead(gzFile, soundFinalWave, 2*735);
 
   if(version >=7) {
     int quality = 1;
-    gzread(gzFile, &quality, sizeof(int));
+    utilGzRead(gzFile, &quality, sizeof(int));
     gbSoundSetQuality(quality);
   } else {
     soundQuality = -1;

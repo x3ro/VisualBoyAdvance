@@ -53,7 +53,7 @@ void gbCheatsSaveGame(gzFile gzFile)
 {
   utilWriteInt(gzFile, gbCheatNumber);
   if(gbCheatNumber)
-    gzwrite(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
+    utilGzWrite(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
 }
 
 void gbCheatsReadGame(gzFile gzFile, int version)
@@ -65,7 +65,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
       int n = utilReadInt(gzFile);
       gbXxCheat tmpCheat;
       for(int i = 0; i < n; i++) {
-        gzread(gzFile,&tmpCheat, sizeof(gbXxCheat));
+        utilGzRead(gzFile,&tmpCheat, sizeof(gbXxCheat));
         gbAddGgCheat(tmpCheat.cheatCode, tmpCheat.cheatDesc);
       }
     }
@@ -76,7 +76,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
       int n = utilReadInt(gzFile);
       gbXxCheat tmpCheat;
       for(int i = 0; i < n; i++) {
-        gzread(gzFile,&tmpCheat, sizeof(gbXxCheat));
+        utilGzRead(gzFile,&tmpCheat, sizeof(gbXxCheat));
         gbAddGsCheat(tmpCheat.cheatCode, tmpCheat.cheatDesc);
       }
     }
@@ -84,7 +84,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
     gbCheatNumber = utilReadInt(gzFile);
 
     if(gbCheatNumber) {
-      gzread(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
+      utilGzRead(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
     }
   }
 

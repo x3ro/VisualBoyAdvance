@@ -1592,7 +1592,7 @@ void cheatsSaveGame(gzFile file)
 {
   utilWriteInt(file, cheatsNumber);
   
-  gzwrite(file, cheatsList, sizeof(cheatsList));
+  utilGzWrite(file, cheatsList, sizeof(cheatsList));
 }
 
 void cheatsReadGame(gzFile file)
@@ -1601,7 +1601,7 @@ void cheatsReadGame(gzFile file)
   
   cheatsNumber = utilReadInt(file);
 
-  gzread(file, cheatsList, sizeof(cheatsList));
+  utilGzRead(file, cheatsList, sizeof(cheatsList));
 
   bool firstCodeBreaker = true;
   

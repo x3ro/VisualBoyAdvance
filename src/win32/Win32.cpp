@@ -111,6 +111,15 @@ CAVIFile *aviRecorder = NULL;
 CStdString aviRecordName;
 int aviFrameNumber = 0;
 
+static char *rewindMemory = NULL;
+static int rewindPos = 0;
+static int rewindTopPos = 0;
+static int rewindCounter = 0;
+static int rewindCount = 0;
+static bool rewindSaveNeeded = false;
+
+#define REWIND_SIZE 400000
+
 bool movieRecording = false;
 bool moviePlaying = false;
 int movieFrame = 0;
@@ -236,7 +245,9 @@ extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
 
+bool (*emuWriteMemState)(char *, int) = NULL;
 bool (*emuWriteState)(char *) = NULL;
+bool (*emuReadMemState)(char *, int) = NULL;
 bool (*emuReadState)(char *) = NULL;
 bool (*emuWriteBattery)(char *) = NULL;
 bool (*emuReadBattery)(char *) = NULL;
@@ -3466,6 +3477,7 @@ extern void toolsGBTileViewer();
 extern void toolsCustomize();
 extern void toolsDebugGDB();
 extern void toolsDebugGDBLoad();
+extern void toolsRewind();
 extern void optionsGameboyColors();
 extern int optionsThrottleOther(int);
 extern bool winDisplayConfirmMode();
@@ -4731,6 +4743,9 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       debugger = true;
       break;
+    case ID_TOOLS_REWIND:
+      toolsRewind();
+      break;
     case ID_HELP_ABOUT:
       winCheckFullscreen();      
       helpAbout();
@@ -5107,6 +5122,9 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   regQueryBinaryValue("gbPalette", (char *)systemGbPalette,
                       24*sizeof(u16));
+
+  rewindMemory = (char *)malloc(8*REWIND_SIZE);
+
   return TRUE;
 }
 
@@ -5387,7 +5405,9 @@ BOOL fileOpen()
       cpuSaveType = (int)i;
     
     emuWriteState = CPUWriteState;
+    emuWriteMemState = CPUWriteMemState;
     emuReadState = CPUReadState;
+    emuReadMemState = CPUReadMemState;
     emuWriteBattery = CPUWriteBatteryFile;
     emuReadBattery = CPUReadBatteryFile;
     emuReset = CPUReset;
@@ -5683,6 +5703,19 @@ BOOL OnIdle(LONG count)
     return !::PeekMessage(&msg, NULL, NULL, NULL, PM_NOREMOVE);
   } else if(emulating && active && !paused) {
     emuMain(emuCount);
+
+    if(rewindSaveNeeded && rewindMemory && emuWriteMemState) {
+      rewindCount++;
+      if(rewindCount > 8)
+        rewindCount = 8;
+      if(emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], REWIND_SIZE)) {
+        rewindPos = ++rewindPos & 7;
+        if(rewindCount == 8)
+          rewindTopPos = ++rewindTopPos & 7;
+      }
+    }
+
+    rewindSaveNeeded = false;
     
     if(mouseCounter) {
       if(--mouseCounter == 0) {
@@ -6356,6 +6389,12 @@ void systemFrame()
     aviFrameNumber++;
   if(movieRecording | moviePlaying)
     movieFrame++;
+  if(rewindMemory) {
+    if(++rewindCounter == (60*10)) {
+      rewindSaveNeeded = true;
+      rewindCounter = 0;
+    }
+  }
 }
 
 void system10Frames(int rate)
@@ -6917,5 +6956,15 @@ void systemGbBorderOn()
 {
   if(emulating && cartridgeType == 1 && gbBorderOn) {
     updateWindowSize(videoOption);
+  }
+}
+
+void toolsRewind()
+{
+  if(emulating && emuReadMemState && rewindMemory && rewindCount) {
+    rewindPos = --rewindPos & 7;
+    emuReadMemState(&rewindMemory[REWIND_SIZE*rewindPos], REWIND_SIZE);
+    rewindCount--;
+    rewindCounter = 0;
   }
 }

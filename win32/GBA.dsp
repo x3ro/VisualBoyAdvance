@@ -197,6 +197,10 @@ SOURCE=..\src\interframe.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\memgzio.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\Mode0.cpp
 # End Source File
 # Begin Source File
@@ -500,6 +504,10 @@ SOURCE=..\src\win32\ScrollWnd.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\skinButton.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\stdafx.cpp
 
 !IF  "$(CFG)" == "GBA - Win32 Release"
@@ -555,10 +563,6 @@ SOURCE=..\src\win32\Wnd.cpp
 SOURCE=..\src\win32\WriteAVI.cpp
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=..\src\win32\skinButton.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 

@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <zlib.h>
 
 extern "C" {
 #include <png.h>
@@ -73,9 +74,17 @@ extern "C" {
 #include "NLS.h"
 #include "Util.h"
 
+extern "C" {
+#include "memgzio.h"
+}
+
 #ifdef __GNUC__
 #define _stricmp strcasecmp
 #endif
+
+static int (*utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
+static int (*utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;
+static int (*utilGzCloseFunc)(gzFile) = NULL;
 
 bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
 {
@@ -963,20 +972,20 @@ u8 *utilLoad(const char *file,
 
 void utilWriteInt(gzFile gzFile, int i)
 {
-  gzwrite(gzFile, &i, sizeof(int));
+  utilGzWrite(gzFile, &i, sizeof(int));
 }
 
 int utilReadInt(gzFile gzFile)
 {
   int i = 0;
-  gzread(gzFile, &i, sizeof(int));
+  utilGzRead(gzFile, &i, sizeof(int));
   return i;
 }
 
 void utilReadData(gzFile gzFile, variable_desc* data)
 {
   while(data->address) {
-    gzread(gzFile, data->address, data->size);
+    utilGzRead(gzFile, data->address, data->size);
     data++;
   }
 }
@@ -984,7 +993,45 @@ void utilReadData(gzFile gzFile, variable_desc* data)
 void utilWriteData(gzFile gzFile, variable_desc *data)
 {
   while(data->address) {
-    gzwrite(gzFile, data->address, data->size);
+    utilGzWrite(gzFile, data->address, data->size);
     data++;
   }
+}
+
+gzFile utilGzOpen(const char *file, const char *mode)
+{
+  utilGzWriteFunc = gzwrite;
+  utilGzReadFunc = gzread;
+  utilGzCloseFunc = gzclose;
+
+  return gzopen(file, mode);
+}
+
+gzFile utilMemGzOpen(char *memory, int available, char *mode)
+{
+  utilGzWriteFunc = memgzwrite;
+  utilGzReadFunc = memgzread;
+  utilGzCloseFunc = memgzclose;
+
+  return memgzopen(memory, available, mode);  
+}
+
+int utilGzWrite(gzFile file, const voidp buffer, unsigned int len)
+{
+  return utilGzWriteFunc(file, buffer, len);
+}
+
+int utilGzRead(gzFile file, voidp buffer, unsigned int len)
+{
+  return utilGzReadFunc(file, buffer, len);
+}
+
+int utilGzClose(gzFile file)
+{
+  return utilGzCloseFunc(file);
+}
+
+long utilGzMemTell(gzFile file)
+{
+  return memtell(file);
 }

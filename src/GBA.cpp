@@ -611,22 +611,15 @@ void CPUUpdateRenderBuffers(bool force)
   }
 }
 
-bool CPUWriteState(char *file)
+static bool CPUWriteState(gzFile gzFile)
 {
-  gzFile gzFile = gzopen(file, "wb");
-
-  if(gzFile == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", file);
-    return false;
-  }
-
   utilWriteInt(gzFile, SAVE_GAME_VERSION);
 
-  gzwrite(gzFile, &rom[0xa0], 16);
+  utilGzWrite(gzFile, &rom[0xa0], 16);
 
   utilWriteInt(gzFile, useBios);
   
-  gzwrite(gzFile, &reg[0], sizeof(reg));
+  utilGzWrite(gzFile, &reg[0], sizeof(reg));
 
   utilWriteData(gzFile, saveGameStruct);
 
@@ -635,13 +628,13 @@ bool CPUWriteState(char *file)
   // new to version 0.8
   utilWriteInt(gzFile, intState);
 
-  gzwrite(gzFile, internalRAM, 0x8000);
-  gzwrite(gzFile, paletteRAM, 0x400);
-  gzwrite(gzFile, workRAM, 0x40000);
-  gzwrite(gzFile, vram, 0x20000);
-  gzwrite(gzFile, oam, 0x400);
-  gzwrite(gzFile, pix, 4*241*162);
-  gzwrite(gzFile, ioMem, 0x400);
+  utilGzWrite(gzFile, internalRAM, 0x8000);
+  utilGzWrite(gzFile, paletteRAM, 0x400);
+  utilGzWrite(gzFile, workRAM, 0x40000);
+  utilGzWrite(gzFile, vram, 0x20000);
+  utilGzWrite(gzFile, oam, 0x400);
+  utilGzWrite(gzFile, pix, 4*241*162);
+  utilGzWrite(gzFile, ioMem, 0x400);
 
   eepromSaveGame(gzFile);
   flashSaveGame(gzFile);
@@ -652,31 +645,59 @@ bool CPUWriteState(char *file)
   // version 1.5
   rtcSaveGame(gzFile);
   
-  gzclose(gzFile);
-  
   return true;
 }
 
-bool CPUReadState(char * file)
+bool CPUWriteState(char *file)
 {
-  gzFile gzFile = gzopen(file, "rb");
+  gzFile gzFile = utilGzOpen(file, "wb");
 
-  if(gzFile == NULL)
+  if(gzFile == NULL) {
+    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", file);
     return false;
+  }
+  
+  bool res = CPUWriteState(gzFile);
 
+  utilGzClose(gzFile);
+  
+  return res;
+}
+
+bool CPUWriteMemState(char *memory, int available)
+{
+  gzFile gzFile = utilMemGzOpen(memory, available, "w");
+
+  if(gzFile == NULL) {
+    return false;
+  }
+
+  bool res = CPUWriteState(gzFile);
+
+  long pos = utilGzMemTell(gzFile)+8;
+
+  if(pos >= (available))
+    res = false;
+
+  utilGzClose(gzFile);
+
+  return res;
+}
+
+static bool CPUReadState(gzFile gzFile)
+{
   int version = utilReadInt(gzFile);
 
   if(version > SAVE_GAME_VERSION || version < SAVE_GAME_VERSION_1) {
     systemMessage(MSG_UNSUPPORTED_VBA_SGM,
                   "Unsupported VisualBoyAdvance save game version %d",
                   version);
-    gzclose(gzFile);
     return false;
   }
   
   u8 romname[17];
 
-  gzread(gzFile, romname, 16);
+  utilGzRead(gzFile, romname, 16);
 
   if(memcmp(&rom[0xa0], romname, 16) != 0) {
     romname[16]=0;
@@ -684,7 +705,6 @@ bool CPUReadState(char * file)
       if(romname[i] < 32)
         romname[i] = 32;
     systemMessage(MSG_CANNOT_LOAD_SGM,"Cannot load save game for %s", romname);
-    gzclose(gzFile);
     return false;
   }
 
@@ -697,11 +717,10 @@ bool CPUReadState(char * file)
     else
       systemMessage(MSG_SAVE_GAME_USING_BIOS,
                     "Save game is using the BIOS file");
-    gzclose(gzFile);
     return false;
   }
 
-  gzread(gzFile, &reg[0], sizeof(reg));
+  utilGzRead(gzFile, &reg[0], sizeof(reg));
 
   utilReadData(gzFile, saveGameStruct);
 
@@ -715,16 +734,16 @@ bool CPUReadState(char * file)
   else
     intState = utilReadInt(gzFile) ? true : false;
   
-  gzread(gzFile, internalRAM, 0x8000);
-  gzread(gzFile, paletteRAM, 0x400);
-  gzread(gzFile, workRAM, 0x40000);
-  gzread(gzFile, vram, 0x20000);
-  gzread(gzFile, oam, 0x400);
+  utilGzRead(gzFile, internalRAM, 0x8000);
+  utilGzRead(gzFile, paletteRAM, 0x400);
+  utilGzRead(gzFile, workRAM, 0x40000);
+  utilGzRead(gzFile, vram, 0x20000);
+  utilGzRead(gzFile, oam, 0x400);
   if(version < SAVE_GAME_VERSION_6)
-    gzread(gzFile, pix, 4*240*160);
+    utilGzRead(gzFile, pix, 4*240*160);
   else
-    gzread(gzFile, pix, 4*241*162);
-  gzread(gzFile, ioMem, 0x400);
+    utilGzRead(gzFile, pix, 4*241*162);
+  utilGzRead(gzFile, ioMem, 0x400);
 
   eepromReadGame(gzFile, version);
   flashReadGame(gzFile, version);
@@ -736,7 +755,6 @@ bool CPUReadState(char * file)
   if(version > SAVE_GAME_VERSION_6) {
     rtcReadGame(gzFile);
   }
-  gzclose(gzFile);
 
   // set pointers!
   layerEnable = layerSettings & DISPCNT;
@@ -767,6 +785,31 @@ bool CPUReadState(char * file)
     gbaSaveType = 3;
   
   return true;  
+}
+
+bool CPUReadMemState(char *memory, int available)
+{
+  gzFile gzFile = utilMemGzOpen(memory, available, "r");
+
+  bool res = CPUReadState(gzFile);
+
+  utilGzClose(gzFile);
+
+  return res;
+}
+
+bool CPUReadState(char * file)
+{
+  gzFile gzFile = utilGzOpen(file, "rb");
+
+  if(gzFile == NULL)
+    return false;
+  
+  bool res = CPUReadState(gzFile);
+
+  utilGzClose(gzFile);
+
+  return res;
 }
 
 bool CPUExportEepromFile(char *fileName)

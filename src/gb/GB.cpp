@@ -2080,91 +2080,90 @@ variable_desc gbSaveGameStruct[] = {
 };
 
 
-bool gbWriteSaveState(char *name)
+static bool gbWriteSaveState(gzFile gzFile)
 {
-  gzFile gzFile = gzopen(name,"wb");
-
-  if(gzFile == NULL)
-    return false;
-
   utilWriteInt(gzFile, GBSAVE_GAME_VERSION);
 
-  gzwrite(gzFile, &gbRom[0x134], 15);
+  utilGzWrite(gzFile, &gbRom[0x134], 15);
   
   utilWriteData(gzFile, gbSaveGameStruct);
 
-  gzwrite(gzFile, &IFF, 2);
+  utilGzWrite(gzFile, &IFF, 2);
   
   if(gbSgbMode) {
     gbSgbSaveGame(gzFile);
   }
   
-  gzwrite(gzFile, &gbDataMBC1, sizeof(gbDataMBC1));
-  gzwrite(gzFile, &gbDataMBC2, sizeof(gbDataMBC2));
-  gzwrite(gzFile, &gbDataMBC3, sizeof(gbDataMBC3));
-  gzwrite(gzFile, &gbDataMBC5, sizeof(gbDataMBC5));
-  gzwrite(gzFile, &gbDataHuC1, sizeof(gbDataHuC1));
-  gzwrite(gzFile, &gbDataHuC3, sizeof(gbDataHuC3));
+  utilGzWrite(gzFile, &gbDataMBC1, sizeof(gbDataMBC1));
+  utilGzWrite(gzFile, &gbDataMBC2, sizeof(gbDataMBC2));
+  utilGzWrite(gzFile, &gbDataMBC3, sizeof(gbDataMBC3));
+  utilGzWrite(gzFile, &gbDataMBC5, sizeof(gbDataMBC5));
+  utilGzWrite(gzFile, &gbDataHuC1, sizeof(gbDataHuC1));
+  utilGzWrite(gzFile, &gbDataHuC3, sizeof(gbDataHuC3));
 
   // not saved anymore
   //  gzwrite(gzFile, pix, 256*224*sizeof(u16));
 
-  gzwrite(gzFile, gbPalette, 128 * sizeof(u16));
+  utilGzWrite(gzFile, gbPalette, 128 * sizeof(u16));
   // todo: remove
-  gzwrite(gzFile, gbPalette, 128 * sizeof(u16));
+  utilGzWrite(gzFile, gbPalette, 128 * sizeof(u16));
   
-  gzwrite(gzFile, &gbMemory[0x8000], 0x8000);
+  utilGzWrite(gzFile, &gbMemory[0x8000], 0x8000);
   
   if(gbRamSize && gbRam) {
-    gzwrite(gzFile, gbRam, gbRamSize);
+    utilGzWrite(gzFile, gbRam, gbRamSize);
   }
 
   if(gbCgbMode) {
-    gzwrite(gzFile, gbVram, 0x4000);
-    gzwrite(gzFile, gbWram, 0x8000);
+    utilGzWrite(gzFile, gbVram, 0x4000);
+    utilGzWrite(gzFile, gbWram, 0x8000);
   }
 
   gbSoundSaveGame(gzFile);  
 
   gbCheatsSaveGame(gzFile);
   
-  gzclose(gzFile);
   return true;
 }
 
-bool gbReadSaveState(char *name)
+bool gbWriteSaveState(char *name)
 {
-  gzFile gzFile = gzopen(name,"rb");
+  gzFile gzFile = utilGzOpen(name,"wb");
 
-  if(gzFile == NULL) {
+  if(gzFile == NULL)
     return false;
-  }
+  
+  bool res = gbWriteSaveState(gzFile);
+  
+  utilGzClose(gzFile);
+  return res;
+}
 
+static bool gbReadSaveState(gzFile gzFile)
+{
   int version = utilReadInt(gzFile);
 
   if(version > GBSAVE_GAME_VERSION || version < 0) {
     systemMessage(MSG_UNSUPPORTED_VB_SGM,
                   "Unsupported VisualBoy save game version %d", version);
-    gzclose(gzFile);
     return false;
   }
   
   u8 romname[20];
   
-  gzread(gzFile, romname, 15);
+  utilGzRead(gzFile, romname, 15);
 
   if(memcmp(&gbRom[0x134], romname, 15) != 0) {
     systemMessage(MSG_CANNOT_LOAD_SGM_FOR,
                   "Cannot load save game for %s. Playing %s",
                   romname, &gbRom[0x134]);
-    gzclose(gzFile);
     return false;
   }
   
   utilReadData(gzFile, gbSaveGameStruct);
 
   if(version >= GBSAVE_GAME_VERSION_7) {
-    gzread(gzFile, &IFF, 2);
+    utilGzRead(gzFile, &IFF, 2);
   }
   
   if(gbSgbMode) {
@@ -2173,31 +2172,31 @@ bool gbReadSaveState(char *name)
     gbSgbMask = 0; // loading a game at the wrong time causes no display
   }
   
-  gzread(gzFile, &gbDataMBC1, sizeof(gbDataMBC1));
-  gzread(gzFile, &gbDataMBC2, sizeof(gbDataMBC2));
+  utilGzRead(gzFile, &gbDataMBC1, sizeof(gbDataMBC1));
+  utilGzRead(gzFile, &gbDataMBC2, sizeof(gbDataMBC2));
   if(version < GBSAVE_GAME_VERSION_4)
     // prior to version 4, there was no adjustment for the time the game
     // was last played, so we have less to read. This needs update if the
     // structure changes again.
-    gzread(gzFile, &gbDataMBC3, sizeof(gbDataMBC3)-sizeof(time_t));
+    utilGzRead(gzFile, &gbDataMBC3, sizeof(gbDataMBC3)-sizeof(time_t));
   else
-    gzread(gzFile, &gbDataMBC3, sizeof(gbDataMBC3));
-  gzread(gzFile, &gbDataMBC5, sizeof(gbDataMBC5));
-  gzread(gzFile, &gbDataHuC1, sizeof(gbDataHuC1));
-  gzread(gzFile, &gbDataHuC3, sizeof(gbDataHuC3));
+    utilGzRead(gzFile, &gbDataMBC3, sizeof(gbDataMBC3));
+  utilGzRead(gzFile, &gbDataMBC5, sizeof(gbDataMBC5));
+  utilGzRead(gzFile, &gbDataHuC1, sizeof(gbDataHuC1));
+  utilGzRead(gzFile, &gbDataHuC3, sizeof(gbDataHuC3));
 
   if(version < GBSAVE_GAME_VERSION_5) {
-    gzseek(gzFile, 256*224*sizeof(u16), SEEK_CUR);
+    utilGzRead(gzFile, pix, 256*224*sizeof(u16));
   }
   memset(pix, 0, 257*226*sizeof(u32));
 
   if(version < GBSAVE_GAME_VERSION_6) {
-    gzread(gzFile, gbPalette, 64 * sizeof(u16));
+    utilGzRead(gzFile, gbPalette, 64 * sizeof(u16));
   } else
-    gzread(gzFile, gbPalette, 128 * sizeof(u16));
+    utilGzRead(gzFile, gbPalette, 128 * sizeof(u16));
 
-  // todo
-  gzseek(gzFile, 128 * sizeof(u16), SEEK_CUR);
+  // todo: remove
+  utilGzRead(gzFile, gbPalette, 128 * sizeof(u16));
   
   if(version < GBSAVE_GAME_VERSION_10) {
     if(!gbCgbMode && !gbSgbMode) {
@@ -2206,10 +2205,10 @@ bool gbReadSaveState(char *name)
     }
   }
   
-  gzread(gzFile, &gbMemory[0x8000], 0x8000);
+  utilGzRead(gzFile, &gbMemory[0x8000], 0x8000);
 
   if(gbRamSize && gbRam) {
-    gzread(gzFile, gbRam, gbRamSize);
+    utilGzRead(gzFile, gbRam, gbRamSize);
   }
   
   gbMemoryMap[0x00] = &gbRom[0x0000];
@@ -2279,8 +2278,8 @@ bool gbReadSaveState(char *name)
   }
 
   if(gbCgbMode) {
-    gzread(gzFile, gbVram, 0x4000);
-    gzread(gzFile, gbWram, 0x8000);
+    utilGzRead(gzFile, gbVram, 0x4000);
+    utilGzRead(gzFile, gbWram, 0x8000);
 
     int value = register_SVBK;
     if(value == 0)
@@ -2301,10 +2300,23 @@ bool gbReadSaveState(char *name)
 
   if(version > GBSAVE_GAME_VERSION_1)
     gbCheatsReadGame(gzFile, version);
-  
-  gzclose(gzFile);
-  
+
   return true;
+}
+
+bool gbReadSaveState(char *name)
+{
+  gzFile gzFile = utilGzOpen(name,"rb");
+
+  if(gzFile == NULL) {
+    return false;
+  }
+  
+  bool res = gbReadSaveState(gzFile);
+  
+  utilGzClose(gzFile);
+  
+  return res;
 }
 
 bool gbWritePNGFile(char *fileName)

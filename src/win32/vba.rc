@@ -1914,6 +1914,7 @@ BEGIN
         END
         MENUITEM SEPARATOR
         MENUITEM "Customize...",                ID_TOOLS_CUSTOMIZE
+        MENUITEM "Rewind",                      ID_TOOLS_REWIND
     END
     POPUP "&Help"
     BEGIN

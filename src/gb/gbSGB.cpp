@@ -867,14 +867,14 @@ void gbSgbSaveGame(gzFile gzFile)
 {
   utilWriteData(gzFile, gbSgbSaveStructV3);
 
-  gzwrite(gzFile, gbSgbBorder, 2048);
-  gzwrite(gzFile, gbSgbBorderChar, 32*256);
+  utilGzWrite(gzFile, gbSgbBorder, 2048);
+  utilGzWrite(gzFile, gbSgbBorderChar, 32*256);
   
-  gzwrite(gzFile, gbSgbPacket, 16*7);
+  utilGzWrite(gzFile, gbSgbPacket, 16*7);
 
-  gzwrite(gzFile, gbSgbSCPPalette, 4 * 512 * sizeof(u16));
-  gzwrite(gzFile, gbSgbATF, 20 * 18);
-  gzwrite(gzFile, gbSgbATFList, 45 * 20 * 18);
+  utilGzWrite(gzFile, gbSgbSCPPalette, 4 * 512 * sizeof(u16));
+  utilGzWrite(gzFile, gbSgbATF, 20 * 18);
+  utilGzWrite(gzFile, gbSgbATFList, 45 * 20 * 18);
 }
 
 void gbSgbReadGame(gzFile gzFile, int version)
@@ -887,13 +887,13 @@ void gbSgbReadGame(gzFile gzFile, int version)
   }
 
   if(version >= 8) {
-    gzread(gzFile, gbSgbBorder, 2048);
-    gzread(gzFile, gbSgbBorderChar, 32*256);
+    utilGzRead(gzFile, gbSgbBorder, 2048);
+    utilGzRead(gzFile, gbSgbBorderChar, 32*256);
   }
   
-  gzread(gzFile, gbSgbPacket, 16*7);
+  utilGzRead(gzFile, gbSgbPacket, 16*7);
 
-  gzread(gzFile, gbSgbSCPPalette, 4 * 512 * sizeof(u16));
-  gzread(gzFile, gbSgbATF, 20 * 18);
-  gzread(gzFile, gbSgbATFList, 45 * 20 * 18);
+  utilGzRead(gzFile, gbSgbSCPPalette, 4 * 512 * sizeof(u16));
+  utilGzRead(gzFile, gbSgbATF, 20 * 18);
+  utilGzRead(gzFile, gbSgbATFList, 45 * 20 * 18);
 }
