@@ -126,8 +126,6 @@ struct {
   { "OptionsSoundEcho", ID_OPTIONS_SOUND_ECHO },
   { "OptionsSoundLowPassFilter", ID_OPTIONS_SOUND_LOWPASSFILTER },
   { "OptionsSoundReverseStereo", ID_OPTIONS_SOUND_REVERSESTEREO },
-  { "OptionsSoundStartRecording", ID_OPTIONS_SOUND_STARTRECORDING },
-  { "OptionsSoundStopRecording", ID_OPTIONS_SOUND_STOPRECORDING },
   { "OptionsGameboyColors", ID_OPTIONS_GAMEBOY_COLORS },
   { "OptionsFilterNormal", ID_OPTIONS_FILTER_NORMAL },
   { "OptionsFilterTVMode", ID_OPTIONS_FILTER_TVMODE },
@@ -160,6 +158,10 @@ struct {
   { "ToolsPaletteViewer", ID_TOOLS_PALETTEVIEW },
   { "ToolsTileViewer", ID_TOOLS_TILEVIEWER },
   { "ToolsNextFrame", ID_DEBUG_NEXTFRAME },
+  { "ToolsRecordSoundStartRecording", ID_OPTIONS_SOUND_STARTRECORDING },
+  { "ToolsRecordSoundStopRecording", ID_OPTIONS_SOUND_STOPRECORDING },
+  { "ToolsRecordAVIStartRecording", ID_TOOLS_RECORD_STARTAVIRECORDING },
+  { "ToolsRecordAVIStopRecording", ID_TOOLS_RECORD_STOPAVIRECORDING },
   { "ToolsCustomize", ID_TOOLS_CUSTOMIZE },
   { "HelpAbout", ID_HELP_ABOUT }
 };

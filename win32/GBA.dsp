@@ -454,6 +454,10 @@ SOURCE=..\src\win32\WinResUtil.cpp
 
 SOURCE=..\src\win32\Wnd.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\WriteAVI.cpp
+# End Source File
 # End Group
 # End Group
 # Begin Group "Header Files"

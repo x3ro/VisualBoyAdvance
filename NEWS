@@ -12,6 +12,7 @@ Windows version:
 - automatically apply IPS patch if it exists (configurable)
 - added save/load support in the memory viewer
 - added support for filters in 32-bit mode for all filters
+- added AVI writing support (no sound yet)
 - memory viewer now displays current edit address
 - removed some test code introduced at version 1.1 that slows down the emulator
 - fixed missing check marks on layers menu

@@ -340,8 +340,10 @@
 #define IDS_SELECT_DUMP_FILE            1125
 #define IDC_PALETTE_VIEW_OBJ            1126
 #define IDC_REFRESH                     1126
+#define IDS_FILTER_AVI                  1126
 #define IDC_SAVE                        1127
 #define IDC_GOPC                        1127
+#define IDS_SELECT_AVI_NAME             1127
 #define IDC_REFRESH2                    1129
 #define IDC_CLOSE                       1131
 #define IDC_COLOR                       1136
@@ -601,13 +603,15 @@
 #define ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K 40174
 #define ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M 40175
 #define ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH 40176
+#define ID_TOOLS_RECORD_STARTAVIRECORDING 40178
+#define ID_TOOLS_RECORD_STOPAVIRECORDING 40179
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        140
-#define _APS_NEXT_COMMAND_VALUE         40177
+#define _APS_NEXT_COMMAND_VALUE         40181
 #define _APS_NEXT_CONTROL_VALUE         1240
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

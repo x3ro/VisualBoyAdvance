@@ -1327,11 +1327,6 @@ BEGIN
             MENUITEM "11 &Khz",                     ID_OPTIONS_SOUND_11KHZ
             MENUITEM "22 K&hz",                     ID_OPTIONS_SOUND_22KHZ
             MENUITEM "44 Kh&z",                     ID_OPTIONS_SOUND_44KHZ
-            MENUITEM SEPARATOR
-            MENUITEM "Start recording...",          ID_OPTIONS_SOUND_STARTRECORDING
-
-            MENUITEM "Stop recording",              ID_OPTIONS_SOUND_STOPRECORDING
-
         END
         POPUP "&Gameboy"
         BEGIN
@@ -1443,6 +1438,18 @@ BEGIN
 
             MENUITEM "Break into GDB",              ID_TOOLS_DEBUG_BREAK
             MENUITEM "Disconnect",                  ID_TOOLS_DEBUG_DISCONNECT
+
+        END
+        MENUITEM SEPARATOR
+        POPUP "Record"
+        BEGIN
+            MENUITEM "Start sound recording...",    ID_OPTIONS_SOUND_STARTRECORDING
+
+            MENUITEM "Stop sound recording",        ID_OPTIONS_SOUND_STOPRECORDING
+
+            MENUITEM "Start AVI recording...",      ID_TOOLS_RECORD_STARTAVIRECORDING
+
+            MENUITEM "Stop AVI recording",          ID_TOOLS_RECORD_STOPAVIRECORDING
 
         END
         MENUITEM SEPARATOR
@@ -1713,6 +1720,8 @@ BEGIN
     IDS_EEPROM_NOT_SUPPORTED "EEPROM saves cannot be exported."
     IDS_FILTER_DUMP         "Memory Dump_*.DMP__"
     IDS_SELECT_DUMP_FILE    "Select dump file name"
+    IDS_FILTER_AVI          "AVI File_*.AVI__"
+    IDS_SELECT_AVI_NAME     "Select AVI file name"
 END
 
 #endif    // English (U.S.) resources

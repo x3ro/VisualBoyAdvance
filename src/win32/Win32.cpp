@@ -44,6 +44,7 @@
 #include "../gb/gbGlobals.h"
 #include "../gb/gbPrinter.h"
 #include "wavwrite.h"
+#include "WriteAVI.h"
 #include "CommDlg.h"
 #include "ExportGSASnapshot.h"
 #include "AcceleratorManager.h"
@@ -85,6 +86,9 @@ BOOL useOldSync = FALSE;
 BOOL soundRecording = FALSE;
 char soundRecordName[2048];
 CWaveSoundWrite *soundRecorder = NULL;
+BOOL aviRecording = FALSE;
+CAVIFile *aviRecorder = NULL;
+char aviRecordName[2048];
 
 BOOL recentFreeze = FALSE;
 BOOL speedupToggle = FALSE;
@@ -294,6 +298,7 @@ BOOL fileOpen();
 BOOL fileOpenSelect();
 BOOL fileOpenSelectGB();
 void fileSoundRecord();
+void fileAVIRecord();
 void loadSaveGame();
 void loadSaveGame(int);
 void writeSaveGame();
@@ -1458,10 +1463,6 @@ void updateSoundMenu(HMENU menu)
                 CHECKMENUSTATE(soundQuality == 2));
   CheckMenuItem(menu, ID_OPTIONS_SOUND_44KHZ,
                 CHECKMENUSTATE(soundQuality == 1));
-  EnableMenuItem(menu, ID_OPTIONS_SOUND_STARTRECORDING,
-                 ENABLEMENU(!soundRecording));
-  EnableMenuItem(menu, ID_OPTIONS_SOUND_STOPRECORDING,
-                 ENABLEMENU(soundRecording));
 }
 
 void updateGameboyMenu(HMENU menu)
@@ -1621,16 +1622,27 @@ void updateToolsMenu(HMENU menu)
   HMENU m = GetSubMenu(menu, 8);
   if(m == NULL)
     m = GetSubMenu(menu, 9);
-  menu = m;
-  if(menu != NULL) {
-    EnableMenuItem(menu, ID_TOOLS_DEBUG_GDB,
+  if(m != NULL) {
+    EnableMenuItem(m, ID_TOOLS_DEBUG_GDB,
                    ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
-    EnableMenuItem(menu, ID_TOOLS_DEBUG_LOADANDWAIT,
+    EnableMenuItem(m, ID_TOOLS_DEBUG_LOADANDWAIT,
                    ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket == -1));
-    EnableMenuItem(menu, ID_TOOLS_DEBUG_DISCONNECT,
+    EnableMenuItem(m, ID_TOOLS_DEBUG_DISCONNECT,
                    ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
-    EnableMenuItem(menu, ID_TOOLS_DEBUG_BREAK,
+    EnableMenuItem(m, ID_TOOLS_DEBUG_BREAK,
                    ENABLEMENU(videoOption <= VIDEO_4X && remoteSocket != -1));
+  }
+
+  m = GetSubMenu(menu, 11);
+  if(m != NULL) {
+    EnableMenuItem(m, ID_OPTIONS_SOUND_STARTRECORDING,
+                   ENABLEMENU(!soundRecording));
+    EnableMenuItem(m, ID_OPTIONS_SOUND_STOPRECORDING,
+                   ENABLEMENU(soundRecording));
+    EnableMenuItem(m, ID_TOOLS_RECORD_STARTAVIRECORDING,
+                   ENABLEMENU(!aviRecording));
+    EnableMenuItem(m, ID_TOOLS_RECORD_STOPAVIRECORDING,
+                   ENABLEMENU(aviRecording));
   }
 }
 
@@ -2041,6 +2053,54 @@ void systemDrawScreen()
     IUpdateListener *up = *it;
     it++;
     up->update();
+  }
+
+  if(aviRecording) {
+    int width = 240;
+    int height = 160;
+    switch(cartridgeType) {
+    case 0:
+      width = 240;
+      height = 160;
+      break;
+    case 1:
+      if(gbBorderOn) {
+        width = 256;
+        height = 224;
+      } else {
+        width = 160;
+        height = 144;
+      }
+      break;
+    }
+    
+    if(aviRecorder == NULL) {
+      aviRecorder = new CAVIFile();
+      
+      if(cartridgeType == 0) {
+        aviRecorder->SetRate(60/(frameSkip+1));
+      } else { 
+        aviRecorder->SetRate(60/(gbFrameSkip+1));
+      }
+      
+      BITMAPINFOHEADER bi;
+      memset(&bi, 0, sizeof(bi));      
+      bi.biSize = 0x28;    
+      bi.biPlanes = 1;
+      bi.biBitCount = 24;
+      bi.biWidth = width;
+      bi.biHeight = height;
+      bi.biSizeImage = 3*width*height;
+      aviRecorder->SetFormat(&bi);
+      aviRecorder->Open(aviRecordName);
+    }
+    
+    char *bmp = new char[width*height*3];
+    
+    utilWriteBMP(bmp, width, height, pix);
+    aviRecorder->AddFrame(bmp);
+    
+    delete bmp;
   }
   
   if(vsync && !speedup) {
@@ -3978,6 +4038,16 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_TOOLS_CUSTOMIZE:
       toolsCustomize();
       break;
+    case ID_TOOLS_RECORD_STARTAVIRECORDING:
+      fileAVIRecord();
+      break;
+    case ID_TOOLS_RECORD_STOPAVIRECORDING:
+      if(aviRecorder != NULL) {
+        delete aviRecorder;
+        aviRecorder = NULL;
+      }
+      aviRecording = FALSE;
+      break;
     case ID_TOOLS_DEBUG_GDB:
       toolsDebugGDB();
       break;
@@ -5517,6 +5587,53 @@ void fileSoundRecord()
   regSetStringValue("soundRecordDir", captureBuffer);
 }
 
+void fileAVIRecord()
+{
+  char captureBuffer[2048];
+  captureBuffer[0] = 0;
+  OPENFILENAME ofn;
+  char *capdir = regQueryStringValue("aviRecordDir", NULL);
+  
+  if(!capdir)
+    capdir = getDirFromFile(filename);
+
+  ZeroMemory(&ofn, sizeof(OPENFILENAME));
+  ofn.lStructSize = sizeof(OPENFILENAME);
+  ofn.hwndOwner = hWindow;
+  ofn.lpstrFile = captureBuffer;
+  ofn.nMaxFile = sizeof(captureBuffer);
+  ofn.lpstrFilter =  winLoadFilter(IDS_FILTER_AVI);
+  ofn.nFilterIndex = 0; //selectedFileIndex;
+  ofn.lpstrFileTitle = NULL;
+  ofn.nMaxFileTitle = 0;
+  ofn.lpstrDefExt = "AVI";  
+  ofn.lpstrInitialDir = (const char *)capdir;
+  ofn.lpstrTitle = winResLoadString(IDS_SELECT_AVI_NAME);
+  ofn.Flags = OFN_PATHMUSTEXIST;
+
+  if(videoOption == VIDEO_320x240) {
+    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
+    ofn.Flags |= OFN_ENABLETEMPLATE;
+  }
+  
+  if(GetSaveFileName(&ofn) == FALSE) {
+    DWORD res = CommDlgExtendedError();
+    return;
+  }
+  
+  strcpy(aviRecordName, captureBuffer);
+  aviRecording = TRUE;
+  
+  if(ofn.nFileOffset > 0) {
+    captureBuffer[ofn.nFileOffset] = 0;
+  }
+
+  int len = strlen((const char *)captureBuffer);
+  if(len > 3 && captureBuffer[len-1] == '\\')
+    captureBuffer[len-1] = 0;
+  regSetStringValue("aviRecordDir", captureBuffer);
+}
+
 void screenCapture()
 {
   char captureBuffer[2048];
@@ -5843,6 +5960,10 @@ bool systemSoundInit()
 
 void systemSoundShutdown()
 {
+  if(aviRecorder != NULL) {
+    delete aviRecorder;
+    aviRecorder = NULL;
+  }
   if(soundRecording) {
     if(soundRecorder != NULL) {
       delete soundRecorder;
@@ -5934,6 +6055,18 @@ void systemWriteDataToSoundBuffer()
       UINT wrote = 0;
       soundRecorder->Write(len, (u8 *)soundFinalWave, &wrote);
     }
+  }
+
+  if(aviRecording) {
+    if(dsbSecondary) {
+      if(!aviRecorder->IsSoundAdded()) {
+        WAVEFORMATEX format;
+        dsbSecondary->GetFormat(&format, sizeof(format), NULL);
+        aviRecorder->SetSoundFormat(&format);
+      }
+    }
+
+    aviRecorder->AddSound((const char *)soundFinalWave, len);
   }
   
   HRESULT hr;

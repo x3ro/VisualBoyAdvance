@@ -1,3 +1,7 @@
+2002-12-09  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp: added AVI writing support
+
 2002-12-02  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Commands.cpp: added missing options
