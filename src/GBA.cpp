@@ -164,7 +164,7 @@ const int gamepakWaitState2[8] = { 8, 8, 8, 8, 1, 1, 1, 1 };
 int memoryWait[16] =
   { 0, 0, 2, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0 };
 int memoryWait32[16] =
-  { 0, 0, 6, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 0 };
+  { 0, 0, 9, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 0 };
 int memoryWaitSeq[16] =
   { 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 4, 4, 8, 8, 4, 0 };
 int memoryWaitSeq32[16] =
@@ -528,14 +528,14 @@ inline int CPUUpdateTicksAccessSeq16(u32 address)
   return memoryWaitSeq[(address>>24)&15];
 }
 
-inline void CPUUpdateTicks(int &cpuLoopTicks)
+inline int CPUUpdateTicks()
 {
-  cpuLoopTicks = lcdTicks;
+  int cpuLoopTicks = lcdTicks;
   
   if(soundTicks < cpuLoopTicks)
     cpuLoopTicks = soundTicks;
   
-  if(timer0On && (timer0Ticks < cpuLoopTicks)) {
+  if(timer0On && !(TM0CNT & 4) && (timer0Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer0Ticks;
   }
   if(timer1On && !(TM1CNT & 4) && (timer1Ticks < cpuLoopTicks)) {
@@ -555,6 +555,7 @@ inline void CPUUpdateTicks(int &cpuLoopTicks)
   }
 #endif
   cpuSavedTicks = cpuLoopTicks;
+  return cpuLoopTicks;
 }
 
 void CPUUpdateWindow0()
@@ -2649,43 +2650,48 @@ void CPUUpdateRegister(u32 address, u16 value)
     UPDATE_REG(0x202, IF);
     break;
   case 0x204:
-    memoryWait[0x0e] = memoryWaitSeq[0x0e] = gamepakRamWaitState[value & 3];
-
-    if(!speedHack) {
-      memoryWait[0x08] = memoryWait[0x09] = gamepakWaitState[(value >> 2) & 7];
-      memoryWaitSeq[0x08] = memoryWaitSeq[0x09] =
-        gamepakWaitState0[(value >> 2) & 7];
-      
-      memoryWait[0x0a] = memoryWait[0x0b] = gamepakWaitState[(value >> 5) & 7];
-      memoryWaitSeq[0x0a] = memoryWaitSeq[0x0b] =
-        gamepakWaitState1[(value >> 5) & 7];
-      
-      memoryWait[0x0c] = memoryWait[0x0d] = gamepakWaitState[(value >> 8) & 7];
-      memoryWaitSeq[0x0c] = memoryWaitSeq[0x0d] =
-        gamepakWaitState2[(value >> 8) & 7];
-    } else {
-      memoryWait[0x08] = memoryWait[0x09] = 4;
-      memoryWaitSeq[0x08] = memoryWaitSeq[0x09] = 2;
-
-      memoryWait[0x0a] = memoryWait[0x0b] = 4;
-      memoryWaitSeq[0x0a] = memoryWaitSeq[0x0b] = 4;
-
-      memoryWait[0x0c] = memoryWait[0x0d] = 4;
-      memoryWaitSeq[0x0c] = memoryWaitSeq[0x0d] = 8;
-    }
     {
-      for(int i = 0; i < 16; i++) {
+      int i;
+      memoryWait[0x0e] = memoryWaitSeq[0x0e] = gamepakRamWaitState[value & 3];
+      
+      if(!speedHack) {
+        memoryWait[0x08] = memoryWait[0x09] = gamepakWaitState[(value >> 2) & 7];
+        memoryWaitSeq[0x08] = memoryWaitSeq[0x09] =
+          gamepakWaitState0[(value >> 2) & 7];
+        
+        memoryWait[0x0a] = memoryWait[0x0b] = gamepakWaitState[(value >> 5) & 7];
+        memoryWaitSeq[0x0a] = memoryWaitSeq[0x0b] =
+          gamepakWaitState1[(value >> 5) & 7];
+        
+        memoryWait[0x0c] = memoryWait[0x0d] = gamepakWaitState[(value >> 8) & 7];
+        memoryWaitSeq[0x0c] = memoryWaitSeq[0x0d] =
+          gamepakWaitState2[(value >> 8) & 7];
+      } else {
+        memoryWait[0x08] = memoryWait[0x09] = 4;
+        memoryWaitSeq[0x08] = memoryWaitSeq[0x09] = 2;
+        
+        memoryWait[0x0a] = memoryWait[0x0b] = 4;
+        memoryWaitSeq[0x0a] = memoryWaitSeq[0x0b] = 4;
+        
+        memoryWait[0x0c] = memoryWait[0x0d] = 4;
+        memoryWaitSeq[0x0c] = memoryWaitSeq[0x0d] = 8;
+      }
+      for(i = 0; i < 16; i++) {
         memoryWaitFetch32[i] = memoryWait32[i] = memoryWait[i] *
           (memory32[i] ? 1 : 2);
         memoryWaitFetch[i] = memoryWait[i];
       }
-    }
-    if(value & 0x4000) {
-      for(int i = 0; i < 16; i++) {
-        memoryWaitFetch32[i] = memoryWaitFetch[i] = cpuMemoryWait[i];
+      memoryWaitFetch32[3] += 1;
+      memoryWaitFetch32[2] += 3;
+      
+      if(value & 0x4000) {
+        for(i = 8; i < 16; i++) {
+          memoryWaitFetch32[i] = 2*cpuMemoryWait[i];
+          memoryWaitFetch[i] = cpuMemoryWait[i];
+        }
       }
+      UPDATE_REG(0x204, value);
     }
-    UPDATE_REG(0x204, value);
     break;
   case 0x208:
     IME = value & 1;
@@ -3347,7 +3353,7 @@ void CPULoop(int ticks)
   extClockTicks = &clockTicks;
   extTicks = &ticks;
 
-  CPUUpdateTicks(cpuLoopTicks);
+  cpuLoopTicks = CPUUpdateTicks();
   if(cpuLoopTicks > ticks) {
     cpuLoopTicks = ticks;
     cpuSavedTicks = ticks;
@@ -3422,6 +3428,7 @@ void CPULoop(int ticks)
       if(cpuSavedTicks) {
         clockTicks = cpuSavedTicks;// + cpuLoopTicks;
       }
+      cpuDmaTicksToUpdate = -cpuLoopTicks;
 
     updateLoop:
       lcdTicks -= clockTicks;
@@ -3865,7 +3872,7 @@ void CPULoop(int ticks)
 
       ticks -= clockTicks;
 
-      CPUUpdateTicks(cpuLoopTicks);
+      cpuLoopTicks = CPUUpdateTicks();
       
       if(cpuDmaTicksToUpdate > 0) {
         clockTicks = cpuSavedTicks;

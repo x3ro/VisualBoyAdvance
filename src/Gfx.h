@@ -25,6 +25,8 @@
 
 #include "Port.h"
 
+//#define SPRITE_DEBUG
+
 void gfxDrawTextScreen(u16, u16, u16, u32 *);
 void gfxDrawRotScreen(u16,
                       u16, u16,
@@ -762,6 +764,11 @@ inline void gfxDrawSprites(u32 *lineOBJ)
         continue;
       }
 
+#ifdef SPRITE_DEBUG
+      int maskX = sizeX-1;
+      int maskY = sizeY-1;
+#endif
+
       int sy = (a0 & 255);
 
       if(sy > 160)
@@ -827,19 +834,25 @@ inline void gfxDrawSprites(u32 *lineOBJ)
 									+ ((yyy & 7)<<3) + ((xxx >> 3)<<6) +
                                     (xxx & 7))&0x7FFF)];
                   if ((color==0) && (((prio >> 25)&3) < 
-                                     ((lineOBJ[sx]>>25)&3)))
+                                     ((lineOBJ[sx]>>25)&3))) {
                     lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
-                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+                  } else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                     lineOBJ[sx] = READ16LE(&spritePalette[color]) | prio;
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
                   }
 
                   if (a0 & 0x1000) {
-                    if (m)
-                      lineOBJ[sx]=lineOBJ[sx-1];
                     m++;
                     if (m==mosaicX)
                       m=0;
                   }
+#ifdef SPRITE_DEBUG
+                  if(t == 0 || t == maskY || x == 0 || x == maskX)
+                    lineOBJ[sx] = 0x001F;
+#endif
                 }
                 sx = (sx+1)&511;;
                 realX += dx;
@@ -870,19 +883,26 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                     color &= 0x0F;
                   
                   if ((color==0) && (((prio >> 25)&3) < 
-                                     ((lineOBJ[sx]>>25)&3)))
+                                     ((lineOBJ[sx]>>25)&3))) {
                     lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
-                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+                  } else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                     lineOBJ[sx] = READ16LE(&spritePalette[palette+color]) | prio;
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
                   }
                 }
-                if (a0 & 0x1000) {
-                  if (m)
-                    lineOBJ[sx]=lineOBJ[sx-1];
+                if((a0 & 0x1000) && m) {
                   m++;
                   if (m==mosaicX)
                     m=0;
                 }
+
+#ifdef SPRITE_DEBUG
+                  if(t == 0 || t == maskY || x == 0 || x == maskX)
+                    lineOBJ[sx] = 0x001F;
+#endif
                 sx = (sx+1)&511;;
                 realX += dx;
                 realY += dy;
@@ -928,18 +948,26 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                 if(sx < 240) {
                   u8 color = vram[address];
                   if ((color==0) && (((prio >> 25)&3) < 
-                                     ((lineOBJ[sx]>>25)&3)))
+                                     ((lineOBJ[sx]>>25)&3))) {
                     lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
-                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+                  } else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                     lineOBJ[sx] = READ16LE(&spritePalette[color]) | prio;
+                    if((a0 & 0x1000) && m)
+                      lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
                   }
+
                   if (a0 & 0x1000) {
-                    if (m)
-                      lineOBJ[sx]=lineOBJ[sx-1];
                     m++;
                     if (m==mosaicX)
                       m=0;
                   }
+
+#ifdef SPRITE_DEBUG
+                  if(t == 0 || t == maskY || xx == 0 || xx == maskX)
+                    lineOBJ[sx] = 0x001F;
+#endif
                 }
                   
                 sx = (sx+1) & 511;
@@ -997,19 +1025,25 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                       color &= 0x0F;
                     
                     if ((color==0) && (((prio >> 25)&3) < 
-                                       ((lineOBJ[sx]>>25)&3)))
+                                       ((lineOBJ[sx]>>25)&3))) {
                       lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
-                    else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                      if((a0 & 0x1000) && m)
+                        lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+                    } else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                       lineOBJ[sx] = READ16LE(&spritePalette[palette + color]) | prio;
+                      if((a0 & 0x1000) && m)
+                        lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
                     }
                   }
                   if (a0 & 0x1000) {
-                    if (m)
-                      lineOBJ[sx]=lineOBJ[sx-1];
                     m++;
                     if (m==mosaicX)
                       m=0;
                   }
+#ifdef SPRITE_DEBUG
+                  if(t == 0 || t == maskY || xx == 0 || xx == maskX)
+                    lineOBJ[sx] = 0x001F;
+#endif
                   sx = (sx+1) & 511;
                   xxx--;
                   if(!(xx & 1))
@@ -1031,19 +1065,26 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                       color &= 0x0F;
                     
                     if ((color==0) && (((prio >> 25)&3) < 
-                                       ((lineOBJ[sx]>>25)&3)))
+                                       ((lineOBJ[sx]>>25)&3))) {
                       lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
-                    else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                      if((a0 & 0x1000) && m)
+                        lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+                    } else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                       lineOBJ[sx] = READ16LE(&spritePalette[palette + color]) | prio;
+                      if((a0 & 0x1000) && m)
+                        lineOBJ[sx]=(lineOBJ[sx-1] & 0xF9FFFFFF) | prio;
+
                     }
                   }
                   if (a0 & 0x1000) {
-                    if (m)
-                      lineOBJ[sx]=lineOBJ[sx-1];
                     m++;
                     if (m==mosaicX)
                       m=0;
                   }
+#ifdef SPRITE_DEBUG
+                  if(t == 0 || t == maskY || xx == 0 || xx == maskX)
+                    lineOBJ[sx] = 0x001F;
+#endif
                   sx = (sx+1) & 511;
                   xxx++;
                   if(xx & 1)
