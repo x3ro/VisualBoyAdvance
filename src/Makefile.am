@@ -1,6 +1,6 @@
 SUBDIRS = gb @VBA_EXTRA@
 EXTRA_SUBDIRS = gp i386 prof
-DIST_SUBDIRS = $(SUBDIRS) $(EXTRA_SUBDIRS)
+DIST_SUBDIRS = gb $(EXTRA_SUBDIRS)
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
