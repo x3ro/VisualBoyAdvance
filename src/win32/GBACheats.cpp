@@ -866,7 +866,7 @@ void AddGSACodeDlg::OnOk()
   GetWindowText(GetDlgItem(IDC_CODE), buffer, 1024);
   GetWindowText(GetDlgItem(IDC_DESC), desc, 100);
   
-  char *s = strtok(buffer, "\n\r");
+  char *s = strtok(buffer, " \n\r");
   part1[0] = 0;
   while(s) {
     if(strlen(s) > 16)
@@ -976,7 +976,7 @@ void AddCheatCodeDlg::OnOk()
   GetWindowText(GetDlgItem(IDC_CODE), buffer, 1024);
   GetWindowText(GetDlgItem(IDC_DESC), desc, 100);
   
-  char *s = strtok(buffer, "\n\r");
+  char *s = strtok(buffer, " \n\r");
   while(s) {
     if(strlen(s) > 17)
       s[17] = 0;
