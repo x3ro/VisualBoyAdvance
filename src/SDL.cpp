@@ -357,6 +357,7 @@ struct option sdlOptions[] = {
   { "save-sram", no_argument, &cpuSaveType, 2 },
   { "save-flash", no_argument, &cpuSaveType, 3 },
   { "save-sensor", no_argument, &cpuSaveType, 4 },
+  { "save-none", no_argument, &cpuSaveType, 5 },
   { "show-speed-normal", no_argument, &showSpeed, 1 },
   { "show-speed-detailed", no_argument, &showSpeed, 2 },
   { "throttle", required_argument, 0, 'T' },
@@ -1168,7 +1169,7 @@ void sdlReadPreferences(FILE *f)
       removeIntros = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "saveType")) {
       cpuSaveType = sdlFromHex(value);
-      if(cpuSaveType < 0 || cpuSaveType > 4)
+      if(cpuSaveType < 0 || cpuSaveType > 5)
         cpuSaveType = 0;
     } else if(!strcmp(key, "flashSize")) {
       sdlFlashSize = sdlFromHex(value);
@@ -1305,7 +1306,7 @@ static void sdlApplyPerImagePreferences()
           flashSetSize(size);
       } else if(!strcmp(token, "saveType")) {
         int save = atoi(value);
-        if(save >= 0 && save < 5)
+        if(save >= 0 && save <= 5)
           cpuSaveType = save;
       }
     }
@@ -1888,6 +1889,7 @@ void usage(char *cmd)
         printf("       --save-sram             2 - SRAM\n");
         printf("       --save-flash            3 - FLASH\n");
         printf("       --save-sensor           4 - EEPROM+Sensor\n");
+        printf("       --save-none             5 - NONE\n");
         printf("  -v , --verbose=VERBOSE      Set verbose logging (trace.log)\n");
         printf("                                 1 - SWI\n");
         printf("                                 2 - Unaligned memory access\n");
@@ -2091,7 +2093,7 @@ int main(int argc, char **argv)
     case 't':
       if(optarg) {
         int a = atoi(optarg);
-        if(a < 0 || a > 4)
+        if(a < 0 || a > 5)
           a = 0;
         cpuSaveType = a;
       }
