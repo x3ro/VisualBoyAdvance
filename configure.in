@@ -63,9 +63,11 @@ AC_PATH_PROG(NASM, nasm)
 dnl Checks for libraries.
 AC_CHECK_LIB(z, gzopen,
   , AC_MSG_ERROR([*** Cannot compile without zlib.]))
-AC_CHECK_LIB(png, png_create_write_struct,
-  , AC_MSG_ERROR([*** Cannot compile without libpng.]), [-lz])
 AC_CHECK_LIB(pthread, pthread_yield)
+
+PKG_CHECK_MODULES(LIBPNG, libpng)
+CPPFLAGS="$CPPFLAGS $LIBPNG_CFLAGS"
+LIBS="$LIBS $LIBPNG_LIBS"
 
 dnl Checks for header files.
 AC_PATH_X
