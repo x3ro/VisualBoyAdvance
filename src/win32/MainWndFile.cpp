@@ -53,11 +53,10 @@ void MainWnd::OnFilePause()
     if(theApp.paused) {
       theApp.wasPaused = true;
       soundPause();
-      theApp.setScreenSaverEnable(theApp.screenSaverState);
+      theApp.enablePowerManagement();
     } else {
       soundResume();
-      if(theApp.screenSaverState)
-        theApp.setScreenSaverEnable(FALSE);
+      theApp.disablePowerManagement();
     }
   }
 }
@@ -154,7 +153,7 @@ void MainWnd::OnFileClose()
   RedrawWindow(NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
   systemSetTitle("VisualBoyAdvance");
 
-  theApp.setScreenSaverEnable(theApp.screenSaverState);
+  theApp.enablePowerManagement();
 }
 
 void MainWnd::OnUpdateFileClose(CCmdUI* pCmdUI) 
@@ -176,7 +175,7 @@ void MainWnd::OnFileOpengameboy()
   CString filter = winLoadFilter(IDS_FILTER_GBROM);
   CString title = winResLoadString(IDS_SELECT_ROM);
 
-  FileDlg dlg(this, "", filter, 0, "", exts, theApp.dir, title, true);
+  FileDlg dlg(this, "", filter, 0, "", exts, initialDir, title, false);
 
   if(dlg.DoModal() == IDOK) {
     theApp.szFile = dlg.GetPathName();
@@ -215,7 +214,7 @@ void MainWnd::OnFileLoad()
   CString filter = winLoadFilter(IDS_FILTER_SGM);
   CString title = winResLoadString(IDS_SELECT_SAVE_GAME_NAME);
 
-  FileDlg dlg(this, filename, filter, 0, "", exts, theApp.dir, title, true);
+  FileDlg dlg(this, filename, filter, 0, "", exts, saveDir, title, false);
 
   if(dlg.DoModal() == IDOK) {
     bool res = loadSaveGame(dlg.GetPathName());
@@ -299,7 +298,7 @@ void MainWnd::OnFileSave()
   CString filter = winLoadFilter(IDS_FILTER_SGM);
   CString title = winResLoadString(IDS_SELECT_SAVE_GAME_NAME);
 
-  FileDlg dlg(this, filename, filter, 0, "", exts, theApp.dir, title, true);
+  FileDlg dlg(this, filename, filter, 0, "", exts, saveDir, title, true);
 
   if(dlg.DoModal() == IDOK) {
     bool res = writeSaveGame(dlg.GetPathName());
@@ -354,7 +353,7 @@ void MainWnd::OnFileImportBatteryfile()
   CString filter = winLoadFilter(IDS_FILTER_SAV);
   CString title = winResLoadString(IDS_SELECT_BATTERY_FILE);
 
-  FileDlg dlg(this, "", filter, 0, "", exts, "", title, true);
+  FileDlg dlg(this, "", filter, 0, "", exts, "", title, false);
   
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -390,7 +389,7 @@ void MainWnd::OnFileImportGamesharkcodefile()
   CString filter = theApp.cartridgeType == 0 ? winLoadFilter(IDS_FILTER_SPC) : winLoadFilter(IDS_FILTER_GCF);
   CString title = winResLoadString(IDS_SELECT_CODE_FILE);
 
-  FileDlg dlg(this, "", filter, 0, "", exts, "", title, true);
+  FileDlg dlg(this, "", filter, 0, "", exts, "", title, false);
   
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -424,7 +423,7 @@ void MainWnd::OnFileImportGamesharksnapshot()
   CString filter = theApp.cartridgeType == 1 ? winLoadFilter(IDS_FILTER_GBS) : winLoadFilter(IDS_FILTER_SPS);
   CString title = winResLoadString(IDS_SELECT_SNAPSHOT_FILE);
 
-  FileDlg dlg(this, "", filter, 0, "", exts, "", title, true);
+  FileDlg dlg(this, "", filter, 0, "", exts, "", title, false);
   
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -473,7 +472,7 @@ void MainWnd::OnFileExportBatteryfile()
               exts,
               "",
               title,
-              false);
+              true);
 
   if(dlg.DoModal() == IDCANCEL) {
     return;
@@ -526,7 +525,7 @@ void MainWnd::OnFileExportGamesharksnapshot()
               exts,
               "",
               title,
-              false);
+              true);
 
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -584,7 +583,7 @@ void MainWnd::OnFileScreencapture()
               exts,
               capdir,
               title,
-              false);
+              true);
 
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -879,3 +878,12 @@ void MainWnd::OnUpdateFileSaveGameSlot(CCmdUI *pCmdUI)
   pCmdUI->Enable(emulating);
 }
 
+void MainWnd::OnFileLoadgameAutoloadmostrecent() 
+{
+  theApp.autoLoadMostRecent = !theApp.autoLoadMostRecent;
+}
+
+void MainWnd::OnUpdateFileLoadgameAutoloadmostrecent(CCmdUI* pCmdUI) 
+{
+  pCmdUI->SetCheck(theApp.autoLoadMostRecent);
+}
