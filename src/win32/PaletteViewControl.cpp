@@ -396,7 +396,7 @@ void PaletteViewControl::registerClass()
   if(!isRegistered) {
     WNDCLASS wc;
     ZeroMemory(&wc, sizeof(wc));
-    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_GLOBALCLASS;
     wc.lpfnWndProc = (WNDPROC)::DefWindowProc;
     wc.hInstance = AfxGetInstanceHandle();
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);

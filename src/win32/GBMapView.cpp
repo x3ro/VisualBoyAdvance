@@ -374,18 +374,17 @@ void GBMapView::paint()
   render();
   
   SIZE s;
-  s.cx = mapView.GetScrollLimit(SB_HORZ);
-  s.cy = mapView.GetScrollLimit(SB_VERT);
-  if(s.cx != w || s.cy != h) {
+  if(mapView.getStretch()) {
+    mapView.setSize(w, h);
+    s.cx = s.cy = 1;
+    mapView.SetScrollSizes(MM_TEXT, s);
+  } else {
     mapView.setSize(w, h);
     s.cx = w;
     s.cy = h;
     mapView.SetScrollSizes(MM_TEXT, s);
   }
-  if(mapView.getStretch()) {
-    s.cx = s.cy = 1;
-    mapView.SetScrollSizes(MM_TEXT, s);
-  }
+
   mapView.refresh();
 }
 
