@@ -39,6 +39,16 @@ extern int systemRenderedFrames;
 extern int systemFPS;
 extern bool debugger;
 extern int RGB_LOW_BITS_MASK;
+extern void (*dbgMain)();
+extern void (*dbgSignal)(int, int);
+extern void (*dbgOutput)(char *, u32);
+extern void remoteInit();
+extern void remoteCleanUp();
+extern void remoteStubMain();
+extern void remoteStubSignal(int, int);
+extern void remoteOutput(char *, u32);
+extern void remoteSetProtocol(int);
+extern void remoteSetPort(int);
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -51,83 +61,6 @@ using Gnome::Glade::Xml;
 
 void Window::vOnFileOpen()
 {
-  if (m_poFileOpenDialog == NULL)
-  {
-    std::string sGBDir  = m_poDirConfig->sGetKey("gb_roms");
-    std::string sGBADir = m_poDirConfig->sGetKey("gba_roms");
-
-#ifdef GTKMM20
-
-    Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Open"));
-    poDialog->set_transient_for(*this);
-
-    if (sGBADir != "")
-    {
-      poDialog->set_filename(sGBADir + "/");
-    }
-    else if (sGBDir != "")
-    {
-      poDialog->set_filename(sGBDir + "/");
-    }
-
-#else // ! GTKMM20
-
-    Gtk::FileChooserDialog * poDialog = new Gtk::FileChooserDialog(*this, _("Open"));
-    poDialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
-    poDialog->add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
-
-    if (sGBDir != "")
-    {
-      poDialog->add_shortcut_folder(sGBDir);
-      poDialog->set_current_folder(sGBDir);
-    }
-
-    if (sGBADir != "" && sGBADir != sGBDir)
-    {
-      poDialog->add_shortcut_folder(sGBADir);
-      poDialog->set_current_folder(sGBADir);
-    }
-
-    const char * acsPattern[] =
-    {
-      // GBA
-      "*.[bB][iI][nN]", "*.[aA][gG][bB]", "*.[gG][bB][aA]",
-      // GB
-      "*.[gG][bB]", "*.[sS][gG][bB]", "*.[cC][gG][bB]", "*.[gG][bB][cC]",
-      // Both
-      "*.[mM][bB]", "*.[eE][lL][fF]", "*.[zZ][iI][pP]", "*.[zZ]", "*.[gG][zZ]"
-    };
-
-    Gtk::FileFilter oAllGBAFilter;
-    oAllGBAFilter.set_name(_("All Gameboy Advance files"));
-    for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
-    {
-      oAllGBAFilter.add_pattern(acsPattern[i]);
-    }
-
-    Gtk::FileFilter oGBAFilter;
-    oGBAFilter.set_name(_("Gameboy Advance files"));
-    for (int i = 0; i < 3; i++)
-    {
-      oGBAFilter.add_pattern(acsPattern[i]);
-    }
-
-    Gtk::FileFilter oGBFilter;
-    oGBFilter.set_name(_("Gameboy files"));
-    for (int i = 3; i < 7; i++)
-    {
-      oGBFilter.add_pattern(acsPattern[i]);
-    }
-
-    poDialog->add_filter(oAllGBAFilter);
-    poDialog->add_filter(oGBAFilter);
-    poDialog->add_filter(oGBFilter);
-
-#endif // ! GTKMM20
-
-    m_poFileOpenDialog = poDialog;
-  }
-
   while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
   {
     if (bLoadROM(m_poFileOpenDialog->get_filename()))
@@ -680,7 +613,7 @@ void Window::vOnFileScreenCapture()
 
 void Window::vOnFileClose()
 {
-  if (emulating)
+  if (m_eCartridge != CartridgeNone)
   {
     soundPause();
     vStopEmu();
@@ -1292,6 +1225,158 @@ void Window::vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, std::string _sKey,
   m_poInputConfig->vSetKey(_sKey, _poCMI->get_active());
 }
 
+void Window::vOnGDBWait()
+{
+  Glib::RefPtr<Xml> poXml;
+  poXml = Xml::create(PKGDATADIR "/vba.glade", "TcpPortDialog");
+
+  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("TcpPortDialog"));
+  Gtk::SpinButton * poSpin = dynamic_cast<Gtk::SpinButton *>(poXml->get_widget("TcpPortSpin"));
+
+  poDialog->set_transient_for(*this);
+
+  int iPort = 55555;
+  poSpin->set_value(iPort);  
+
+  bool bOk = false;
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    bOk = true;
+    iPort = poSpin->get_value_as_int();
+  }
+  delete poDialog;
+
+  if (! bOk)
+  {
+    return;
+  }
+
+  m_eCartridge = CartridgeGBA;
+  m_sRomFile   = "gnu_stub";
+  m_stEmulator = GBASystem;
+
+  rom         = (u8 *) malloc(0x2000000);
+  workRAM     = (u8 *) calloc(1, 0x40000);
+  bios        = (u8 *) calloc(1, 0x4000);
+  internalRAM = (u8 *) calloc(1, 0x8000);
+  paletteRAM  = (u8 *) calloc(1, 0x400);
+  vram        = (u8 *) calloc(1, 0x20000);
+  oam         = (u8 *) calloc(1, 0x400);
+  pix         = (u8 *) calloc(1, 4 * m_iGBAScreenWidth * m_iGBAScreenHeight);
+  ioMem       = (u8 *) calloc(1, 0x400);
+
+  useBios = m_poCoreConfig->oGetKey<bool>("use_bios_file");
+  CPUInit(m_poCoreConfig->sGetKey("bios_file").c_str(), useBios);
+  CPUReset();
+
+  for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
+       it != m_listSensitiveWhenPlaying.end();
+       it++)
+  {
+    (*it)->set_sensitive();
+  }
+
+  if (m_poCoreConfig->oGetKey<bool>("load_game_auto"))
+  {
+    vOnLoadGameMostRecent();
+  }
+
+  vStartEmu();
+
+  emulating = 1;
+
+  dbgMain   = remoteStubMain;
+  dbgSignal = remoteStubSignal;
+  dbgOutput = remoteOutput;
+  debugger  = true;
+
+  remoteSetProtocol(0);
+  remoteSetPort(iPort);
+  remoteInit();
+}
+
+void Window::vOnGDBLoadAndWait()
+{
+  bool bLoaded = false;
+
+  while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
+  {
+    if (bLoadROM(m_poFileOpenDialog->get_filename()))
+    {
+      bLoaded = true;
+      break;
+    }
+  }
+  m_poFileOpenDialog->hide();
+
+  if (! bLoaded)
+  {
+    return;
+  }
+
+  if (m_eCartridge != CartridgeGBA)
+  {
+    vPopupError(_("Only GBA images are supported."));
+    vOnFileClose();
+    return;
+  }
+
+  Glib::RefPtr<Xml> poXml;
+  poXml = Xml::create(PKGDATADIR "/vba.glade", "TcpPortDialog");
+
+  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("TcpPortDialog"));
+  Gtk::SpinButton * poSpin = dynamic_cast<Gtk::SpinButton *>(poXml->get_widget("TcpPortSpin"));
+
+  poDialog->set_transient_for(*this);
+
+  int iPort = 55555;
+  poSpin->set_value(iPort);  
+
+  bool bOk = false;
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    bOk = true;
+    iPort = poSpin->get_value_as_int();
+  }
+  delete poDialog;
+
+  if (! bOk)
+  {
+    return;
+  }
+
+  dbgMain   = remoteStubMain;
+  dbgSignal = remoteStubSignal;
+  dbgOutput = remoteOutput;
+  debugger  = true;
+
+  remoteSetProtocol(0);
+  remoteSetPort(iPort);
+  remoteInit();
+}
+
+void Window::vOnGDBBreak()
+{
+  if (armState)
+  {
+    armNextPC -= 4;
+    reg[15].I -= 4;
+  }
+  else
+  {
+    armNextPC -= 2;
+    reg[15].I -= 2;
+  }
+
+  debugger = true;
+}
+
+void Window::vOnGDBDisconnect()
+{
+  remoteCleanUp();
+  debugger = false;
+}
+
 void Window::vOnHelpAbout()
 {
   Glib::RefPtr<Xml> poXml;
@@ -1308,6 +1393,12 @@ void Window::vOnHelpAbout()
 
 bool Window::bOnEmuIdle()
 {
+  if (debugger && m_stEmulator.emuHasDebugger)
+  {
+    dbgMain();
+    return true;
+  }
+
   if (m_uiThrottleDelay != 0)
   {
     u32 uiTime = SDL_GetTicks();

@@ -186,6 +186,10 @@ protected:
   virtual void vOnJoypadConfigure(int _iJoypad);
   virtual void vOnJoypadToggled(Gtk::CheckMenuItem * _poCMI, int _iJoypad);
   virtual void vOnAutofireToggled(Gtk::CheckMenuItem * _poCMI, std::string _sKey, u32 _uiKeyFlag);
+  virtual void vOnGDBWait();
+  virtual void vOnGDBLoadAndWait();
+  virtual void vOnGDBBreak();
+  virtual void vOnGDBDisconnect();
   virtual void vOnHelpAbout();
   virtual bool bOnEmuIdle();
 
@@ -301,6 +305,7 @@ private:
   void vUpdateScreen();
   void vDrawDefaultScreen();
   void vSetDefaultTitle();
+  void vCreateFileOpenDialog();
   bool bLoadROM(const std::string & _rsFile);
   void vLoadBattery();
   void vSaveBattery();

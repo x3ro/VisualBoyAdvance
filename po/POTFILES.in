@@ -9,6 +9,7 @@ src/gb/gbCheats.cpp
 src/gb/gbCodesCB.h
 src/gb/gbCodes.h
 src/gb/GB.cpp
+src/gtk/joypadconfig.cpp
 src/gtk/system.cpp
 src/gtk/vba.glade
 src/gtk/windowcallbacks.cpp

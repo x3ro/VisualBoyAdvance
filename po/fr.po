@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VisualBoyAdvance 1.7.2\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-05-05 17:41+0200\n"
-"PO-Revision-Date: 2004-05-05 17:50+0200\n"
+"POT-Creation-Date: 2004-05-11 00:29+0200\n"
+"PO-Revision-Date: 2004-05-11 00:30+0200\n"
 "Last-Translator: Sébastien Guignot <kxu@tsys.org>\n"
 "Language-Team: French <@>\n"
 "MIME-Version: 1.0\n"
@@ -232,6 +232,11 @@ msgstr "Taille de ram %02x non supportée"
 msgid "Unknown cartridge type %02x"
 msgstr "Type de cartouche %02x inconnu"
 
+#: src/gtk/joypadconfig.cpp:202 src/gtk/joypadconfig.cpp:239
+#: src/gtk/joypadconfig.cpp:257
+msgid "<Undefined>"
+msgstr "<Non défini>"
+
 #: src/gtk/vba.glade:7
 msgid "VBA"
 msgstr "VBA"
@@ -344,592 +349,642 @@ msgstr "E_xporter"
 msgid "Screen capt_ure..."
 msgstr "Capt_ure d'écran..."
 
-#: src/gtk/vba.glade:465
-msgid "RO_M information..."
-msgstr "Informations sur la RO_M..."
-
-#: src/gtk/vba.glade:479
+#: src/gtk/vba.glade:471
 msgid "_Close"
 msgstr "_Fermer"
 
-#: src/gtk/vba.glade:499
+#: src/gtk/vba.glade:491
 msgid "_Exit"
 msgstr "_Quitter"
 
-#: src/gtk/vba.glade:524
+#: src/gtk/vba.glade:516
 msgid "_Options"
 msgstr "_Options"
 
-#: src/gtk/vba.glade:533
+#: src/gtk/vba.glade:525
 msgid "_Frameskip"
 msgstr "_Frameskip"
 
-#: src/gtk/vba.glade:542
+#: src/gtk/vba.glade:534
 msgid "_Throttle"
 msgstr "_Vitesse"
 
-#: src/gtk/vba.glade:551
+#: src/gtk/vba.glade:543
 msgid "_No throttle"
 msgstr "_Aucune"
 
-#: src/gtk/vba.glade:560 src/gtk/vba.glade:1281
+#: src/gtk/vba.glade:552 src/gtk/vba.glade:1317
 msgid "25%"
 msgstr "25%"
 
-#: src/gtk/vba.glade:570 src/gtk/vba.glade:1290
+#: src/gtk/vba.glade:562 src/gtk/vba.glade:1326
 msgid "50%"
 msgstr "50%"
 
-#: src/gtk/vba.glade:580 src/gtk/vba.glade:1300
+#: src/gtk/vba.glade:572 src/gtk/vba.glade:1336
 msgid "100%"
 msgstr "100%"
 
-#: src/gtk/vba.glade:590
+#: src/gtk/vba.glade:582
 msgid "150%"
 msgstr "150%"
 
-#: src/gtk/vba.glade:600 src/gtk/vba.glade:1310
+#: src/gtk/vba.glade:592 src/gtk/vba.glade:1346
 msgid "200%"
 msgstr "200%"
 
-#: src/gtk/vba.glade:610
+#: src/gtk/vba.glade:602
 msgid "_Other..."
 msgstr "A_utre..."
 
-#: src/gtk/vba.glade:630 src/gtk/vba.glade:991 src/gtk/vba.glade:1381
+#: src/gtk/vba.glade:622 src/gtk/vba.glade:983 src/gtk/vba.glade:1417
 msgid "_Automatic"
 msgstr "_Automatique"
 
-#: src/gtk/vba.glade:639
+#: src/gtk/vba.glade:631
 msgid "_0"
 msgstr "_0"
 
-#: src/gtk/vba.glade:649 src/gtk/vba.glade:1719
+#: src/gtk/vba.glade:641 src/gtk/vba.glade:1755
 msgid "_1"
 msgstr "_1"
 
-#: src/gtk/vba.glade:659 src/gtk/vba.glade:1728
+#: src/gtk/vba.glade:651 src/gtk/vba.glade:1764
 msgid "_2"
 msgstr "_2"
 
-#: src/gtk/vba.glade:669 src/gtk/vba.glade:1738
+#: src/gtk/vba.glade:661 src/gtk/vba.glade:1774
 msgid "_3"
 msgstr "_3"
 
-#: src/gtk/vba.glade:679 src/gtk/vba.glade:1748
+#: src/gtk/vba.glade:671 src/gtk/vba.glade:1784
 msgid "_4"
 msgstr "_4"
 
-#: src/gtk/vba.glade:689
+#: src/gtk/vba.glade:681
 msgid "_5"
 msgstr "_5"
 
-#: src/gtk/vba.glade:699
+#: src/gtk/vba.glade:691
 msgid "_6"
 msgstr "_6"
 
-#: src/gtk/vba.glade:709
+#: src/gtk/vba.glade:701
 msgid "_7"
 msgstr "_7"
 
-#: src/gtk/vba.glade:719
+#: src/gtk/vba.glade:711
 msgid "_8"
 msgstr "_8"
 
-#: src/gtk/vba.glade:729
+#: src/gtk/vba.glade:721
 msgid "_9"
 msgstr "_9"
 
-#: src/gtk/vba.glade:743
+#: src/gtk/vba.glade:735
 msgid "_Video"
 msgstr "_Vidéo"
 
-#: src/gtk/vba.glade:752
+#: src/gtk/vba.glade:744
 msgid "_1x"
 msgstr "_1x"
 
-#: src/gtk/vba.glade:761
+#: src/gtk/vba.glade:753
 msgid "_2x"
 msgstr "_2x"
 
-#: src/gtk/vba.glade:771
+#: src/gtk/vba.glade:763
 msgid "_3x"
 msgstr "_3x"
 
-#: src/gtk/vba.glade:781
+#: src/gtk/vba.glade:773
 msgid "_4x"
 msgstr "_4x"
 
-#: src/gtk/vba.glade:791
+#: src/gtk/vba.glade:783
 msgid "_5x"
 msgstr "_5x"
 
-#: src/gtk/vba.glade:801
+#: src/gtk/vba.glade:793
 msgid "_6x"
 msgstr "_6x"
 
-#: src/gtk/vba.glade:817
+#: src/gtk/vba.glade:809
 msgid "_Layers"
 msgstr "_Couches"
 
-#: src/gtk/vba.glade:826
+#: src/gtk/vba.glade:818
 msgid "BG0"
 msgstr "BG0"
 
-#: src/gtk/vba.glade:836
+#: src/gtk/vba.glade:828
 msgid "BG1"
 msgstr "BG1"
 
-#: src/gtk/vba.glade:846
+#: src/gtk/vba.glade:838
 msgid "BG2"
 msgstr "BG2"
 
-#: src/gtk/vba.glade:856
+#: src/gtk/vba.glade:848
 msgid "BG3"
 msgstr "BG3"
 
-#: src/gtk/vba.glade:866
+#: src/gtk/vba.glade:858
 msgid "OBJ"
 msgstr "OBJ"
 
-#: src/gtk/vba.glade:876
+#: src/gtk/vba.glade:868
 msgid "WIN0"
 msgstr "WIN0"
 
-#: src/gtk/vba.glade:886
+#: src/gtk/vba.glade:878
 msgid "WIN1"
 msgstr "WIN1"
 
-#: src/gtk/vba.glade:896
+#: src/gtk/vba.glade:888
 msgid "OBJWIN"
 msgstr "OBJWIN"
 
-#: src/gtk/vba.glade:914
+#: src/gtk/vba.glade:906
 msgid "_Emulator"
 msgstr "_Émulateur"
 
-#: src/gtk/vba.glade:923
+#: src/gtk/vba.glade:915
 msgid "Directories..."
 msgstr "Répertoires..."
 
-#: src/gtk/vba.glade:931
+#: src/gtk/vba.glade:923
 msgid "Pause when inactive window"
 msgstr "Pause lorsque la fenêtre est inactive"
 
-#: src/gtk/vba.glade:940
+#: src/gtk/vba.glade:932
 msgid "Show speed"
 msgstr "Affichage de la vitesse"
 
-#: src/gtk/vba.glade:949 src/gtk/vba.glade:1040
+#: src/gtk/vba.glade:941 src/gtk/vba.glade:1032
 msgid "None"
 msgstr "Aucun"
 
-#: src/gtk/vba.glade:958
+#: src/gtk/vba.glade:950
 msgid "Percentage"
 msgstr "Pourcentage"
 
-#: src/gtk/vba.glade:968
+#: src/gtk/vba.glade:960
 msgid "Detailed"
 msgstr "Détaillé"
 
-#: src/gtk/vba.glade:982
+#: src/gtk/vba.glade:974
 msgid "Save type"
 msgstr "Type de sauvegarde"
 
-#: src/gtk/vba.glade:1000
+#: src/gtk/vba.glade:992
 msgid "EEPROM"
 msgstr "EEPROM"
 
-#: src/gtk/vba.glade:1010
+#: src/gtk/vba.glade:1002
 msgid "SRAM"
 msgstr "SRAM"
 
-#: src/gtk/vba.glade:1020
+#: src/gtk/vba.glade:1012
 msgid "Flash"
 msgstr "Flash"
 
-#: src/gtk/vba.glade:1030
+#: src/gtk/vba.glade:1022
 msgid "EEPROM+Sensor"
 msgstr "EEPROM+Sensor"
 
-#: src/gtk/vba.glade:1056
+#: src/gtk/vba.glade:1048
 msgid "Flash 64K"
 msgstr "Flash 64K"
 
-#: src/gtk/vba.glade:1065
+#: src/gtk/vba.glade:1057
 msgid "Flash 128K"
 msgstr "Flash 128K"
 
-#: src/gtk/vba.glade:1079
+#: src/gtk/vba.glade:1077
 msgid "_Select BIOS file..."
 msgstr "_Sélectionner un fichier BIOS..."
 
-#: src/gtk/vba.glade:1087
+#: src/gtk/vba.glade:1085
 msgid "_Use BIOS file"
 msgstr "_Utiliser le fichier BIOS"
 
 #: src/gtk/vba.glade:1100
+msgid "Screenshot format"
+msgstr "Format des captures d'écran"
+
+#: src/gtk/vba.glade:1109
+msgid "_PNG"
+msgstr "_PNG"
+
+#: src/gtk/vba.glade:1118
+msgid "_BMP"
+msgstr "_BMP"
+
+#: src/gtk/vba.glade:1136
 msgid "_Sound"
 msgstr "_Son"
 
-#: src/gtk/vba.glade:1109
+#: src/gtk/vba.glade:1145
 msgid "O_ff"
 msgstr "_Désactivé"
 
-#: src/gtk/vba.glade:1118
+#: src/gtk/vba.glade:1154
 msgid "_Mute"
 msgstr "_Muet"
 
-#: src/gtk/vba.glade:1128
+#: src/gtk/vba.glade:1164
 msgid "_On"
 msgstr "A_ctivé"
 
-#: src/gtk/vba.glade:1144
+#: src/gtk/vba.glade:1180
 msgid "Echo"
 msgstr "Écho"
 
-#: src/gtk/vba.glade:1153
+#: src/gtk/vba.glade:1189
 msgid "Low pass filter"
 msgstr "Filtre passe-bas"
 
-#: src/gtk/vba.glade:1162
+#: src/gtk/vba.glade:1198
 msgid "Reverse stereo"
 msgstr "Stéréo inversée"
 
-#: src/gtk/vba.glade:1177
+#: src/gtk/vba.glade:1213
 msgid "Channel _1"
 msgstr "Canal _1"
 
-#: src/gtk/vba.glade:1186
+#: src/gtk/vba.glade:1222
 msgid "Channel _2"
 msgstr "Canal _2"
 
-#: src/gtk/vba.glade:1195
+#: src/gtk/vba.glade:1231
 msgid "Channel _3"
 msgstr "Canal _3"
 
-#: src/gtk/vba.glade:1204
+#: src/gtk/vba.glade:1240
 msgid "Channel _4"
 msgstr "Canal _4"
 
-#: src/gtk/vba.glade:1213
+#: src/gtk/vba.glade:1249
 msgid "Channel _A"
 msgstr "Canal _A"
 
-#: src/gtk/vba.glade:1222
+#: src/gtk/vba.glade:1258
 msgid "Channel _B"
 msgstr "Canal _B"
 
-#: src/gtk/vba.glade:1237
+#: src/gtk/vba.glade:1273
 msgid "11 _Khz"
 msgstr "11 _Khz"
 
-#: src/gtk/vba.glade:1246
+#: src/gtk/vba.glade:1282
 msgid "22 K_hz"
 msgstr "22 K_hz"
 
-#: src/gtk/vba.glade:1256
+#: src/gtk/vba.glade:1292
 msgid "44 Kh_z"
 msgstr "44 Kh_z"
 
-#: src/gtk/vba.glade:1272
+#: src/gtk/vba.glade:1308
 msgid "_Volume"
 msgstr "_Volume"
 
-#: src/gtk/vba.glade:1320
+#: src/gtk/vba.glade:1356
 msgid "300%"
 msgstr "300%"
 
-#: src/gtk/vba.glade:1330
+#: src/gtk/vba.glade:1366
 msgid "400%"
 msgstr "400%"
 
-#: src/gtk/vba.glade:1348
+#: src/gtk/vba.glade:1384
 msgid "_Gameboy"
 msgstr "_Gameboy"
 
-#: src/gtk/vba.glade:1357
+#: src/gtk/vba.glade:1393
 msgid "_Border"
 msgstr "_Bordure"
 
-#: src/gtk/vba.glade:1366
+#: src/gtk/vba.glade:1402
 msgid "_Printer"
 msgstr "_Imprimante"
 
-#: src/gtk/vba.glade:1390
+#: src/gtk/vba.glade:1426
 msgid "_GBA"
 msgstr "_GBA"
 
-#: src/gtk/vba.glade:1400
+#: src/gtk/vba.glade:1436
 msgid "_CGB/GBC"
 msgstr "_CGB/GBC"
 
-#: src/gtk/vba.glade:1410
+#: src/gtk/vba.glade:1446
 msgid "_SGB"
 msgstr "_SGB"
 
-#: src/gtk/vba.glade:1420
+#: src/gtk/vba.glade:1456
 msgid "SGB_2"
 msgstr "SGB_2"
 
-#: src/gtk/vba.glade:1430
+#: src/gtk/vba.glade:1466
 msgid "G_B"
 msgstr "G_B"
 
-#: src/gtk/vba.glade:1444
+#: src/gtk/vba.glade:1480
 msgid "F_ilter"
 msgstr "_Filtre"
 
-#: src/gtk/vba.glade:1453
+#: src/gtk/vba.glade:1489
 msgid "Interframe _blending"
 msgstr "Interframe _blending"
 
-#: src/gtk/vba.glade:1462 src/gtk/vba.glade:1501
+#: src/gtk/vba.glade:1498 src/gtk/vba.glade:1537
 msgid "_None"
 msgstr "Aucu_n"
 
-#: src/gtk/vba.glade:1471
+#: src/gtk/vba.glade:1507
 msgid "_Smart"
 msgstr "_Smart"
 
-#: src/gtk/vba.glade:1481 src/gtk/vba.glade:1560
+#: src/gtk/vba.glade:1517 src/gtk/vba.glade:1596
 msgid "_Motion Blur"
 msgstr "_Motion Blur"
 
-#: src/gtk/vba.glade:1510
+#: src/gtk/vba.glade:1546
 msgid "_TV Mode"
 msgstr "_TV Mode"
 
-#: src/gtk/vba.glade:1520
+#: src/gtk/vba.glade:1556
 msgid "_2xSaI"
 msgstr "_2xSaI"
 
-#: src/gtk/vba.glade:1530
+#: src/gtk/vba.glade:1566
 msgid "_Super 2xSaI"
 msgstr "_Super 2xSaI"
 
-#: src/gtk/vba.glade:1540
+#: src/gtk/vba.glade:1576
 msgid "Super _Eagle"
 msgstr "Super _Eagle"
 
-#: src/gtk/vba.glade:1550
+#: src/gtk/vba.glade:1586
 msgid "_Pixelate"
 msgstr "_Pixelate"
 
-#: src/gtk/vba.glade:1570
+#: src/gtk/vba.glade:1606
 msgid "_AdvanceMAME 2x"
 msgstr "_AdvanceMAME 2x"
 
-#: src/gtk/vba.glade:1580
+#: src/gtk/vba.glade:1616
 msgid "S_imple 2x"
 msgstr "S_imple 2x"
 
-#: src/gtk/vba.glade:1590
+#: src/gtk/vba.glade:1626
 msgid "Bilinea_r"
 msgstr "Bilinea_r"
 
-#: src/gtk/vba.glade:1600
+#: src/gtk/vba.glade:1636
 msgid "Bilinear Pl_us"
 msgstr "Bilinear Pl_us"
 
-#: src/gtk/vba.glade:1610
+#: src/gtk/vba.glade:1646
 msgid "S_canlines"
 msgstr "S_canlines"
 
-#: src/gtk/vba.glade:1620
+#: src/gtk/vba.glade:1656
 msgid "h_q2x"
 msgstr "h_q2x"
 
-#: src/gtk/vba.glade:1630
+#: src/gtk/vba.glade:1666
 msgid "_lq2x"
 msgstr "_lq2x"
 
-#: src/gtk/vba.glade:1646
+#: src/gtk/vba.glade:1682
 msgid "_Disable MMX"
 msgstr "_Désactiver MMX"
 
-#: src/gtk/vba.glade:1659
+#: src/gtk/vba.glade:1695
 msgid "_Joypad"
 msgstr "_Joypad"
 
-#: src/gtk/vba.glade:1668
+#: src/gtk/vba.glade:1704
 msgid "_Configure"
 msgstr "_Configurer"
 
-#: src/gtk/vba.glade:1677
+#: src/gtk/vba.glade:1713
 msgid "_1..."
 msgstr "_1..."
 
-#: src/gtk/vba.glade:1685
+#: src/gtk/vba.glade:1721
 msgid "_2..."
 msgstr "_2..."
 
-#: src/gtk/vba.glade:1693
+#: src/gtk/vba.glade:1729
 msgid "_3..."
 msgstr "_3..."
 
-#: src/gtk/vba.glade:1701
+#: src/gtk/vba.glade:1737
 msgid "_4..."
 msgstr "_4..."
 
-#: src/gtk/vba.glade:1764
-msgid "_Motion configure..."
-msgstr ""
-
-#: src/gtk/vba.glade:1778
+#: src/gtk/vba.glade:1800
 msgid "_Autofire"
-msgstr ""
+msgstr "_Autofire"
 
-#: src/gtk/vba.glade:1787
+#: src/gtk/vba.glade:1809
 msgid "_A"
 msgstr "_A"
 
-#: src/gtk/vba.glade:1797
+#: src/gtk/vba.glade:1819
 msgid "_B"
 msgstr "_B"
 
-#: src/gtk/vba.glade:1807
+#: src/gtk/vba.glade:1829
 msgid "_L"
 msgstr "_L"
 
-#: src/gtk/vba.glade:1817
+#: src/gtk/vba.glade:1839
 msgid "_R"
 msgstr "_R"
 
-#: src/gtk/vba.glade:1839
+#: src/gtk/vba.glade:1861
 msgid "_Tools"
 msgstr "Ou_tils"
 
-#: src/gtk/vba.glade:1848
+#: src/gtk/vba.glade:1870
 msgid "_GDB"
 msgstr "_GDB"
 
-#: src/gtk/vba.glade:1857
-msgid "_Wait for connection..."
-msgstr ""
+#: src/gtk/vba.glade:1879
+msgid "_Wait connection..."
+msgstr "_Attendre une connexion..."
 
-#: src/gtk/vba.glade:1865
+#: src/gtk/vba.glade:1887
 msgid "_Load and wait..."
-msgstr ""
+msgstr "_Charger et attendre..."
 
-#: src/gtk/vba.glade:1873
-msgid "_Break into GDB"
-msgstr ""
+#: src/gtk/vba.glade:1895
+msgid "_Break"
+msgstr "_Break"
 
-#: src/gtk/vba.glade:1881
+#: src/gtk/vba.glade:1903
 msgid "_Disconnect"
-msgstr ""
+msgstr "_Déconnecter"
 
-#: src/gtk/vba.glade:1893
-msgid "_Cheats"
-msgstr "_Cheats"
-
-#: src/gtk/vba.glade:1905
+#: src/gtk/vba.glade:1919
 msgid "_Help"
 msgstr "_Aide"
 
-#: src/gtk/vba.glade:1914
+#: src/gtk/vba.glade:1928
 msgid "_About"
 msgstr "À _propos"
 
-#: src/gtk/vba.glade:1959
+#: src/gtk/vba.glade:1973
 msgid "About VBA"
 msgstr "À propos de VBA"
 
-#: src/gtk/vba.glade:2030
-msgid "An emulator for Gameboy™ and GameboyAdvance™."
+#: src/gtk/vba.glade:2044
+msgid "An emulator for Gameboy(TM) and GameboyAdvance(TM)."
 msgstr "Émulateur pour Gameboy™ et GameboyAdvance™."
 
-#: src/gtk/vba.glade:2052
-msgid "<small>Copyright © 1999-2004 Forgotten</small>"
-msgstr "<small>Copyright © 1999-2004 Forgotten</small>"
+#: src/gtk/vba.glade:2066
+msgid ""
+"<small>Copyright (C) 2004 Forgotten and the VBA development team</small>"
+msgstr "<small>Copyright © 2004 Forgotten et l'équipe de développement de VBA</small>"
 
-#: src/gtk/vba.glade:2074
+#: src/gtk/vba.glade:2088
 msgid "Throttle"
 msgstr "Vitesse"
 
-#: src/gtk/vba.glade:2141
+#: src/gtk/vba.glade:2167
 msgid "Throttle : "
 msgstr "Vitesse : "
 
-#: src/gtk/vba.glade:2181
+#: src/gtk/vba.glade:2207
 msgid " %"
 msgstr " %"
 
-#: src/gtk/vba.glade:2211
+#: src/gtk/vba.glade:2238
 msgid "Directories"
 msgstr "Répertoires"
 
-#: src/gtk/vba.glade:2281
+#: src/gtk/vba.glade:2308
 msgid "GBA roms : "
 msgstr "Roms GBA : "
 
-#: src/gtk/vba.glade:2311 src/gtk/vba.glade:2467 src/gtk/vba.glade:2570
-#: src/gtk/vba.glade:2673 src/gtk/vba.glade:2752
+#: src/gtk/vba.glade:2338 src/gtk/vba.glade:2494 src/gtk/vba.glade:2597
+#: src/gtk/vba.glade:2700 src/gtk/vba.glade:2779 src/gtk/vba.glade:2919
+#: src/gtk/vba.glade:3205 src/gtk/vba.glade:3227 src/gtk/vba.glade:3249
+#: src/gtk/vba.glade:3271 src/gtk/vba.glade:3293 src/gtk/vba.glade:3315
+#: src/gtk/vba.glade:3337 src/gtk/vba.glade:3359 src/gtk/vba.glade:3381
+#: src/gtk/vba.glade:3403 src/gtk/vba.glade:3425
 msgid "*"
 msgstr "*"
 
-#: src/gtk/vba.glade:2384
+#: src/gtk/vba.glade:2411
 msgid "GB roms : "
 msgstr "Roms GB : "
 
-#: src/gtk/vba.glade:2437
+#: src/gtk/vba.glade:2464
 msgid "Batteries : "
 msgstr "Batteries : "
 
-#: src/gtk/vba.glade:2540
+#: src/gtk/vba.glade:2567
 msgid "Saves : "
 msgstr "Sauvegardes : "
 
-#: src/gtk/vba.glade:2643
+#: src/gtk/vba.glade:2670
 msgid "Captures : "
 msgstr "Captures : "
 
-#: src/gtk/windowcallbacks.cpp:61 src/gtk/windowcallbacks.cpp:75
-msgid "Open"
-msgstr "Ouvrir"
+#: src/gtk/vba.glade:2831
+msgid "Joypad config"
+msgstr "Configuration du joypad"
 
-#: src/gtk/windowcallbacks.cpp:102
-msgid "All Gameboy Advance files"
-msgstr "Tous les fichiers Gameboy Advance"
+#: src/gtk/vba.glade:2935
+msgid "Down : "
+msgstr "Bas : "
 
-#: src/gtk/windowcallbacks.cpp:109
-msgid "Gameboy Advance files"
-msgstr "Fichiers Gameboy Advance"
+#: src/gtk/vba.glade:2959
+msgid "Left : "
+msgstr "Gauche : "
 
-#: src/gtk/windowcallbacks.cpp:116
-msgid "Gameboy files"
-msgstr "Fichiers Gameboy"
+#: src/gtk/vba.glade:2983
+msgid "Right : "
+msgstr "Droite : "
 
-#: src/gtk/windowcallbacks.cpp:147 src/gtk/windowcallbacks.cpp:161
+#: src/gtk/vba.glade:3007
+msgid "Button A : "
+msgstr "Bouton A : "
+
+#: src/gtk/vba.glade:3031
+msgid "Button B : "
+msgstr "Bouton B : "
+
+#: src/gtk/vba.glade:3055
+msgid "Button L : "
+msgstr "Bouton L : "
+
+#: src/gtk/vba.glade:3079
+msgid "Button R : "
+msgstr "Bouton R : "
+
+#: src/gtk/vba.glade:3103
+msgid "Select : "
+msgstr "Select : "
+
+#: src/gtk/vba.glade:3127
+msgid "Start : "
+msgstr "Start : "
+
+#: src/gtk/vba.glade:3151
+msgid "Speed : "
+msgstr "Speed : "
+
+#: src/gtk/vba.glade:3175
+msgid "Capture : "
+msgstr "Capture : "
+
+#: src/gtk/vba.glade:3441
+msgid "Up : "
+msgstr "Haut : "
+
+#: src/gtk/vba.glade:3475
+msgid "TCP port"
+msgstr "Port TCP"
+
+#: src/gtk/vba.glade:3554
+msgid "Port : "
+msgstr "Port : "
+
+#: src/gtk/windowcallbacks.cpp:80 src/gtk/windowcallbacks.cpp:94
 msgid "Load game"
 msgstr "Charger une partie"
 
-#: src/gtk/windowcallbacks.cpp:176 src/gtk/windowcallbacks.cpp:232
+#: src/gtk/windowcallbacks.cpp:109 src/gtk/windowcallbacks.cpp:163
 msgid "VisualBoyAdvance save game"
 msgstr "Sauvegarde VisualBoyAdvance"
 
-#: src/gtk/windowcallbacks.cpp:198 src/gtk/windowcallbacks.cpp:215
+#: src/gtk/windowcallbacks.cpp:131 src/gtk/windowcallbacks.cpp:146
 msgid "Save game"
 msgstr "Enregistrer une partie"
 
-#: src/gtk/windowcallbacks.cpp:250 src/gtk/windowcallbacks.cpp:533
+#: src/gtk/windowcallbacks.cpp:181 src/gtk/windowcallbacks.cpp:466
+#: src/gtk/windowcallbacks.cpp:585
 msgid "File already exists. Overwrite it?"
 msgstr "Le fichier existe déjà. Voulez-vous l'écraser ?"
 
-#: src/gtk/windowcallbacks.cpp:387 src/gtk/windowcallbacks.cpp:401
+#: src/gtk/windowcallbacks.cpp:318 src/gtk/windowcallbacks.cpp:332
 msgid "Import battery file"
 msgstr "Importer un fichier de batterie"
 
-#: src/gtk/windowcallbacks.cpp:416 src/gtk/windowcallbacks.cpp:491
+#: src/gtk/windowcallbacks.cpp:347 src/gtk/windowcallbacks.cpp:424
 msgid "Battery file"
 msgstr "Fichier de batterie"
 
-#: src/gtk/windowcallbacks.cpp:420 src/gtk/windowcallbacks.cpp:495
+#: src/gtk/windowcallbacks.cpp:351 src/gtk/windowcallbacks.cpp:428
 msgid "Flash save"
 msgstr "Sauvegarde de flash"
 
-#: src/gtk/windowcallbacks.cpp:431
+#: src/gtk/windowcallbacks.cpp:362
 msgid ""
 "Importing a battery file will erase any saved games and reset the emulator. "
 "Do you want to continue?"
@@ -937,54 +992,86 @@ msgstr ""
 "Importer un fichier de batterie va effacer les parties sauvegardées dans le "
 "jeu et redémarrer le jeu. Voulez-vous continuer ?"
 
-#: src/gtk/windowcallbacks.cpp:449
+#: src/gtk/windowcallbacks.cpp:380
 #, c-format
 msgid "Failed to import battery file %s."
 msgstr "L'importation du fichier de batterie %s a échoué"
 
-#: src/gtk/windowcallbacks.cpp:461 src/gtk/windowcallbacks.cpp:475
+#: src/gtk/windowcallbacks.cpp:392 src/gtk/windowcallbacks.cpp:407
 msgid "Export battery file"
 msgstr "Exporter un fichier de batterie"
 
-#: src/gtk/windowcallbacks.cpp:561
+#: src/gtk/windowcallbacks.cpp:494
 #, c-format
 msgid "Failed to export battery file %s."
 msgstr "L'exportation du fichier de batterie %s a échoué"
 
-#: src/gtk/windowcallbacks.cpp:777 src/gtk/windowcallbacks.cpp:797
+#: src/gtk/windowcallbacks.cpp:506 src/gtk/windowcallbacks.cpp:521
+msgid "Save screenshot"
+msgstr "Enregistrer la capture d'écran"
+
+#: src/gtk/windowcallbacks.cpp:538
+msgid "PNG image"
+msgstr "Image PNG"
+
+#: src/gtk/windowcallbacks.cpp:542
+msgid "BMP image"
+msgstr "Image BMP"
+
+#: src/gtk/windowcallbacks.cpp:824 src/gtk/windowcallbacks.cpp:844
 msgid "Select directory"
 msgstr "Sélectionner un répertoire"
 
-#: src/gtk/windowcallbacks.cpp:825 src/gtk/windowcallbacks.cpp:835
+#: src/gtk/windowcallbacks.cpp:872 src/gtk/windowcallbacks.cpp:882
 msgid "Select BIOS file"
 msgstr "_Sélectionner un fichier BIOS..."
 
-#: src/gtk/windowcallbacks.cpp:851
+#: src/gtk/windowcallbacks.cpp:898
 msgid "All files"
 msgstr "Tous les fichiers"
 
-#: src/gtk/windowcallbacks.cpp:855
+#: src/gtk/windowcallbacks.cpp:902
 msgid "Gameboy Advance BIOS"
 msgstr "BIOS Gameboy Advance"
 
-#: src/gtk/window.cpp:1376
+#: src/gtk/windowcallbacks.cpp:1319
+msgid "Only GBA images are supported."
+msgstr "Seules les images GBA sont supportées."
+
+#: src/gtk/window.cpp:1621 src/gtk/window.cpp:1635
+msgid "Open"
+msgstr "Ouvrir"
+
+#: src/gtk/window.cpp:1662
+msgid "All Gameboy Advance files"
+msgstr "Tous les fichiers Gameboy Advance"
+
+#: src/gtk/window.cpp:1669
+msgid "Gameboy Advance files"
+msgstr "Fichiers Gameboy Advance"
+
+#: src/gtk/window.cpp:1676
+msgid "Gameboy files"
+msgstr "Fichiers Gameboy"
+
+#: src/gtk/window.cpp:1701
 #, c-format
 msgid "Unknown file type %s"
 msgstr "Type de fichier inconnu %s"
 
-#: src/gtk/window.cpp:1469
+#: src/gtk/window.cpp:1795
 msgid "Loaded battery"
 msgstr "Batterie chargée"
 
-#: src/gtk/window.cpp:1488
+#: src/gtk/window.cpp:1814
 msgid "Saved battery"
 msgstr "Batterie enregistrée"
 
-#: src/gtk/window.cpp:1546 src/gtk/window.cpp:1593
+#: src/gtk/window.cpp:1872 src/gtk/window.cpp:1919
 msgid "----/--/-- --:--:--"
 msgstr "--/--/---- --:--:--"
 
-#: src/gtk/window.cpp:1578
+#: src/gtk/window.cpp:1904
 msgid "%Y/%m/%d %H:%M:%S"
 msgstr "%d/%m/%Y %H:%M:%S"
 
@@ -992,8 +1079,5 @@ msgstr "%d/%m/%Y %H:%M:%S"
 msgid "No space for profiling buffer(s)\n"
 msgstr "Pas de place pour le(s) tampon(s) de profil\n"
 
-#~ msgid "Importing the battery file failed."
-#~ msgstr "L'importation du fichier de batterie a échoué."
-
-#~ msgid "Exporting the battery file failed."
-#~ msgstr "L'exportation du fichier de batterie a échoué."
+#~ msgid "_Cheats"
+#~ msgstr "_Cheats"

@@ -40,6 +40,16 @@ extern int systemRenderedFrames;
 extern int systemFPS;
 extern bool debugger;
 extern int RGB_LOW_BITS_MASK;
+extern void (*dbgMain)();
+extern void (*dbgSignal)(int, int);
+extern void (*dbgOutput)(char *, u32);
+extern void remoteInit();
+extern void remoteCleanUp();
+extern void remoteStubMain();
+extern void remoteStubSignal(int, int);
+extern void remoteOutput(char *, u32);
+extern void remoteSetProtocol(int);
+extern void remoteSetPort(int);
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -121,6 +131,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     vSaveConfig(m_sConfigFile);
   }
 
+  vCreateFileOpenDialog();
   vLoadHistoryFromConfig();
   vLoadJoypadsFromConfig();
 
@@ -805,11 +816,25 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astAutofire[i].m_csName));
     poCMI->set_active(m_poInputConfig->oGetKey<bool>(astAutofire[i].m_csKey));
-    vOnAutofireToggled(poCMI, astAutofire[i].m_csName, astAutofire[i].m_eKeyFlag);
+    vOnAutofireToggled(poCMI, astAutofire[i].m_csKey, astAutofire[i].m_eKeyFlag);
     poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, std::string, u32>(
                                       SigC::slot(*this, &Window::vOnAutofireToggled),
                                       poCMI, astAutofire[i].m_csKey, astAutofire[i].m_eKeyFlag));
   }
+
+  // GDB menu
+  //
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("GdbWait"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnGDBWait));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("GdbLoadAndWait"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnGDBLoadAndWait));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("GdbBreak"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnGDBBreak));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("GdbDisconnect"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnGDBDisconnect));
 
   // Help menu
   //
@@ -1581,6 +1606,88 @@ u32 Window::uiReadJoypad()
   return uiJoypad;
 }
 
+void Window::vCreateFileOpenDialog()
+{
+  if (m_poFileOpenDialog != NULL)
+  {
+    return;
+  }
+
+  std::string sGBDir  = m_poDirConfig->sGetKey("gb_roms");
+  std::string sGBADir = m_poDirConfig->sGetKey("gba_roms");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Open"));
+  poDialog->set_transient_for(*this);
+
+  if (sGBADir != "")
+  {
+    poDialog->set_filename(sGBADir + "/");
+  }
+  else if (sGBDir != "")
+  {
+    poDialog->set_filename(sGBDir + "/");
+  }
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog * poDialog = new Gtk::FileChooserDialog(*this, _("Open"));
+  poDialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  poDialog->add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
+
+  if (sGBDir != "")
+  {
+    poDialog->add_shortcut_folder(sGBDir);
+    poDialog->set_current_folder(sGBDir);
+  }
+
+  if (sGBADir != "" && sGBADir != sGBDir)
+  {
+    poDialog->add_shortcut_folder(sGBADir);
+    poDialog->set_current_folder(sGBADir);
+  }
+
+  const char * acsPattern[] =
+  {
+    // GBA
+    "*.[bB][iI][nN]", "*.[aA][gG][bB]", "*.[gG][bB][aA]",
+    // GB
+    "*.[gG][bB]", "*.[sS][gG][bB]", "*.[cC][gG][bB]", "*.[gG][bB][cC]",
+    // Both
+    "*.[mM][bB]", "*.[eE][lL][fF]", "*.[zZ][iI][pP]", "*.[zZ]", "*.[gG][zZ]"
+  };
+
+  Gtk::FileFilter oAllGBAFilter;
+  oAllGBAFilter.set_name(_("All Gameboy Advance files"));
+  for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
+  {
+    oAllGBAFilter.add_pattern(acsPattern[i]);
+  }
+
+  Gtk::FileFilter oGBAFilter;
+  oGBAFilter.set_name(_("Gameboy Advance files"));
+  for (int i = 0; i < 3; i++)
+  {
+    oGBAFilter.add_pattern(acsPattern[i]);
+  }
+
+  Gtk::FileFilter oGBFilter;
+  oGBFilter.set_name(_("Gameboy files"));
+  for (int i = 3; i < 7; i++)
+  {
+    oGBFilter.add_pattern(acsPattern[i]);
+  }
+
+  poDialog->add_filter(oAllGBAFilter);
+  poDialog->add_filter(oGBAFilter);
+  poDialog->add_filter(oGBFilter);
+
+#endif // ! GTKMM20
+
+  m_poFileOpenDialog = poDialog;
+}
+
 bool Window::bLoadROM(const std::string & _rsFile)
 {
   vOnFileClose();
@@ -1636,6 +1743,7 @@ bool Window::bLoadROM(const std::string & _rsFile)
   vLoadBattery();
   vUpdateScreen();
 
+  debugger = false; // May cause conflicts
   emulating = 1;
   m_bWasEmulating = false;
   m_uiThrottleDelay = 0;
