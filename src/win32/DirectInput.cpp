@@ -599,8 +599,8 @@ static void checkJoypads()
     }
 
     for(j = 0;j < 4 && j < pDevices[i].nPovs; j++) {
-      if(pDevices[i].state.rgdwPOV[j] ^ joystick.rgdwPOV[j]) {
-        int state = getPovState((pDevices[i].state.rgdwPOV[j] ^ joystick.rgdwPOV[j]) & joystick.rgdwPOV[j]);
+      if(LOWORD(pDevices[i].state.rgdwPOV[j]) != LOWORD(joystick.rgdwPOV[j])) {
+        int state = getPovState(joystick.rgdwPOV[j]);
         
         if(state & POV_UP)
           SendMessage(GetFocus(), JOYCONFIG_MESSAGE, i, (j<<2)+0x20);
@@ -962,7 +962,7 @@ CString DirectInput::getKeyName(int key)
         dir = "right";
       else if(dd == 3)
         dir = "left";
-      winBuffer.Format(" Joy %d %s %s", d, di.tszName, dir);
+      winBuffer.Format("Joy %d %s %s", d, di.tszName, dir);
     } else {
       pDevices[d].device->GetObjectInfo(&di,
                                         DIJOFS_BUTTON(k-128),
