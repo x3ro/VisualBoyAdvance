@@ -1330,7 +1330,8 @@ case 0x38:
    break;
  case 0xf3:
    // DI
-   IFF&=0xFE;
+ //   IFF&=0xFE;
+   IFF&=(~0x21);
    break;
    // F4 illegal
  case 0xf5:
