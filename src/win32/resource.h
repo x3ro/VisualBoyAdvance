@@ -81,6 +81,7 @@
 #define IDD_EXPORT_SPS                  138
 #define IDD_ADDR_SIZE                   139
 #define IDD_MODES                       140
+#define IDD_DRIVERS                     142
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -444,6 +445,7 @@
 #define IDC_LOAD                        1238
 #define IDC_SIZE_CONTROL                1240
 #define IDC_MODES                       1240
+#define IDC_DRIVERS                     1241
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -623,14 +625,22 @@
 #define ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE 40196
 #define ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED 40197
 #define ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT 40198
+#define ID_OPTIONS_JOYPAD_CONFIGURE_1   40199
+#define ID_OPTIONS_JOYPAD_CONFIGURE_2   40200
+#define ID_OPTIONS_JOYPAD_CONFIGURE_3   40201
+#define ID_OPTIONS_JOYPAD_CONFIGURE_4   40202
+#define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_1 40208
+#define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_2 40209
+#define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_3 40210
+#define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_4 40211
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        141
-#define _APS_NEXT_COMMAND_VALUE         40199
-#define _APS_NEXT_CONTROL_VALUE         1241
+#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_COMMAND_VALUE         40212
+#define _APS_NEXT_CONTROL_VALUE         1242
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

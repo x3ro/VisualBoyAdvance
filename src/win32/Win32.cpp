@@ -21,6 +21,8 @@
 #define DIRECTSOUND_VERSION 0x0500
 #define JOYCONFIG_MESSAGE (WM_USER + 1000)
 
+#pragma warning(disable:985)
+
 #include <windows.h>
 #include <ddraw.h>
 #include <dinput.h>
@@ -83,6 +85,11 @@ HINSTANCE hInstance = NULL;
 HMENU menu;
 HWND regDialog = NULL;
 HACCEL hAccel = NULL;
+
+GUID videoDriverGUID;
+GUID *pVideoDriverGUID = NULL;
+
+BOOL ddrawUsingEmulationOnly = FALSE;
 
 BOOL screenSaverState = FALSE;
 BOOL screenSaverDisabled = FALSE;
@@ -293,14 +300,21 @@ enum {
   MENU_OPTIONS_LANGUAGE
 };
 
-USHORT joypad[13] = {
-  DIK_LEFT,  DIK_RIGHT,
-  DIK_UP,    DIK_DOWN,
-  DIK_Z,     DIK_X,
-  DIK_RETURN,DIK_BACK,
-  DIK_A,     DIK_S,
-  DIK_SPACE, DIK_F12,
-  DIK_C
+int joypadDefault = 0;
+
+USHORT joypad[4][13] = {
+  {
+    DIK_LEFT,  DIK_RIGHT,
+    DIK_UP,    DIK_DOWN,
+    DIK_Z,     DIK_X,
+    DIK_RETURN,DIK_BACK,
+    DIK_A,     DIK_S,
+    DIK_SPACE, DIK_F12,
+    DIK_C
+  },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  
 };
 
 USHORT motion[4] = {
@@ -367,10 +381,10 @@ extern void winCheatsListDialog();
 extern void showDirectories(HWND);
 extern void winGbCheatsDialog();
 extern void winGbCheatsListDialog();
-extern void configurePad();
+extern void configurePad(int);
 extern void motionConfigurePad();
 extern int winGSACodeSelect(HWND, LPARAM);
-extern int winVideoModeSelect(HWND, LPDIRECTDRAW7);
+extern int winVideoModeSelect(HWND, GUID **);
 extern void fileExportSPSSnapshot(char *, char *);
 
 #ifdef MMX
@@ -379,7 +393,7 @@ extern "C" bool cpu_mmx;
 bool detectMMX()
 {
   bool support = false;
-  char brand[12];
+  char brand[13];
 
   // check for Intel chip
   __try {
@@ -548,88 +562,91 @@ int getPovState(DWORD value)
 void checkKeys()
 {
   int dev = 0;
+  int i;
 
-  for(int i = 0; i < numDevices; i++)
+  for(i = 0; i < numDevices; i++)
     pDevices[i].needed = 0;
-  
-  dev = joypad[KEY_LEFT] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_LEFT] = DIK_LEFT;
-  
-  dev = joypad[KEY_RIGHT] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_RIGHT] = DIK_RIGHT;
-  
-  dev = joypad[KEY_UP] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_UP] = DIK_UP;
-  
-  dev = joypad[KEY_DOWN] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_DOWN] = DIK_DOWN;
-  
-  dev = joypad[KEY_BUTTON_A] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_A] = DIK_Z;
-  
-  dev = joypad[KEY_BUTTON_B] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_B] = DIK_X;
 
-  dev = joypad[KEY_BUTTON_L] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_L] = DIK_A;
-  
-  dev = joypad[KEY_BUTTON_R] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_R] = DIK_S;
-  
-  dev = joypad[KEY_BUTTON_START] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_START] = DIK_RETURN;
-  
-  dev = joypad[KEY_BUTTON_SELECT] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_SELECT] = DIK_BACK;
-  
-  dev = joypad[KEY_BUTTON_SPEED] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_SPEED] = DIK_SPACE;
-  
-  dev = joypad[KEY_BUTTON_CAPTURE] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_CAPTURE] = DIK_F12;
-
-  dev = joypad[KEY_BUTTON_GS] >> 8;
-  if(dev < numDevices && dev >= 0)
-    pDevices[dev].needed = 1;
-  else
-    joypad[KEY_BUTTON_GS] = DIK_C;
-  
+  for(i = 0; i < 4; i++) {
+    dev = joypad[i][KEY_LEFT] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_LEFT] = DIK_LEFT;
+    
+    dev = joypad[i][KEY_RIGHT] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_RIGHT] = DIK_RIGHT;
+    
+    dev = joypad[i][KEY_UP] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_UP] = DIK_UP;
+    
+    dev = joypad[i][KEY_DOWN] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_DOWN] = DIK_DOWN;
+    
+    dev = joypad[i][KEY_BUTTON_A] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_A] = DIK_Z;
+    
+    dev = joypad[i][KEY_BUTTON_B] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_B] = DIK_X;
+    
+    dev = joypad[i][KEY_BUTTON_L] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_L] = DIK_A;
+    
+    dev = joypad[i][KEY_BUTTON_R] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_R] = DIK_S;
+    
+    dev = joypad[i][KEY_BUTTON_START] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_START] = DIK_RETURN;
+    
+    dev = joypad[i][KEY_BUTTON_SELECT] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_SELECT] = DIK_BACK;
+    
+    dev = joypad[i][KEY_BUTTON_SPEED] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_SPEED] = DIK_SPACE;
+    
+    dev = joypad[i][KEY_BUTTON_CAPTURE] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_CAPTURE] = DIK_F12;
+    
+    dev = joypad[i][KEY_BUTTON_GS] >> 8;
+    if(dev < numDevices && dev >= 0)
+      pDevices[dev].needed = 1;
+    else
+      joypad[i][KEY_BUTTON_GS] = DIK_C;
+  }
+    
   dev = motion[KEY_UP] >> 8;
   if(dev < numDevices && dev >= 0)
     pDevices[dev].needed = 1;
@@ -830,41 +847,39 @@ void checkJoypads()
   }
 }
 
-void saveKeys()
+static void winSaveKey(char *name, int num, USHORT value)
 {
-  regSetDwordValue("Joy0_Left",
-                   joypad[KEY_LEFT]);
-  regSetDwordValue("Joy0_Right",
-                   joypad[KEY_RIGHT]);
-  regSetDwordValue("Joy0_Up",
-                   joypad[KEY_UP]);
-  regSetDwordValue("Joy0_Speed",
-                   joypad[KEY_BUTTON_SPEED]);
-  regSetDwordValue("Joy0_Capture",
-                   joypad[KEY_BUTTON_CAPTURE]);
-  regSetDwordValue("Joy0_GS",
-                   joypad[KEY_BUTTON_GS]);  
-  regSetDwordValue("Joy0_Down",
-                   joypad[KEY_DOWN]);
-  regSetDwordValue("Joy0_A",
-                   joypad[KEY_BUTTON_A]);
-  regSetDwordValue("Joy0_B",
-                   joypad[KEY_BUTTON_B]);
-  regSetDwordValue("Joy0_L",
-                   joypad[KEY_BUTTON_L]);
-  regSetDwordValue("Joy0_R",
-                   joypad[KEY_BUTTON_R]);  
-  regSetDwordValue("Joy0_Start",
-                   joypad[KEY_BUTTON_START]);
-  regSetDwordValue("Joy0_Select",
-                   joypad[KEY_BUTTON_SELECT]);
+  char buffer[80];
+
+  sprintf(buffer, "Joy%d_%s", num, name);
+
+  regSetDwordValue(buffer, value);
+}
+
+void winSaveKeys()
+{
+  for(int i = 0; i < 4; i++) {
+    winSaveKey("Left", i, joypad[i][KEY_LEFT]);
+    winSaveKey("Right", i, joypad[i][KEY_RIGHT]);
+    winSaveKey("Up", i, joypad[i][KEY_UP]);
+    winSaveKey("Speed", i, joypad[i][KEY_BUTTON_SPEED]);
+    winSaveKey("Capture", i, joypad[i][KEY_BUTTON_CAPTURE]);
+    winSaveKey("GS", i, joypad[i][KEY_BUTTON_GS]);  
+    winSaveKey("Down", i, joypad[i][KEY_DOWN]);
+    winSaveKey("A", i, joypad[i][KEY_BUTTON_A]);
+    winSaveKey("B", i, joypad[i][KEY_BUTTON_B]);
+    winSaveKey("L", i, joypad[i][KEY_BUTTON_L]);
+    winSaveKey("R", i, joypad[i][KEY_BUTTON_R]);  
+    winSaveKey("Start", i, joypad[i][KEY_BUTTON_START]);
+    winSaveKey("Select", i, joypad[i][KEY_BUTTON_SELECT]);
+  }
   regSetDwordValue("joyVersion", 1);  
 }
 
 void convertKeys()
 {
   for(int i = 0 ; i < 13; i++) {
-    int k = joypad[i];
+    int k = joypad[0][i];
 
     int dev = k >> 8;
 
@@ -873,11 +888,11 @@ void convertKeys()
 
       if(k >= 4) {
         k = 0x80 + k - 4;
-        joypad[i] = ((dev) << 8) | k;
+        joypad[0][i] = ((dev) << 8) | k;
       }
     }
   }
-  saveKeys();
+  winSaveKeys();
 }
 
 char *getKeyName(int key)
@@ -947,50 +962,60 @@ char *getKeyName(int key)
   return winBuffer;
 }
 
-void readKeys()
+static int winReadKey(char *name, int num)
+{
+  char buffer[80];
+
+  sprintf(buffer, "Joy%d_%s", num, name);
+
+  return regQueryDwordValue(buffer, (DWORD)-1);
+}
+
+void winReadKeys()
 {
   int key = -1;
 
-  // joy 0
-  key = regQueryDwordValue("Joy0_Left", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_LEFT] = key;
-  key = regQueryDwordValue("Joy0_Right", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_RIGHT] = key;
-  key = regQueryDwordValue("Joy0_Up", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_UP] = key;
-  key = regQueryDwordValue("Joy0_Down", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_DOWN] = key;
-  key = regQueryDwordValue("Joy0_A", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_A] = key;
-  key = regQueryDwordValue("Joy0_B", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_B] = key;
-  key = regQueryDwordValue("Joy0_L", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_L] = key;
-  key = regQueryDwordValue("Joy0_R", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_R] = key;  
-  key = regQueryDwordValue("Joy0_Start", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_START] = key;
-  key = regQueryDwordValue("Joy0_Select", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_SELECT] = key;
-  key = regQueryDwordValue("Joy0_Speed", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_SPEED] = key;
-  key = regQueryDwordValue("Joy0_Capture", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_CAPTURE] = key;
-  key = regQueryDwordValue("Joy0_GS", (DWORD)-1);
-  if(key != -1)
-    joypad[KEY_BUTTON_GS] = key;  
+  for(int i = 0; i < 4; i++) {
+    key = winReadKey("Left", i);
+    if(key != -1)
+      joypad[i][KEY_LEFT] = key;
+    key = winReadKey("Right", i);
+    if(key != -1)
+      joypad[i][KEY_RIGHT] = key;
+    key = winReadKey("Up", i);
+    if(key != -1)
+      joypad[i][KEY_UP] = key;
+    key = winReadKey("Down", i);
+    if(key != -1)
+      joypad[i][KEY_DOWN] = key;
+    key = winReadKey("A", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_A] = key;
+    key = winReadKey("B", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_B] = key;
+    key = winReadKey("L", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_L] = key;
+    key = winReadKey("R", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_R] = key;  
+    key = winReadKey("Start", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_START] = key;
+    key = winReadKey("Select", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_SELECT] = key;
+    key = winReadKey("Speed", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_SPEED] = key;
+    key = winReadKey("Capture", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_CAPTURE] = key;
+    key = winReadKey("GS", i);
+    if(key != -1)
+      joypad[i][KEY_BUTTON_GS] = key;
+  }
   key = regQueryDwordValue("Motion_Left", (DWORD)-1);
   if(key != -1)
     motion[KEY_LEFT] = key;
@@ -1350,18 +1375,28 @@ void updateLayersMenu(HMENU menu)
                 CHECKMENUSTATE(layerSettings & 0x0100));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG1,
                 CHECKMENUSTATE(layerSettings & 0x0200));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG1,
+                 ENABLEMENU(cartridgeType == 0));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG2,
                 CHECKMENUSTATE(layerSettings & 0x0400));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG2,
+                 ENABLEMENU(cartridgeType == 0));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG3,
                 CHECKMENUSTATE(layerSettings & 0x0800));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_BG3,
+                 ENABLEMENU(cartridgeType == 0));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_OBJ,
                 CHECKMENUSTATE(layerSettings & 0x1000));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_WIN0,
                 CHECKMENUSTATE(layerSettings & 0x2000));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_WIN1,
                 CHECKMENUSTATE(layerSettings & 0x4000));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_WIN1,
+                 ENABLEMENU(cartridgeType == 0));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_OBJWIN,
                 CHECKMENUSTATE(layerSettings & 0x8000));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_LAYERS_OBJWIN,
+                 ENABLEMENU(cartridgeType == 0));
 }
 
 void updateVideoMenu(HMENU menu)
@@ -1663,22 +1698,43 @@ void updateJoypadMenu(HMENU menu)
   if(menu == NULL)
     return;
 
-  EnableMenuItem(menu, ID_OPTIONS_JOYPAD,
+  EnableMenuItem(menu, ID_OPTIONS_JOYPAD_CONFIGURE_1,
+                 ENABLEMENU(videoOption != VIDEO_320x240));
+  EnableMenuItem(menu, ID_OPTIONS_JOYPAD_CONFIGURE_2,
+                 ENABLEMENU(videoOption != VIDEO_320x240));
+  EnableMenuItem(menu, ID_OPTIONS_JOYPAD_CONFIGURE_3,
+                 ENABLEMENU(videoOption != VIDEO_320x240));
+  EnableMenuItem(menu, ID_OPTIONS_JOYPAD_CONFIGURE_4,
                  ENABLEMENU(videoOption != VIDEO_320x240));
   EnableMenuItem(menu, ID_OPTIONS_JOYPAD_MOTIONCONFIGURE,
                  ENABLEMENU(videoOption != VIDEO_320x240));
+
+  HMENU sub = GetSubMenu(menu, 1);
+  if(sub != NULL) {
+    CheckMenuItem(sub, ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_1,
+                  CHECKMENUSTATE(joypadDefault == 0));
+    CheckMenuItem(sub, ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_2,
+                  CHECKMENUSTATE(joypadDefault == 1));
+    CheckMenuItem(sub, ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_3,
+                  CHECKMENUSTATE(joypadDefault == 2));
+    CheckMenuItem(sub, ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_4,
+                  CHECKMENUSTATE(joypadDefault == 3));
+  }
   
-  menu = GetSubMenu(menu, 3);
-  if(menu == NULL)
+  sub = GetSubMenu(menu, 3);
+  if(sub == NULL)
+    sub = GetSubMenu(menu, 4);
+    
+  if(sub == NULL)
     return;
 
-  CheckMenuItem(menu, ID_OPTIONS_JOYPAD_AUTOFIRE_A,
+  CheckMenuItem(sub, ID_OPTIONS_JOYPAD_AUTOFIRE_A,
                 CHECKMENUSTATE(autoFire & 1));
-  CheckMenuItem(menu, ID_OPTIONS_JOYPAD_AUTOFIRE_B,
+  CheckMenuItem(sub, ID_OPTIONS_JOYPAD_AUTOFIRE_B,
                 CHECKMENUSTATE(autoFire & 2));
-  CheckMenuItem(menu, ID_OPTIONS_JOYPAD_AUTOFIRE_L,
+  CheckMenuItem(sub, ID_OPTIONS_JOYPAD_AUTOFIRE_L,
                 CHECKMENUSTATE(autoFire & 512));
-  CheckMenuItem(menu, ID_OPTIONS_JOYPAD_AUTOFIRE_R,
+  CheckMenuItem(sub, ID_OPTIONS_JOYPAD_AUTOFIRE_R,
                 CHECKMENUSTATE(autoFire & 256));
 }
 
@@ -2094,42 +2150,52 @@ BOOL checkKey(int key)
   return FALSE;
 }
 
-u32 systemReadJoypad()
+bool systemReadJoypads()
 {
-  BOOL ok = TRUE;
+  bool ok = TRUE;
   for(int i = 0; i < numDevices; i++) {
     if(i) {
       ok = readJoystick(i);
     } else
       ok = readKeyboard();
-    if(!ok)
-      return 0;
   }
+  return ok;
+}
 
+u32 systemReadJoypad(int which)
+{
   u32 res = 0;
-
-  if(checkKey(joypad[KEY_BUTTON_A])) {
+  int i = joypadDefault;
+  if(which >= 0 && which <= 3)
+    i = which;
+  
+  if(checkKey(joypad[i][KEY_BUTTON_A]))
     res |= 1;
-  }
-  if(checkKey(joypad[KEY_BUTTON_B])) {
+  if(checkKey(joypad[i][KEY_BUTTON_B]))
     res |= 2;
-  }
-  if(checkKey(joypad[KEY_BUTTON_SELECT]))
+  if(checkKey(joypad[i][KEY_BUTTON_SELECT]))
     res |= 4;
-  if(checkKey(joypad[KEY_BUTTON_START]))
+  if(checkKey(joypad[i][KEY_BUTTON_START]))
     res |= 8;
-  if(checkKey(joypad[KEY_RIGHT]))
+  if(checkKey(joypad[i][KEY_RIGHT]))
     res |= 16;
-  if(checkKey(joypad[KEY_LEFT]))
+  if(checkKey(joypad[i][KEY_LEFT]))
     res |= 32;
-  if(checkKey(joypad[KEY_UP]))
+  if(checkKey(joypad[i][KEY_UP]))
     res |= 64;
-  if(checkKey(joypad[KEY_DOWN]))
+  if(checkKey(joypad[i][KEY_DOWN]))
     res |= 128;
-  if(checkKey(joypad[KEY_BUTTON_R]))
+  if(checkKey(joypad[i][KEY_BUTTON_R]))
     res |= 256;
-  if(checkKey(joypad[KEY_BUTTON_L]))
+  if(checkKey(joypad[i][KEY_BUTTON_L]))
     res |= 512;
+
+  if(checkKey(joypad[i][KEY_BUTTON_SPEED]) || speedupToggle)
+    res |= 1024;
+  if(checkKey(joypad[i][KEY_BUTTON_CAPTURE]))
+    res |= 2048;
+  if(checkKey(joypad[i][KEY_BUTTON_GS]))
+    res |= 4096;
 
   if(autoFire) {
     res &= (~autoFire);
@@ -2138,19 +2204,6 @@ u32 systemReadJoypad()
     autoFireToggle = !autoFireToggle;
   }
   
-  return res;
-}
-
-u32 systemReadJoypadExtended()
-{
-  u32 res = 0;
-
-  if(checkKey(joypad[KEY_BUTTON_SPEED]) || speedupToggle)
-    res |= 1;
-  if(checkKey(joypad[KEY_BUTTON_CAPTURE]))
-    res |= 2;
-  if(checkKey(joypad[KEY_BUTTON_GS]))
-    res |= 4;
   return res;
 }
 
@@ -2306,191 +2359,69 @@ void systemDrawScreen()
                           filterHeight);
         
     } else {
-      if(cartridgeType == 0) {
-        __asm {
-          push esi;
-          push edi;
-          push ecx;
-          push edx;
-          
-          mov esi, pix;
-          mov edi, ddsDesc.lpSurface;
-          mov edx, ddsDesc.lPitch;
-          mov ecx, 160;
-          cmp systemColorDepth, 16;
-          jnz gbaOtherColor;
-          sub edx,480;
-          add esi,482;
-        gbaLoop16bit:
-          push ecx;
-          mov ecx, 240;
-          repz movsw;
-          inc esi;
-          inc esi;
-          add edi, edx;
-          pop ecx;
-          dec ecx;
-          jnz gbaLoop16bit;
-          jmp gbaLoopEnd;
-        gbaOtherColor:
-          cmp systemColorDepth, 24;
-          jnz gbaOtherColor2;
-          sub edx, 240*3;
-        gbaLoop24bit:
-          push ecx;
-          mov ecx, 240*3;
-          repz movsb;
-          add edi, edx;
-          pop ecx;
-          dec ecx;
-          jnz gbaLoop24bit;
-          jmp gbaLoopEnd;
-        gbaOtherColor2:
-          sub edx, 240*4;
-          add esi, 241*4;
-        gbaLoop32bit:
-          push ecx;
-          mov ecx, 240;
-          repz movsd;
-          add esi, 4;
-          add edi, edx;
-          pop ecx;
-          dec ecx;
-          jnz gbaLoop32bit;
-        gbaLoopEnd:
-          pop edx;
-          pop ecx;
-          pop edi;
-          pop esi;
-        }
-      } else {
+      int copyX = 240;
+      int copyY = 160;
+      
+      if(cartridgeType == 1) {
         if(gbBorderOn) {
-          __asm {
-            push esi;
-            push edi;
-            push ecx;
-            push edx;
-            
-            mov esi, pix;
-            mov edi, ddsDesc.lpSurface;
-            mov edx, ddsDesc.lPitch;
-            mov ecx, 224;
-            cmp systemColorDepth, 16;
-            jnz otherColor;
-            add esi, 514;
-          loop123: 
-            push ecx;
-            
-            mov ecx, 256;
-            repz movsw;
-            inc esi;
-            inc esi;
-            add edi, edx;
-            sub edi, 256 * 2;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop123;
-            jmp loopEnd;
-          otherColor:
-            cmp systemColorDepth, 24;
-            jnz otherColor2;
-          loop456: 
-            push ecx;
-            
-            mov ecx, 256 * 3;
-            repz movsb;
-            
-            add edi, edx;
-            sub edi, 256 * 3;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop456;
-            jmp loopEnd;
-          otherColor2:
-            add esi, 257*4;
-          loop789:
-            push ecx;
-            mov ecx, 256;
-            repz movsd;
-            add edi, edx;
-            add esi, 4;
-            sub edi, 256 * 4;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop789;
-          loopEnd:
-            pop edx;
-            pop ecx;
-            pop edi;
-            pop esi;
-          }
+          copyX = 256;
+          copyY = 224;
         } else {
-          __asm {
-            push esi;
-            push edi;
-            push ecx;
-            push edx;
-            
-            mov esi, pix;
-            mov edi, ddsDesc.lpSurface;
-            mov edx, ddsDesc.lPitch;
-            mov ecx, 144;
-            cmp systemColorDepth, 16;
-            jnz otherColor3;
-            add esi, 322;
-          loop1234: 
-            push ecx;
-            
-            mov ecx, 160;
-            repz movsw;
-            inc esi;
-            inc esi;
-            add edi, edx;
-            sub edi, 160 * 2;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop1234;
-            jmp loopEnd2;
-          otherColor3:
-            cmp systemColorDepth, 24;
-            jnz otherColor4;
-          loop4567: 
-            push ecx;
-            
-            mov ecx, 160 * 3;
-            repz movsb;
-            
-            add edi, edx;
-            sub edi, 160 * 3;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop4567;
-            jmp loopEnd2;
-          otherColor4:
-            add esi, 161 * 4;
-          loop7890:
-            push ecx;
-            mov ecx, 160;
-            repz movsd;
-            add esi, 4;
-            add edi, edx;
-            sub edi, 160 * 4;
-            
-            pop ecx;
-            dec ecx;
-            jnz loop7890;
-          loopEnd2:
-            pop edx;
-            pop ecx;
-            pop edi;
-            pop esi;
-          }
-        }      
+          copyX = 160;
+          copyY = 144;
+        }
+      }
+      // MMX doesn't seem to be faster to copy the data
+      __asm {
+        mov eax, copyX;
+        mov ebx, copyY;
+        
+        mov esi, pix;
+        mov edi, ddsDesc.lpSurface;
+        mov edx, ddsDesc.lPitch;
+        cmp systemColorDepth, 16;
+        jnz gbaOtherColor;
+        sub edx, eax;
+        sub edx, eax;
+        lea esi,[esi+2*eax+2];
+        shr eax, 1;
+      gbaLoop16bit:
+        mov ecx, eax;
+        repz movsd;
+        inc esi;
+        inc esi;
+        add edi, edx;
+        dec ebx;
+        jnz gbaLoop16bit;
+        jmp gbaLoopEnd;
+      gbaOtherColor:
+        cmp systemColorDepth, 32;
+        jnz gbaOtherColor2;
+        
+        sub edx, eax;
+        sub edx, eax;
+        sub edx, eax;
+        sub edx, eax;
+        lea esi, [esi+4*eax+4];
+      gbaLoop32bit:
+        mov ecx, eax;
+        repz movsd;
+        add esi, 4;
+        add edi, edx;
+        dec ebx;
+        jnz gbaLoop32bit;
+        jmp gbaLoopEnd;
+      gbaOtherColor2:
+        lea eax, [eax+2*eax];
+        sub edx, eax;
+      gbaLoop24bit:
+        mov ecx, eax;
+        shr ecx, 2;
+        repz movsd;
+        add edi, edx;
+        dec ebx;
+        jnz gbaLoop24bit;
+      gbaLoopEnd:
       }
     }
     if(videoOption > VIDEO_4X && showSpeed) {
@@ -2525,8 +2456,14 @@ void systemDrawScreen()
       hret = ddsFlip->Blt(&dest, ddsOffscreen, &rect, DDBLT_WAIT, NULL);
       if(hret == DD_OK) {
         if(menuToggle) {
+          pDirectDraw->FlipToGDISurface();
           ddsPrimary->SetClipper(ddsClipper);
           hret = ddsPrimary->Blt(&dest, ddsFlip, &dest, DDBLT_ASYNC, NULL);
+          // if using emulation only, then we have to redraw the menu
+          // everytime. It seems like a bug in DirectDraw to me as we not
+          // overwritting the menu area at all.
+          if(ddrawUsingEmulationOnly)
+            DrawMenuBar(hWindow);
         } else
           hret = ddsPrimary->Flip(NULL, 0);
       }
@@ -2823,8 +2760,11 @@ void updateWindowSize(int value)
       if(videoOption == VIDEO_320x240 ||
          videoOption == VIDEO_640x480 ||
          videoOption == VIDEO_800x600 ||
-         videoOption == VIDEO_OTHER)
+         videoOption == VIDEO_OTHER) {
         regSetDwordValue("video", VIDEO_1X);
+        if(pVideoDriverGUID)
+          regSetDwordValue("defaultVideoDriver", TRUE);
+      }
       changingVideoSize = FALSE;
       fileExit();
       return;
@@ -3447,6 +3387,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             soundPause();
           active = a;
         }
+
+        memset(delta,255,sizeof(delta));        
       }
     }
     if(paused && emulating)
@@ -3802,18 +3744,29 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_OPTIONS_VIDEO_FULLSCREEN:
       {
-        int size = winVideoModeSelect(hWindow, pDirectDraw);
+        GUID *pGUID = NULL;
+        int size = winVideoModeSelect(hWindow, &pGUID);
         if(size != -1) {
           int width = (size >> 12) & 4095;
           int height = (size & 4095);
           int colorDepth = (size >> 24);
           if(width != fsWidth ||
              height != fsHeight ||
-             colorDepth != fsColorDepth) {
+             colorDepth != fsColorDepth ||
+             pGUID != pVideoDriverGUID) {
             fsForceChange = true;
             fsWidth = width;
             fsHeight = height;
             fsColorDepth = colorDepth;
+            pVideoDriverGUID = pGUID;
+            if(pGUID) {
+              videoDriverGUID = *pGUID;
+              regSetDwordValue("defaultVideoDriver", FALSE);
+              regSetBinaryValue("videoDriverGUID",
+                                (char *)pGUID, sizeof(GUID));
+            } else {
+              regSetDwordValue("defaultVideoDriver", TRUE);
+            }
             updateVideoSize(wParam & 0xffff);
           }
         }
@@ -4203,8 +4156,33 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         cpu_mmx = 0;
       regSetDwordValue("disableMMX", disableMMX);
       break;
-    case ID_OPTIONS_JOYPAD:
-      configurePad();
+    case ID_OPTIONS_JOYPAD_CONFIGURE_1:
+      configurePad(0);
+      break;
+    case ID_OPTIONS_JOYPAD_CONFIGURE_2:
+      configurePad(1);
+      break;
+    case ID_OPTIONS_JOYPAD_CONFIGURE_3:
+      configurePad(2);
+      break;
+    case ID_OPTIONS_JOYPAD_CONFIGURE_4:
+      configurePad(3);
+      break;
+    case ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_1:
+      joypadDefault = 0;
+      regSetDwordValue("joypadDefault", joypadDefault);
+      break;
+    case ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_2:
+      joypadDefault = 1;
+      regSetDwordValue("joypadDefault", joypadDefault);
+      break;
+    case ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_3:
+      joypadDefault = 2;
+      regSetDwordValue("joypadDefault", joypadDefault);
+      break;
+    case ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_4:
+      joypadDefault = 3;
+      regSetDwordValue("joypadDefault", joypadDefault);
       break;
     case ID_OPTIONS_JOYPAD_MOTIONCONFIGURE:
       motionConfigurePad();
@@ -4470,6 +4448,9 @@ BOOL initDirectDraw()
   if(ddrawEmulationOnly)
     guid = (GUID *)DDCREATE_EMULATIONONLY;
 
+  if(pVideoDriverGUID)
+    guid = pVideoDriverGUID;
+
   ddrawDLL = LoadLibrary("DDRAW.DLL");
   HRESULT (WINAPI *DDrawCreateEx)(GUID *,LPVOID *,REFIID,IUnknown *);  
   if(ddrawDLL != NULL) {    
@@ -4484,6 +4465,8 @@ BOOL initDirectDraw()
     directXMessage("DDRAW.DLL");
     return FALSE;
   }
+
+  ddrawUsingEmulationOnly = ddrawEmulationOnly;
   
   HRESULT hret = DDrawCreateEx(guid,
                                (void **)&pDirectDraw,
@@ -4531,8 +4514,7 @@ BOOL initDirectDraw()
                                        0,
                                        0);
     if(hret != DD_OK) {
-      videoOption = VIDEO_1X;
-      regSetDwordValue("video", videoOption);
+      winlog("Error SetDisplayMode %08x\n", hret);
       //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
       return FALSE;
     }
@@ -4705,7 +4687,6 @@ BOOL initDirectDraw()
     winlog("G shift: %d\n", systemGreenShift);
     winlog("B shift: %d\n", systemBlueShift);
   }
-
   
   switch(systemColorDepth) {
   case 16:
@@ -4865,6 +4846,19 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   if(videoOption < 0 || videoOption > VIDEO_OTHER)
     videoOption = 0;
 
+  BOOL defaultVideoDriver = regQueryDwordValue("defaultVideoDriver", TRUE) ?
+    TRUE : FALSE;
+
+  if(!regQueryBinaryValue("videoDriverGUID", (char *)&videoDriverGUID,
+                          sizeof(GUID))) {
+    defaultVideoDriver = TRUE;
+  }
+
+  if(defaultVideoDriver)
+    pVideoDriverGUID = NULL;
+  else
+    pVideoDriverGUID = &videoDriverGUID;
+
   fsWidth = regQueryDwordValue("fsWidth", 0);
   fsHeight = regQueryDwordValue("fsHeight", 0);
   fsColorDepth = regQueryDwordValue("fsColorDepth", 0);
@@ -4945,6 +4939,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   autoIPS = regQueryDwordValue("autoIPS", 1);
 
+  cpuDisableSfx = regQueryDwordValue("disableSfx", 0) ? true : false;
+  
   cpuSaveType = regQueryDwordValue("saveType", 0);
   if(cpuSaveType < 0 || cpuSaveType > 4)
     cpuSaveType = 0;
@@ -4976,20 +4972,27 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   }
 
   if(!initDirectDraw()) {
-    if(videoOption >= VIDEO_320x240)
-      regSetDwordValue("video", VIDEO_1X);    
+    if(videoOption >= VIDEO_320x240) {
+      regSetDwordValue("video", VIDEO_1X);
+      if(pVideoDriverGUID)
+        regSetDwordValue("defaultVideoDriver", TRUE);
+    }
     return FALSE;
   }
   if(!initDirectInput())
     return FALSE;
 
-  readKeys();
+  winReadKeys();
 
   if(regQueryDwordValue("joyVersion", 0) == 0) {
     convertKeys();
   }
   
   checkKeys();
+
+  joypadDefault = regQueryDwordValue("joypadDefault", 0);
+  if(joypadDefault < 0 || joypadDefault > 3)
+    joypadDefault = 0;
 
   hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ACCELERATOR));
 
@@ -5053,10 +5056,11 @@ void fileToggleMenu()
   BOOL res = FALSE;
   
   if(menuToggle) {
+    updateMenuBar();
     if(tripleBuffering) {
       pDirectDraw->FlipToGDISurface();
-    }
-    updateMenuBar();
+      DrawMenuBar(hWindow);
+    }    
   } else {
     res = SetMenu(hWindow,NULL);
     DestroyMenu(menu);
@@ -5327,8 +5331,15 @@ BOOL fileOpen()
 #else
     emuCount = 1000;
 #endif
-    if(autoIPS)
-      utilApplyIPS(ipsname, gbRom);
+    if(autoIPS) {
+      int size = gbRomSize;
+      utilApplyIPS(ipsname, &gbRom, &size);
+      if(size != gbRomSize) {
+        extern bool gbUpdateSizes();
+        gbUpdateSizes();
+        gbReset();
+      }
+    }
   } else {
     if(!CPULoadRom(szFile))
       return FALSE;
@@ -5351,8 +5362,13 @@ BOOL fileOpen()
     if(removeIntros && rom != NULL) {
       *((u32 *)rom)= 0xea00002e;
     }
-    if(autoIPS)
-      utilApplyIPS(ipsname, rom);
+    if(autoIPS) {
+      int size = 0x2000000;
+      utilApplyIPS(ipsname, &rom, &size);
+      if(size != 0x2000000) {
+        CPUReset();
+      }
+    }
   }
     
   if(soundInitialized) {

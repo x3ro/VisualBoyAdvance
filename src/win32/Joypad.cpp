@@ -24,12 +24,12 @@ extern void checkKeys();
 extern void checkJoypads();
 extern void checkKeyboard();
 extern void setDeviceFirst();
-extern void saveKeys();
+extern void winSaveKeys();
 extern void winCenterWindow(HWND);
 extern char *getKeyName(int);
 extern HWND hWindow;
 
-extern USHORT joypad[13];
+extern USHORT joypad[4][13];
 extern USHORT motion[4];
 
 #define JOYCONFIG_MESSAGE (WM_USER + 1000)
@@ -71,10 +71,11 @@ class JoypadConfigDlg : public Dlg {
   JoypadEditControl capture;
   JoypadEditControl buttonGS;
   UINT timerId;
+  int which;
 protected:
   DECLARE_MESSAGE_MAP()
 public:
-  JoypadConfigDlg();
+  JoypadConfigDlg(int);
 
   void assignKey(int, int);
   void assignKeys();
@@ -109,11 +110,11 @@ public:
   LRESULT OnCtlColorStatic(WPARAM, LPARAM);
 };
 
-void configurePad()
+void configurePad(int which)
 {
   setDeviceFirst();
   checkKeys();
-  JoypadConfigDlg dlg;
+  JoypadConfigDlg dlg(which);
   dlg.DoModal(IDD_CONFIG,
               hWindow);
 }
@@ -163,53 +164,56 @@ BEGIN_MESSAGE_MAP(JoypadConfigDlg, Dlg)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
 END_MESSAGE_MAP()
 
-JoypadConfigDlg::JoypadConfigDlg()
+JoypadConfigDlg::JoypadConfigDlg(int w)
   : Dlg()
 {
-  timerId = 0;  
+  timerId = 0;
+  which = w;
+  if(which < 0 || which > 3)
+    which = 0;
 }
 
 void JoypadConfigDlg::assignKey(int id,int key)
 {
   switch(id) {
   case IDC_EDIT_LEFT:
-    joypad[KEY_LEFT] = key;
+    joypad[which][KEY_LEFT] = key;
     break;
   case IDC_EDIT_RIGHT:
-    joypad[KEY_RIGHT] = key;
+    joypad[which][KEY_RIGHT] = key;
     break;
   case IDC_EDIT_UP:
-    joypad[KEY_UP] = key;
+    joypad[which][KEY_UP] = key;
     break;
   case IDC_EDIT_SPEED:
-    joypad[KEY_BUTTON_SPEED] = key;
+    joypad[which][KEY_BUTTON_SPEED] = key;
     break;
   case IDC_EDIT_CAPTURE:
-    joypad[KEY_BUTTON_CAPTURE] = key;
+    joypad[which][KEY_BUTTON_CAPTURE] = key;
     break;    
   case IDC_EDIT_DOWN:
-    joypad[KEY_DOWN] = key;
+    joypad[which][KEY_DOWN] = key;
     break;
   case IDC_EDIT_BUTTON_A:
-    joypad[KEY_BUTTON_A] = key;
+    joypad[which][KEY_BUTTON_A] = key;
     break;
   case IDC_EDIT_BUTTON_B:
-    joypad[KEY_BUTTON_B] = key;
+    joypad[which][KEY_BUTTON_B] = key;
     break;
   case IDC_EDIT_BUTTON_L:
-    joypad[KEY_BUTTON_L] = key;
+    joypad[which][KEY_BUTTON_L] = key;
     break;
   case IDC_EDIT_BUTTON_R:
-    joypad[KEY_BUTTON_R] = key;
+    joypad[which][KEY_BUTTON_R] = key;
     break;
   case IDC_EDIT_BUTTON_START:
-    joypad[KEY_BUTTON_START] = key;
+    joypad[which][KEY_BUTTON_START] = key;
     break;
   case IDC_EDIT_BUTTON_SELECT:
-    joypad[KEY_BUTTON_SELECT] = key;
+    joypad[which][KEY_BUTTON_SELECT] = key;
     break;
   case IDC_EDIT_BUTTON_GS:
-    joypad[KEY_BUTTON_GS] = key;
+    joypad[which][KEY_BUTTON_GS] = key;
     break;
   }
 }
@@ -257,7 +261,7 @@ void JoypadConfigDlg::assignKeys()
   id = IDC_EDIT_BUTTON_GS;
   assignKey(id, buttonGS.GetWindowLong(GWL_USERDATA));
 
-  saveKeys();
+  winSaveKeys();
 }
 
 BOOL JoypadConfigDlg::OnInitDialog(LPARAM)
@@ -265,68 +269,68 @@ BOOL JoypadConfigDlg::OnInitDialog(LPARAM)
   timerId = SetTimer(getHandle(),0,200,NULL);
   
   up.SubClassWindow(GetDlgItem(IDC_EDIT_UP));
-  up.SetWindowLong(GWL_USERDATA,joypad[KEY_UP]);
-  up.SetWindowText(getKeyName(joypad[KEY_UP]));
+  up.SetWindowLong(GWL_USERDATA,joypad[which][KEY_UP]);
+  up.SetWindowText(getKeyName(joypad[which][KEY_UP]));
   up.setParent(this);
   
   down.SubClassWindow(GetDlgItem(IDC_EDIT_DOWN));
-  down.SetWindowLong(GWL_USERDATA,joypad[KEY_DOWN]);
-  down.SetWindowText(getKeyName(joypad[KEY_DOWN]));
+  down.SetWindowLong(GWL_USERDATA,joypad[which][KEY_DOWN]);
+  down.SetWindowText(getKeyName(joypad[which][KEY_DOWN]));
   down.setParent(this);
 
   left.SubClassWindow(GetDlgItem(IDC_EDIT_LEFT));
-  left.SetWindowLong(GWL_USERDATA,joypad[KEY_LEFT]);
-  left.SetWindowText(getKeyName(joypad[KEY_LEFT]));
+  left.SetWindowLong(GWL_USERDATA,joypad[which][KEY_LEFT]);
+  left.SetWindowText(getKeyName(joypad[which][KEY_LEFT]));
   left.setParent(this);
 
   right.SubClassWindow(GetDlgItem(IDC_EDIT_RIGHT));
-  right.SetWindowLong(GWL_USERDATA,joypad[KEY_RIGHT]);
-  right.SetWindowText(getKeyName(joypad[KEY_RIGHT]));
+  right.SetWindowLong(GWL_USERDATA,joypad[which][KEY_RIGHT]);
+  right.SetWindowText(getKeyName(joypad[which][KEY_RIGHT]));
   right.setParent(this);
 
   buttonA.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_A));
-  buttonA.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_A]);
-  buttonA.SetWindowText(getKeyName(joypad[KEY_BUTTON_A]));
+  buttonA.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_A]);
+  buttonA.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_A]));
   buttonA.setParent(this);
 
   buttonB.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_B));
-  buttonB.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_B]);
-  buttonB.SetWindowText(getKeyName(joypad[KEY_BUTTON_B]));
+  buttonB.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_B]);
+  buttonB.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_B]));
   buttonB.setParent(this);
   
   buttonL.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_L));
-  buttonL.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_L]);
-  buttonL.SetWindowText(getKeyName(joypad[KEY_BUTTON_L]));
+  buttonL.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_L]);
+  buttonL.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_L]));
   buttonL.setParent(this);
 
   buttonR.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_R));
-  buttonR.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_R]);
-  buttonR.SetWindowText(getKeyName(joypad[KEY_BUTTON_R]));
+  buttonR.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_R]);
+  buttonR.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_R]));
   buttonR.setParent(this);
   
   buttonSelect.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_SELECT));
-  buttonSelect.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_SELECT]);
-  buttonSelect.SetWindowText(getKeyName(joypad[KEY_BUTTON_SELECT]));
+  buttonSelect.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_SELECT]);
+  buttonSelect.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_SELECT]));
   buttonSelect.setParent(this);
 
   buttonStart.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_START));
-  buttonStart.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_START]);
-  buttonStart.SetWindowText(getKeyName(joypad[KEY_BUTTON_START]));
+  buttonStart.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_START]);
+  buttonStart.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_START]));
   buttonStart.setParent(this);
 
   speed.SubClassWindow(GetDlgItem(IDC_EDIT_SPEED));
-  speed.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_SPEED]);
-  speed.SetWindowText(getKeyName(joypad[KEY_BUTTON_SPEED]));
+  speed.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_SPEED]);
+  speed.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_SPEED]));
   speed.setParent(this);
   
   capture.SubClassWindow(GetDlgItem(IDC_EDIT_CAPTURE));
-  capture.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_CAPTURE]);
-  capture.SetWindowText(getKeyName(joypad[KEY_BUTTON_CAPTURE]));
+  capture.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_CAPTURE]);
+  capture.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_CAPTURE]));
   capture.setParent(this);
 
   buttonGS.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_GS));
-  buttonGS.SetWindowLong(GWL_USERDATA,joypad[KEY_BUTTON_GS]);
-  buttonGS.SetWindowText(getKeyName(joypad[KEY_BUTTON_GS]));
+  buttonGS.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_GS]);
+  buttonGS.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_GS]));
   buttonGS.setParent(this);
   
   winCenterWindow(getHandle());
