@@ -92,6 +92,8 @@ int soundShiftClock[16]= {
   1      // 15
 };
 
+int soundVolume = 0;
+
 u8 soundBuffer[6][735];
 u16 soundFinalWave[1470];
 
@@ -908,39 +910,31 @@ void soundMix()
 {
   int res = 0;
   int cgbRes = 0;
-  int channelsOn = 0;
   int ratio = ioMem[0x82] & 3;
   int dsaRatio = ioMem[0x82] & 4;
   int dsbRatio = ioMem[0x82] & 8;
   
   if(soundBalance & 16) {
     cgbRes = ((s8)soundBuffer[0][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 32) {
     cgbRes += ((s8)soundBuffer[1][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 64) {
     cgbRes += ((s8)soundBuffer[2][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 128) {
     cgbRes += ((s8)soundBuffer[3][soundIndex]);
-    channelsOn++;
   }
 
-  if(channelsOn)
-    cgbRes = cgbRes/channelsOn;
-  
   if((soundControl & 0x0200) && (soundEnableFlag & 0x100))
     res = ((s8)soundBuffer[4][soundIndex]);
   
   if((soundControl & 0x2000) && (soundEnableFlag & 0x200))
     res += ((s8)soundBuffer[5][soundIndex]);
   
-  res = (res * 125);
-  cgbRes = (cgbRes * 150 * soundLevel1);
+  res = (res * 170);
+  cgbRes = (cgbRes * 52 * soundLevel1);
 
   switch(ratio) {
   case 0:
@@ -975,6 +969,8 @@ void soundMix()
     res = (soundLeft[4] + 2*soundLeft[3] + 8*soundLeft[2] + 2*soundLeft[1] +
            soundLeft[0])/14;
   }
+
+  res *= (soundVolume+1);
   
   if(res > 32767)
     res = 32767;
@@ -988,28 +984,20 @@ void soundMix()
   
   res = 0;
   cgbRes = 0;
-  channelsOn = 0;
   
   if(soundBalance & 1) {
     cgbRes = ((s8)soundBuffer[0][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 2) {
     cgbRes += ((s8)soundBuffer[1][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 4) {
     cgbRes += ((s8)soundBuffer[2][soundIndex]);
-    channelsOn++;
   }
   if(soundBalance & 8) {
     cgbRes += ((s8)soundBuffer[3][soundIndex]);
-    channelsOn++;
   }
 
-  if(channelsOn)
-    cgbRes /= channelsOn;
-  
   if((soundControl & 0x0100) && (soundEnableFlag & 0x100))
     res = ((s8)soundBuffer[4][soundIndex]);
   
@@ -1017,8 +1005,8 @@ void soundMix()
     res += ((s8)soundBuffer[5][soundIndex]);      
   }
 
-  res = (res * 125);
-  cgbRes = (cgbRes * 150 * soundLevel1);
+  res = (res * 170);
+  cgbRes = (cgbRes * 52 * soundLevel1);
   
   switch(ratio) {
   case 0:
@@ -1052,10 +1040,12 @@ void soundMix()
     soundRight[3] = soundRight[2];
     soundRight[2] = soundRight[1];
     soundRight[1] = soundRight[0];
-    soundRight[0] = res;    
-    res = (soundRight[4] + 2*soundRight[3] + 8*soundRight[2] + 2*soundRight[1] +
-           soundRight[0])/14;
+    soundRight[0] = res;
+    res = (soundLeft[4] + 2*soundLeft[3] + 8*soundLeft[2] + 2*soundLeft[1] +
+           soundLeft[0])/14;
   }
+
+  res *= (soundVolume+1);
   
   if(res > 32767)
     res = 32767;

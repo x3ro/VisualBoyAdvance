@@ -72,5 +72,6 @@ extern int soundBufferLen;
 extern int soundBufferTotalLen;
 extern u32 soundNextPosition;
 extern u16 soundFinalWave[1470];
+extern int soundVolume;
 
 #endif // VBA_SOUND_H

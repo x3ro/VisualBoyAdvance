@@ -990,6 +990,10 @@ soundQuality);
       soundLowPass = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "soundReverse")) {
       soundReverse = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "soundVolume")) {
+      soundVolume = sdlFromHex(value);
+      if(soundVolume < 0 || soundVolume > 3)
+        soundVolume = 0;
     } else if(!strcmp(key, "removeIntros")) {
       removeIntros = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "saveType")) {

@@ -1461,6 +1461,18 @@ void updateSoundMenu(HMENU menu)
                 CHECKMENUSTATE(soundQuality == 2));
   CheckMenuItem(menu, ID_OPTIONS_SOUND_44KHZ,
                 CHECKMENUSTATE(soundQuality == 1));
+
+  HMENU sub = GetSubMenu(menu, 21);
+  if(sub != NULL) {
+    CheckMenuItem(menu, ID_OPTIONS_SOUND_VOLUME_1X,
+                  CHECKMENUSTATE(soundVolume == 0));
+    CheckMenuItem(menu, ID_OPTIONS_SOUND_VOLUME_2X,
+                  CHECKMENUSTATE(soundVolume == 1));
+    CheckMenuItem(menu, ID_OPTIONS_SOUND_VOLUME_3X,
+                  CHECKMENUSTATE(soundVolume == 2));
+    CheckMenuItem(menu, ID_OPTIONS_SOUND_VOLUME_4X,
+                  CHECKMENUSTATE(soundVolume == 3));    
+  }
 }
 
 void updateGameboyMenu(HMENU menu)
@@ -3243,7 +3255,11 @@ void fileExportGSASnapshot()
     return;
   }
 
-  fileExportSPSSnapshot(szFile, p);
+  char buffer[16];
+  strncpy(buffer, &rom[0xa0], 12);
+  buffer[12] = 0;
+
+  fileExportSPSSnapshot(szFile, buffer);
 }
 
 extern void helpAbout();
@@ -3805,6 +3821,26 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         gbSoundSetQuality(1);
       regSetDwordValue("soundQuality",
                        soundQuality);      
+      break;
+    case ID_OPTIONS_SOUND_VOLUME_1X:
+      soundVolume = 0;
+      regSetDwordValue("soundVolume",
+                       soundVolume);
+      break;
+    case ID_OPTIONS_SOUND_VOLUME_2X:
+      soundVolume = 1;
+      regSetDwordValue("soundVolume",
+                       soundVolume);
+      break;
+    case ID_OPTIONS_SOUND_VOLUME_3X:
+      soundVolume = 2;
+      regSetDwordValue("soundVolume",
+                       soundVolume);
+      break;
+    case ID_OPTIONS_SOUND_VOLUME_4X:
+      soundVolume = 3;
+      regSetDwordValue("soundVolume",
+                       soundVolume);
       break;
     case ID_OPTIONS_SOUND_STARTRECORDING:
       fileSoundRecord();
@@ -4610,6 +4646,10 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   soundLowPass = regQueryDwordValue("soundLowPass", 0) ? true : false;
 
   soundReverse = regQueryDwordValue("soundReverse", 0) ? true : false;
+
+  soundVolume = regQueryDwordValue("soundVolume", 0);
+  if(soundVolume < 0 || soundVolume > 3)
+    soundVolume = 0;
 
   ddrawEmulationOnly = regQueryDwordValue("ddrawEmulationOnly", 0);
   ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", 0);

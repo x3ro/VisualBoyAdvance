@@ -1,5 +1,7 @@
 2002-12-09  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/win32/Win32.cpp (fileExportGSASnapshot): change default title to internal name
+	* src/win32/Win32.cpp (WindowProc): added sound volume option
 	* src/win32/Win32.cpp (updateFileMenu): allow pausing even if not emulating yet
 	* src/win32/Win32.cpp: added AVI writing support
 
