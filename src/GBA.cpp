@@ -3340,10 +3340,7 @@ void CPULoop(int ticks)
     cpuLoopTicks -= clockTicks;
     if((cpuLoopTicks <= 0)) {
       if(cpuSavedTicks) {
-        if(cpuLoopTicks <= 0)
-          clockTicks = cpuSavedTicks;// + cpuLoopTicks;
-        else
-          clockTicks = cpuSavedTicks - cpuLoopTicks;
+        clockTicks = cpuSavedTicks;// + cpuLoopTicks;
       }
 
     updateLoop:
@@ -3431,7 +3428,8 @@ void CPULoop(int ticks)
               }
               
               u32 ext = (joy >> 10);
-              cheatsCheckKeys(P1^0x3FF, ext);
+              int cheatTicks = cheatsCheckKeys(P1^0x3FF, ext);
+              cpuDmaTicksToUpdate += cheatTicks;
               speedup = (ext & 1) ? true : false;
               capture = (ext & 2) ? true : false;
               

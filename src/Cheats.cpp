@@ -134,6 +134,7 @@
 #define GSA_8_BIT_IF_FALSE2    28
 #define GSA_16_BIT_IF_FALSE2   29
 #define GSA_32_BIT_IF_FALSE2   30
+#define GSA_SLOWDOWN           31
 
 CheatSearch cheatSearch;
 CheatsData cheatsList[100];
@@ -185,6 +186,7 @@ static bool isMultilineWithData(int i)
     case GSA_8_BIT_IF_FALSE2:
     case GSA_16_BIT_IF_FALSE2:
     case GSA_32_BIT_IF_FALSE2:
+    case GSA_SLOWDOWN:
       return false;
       // the codes below have two lines of data
     case CBA_SLIDE_CODE:
@@ -217,6 +219,7 @@ static int getCodeLength(int num)
   case CBA_AND:
   case GSA_8_BIT_FILL:
   case GSA_16_BIT_FILL:
+  case GSA_SLOWDOWN:
     return 1;
   case CBA_IF_KEYS_PRESSED:
   case CBA_IF_TRUE:
@@ -245,8 +248,9 @@ static int getCodeLength(int num)
   return 1;
 }
 
-void cheatsCheckKeys(u32 keys, u32 extended)
+int cheatsCheckKeys(u32 keys, u32 extended)
 {
+  int ticks = 0;
   for(int i = 0; i < cheatsNumber; i++) {
     if(!cheatsList[i].enabled) {
       // make sure we skip other lines in this code
@@ -484,8 +488,21 @@ void cheatsCheckKeys(u32 keys, u32 extended)
         i+=2;
       }
       break;
+    case GSA_SLOWDOWN:
+      // check if button was pressed and released, if so toggle our state
+      if((cheatsList[i].status & 4) && !(extended & 4))
+        cheatsList[i].status ^= 1;
+      if(extended & 4)
+        cheatsList[i].status |= 4;
+      else
+        cheatsList[i].status &= ~4;
+      
+      if(cheatsList[i].status & 1)
+        ticks += 2*256*((cheatsList[i].value >> 8) & 255);
+      break;
     }
   }
+  return ticks;
 }
 
 void cheatsAdd(char *codeStr,
@@ -957,6 +974,9 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
         type = (value >> 25) & 127;
         addr = (value & 0x00F00000) << 4 | (value & 0x0003FFFF);
         switch(type) {
+        case 0x04:
+          cheatsAdd(code, desc, 0, value & 0x00FFFFFF, 257, GSA_SLOWDOWN);
+          break;
         case 0x08:
           cheatsAdd(code, desc, 0, addr, 257, GSA_8_BIT_GS_WRITE2);
           break;
@@ -1067,6 +1087,9 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
       case 3:
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
                   GSA_32_BIT_GS_WRITE);
+      case 15:
+        cheatsAdd(code, desc, 0, value & 0xFF00, 256, GSA_SLOWDOWN);
+        break;
       default:
         // unsupported code
         cheatsAdd(code, desc, address, value, 256, 

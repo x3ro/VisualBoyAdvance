@@ -147,7 +147,7 @@ extern bool cheatsLoadCheatList(char *file);
 extern void cheatsWriteMemory(u32 *, u32, u32);
 extern void cheatsWriteHalfWord(u16 *, u16, u16);
 extern void cheatsWriteByte(u8 *, u8);
-extern void cheatsCheckKeys(u32,u32);
+extern int cheatsCheckKeys(u32,u32);
 extern int cheatsNumber;
 extern CheatsData cheatsList[100];
 
