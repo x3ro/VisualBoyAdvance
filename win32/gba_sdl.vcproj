@@ -251,16 +251,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="GP"
-				Filter="">
-				<File
-					RelativePath="..\src\gp\GP.cpp">
-				</File>
-				<File
-					RelativePath="..\src\gp\gpGfxRender.cpp">
-				</File>
-			</Filter>
-			<Filter
 				Name="SDL"
 				Filter="">
 				<File
