@@ -114,7 +114,9 @@ extern void GPUpdateCPSR();
 #endif
 
 bool (*emuWriteState)(char *) = NULL;
+bool (*emuWriteMemState)(char *, int) = NULL;
 bool (*emuReadState)(char *) = NULL;
+bool (*emuReadMemState)(char *, int) = NULL;
 bool (*emuWriteBattery)(char *) = NULL;
 bool (*emuReadBattery)(char *) = NULL;
 void (*emuReset)() = NULL;
@@ -182,6 +184,16 @@ char biosFileName[2048];
 char captureDir[2048];
 char saveDir[2048];
 char batteryDir[2048];
+
+static char *rewindMemory = NULL;
+static int rewindPos = 0;
+static int rewindTopPos = 0;
+static int rewindCounter = 0;
+static int rewindCount = 0;
+static bool rewindSaveNeeded = false;
+static int rewindTimer = 600;
+
+#define REWIND_SIZE 400000
 
 #define _stricmp strcasecmp
 
@@ -1188,6 +1200,10 @@ void sdlReadPreferences(FILE *f)
       sdlAgbPrint = sdlFromHex(value);
     } else if(!strcmp(key, "rtcEnabled")) {
       sdlRtcEnable = sdlFromHex(value);
+    } else if(!strcmp(key, "rewindTimer")) {
+      rewindTimer = sdlFromHex(value) * 60; // convert value to frames
+      if(rewindTimer < 600 || rewindTimer > 60*60*10)
+        rewindTimer = 600;
     } else {
       fprintf(stderr, "Unknown configuration key %s\n", key);
     }
@@ -1694,6 +1710,18 @@ void sdlPollEvents()
           }
         }
         break;
+      case SDLK_b:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          if(emulating && emuReadMemState && rewindMemory && rewindCount) {
+            rewindPos = --rewindPos & 7;
+            emuReadMemState(&rewindMemory[REWIND_SIZE*rewindPos], REWIND_SIZE);
+            rewindCount--;
+            rewindCounter = 0;
+            systemScreenMessage("Rewind");
+          }
+        }
+        break;
       case SDLK_p:
         if(!(event.key.keysym.mod & MOD_NOCTRL) &&
            (event.key.keysym.mod & KMOD_CTRL)) {
@@ -2107,6 +2135,8 @@ int main(int argc, char **argv)
     cpu_mmx = 0;
 #endif
 
+  rewindMemory = (char *)malloc(8*REWIND_SIZE);
+
   if(sdlFlashSize == 0)
     flashSetSize(0x10000);
   else
@@ -2161,7 +2191,9 @@ int main(int argc, char **argv)
       if(!failed) {
         cartridgeType = 1;
         emuWriteState = gbWriteSaveState;
+        emuWriteMemState = gbWriteMemSaveState;
         emuReadState = gbReadSaveState;
+        emuReadMemState = gbReadMemSaveState;
         emuWriteBattery = gbWriteBatteryFile;
         emuReadBattery = gbReadBatteryFile;
         emuReset = gbReset;
@@ -2189,7 +2221,9 @@ int main(int argc, char **argv)
         
         cartridgeType = 0;
         emuWriteState = CPUWriteState;
+        emuWriteMemState = CPUWriteMemState;
         emuReadState = CPUReadState;
+        emuReadMemState = CPUReadMemState;
         emuWriteBattery = CPUWriteBatteryFile;
         emuReadBattery = CPUReadBatteryFile;
         emuReset = CPUReset;
@@ -2547,8 +2581,23 @@ int main(int argc, char **argv)
     if(!paused && active) {
       if(debugger && emuHasDebugger)
         dbgMain();
-      else
+      else {
         emuMain(emuCount);
+        if(rewindSaveNeeded && rewindMemory && emuWriteMemState) {
+          rewindCount++;
+          if(rewindCount > 8)
+            rewindCount = 8;
+          if(emuWriteMemState &&
+             emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
+                              REWIND_SIZE)) {
+            rewindPos = ++rewindPos & 7;
+            if(rewindCount == 8)
+              rewindTopPos = ++rewindTopPos & 7;
+          }
+        }
+
+        rewindSaveNeeded = false;
+      }
     } else {
       SDL_Delay(500);
     }
@@ -2800,6 +2849,12 @@ void systemShowSpeed(int speed)
 
 void systemFrame()
 {
+  if(rewindMemory) {
+    if(++rewindCounter == rewindTimer) {
+      rewindSaveNeeded = true;
+      rewindCounter = 0;
+    }
+  }
 }
 
 void system10Frames(int rate)
