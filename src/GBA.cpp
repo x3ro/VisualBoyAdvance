@@ -3449,9 +3449,9 @@ void CPULoop(int ticks)
     if(!holdState) {
       if(armState) {
         clockTicks = 1;
-#include "arm-new.cpp"
+#include "arm-new.h"
       } else {
-#include "thumb.cpp"
+#include "thumb.h"
       }
     } else {
       clockTicks = lcdTicks;
