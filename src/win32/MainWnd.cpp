@@ -1098,7 +1098,12 @@ void MainWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
   }
 
   if(theApp.paused && emulating)
+  {
+    theApp.painting = true;
     systemDrawScreen();
+    theApp.painting = false;
+    theApp.renderedFrames--;
+  }
 }
 
 #if _MSC_VER <= 1200
