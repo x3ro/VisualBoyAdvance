@@ -118,7 +118,7 @@ static int rewindTopPos = 0;
 static int rewindCounter = 0;
 static int rewindCount = 0;
 static bool rewindSaveNeeded = false;
-static int rewindTimer = 10*60;
+static int rewindTimer = 0;
 #define REWIND_SIZE 400000
 
 bool movieRecording = false;
@@ -4261,11 +4261,22 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_OPTIONS_EMULATOR_REWINDINTERVAL:
       {
-        int v = optionsRewindInterval(rewindTimer/60);
+        int v = optionsRewindInterval(rewindTimer/6);
 
-        if(v) {
-          rewindTimer = v*60;
+        if(v >= 0) {
+          rewindTimer = v*6; // convert to a multiple of 10 frames
           regSetDwordValue("rewindTimer", v);
+          if(rewindTimer == 0) {
+            if(rewindMemory)
+              free(rewindMemory);
+            rewindMemory = NULL;
+            rewindCount = 0;
+            rewindCounter = 0;
+            rewindSaveNeeded = false;
+          } else {
+            if(rewindMemory == NULL)
+              rewindMemory = (char *)malloc(8*REWIND_SIZE);
+          }
         }
       }
       break;
@@ -5165,12 +5176,13 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   rewindTimer = regQueryDwordValue("rewindTimer", 10);
 
-  if(rewindTimer < 10 || rewindTimer > 600)
-    rewindTimer = 10;
+  if(rewindTimer < 0 || rewindTimer > 600)
+    rewindTimer = 0;
 
-  rewindTimer *= 60; // convert to frames
-
-  rewindMemory = (char *)malloc(8*REWIND_SIZE);
+  rewindTimer *= 6; // convert to 10 frames multiple
+  
+  if(rewindTimer != 0)
+    rewindMemory = (char *)malloc(8*REWIND_SIZE);
 
   return TRUE;
 }
@@ -6188,6 +6200,12 @@ void fileAVIRecord()
 
 void fileMoviePlay()
 {
+  if(MessageBox(hWindow,
+                winResLoadString(IDS_MOVIE_PLAY),
+                winResLoadString(IDS_CONFIRM_ACTION),
+                MB_OKCANCEL) == IDCANCEL)
+    return;
+
   char captureBuffer[2048];
   captureBuffer[0] = 0;
   OPENFILENAME ofn;
@@ -6465,12 +6483,6 @@ void systemFrame()
     aviFrameNumber++;
   if(movieRecording | moviePlaying)
     movieFrame++;
-  if(rewindMemory) {
-    if(++rewindCounter >= (rewindTimer)) {
-      rewindSaveNeeded = true;
-      rewindCounter = 0;
-    }
-  }
 }
 
 void system10Frames(int rate)
@@ -6516,6 +6528,12 @@ void system10Frames(int rate)
       }
     }
     throttleLastTime = systemGetClock();
+  }
+  if(rewindMemory) {
+    if(++rewindCounter >= (rewindTimer)) {
+      rewindSaveNeeded = true;
+      rewindCounter = 0;
+    }
   }
   wasPaused = FALSE;
   autoFrameSkipLastTime = time;

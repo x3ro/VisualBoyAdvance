@@ -1112,16 +1112,17 @@ BEGIN
     CTEXT           "",IDC_TIMER,7,19,172,8
 END
 
-IDD_REWIND_INTERVAL DIALOG DISCARDABLE  0, 0, 186, 63
+IDD_REWIND_INTERVAL DIALOG DISCARDABLE  0, 0, 186, 68
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Select rewind interval"
 FONT 8, "MS Sans Serif"
 BEGIN
-    EDITTEXT        IDC_INTERVAL,7,20,172,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",ID_OK,37,42,50,14
-    PUSHBUTTON      "Cancel",ID_CANCEL,99,42,50,14
-    LTEXT           "Enter rewind interval (10...600) seconds:",IDC_STATIC,7,
+    EDITTEXT        IDC_INTERVAL,7,28,172,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",ID_OK,37,47,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,99,47,50,14
+    LTEXT           "Enter rewind interval (0...600) seconds:",IDC_STATIC,7,
                     7,172,8
+    LTEXT           "Enter 0 to disable rewind.",IDC_STATIC,7,17,172,8
 END
 
 
@@ -1439,7 +1440,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 179
         TOPMARGIN, 7
-        BOTTOMMARGIN, 56
+        BOTTOMMARGIN, 61
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -2223,8 +2224,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_INVALID_INTERVAL_VALUE 
-                            "Invalid rewind interval value. Please enter a number between 10 and 600 seconds."
+                            "Invalid rewind interval value. Please enter a number between 0 and 600 seconds."
     IDS_REGISTRY            "VisualBoyAdvance no longer uses the registry to store its settings. Your previous settings have been exported into the file: %s"
+    IDS_MOVIE_PLAY          "Playing a movie will load a save state which may erase your previous battery saves. Please be sure to have a saved state if you don't want to loose any previous data."
 END
 
 #endif    // English (U.S.) resources

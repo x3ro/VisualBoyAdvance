@@ -370,6 +370,7 @@
 #define IDS_REGISTRY                    1137
 #define IDC_SAVE_OBJ                    1138
 #define IDC_MAP_VIEW_ZOOM               1138
+#define IDS_MOVIE_PLAY                  1138
 #define IDC_VIEWER                      1140
 #define IDC_ADDRESSES                   1141
 #define IDC_GO                          1143

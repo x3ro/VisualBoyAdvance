@@ -54,12 +54,11 @@ BOOL RewindDlg::OnInitDialog(LPARAM value)
 
   ::SendMessage(h, EM_LIMITTEXT, 3, 0);
 
-  if(value != 0) {
-    char buffer[16];
-    sprintf(buffer, "%d", value);
-    ::SetWindowText(h, buffer);
-    interval = value;
-  }
+  char buffer[16];
+  sprintf(buffer, "%d", value);
+  ::SetWindowText(h, buffer);
+  interval = value;
+
   winCenterWindow(hWnd);
   
   return TRUE;
@@ -72,17 +71,17 @@ void RewindDlg::OnOk()
   ::GetWindowText(GetDlgItem(IDC_INTERVAL), buffer, 16);
   int v = atoi(buffer);
 
-  if(v >= 10 && v <= 600) {
+  if(v >= 0 && v <= 600) {
     EndDialog(v);
   } else
     systemMessage(IDS_INVALID_INTERVAL_VALUE, 
                   "Invalid rewind interval value. Please enter a number "
-                  "between 10 and 600 seconds");
+                  "between 0 and 600 seconds");
 }
 
 void RewindDlg::OnCancel()
 {
-  EndDialog(FALSE);
+  EndDialog(-1);
 }
 
 extern HWND hWindow;
