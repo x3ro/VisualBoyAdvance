@@ -874,7 +874,7 @@ BOOL GBACheatList::OnInitDialog()
   restoreValues = regQueryDwordValue("cheatsRestore", 0) ?
     true : false;
   
-  UpdateData(FALSE);
+  m_restore.SetCheck(restoreValues);
   
   refresh();
   GetDlgItem(IDC_REMOVE)->EnableWindow(FALSE);
