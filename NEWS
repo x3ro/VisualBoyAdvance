@@ -5,6 +5,7 @@ Core changes:
 - added support for AR codes (thanks parasytic and pokemonhacker)
 - no longer allow L+R or U+D to be reported as pressed
 - fixed RTC problem on last day of the month
+- fixed bug with some cheat codes that caused an invalid ROM patch
 
 Windows:
 - added skin button support

@@ -1,3 +1,7 @@
+2003-06-04  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/Cheats.cpp (cheatsAdd): fixed bug that changed ROM with some codes
+
 2003-06-03  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/RTC.cpp (rtcWrite): fixed problem on last day of the month
