@@ -9,9 +9,9 @@ ac_cv_use_gp=$enableval, ac_cv_use_gp=no)
 AC_CACHE_CHECK(whether to enable GP32 emulation, ac_cv_use_gp, ac_cv_use_gp=no)
 
 AC_ARG_ENABLE(c-core,
-[  --enable-c-core         enable C core (default is NO)],
-ac_cv_use_c_core=$enableval, ac_cv_use_c_core=no)
-AC_CACHE_CHECK(whether to enable C core, ac_cv_use_c_core, ac_cv_use_c_core=no)
+[  --enable-c-core         enable C core (default is YES)],
+ac_cv_use_c_core=$enableval, ac_cv_use_c_core=yes)
+AC_CACHE_CHECK(whether to enable C core, ac_cv_use_c_core, ac_cv_use_c_core=yes)
 
 AC_ARG_WITH(dev,
 [  --enable-dev            enable development features (default is YES)],
@@ -19,9 +19,9 @@ ac_cv_use_dev=$withval, ac_cv_use_dev=yes)
 AC_CACHE_CHECK(whether to enable development features, ac_cv_use_dev, ac_cv_use_dev=no)
 
 AC_ARG_WITH(mmx,
-[  --with-mmx              use MMX (default is YES)],
-ac_cv_use_mmx=$withval, ac_cv_use_mmx=yes)
-AC_CACHE_CHECK(whether to use mmx, ac_cv_use_mmx, ac_cv_use_mmx=yes)
+[  --with-mmx              use MMX (default is NO)],
+ac_cv_use_mmx=$withval, ac_cv_use_mmx=no)
+AC_CACHE_CHECK(whether to use mmx, ac_cv_use_mmx, ac_cv_use_mmx=no)
 
 PACKAGE=VisualBoyAdvance
 VERSION=1.2

@@ -14,11 +14,11 @@ ac_default_prefix=/usr/local
 ac_help="$ac_help
   --enable-gp             enable GP32 emulation (default is NO)"
 ac_help="$ac_help
-  --enable-c-core         enable C core (default is NO)"
+  --enable-c-core         enable C core (default is YES)"
 ac_help="$ac_help
   --enable-dev            enable development features (default is YES)"
 ac_help="$ac_help
-  --with-mmx              use MMX (default is YES)"
+  --with-mmx              use MMX (default is NO)"
 ac_help="$ac_help
   --with-x                use the X Window System"
 
@@ -808,7 +808,7 @@ if test "${enable_c_core+set}" = set; then
   enableval="$enable_c_core"
   ac_cv_use_c_core=$enableval
 else
-  ac_cv_use_c_core=no
+  ac_cv_use_c_core=yes
 fi
 
 echo $ac_n "checking whether to enable C core""... $ac_c" 1>&6
@@ -816,7 +816,7 @@ echo "configure:816: checking whether to enable C core" >&5
 if eval "test \"`echo '$''{'ac_cv_use_c_core'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  ac_cv_use_c_core=no
+  ac_cv_use_c_core=yes
 fi
 
 echo "$ac_t""$ac_cv_use_c_core" 1>&6
@@ -844,7 +844,7 @@ if test "${with_mmx+set}" = set; then
   withval="$with_mmx"
   ac_cv_use_mmx=$withval
 else
-  ac_cv_use_mmx=yes
+  ac_cv_use_mmx=no
 fi
 
 echo $ac_n "checking whether to use mmx""... $ac_c" 1>&6
@@ -852,7 +852,7 @@ echo "configure:852: checking whether to use mmx" >&5
 if eval "test \"`echo '$''{'ac_cv_use_mmx'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
-  ac_cv_use_mmx=yes
+  ac_cv_use_mmx=no
 fi
 
 echo "$ac_t""$ac_cv_use_mmx" 1>&6
