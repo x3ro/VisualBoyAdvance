@@ -32,10 +32,11 @@ TestEmu_LDFLAGS =
 
 EXTRA_DIST = \
 	gp i386 win32 VisualBoyAdvance.cfg \
-	expr.l expr.y arm-new.cpp thumb.cpp getopt.c
+	expr.l expr.y arm-new.cpp thumb.cpp getopt.c getopt1.c getopt.h qt
 
 dist-hook:
 	rm -rf `find $(distdir)/gp -name CVS`
 	rm -rf `find $(distdir)/i386 -name CVS`
 	rm -rf `find $(distdir)/win32 -name CVS`
+	rm -rf `find $(distdir)/qt -name CVS`
 

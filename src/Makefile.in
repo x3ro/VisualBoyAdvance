@@ -119,7 +119,7 @@ TestEmu_LDFLAGS =
 
 EXTRA_DIST = \
 	gp i386 win32 VisualBoyAdvance.cfg \
-	expr.l expr.y arm-new.cpp thumb.cpp getopt.c
+	expr.l expr.y arm-new.cpp thumb.cpp getopt.c getopt1.c getopt.h qt
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
@@ -485,6 +485,7 @@ dist-hook:
 	rm -rf `find $(distdir)/gp -name CVS`
 	rm -rf `find $(distdir)/i386 -name CVS`
 	rm -rf `find $(distdir)/win32 -name CVS`
+	rm -rf `find $(distdir)/qt -name CVS`
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
