@@ -27,6 +27,7 @@
 #include "Display.h"
 #include "Reg.h"
 #include "resource.h"
+#include "skin.h"
 
 enum {
   VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
@@ -78,6 +79,7 @@ extern bool screenMessage;
 extern char screenMessageBuffer[41];
 extern DWORD screenMessageTime;
 extern bool disableStatusMessage;
+extern CSkin *skin;
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -378,7 +380,7 @@ void GDIDisplay::render()
                         filterHeight);
   }
 
-  if(videoOption > VIDEO_4X && showSpeed) {
+  if(showSpeed && (videoOption > VIDEO_4X || skin != NULL)) {
     char buffer[30];
     if(showSpeed == 1)
       sprintf(buffer, "%3d%%", systemSpeed);
