@@ -1247,6 +1247,14 @@ void updateFrameSkipMenu(HMENU menu)
                   CHECKMENUSTATE(frameSkip == 4));
     CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_5,
                   CHECKMENUSTATE(frameSkip == 5));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_6,
+                  CHECKMENUSTATE(frameSkip == 6));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_7,
+                  CHECKMENUSTATE(frameSkip == 7));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_8,
+                  CHECKMENUSTATE(frameSkip == 8));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_9,
+                  CHECKMENUSTATE(frameSkip == 9));
   } else {
     CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_0,
                   CHECKMENUSTATE(gbFrameSkip == 0));
@@ -1260,6 +1268,14 @@ void updateFrameSkipMenu(HMENU menu)
                   CHECKMENUSTATE(gbFrameSkip == 4));
     CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_5,
                   CHECKMENUSTATE(gbFrameSkip == 5));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_6,
+                  CHECKMENUSTATE(gbFrameSkip == 6));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_7,
+                  CHECKMENUSTATE(gbFrameSkip == 7));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_8,
+                  CHECKMENUSTATE(gbFrameSkip == 8));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_9,
+                  CHECKMENUSTATE(gbFrameSkip == 9));
   }
 }
 
@@ -3398,6 +3414,18 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         regSetDwordValue("gbFrameSkip", gbFrameSkip);   
       }
       break;
+    case ID_OPTIONS_VIDEO_FRAMESKIP_6:
+    case ID_OPTIONS_VIDEO_FRAMESKIP_7:
+    case ID_OPTIONS_VIDEO_FRAMESKIP_8:
+    case ID_OPTIONS_VIDEO_FRAMESKIP_9:
+      if(cartridgeType == 0) {
+        frameSkip = 6 + (wParam&0xffff) - ID_OPTIONS_VIDEO_FRAMESKIP_6;
+        regSetDwordValue("frameSkip", frameSkip);
+      } else {
+        gbFrameSkip = 6 + (wParam&0xffff) - ID_OPTIONS_VIDEO_FRAMESKIP_6;
+        regSetDwordValue("gbFrameSkip", gbFrameSkip);   
+      }
+      break;
     case ID_OPTIONS_VIDEO_VSYNC:
       vsync = !vsync;
       regSetDwordValue("vsync", vsync);
@@ -4322,11 +4350,11 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   winSetLanguageOption(languageOption, true);
   
   frameSkip = regQueryDwordValue("frameSkip", 2);
-  if(frameSkip < 0 || frameSkip > 5)
+  if(frameSkip < 0 || frameSkip > 9)
     frameSkip = 2;
 
   gbFrameSkip = regQueryDwordValue("gbFrameSkip", 0);
-  if(gbFrameSkip < 0 || gbFrameSkip > 5)
+  if(gbFrameSkip < 0 || gbFrameSkip > 9)
     gbFrameSkip = 0;
   
   vsync = regQueryDwordValue("vsync", 0);

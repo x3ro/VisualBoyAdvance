@@ -1178,6 +1178,14 @@ BEGIN
 
             MENUITEM "&5",                          ID_OPTIONS_VIDEO_FRAMESKIP_5
 
+            MENUITEM "&6",                          ID_OPTIONS_VIDEO_FRAMESKIP_6
+
+            MENUITEM "&7",                          ID_OPTIONS_VIDEO_FRAMESKIP_7
+
+            MENUITEM "&8",                          ID_OPTIONS_VIDEO_FRAMESKIP_8
+
+            MENUITEM "&9",                          ID_OPTIONS_VIDEO_FRAMESKIP_9
+
         END
         POPUP "&Video"
         BEGIN

@@ -784,11 +784,11 @@ void sdlReadPreferences()
       motion[KEY_DOWN] = sdlFromHex(value);
     } else if(!strcmp(key, "frameSkip")) {
       frameSkip = sdlFromHex(value);
-      if(frameSkip < 0 || frameSkip > 5)
+      if(frameSkip < 0 || frameSkip > 9)
         frameSkip = 2;
     } else if(!strcmp(key, "gbFrameSkip")) {
       gbFrameSkip = sdlFromHex(value);
-      if(gbFrameSkip < 0 || gbFrameSkip > 5)
+      if(gbFrameSkip < 0 || gbFrameSkip > 9)
         gbFrameSkip = 0;      
     } else if(!strcmp(key, "video")) {
       sizeOption = sdlFromHex(value);
@@ -1306,7 +1306,7 @@ void usage(char *cmd)
         printf("    6 - Motion Blur\n");
         printf("    7 - AdvanceMAME Scale2x\n");
         printf("    8 - Simple2x\n");
-        printf("  -s<frameskip> Set frame skip (0...5)\n");
+        printf("  -s<frameskip> Set frame skip (0...9)\n");
         printf("  -v<verbose> Set verbose logging (trace.log)\n");
         printf("    1   - SWI\n");
         printf("    2   - Unaligned memory access\n");
@@ -1426,7 +1426,7 @@ int main(int argc, char **argv)
     case 's':
       if(optarg) {
         int a = atoi(optarg);
-        if(a >= 0 && a <= 5) {
+        if(a >= 0 && a <= 9) {
           gbFrameSkip = a;
           frameSkip = a;
         }
