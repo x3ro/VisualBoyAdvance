@@ -1765,7 +1765,11 @@ int main(int argc, char **argv)
 
   sdlPrintUsage = 0;
   
-  while((op = getopt(argc, argv, "FNT:Y:G:D:b:c:df:hi:p::s:t:v:1234")) != -1) {
+  while((op = getopt_long(argc,
+                          argv,
+                          "FNT:Y:G:D:b:c:df:hi:p::s:t:v:1234",
+                          sdlOptions,
+                          NULL)) != -1) {
     switch(op) {
     case 0:
       // long option already processed by getopt_long
@@ -2178,12 +2182,12 @@ int main(int argc, char **argv)
     SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE;
   
   if(SDL_Init(flags)) {
-    systemMessage(0, "Failed to init SDL: %d", SDL_GetError());
+    systemMessage(0, "Failed to init SDL: %s", SDL_GetError());
     exit(-1);
   }
 
   if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
-    systemMessage(0, "Failed to init joystick support: %d", SDL_GetError());
+    systemMessage(0, "Failed to init joystick support: %s", SDL_GetError());
   }
   
   sdlCheckKeys();
@@ -2754,7 +2758,7 @@ void soundCallback(void *,u8 *stream,int len)
     return;
   SDL_mutexP(mutex);
   //  printf("Locked mutex\n");
-  if(!speedup) {
+  if(!speedup && !throttle) {
     while(sdlSoundLen < 2048*2) {
       if(emulating)
         SDL_CondWait(cond, mutex);
@@ -2776,7 +2780,7 @@ void systemWriteDataToSoundBuffer()
   if(SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
     SDL_PauseAudio(0);
   bool cont = true;
-  while(cont && !speedup) {
+  while(cont && !speedup && !throttle) {
     SDL_mutexP(mutex);
     //    printf("Waiting for len < 2048 (speed up %d)\n", speedup);
     if(sdlSoundLen < 2048*2)
@@ -2793,7 +2797,7 @@ void systemWriteDataToSoundBuffer()
     sdlSoundLen = 2048*2;
     SDL_CondSignal(cond);
     cont = true;
-    if(!speedup) {
+    if(!speedup && !throttle) {
       while(cont) {
         SDL_mutexP(mutex);
         if(sdlSoundLen < 2048*2)
