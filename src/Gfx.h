@@ -166,8 +166,9 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
       screenBase += 0x400;
   }
   
+  int yshift = ((yyy>>3)<<5);
   if((control) & 0x80) {
-    u16 *screenSource = screenBase + 0x400 * (xxx>>8) + ((xxx & 255)>>3) + ((yyy>>3)*32);
+    u16 *screenSource = screenBase + 0x400 * (xxx>>8) + ((xxx & 255)>>3) + yshift;
     for(int x = 0; x < 240; x++) {
       u16 data = READ16LE(screenSource);
       
@@ -192,19 +193,19 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
       xxx++;
       if(xxx == 256) {
         if(sizeX > 256)
-          screenSource = screenBase + 0x400 + ((yyy>>3)*32);
+          screenSource = screenBase + 0x400 + yshift;
         else {
-          screenSource = screenBase + ((yyy>>3)*32);
+          screenSource = screenBase + yshift;
           xxx = 0;
         }
       } else if(xxx >= sizeX) {
         xxx = 0;
-        screenSource = screenBase + ((yyy>>3)*32);
+        screenSource = screenBase + yshift;
       }
     }
   } else {
     u16 *screenSource = screenBase + 0x400*(xxx>>8)+((xxx&255)>>3) +
-      ((yyy>>3)*32);
+      yshift;
     for(int x = 0; x < 240; x++) {
       u16 data = READ16LE(screenSource);
         
@@ -217,7 +218,7 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
       if(data & 0x0800)
         tileY = 7 - tileY;
 
-      u8 color = charBase[tile * 32 + tileY * 4 + (tileX>>1)];
+      u8 color = charBase[(tile<<5) + (tileY<<2) + (tileX>>1)];
 
       if(tileX & 1) {
         color = (color >> 4);
@@ -236,14 +237,14 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
       xxx++;
       if(xxx == 256) {
         if(sizeX > 256)
-          screenSource = screenBase + 0x400 + (yyy>>3)*32;
+          screenSource = screenBase + 0x400 + yshift;
         else {
-          screenSource = screenBase + (yyy>>3)*32;
+          screenSource = screenBase + yshift;
           xxx = 0;
         }
       } else if(xxx >= sizeX) {
         xxx = 0;
-        screenSource = screenBase + ((yyy>>3)*32);
+        screenSource = screenBase + yshift;
       }
     }
   }
@@ -353,7 +354,7 @@ inline void gfxDrawRotScreen(u16 control,
         int tileX = (xxx & 7);
         int tileY = yyy & 7;
         
-        u8 color = charBase[tile * 64 + tileY * 8 + tileX];
+        u8 color = charBase[(tile<<6) + (tileY<<3) + tileX];
           
         line[x] = color ? (READ16LE(&palette[color])|prio): 0x80000000;
       }
@@ -385,7 +386,7 @@ inline void gfxDrawRotScreen(u16 control,
         int tileX = (xxx & 7);
         int tileY = yyy & 7;
         
-        u8 color = charBase[tile * 64 + tileY * 8 + tileX];
+        u8 color = charBase[(tile<<6) + (tileY<<3) + tileX];
           
         line[x] = color ? (READ16LE(&palette[color])|prio): 0x80000000;
       }
@@ -822,8 +823,8 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                    yyy < 0 || yyy >= sizeY ||
                    sx >= 240);
                 else {
-                  u32 color = vram[0x10000 + (((c + (yyy>>3) * inc)*
-                                    32 + (yyy & 7) * 8 + (xxx >> 3) * 64 +
+                  u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
+									+ ((yyy & 7)<<3) + ((xxx >> 3)<<6) +
                                     (xxx & 7))&0x7FFF)];
                   if ((color==0) && (((prio >> 25)&3) < 
                                      ((lineOBJ[sx]>>25)&3)))
@@ -860,8 +861,8 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                    yyy < 0 || yyy >= sizeY ||
                    sx >= 240);
                 else {
-                  u32 color = vram[0x10000 + (((c + (yyy>>3) * inc)*
-                                               32 + (yyy & 7) * 4 + (xxx >> 3) * 32 +
+                  u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
+                                                + ((yyy & 7)<<2) + ((xxx >> 3)<<5) +
                                                ((xxx & 7)>>1))&0x7FFF)];
                   if(xxx & 1)
                     color >>= 4;
@@ -981,8 +982,8 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                   t -= (t % mosaicY);
                 }
 
-              int address = 0x10000 + (((c + (t>>3) * inc) * 32
-                + (t & 7) * 4 + (xxx>>3) * 32 + ((xxx & 7) >> 1))&0x7FFF);
+              int address = 0x10000 + ((((c + (t>>3) * inc)<<5)
+                + ((t & 7)<<2) + ((xxx>>3)<<5) + ((xxx & 7) >> 1))&0x7FFF);
               u32 prio = (((a2 >> 10) & 3) << 25) | ((a0 & 0x0c00)<<6);
               int palette = (a2 >> 8) & 0xF0;         
               if(a1 & 0x1000) {
@@ -1182,8 +1183,8 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 if(xxx < 0 || xxx >= sizeX ||
                    yyy < 0 || yyy >= sizeY) {
                 } else {
-                  u32 color = vram[0x10000 + (((c + (yyy>>3) * inc)*
-                                   32 + (yyy & 7) * 8 + (xxx >> 3) * 64 +
+                  u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
+                                    + ((yyy & 7)<<3) + ((xxx >> 3)<<6) +
                                    (xxx & 7))&0x7fff)];
                   if(color) {
                     lineOBJWin[sx] = 1;
@@ -1213,8 +1214,8 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                   if(xxx < 0 || xxx >= sizeX ||
                      yyy < 0 || yyy >= sizeY){
                   } else {
-                    u32 color = vram[0x10000 + (((c + (yyy>>3) * inc)*
-                                     32 + (yyy & 7) * 4 + (xxx >> 3) * 32 +
+                    u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
+                                     + ((yyy & 7)<<2) + ((xxx >> 3)<<5) +
                                      ((xxx & 7)>>1))&0x7fff)];
                     if(xxx & 1)
                       color >>= 4;
@@ -1302,8 +1303,8 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
               int xxx = 0;
               if(a1 & 0x1000)
                 xxx = sizeX - 1;
-              int address = 0x10000 + (((c + (t>>3) * inc) * 32
-                + (t & 7) * 4 + (xxx>>3) * 32 + ((xxx & 7) >> 1))&0x7fff);
+              int address = 0x10000 + ((((c + (t>>3) * inc)<<5)
+                + ((t & 7)<<2) + ((xxx>>3)<<5) + ((xxx & 7) >> 1))&0x7fff);
               // u32 prio = (((a2 >> 10) & 3) << 25) | ((a0 & 0x0c00)<<6);
               // int palette = (a2 >> 8) & 0xF0;              
               if(a1 & 0x1000) {
