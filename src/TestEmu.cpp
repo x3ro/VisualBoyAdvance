@@ -511,4 +511,5 @@ bool systemCanChangeSoundQuality()
 
 bool systemPauseOnFrame()
 {
+  return false;
 }
