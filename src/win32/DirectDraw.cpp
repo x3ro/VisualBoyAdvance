@@ -25,7 +25,7 @@
 #include "../gb/gbGlobals.h"
 #include "../GBA.h"
 #include "../Globals.h"
-#include "../Font.h"
+#include "../Text.h"
 
 #include "VBA.h"
 #include "MainWnd.h"
@@ -190,6 +190,8 @@ bool DirectDrawDisplay::initialize()
       int scaleX = (theApp.fsWidth / theApp.sizeX);
       int scaleY = (theApp.fsHeight / theApp.sizeY);
       int min = scaleX < scaleY ? scaleX : scaleY;
+      if(theApp.fsMaxScale)
+        min = min > theApp.fsMaxScale ? theApp.fsMaxScale : min;
       theApp.surfaceSizeX = theApp.sizeX * min;
       theApp.surfaceSizeY = theApp.sizeY * min;
       if(theApp.fullScreenStretch) {
@@ -790,17 +792,17 @@ void DirectDrawDisplay::render()
                 systemFrameSkip,
                 theApp.showRenderedFrames);
       if(theApp.showSpeedTransparent)
-        fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
-                                ddsDesc.lPitch,
-                                theApp.rect.left+10,
-                                theApp.rect.bottom-10,
-                                buffer);
+        drawTextTransp((u8*)ddsDesc.lpSurface,
+                       ddsDesc.lPitch,
+                       theApp.rect.left+10,
+                       theApp.rect.bottom-10,
+                       buffer);
       else
-        fontDisplayString((u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          theApp.rect.left+10,
-                          theApp.rect.bottom-10,
-                          buffer);        
+        drawText((u8*)ddsDesc.lpSurface,
+                 ddsDesc.lPitch,
+                 theApp.rect.left+10,
+                 theApp.rect.bottom-10,
+                 buffer);        
     }
   } else if(theApp.ddrawDebug)
     winlog("Error during lock: %08x\n", hret);

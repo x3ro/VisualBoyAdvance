@@ -91,6 +91,7 @@
 #define IDD_MODE_CONFIRM                149
 #define IDD_REWIND_INTERVAL             150
 #define IDD_IO_VIEWER                   151
+#define IDD_MAX_SCALE                   154
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -730,13 +731,17 @@
 #define ID_FILE_LOADGAME_AUTOLOADMOSTRECENT 40269
 #define ID_OPTIONS_SOUND_VOLUME_5X      40270
 #define ID_OPTIONS_SOUND_VOLUME_25X     40271
+#define ID_CHEATS_DISABLECHEATS         40272
+#define ID_OPTIONS_VIDEO_FULLSCREENMAXSCALE 40273
+#define ID_OPTIONS_FILTER_HQ2X          40274
+#define ID_OPTIONS_FILTER_LQ2X          40275
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        154
-#define _APS_NEXT_COMMAND_VALUE         40272
+#define _APS_NEXT_RESOURCE_VALUE        155
+#define _APS_NEXT_COMMAND_VALUE         40276
 #define _APS_NEXT_CONTROL_VALUE         1252
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

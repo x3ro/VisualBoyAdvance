@@ -23,7 +23,7 @@
 #include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
-#include "../Font.h"
+#include "../Text.h"
 
 #include "VBA.h"
 #include "MainWnd.h"
@@ -121,6 +121,8 @@ bool GDIDisplay::initialize()
       int scaleX = (theApp.fsWidth / theApp.sizeX);
       int scaleY = (theApp.fsHeight / theApp.sizeY);
       int min = scaleX < scaleY ? scaleX : scaleY;
+      if(theApp.fsMaxScale)
+        min = min > theApp.fsMaxScale ? theApp.fsMaxScale : min;
       theApp.surfaceSizeX = theApp.sizeX * min;
       theApp.surfaceSizeY = theApp.sizeY * min;
       if(theApp.fullScreenStretch) {
@@ -339,30 +341,30 @@ void GDIDisplay::render()
       else if(systemColorDepth == 32)
         p = theApp.filterWidth * 8;
       if(theApp.showSpeedTransparent)
-        fontDisplayStringTransp((u8*)filterData,
-                                p,
-                                10,
-                                theApp.filterHeight*2-10,
-                                buffer);
+        drawTextTransp((u8*)filterData,
+                       p,
+                       10,
+                       theApp.filterHeight*2-10,
+                       buffer);
       else
-        fontDisplayString((u8*)filterData,
-                          p,
-                          10,
-                          theApp.filterHeight*2-10,
-                          buffer);      
+        drawText((u8*)filterData,
+                 p,
+                 10,
+                 theApp.filterHeight*2-10,
+                 buffer);      
     } else {
       if(theApp.showSpeedTransparent)
-        fontDisplayStringTransp((u8*)pix,
-                                pitch,
-                                10,
-                                theApp.filterHeight-10,
-                                buffer);
+        drawTextTransp((u8*)pix,
+                       pitch,
+                       10,
+                       theApp.filterHeight-10,
+                       buffer);
       else
-        fontDisplayString((u8*)pix,
-                          pitch,
-                          10,
-                          theApp.filterHeight-10,
-                          buffer);
+        drawText((u8*)pix,
+                 pitch,
+                 10,
+                 theApp.filterHeight-10,
+                 buffer);
     }
   }
 
