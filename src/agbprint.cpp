@@ -38,6 +38,7 @@ bool agbPrintWrite(u32 address, u16 value)
     if(address == 0x9fe2ffe) { // protect
       agbPrintProtect = (value != 0);
       debuggerWriteHalfWord(address, value);
+      return true;
     } else {
       if(agbPrintProtect &&
          ((address >= 0x9fe20f8 && address <= 0x9fe20ff) // control structure
