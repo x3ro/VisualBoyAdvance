@@ -8185,8 +8185,7 @@ echo "$as_me: error: *** Couldn't find nasm program." >&2;}
   VBA_LIBS="$VBA_LIBS ../i386/lib386.a"
 fi
 
-if test "x$enable_sdl" = xyes || test "x$enable_gtk" = xyes; then
-  SDL_VERSION=1.2.2
+SDL_VERSION=1.2.2
 
 # Check whether --with-sdl-prefix or --without-sdl-prefix was given.
 if test "${with_sdl_prefix+set}" = set; then
@@ -8472,7 +8471,7 @@ rm -f conftest.err conftest.$ac_objext \
      SDL_CFLAGS=""
      SDL_LIBS=""
 
-  { { echo "$as_me:$LINENO: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&5
+{ { echo "$as_me:$LINENO: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&5
 echo "$as_me: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >&2;}
    { (exit 1); exit 1; }; }
 
@@ -8481,6 +8480,8 @@ echo "$as_me: error: *** Couldn't find SDL library (version >= $SDL_VERSION)." >
 
   rm -f conf.sdltest
 
+
+if test "x$enable_sdl" = xyes; then
   VBA_EXTRA="$VBA_EXTRA sdl"
 fi
 

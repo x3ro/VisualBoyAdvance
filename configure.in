@@ -118,12 +118,13 @@ if test "x$with_mmx" = xyes; then
   VBA_LIBS="$VBA_LIBS ../i386/lib386.a"
 fi
 
-if test "x$enable_sdl" = xyes || test "x$enable_gtk" = xyes; then
-  SDL_VERSION=1.2.2
-  AM_PATH_SDL($SDL_VERSION,[
-  ],[
-  AC_MSG_ERROR([*** Couldn't find SDL library (version >= $SDL_VERSION).])
-  ])
+SDL_VERSION=1.2.2
+AM_PATH_SDL($SDL_VERSION,[
+],[
+AC_MSG_ERROR([*** Couldn't find SDL library (version >= $SDL_VERSION).])
+])
+
+if test "x$enable_sdl" = xyes; then
   VBA_EXTRA="$VBA_EXTRA sdl"
 fi
 
