@@ -394,12 +394,15 @@ class MainWnd : public CWnd
   afx_msg void OnUpdateFileSavegameOldestslot(CCmdUI* pCmdUI);
   afx_msg void OnFileLoadgameMostrecent();
   afx_msg void OnUpdateFileLoadgameMostrecent(CCmdUI* pCmdUI);
-	afx_msg void OnFileLoadgameAutoloadmostrecent();
-	afx_msg void OnUpdateFileLoadgameAutoloadmostrecent(CCmdUI* pCmdUI);
-	afx_msg void OnOptionsSoundVolume25x();
-	afx_msg void OnUpdateOptionsSoundVolume25x(CCmdUI* pCmdUI);
-	afx_msg void OnOptionsSoundVolume5x();
-	afx_msg void OnUpdateOptionsSoundVolume5x(CCmdUI* pCmdUI);
+  afx_msg void OnFileLoadgameAutoloadmostrecent();
+  afx_msg void OnUpdateFileLoadgameAutoloadmostrecent(CCmdUI* pCmdUI);
+  afx_msg void OnOptionsSoundVolume25x();
+  afx_msg void OnUpdateOptionsSoundVolume25x(CCmdUI* pCmdUI);
+  afx_msg void OnOptionsSoundVolume5x();
+  afx_msg void OnUpdateOptionsSoundVolume5x(CCmdUI* pCmdUI);
+  afx_msg void OnCheatsDisablecheats();
+  afx_msg void OnUpdateCheatsDisablecheats(CCmdUI* pCmdUI);
+	afx_msg void OnOptionsVideoFullscreenmaxscale();
 	//}}AFX_MSG
   DECLARE_MESSAGE_MAP()
 

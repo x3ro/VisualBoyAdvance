@@ -141,7 +141,6 @@ class VBA : public CWinApp
   CString skinName;
   bool skinEnabled;
   int skinButtons;
-  bool synchronize;
   bool pauseWhenInactive;
   bool speedupToggle;
   bool useOldSync;
@@ -179,6 +178,7 @@ class VBA : public CWinApp
   bool wasPaused;
   int frameskipadjust;
   bool autoLoadMostRecent;
+  int fsMaxScale;
  
   CList<IUpdateListener *, IUpdateListener*&> updateList;
   int updateCount;
@@ -231,9 +231,8 @@ class VBA : public CWinApp
   // Implementation
 
  public:
-  void setScreenSaverEnable(BOOL e);
-  BOOL getScreenSaverEnable();
-  BOOL screenSaverState;
+  void disablePowerManagement();
+  void enablePowerManagement();
   void saveSettings();
   void movieReadNext();
   bool initInput();

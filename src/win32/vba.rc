@@ -1175,6 +1175,19 @@ BEGIN
     LTEXT           "Value:",IDC_STATIC,7,23,72,8
 END
 
+IDD_MAX_SCALE DIALOG DISCARDABLE  0, 0, 186, 68
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Fullscreen scale"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_VALUE,7,28,172,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",ID_OK,37,47,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,99,47,50,14
+    LTEXT           "Enter the maxium fullscreen scale:",IDC_STATIC,7,7,172,
+                    8
+    LTEXT           "Enter 0 to use maximum scale.",IDC_STATIC,7,17,172,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1500,6 +1513,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 235
     END
+
+    IDD_MAX_SCALE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1685,6 +1706,8 @@ BEGIN
             MENUITEM "Full Screen (800x600)",       ID_OPTIONS_VIDEO_FULLSCREEN800X600
 
             MENUITEM "&Other Full Screen...",       ID_OPTIONS_VIDEO_FULLSCREEN
+
+            MENUITEM "Full screen max scale...",    ID_OPTIONS_VIDEO_FULLSCREENMAXSCALE
 
             MENUITEM SEPARATOR
             MENUITEM "&Disable SFX",                ID_OPTIONS_VIDEO_DISABLESFX
@@ -1903,6 +1926,8 @@ BEGIN
 
             MENUITEM "Scanlines",                   ID_OPTIONS_FILTER_SCANLINES
 
+            MENUITEM "hq2x",                        ID_OPTIONS_FILTER_HQ2X
+            MENUITEM "lq2x",                        ID_OPTIONS_FILTER_LQ2X
             MENUITEM SEPARATOR
             MENUITEM "&Disable MMX",                ID_OPTIONS_FILTER_DISABLEMMX
 
@@ -1963,6 +1988,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Automatic save/load cheats", ID_CHEATS_AUTOMATICSAVELOADCHEATS
 
+        MENUITEM "Disable cheats",              ID_CHEATS_DISABLECHEATS
         MENUITEM "&Load cheat list...",         ID_CHEATS_LOADCHEATLIST
         MENUITEM "Sa&ve cheat list...",         ID_CHEATS_SAVECHEATLIST
     END
