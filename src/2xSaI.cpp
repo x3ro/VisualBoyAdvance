@@ -90,6 +90,8 @@ static u32 qlowpixelMask = 0x18631863;
 static u32 redblueMask = 0xF81F;
 static u32 greenMask = 0x7E0;
 
+u32 qRGB_COLOR_MASK[2] = { 0xF7DEF7DE, 0xF7DEF7DE };
+
 int Init_2xSaI(u32 BitFormat)
 {
   if(systemColorDepth == 16) {
@@ -100,6 +102,7 @@ int Init_2xSaI(u32 BitFormat)
       qlowpixelMask = 0x18631863;
       redblueMask = 0xF81F;
       greenMask = 0x7E0;
+      qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0xF7DEF7DE;
     } else if (BitFormat == 555) {
       colorMask = 0x7BDE7BDE;
       lowPixelMask = 0x04210421;
@@ -107,6 +110,7 @@ int Init_2xSaI(u32 BitFormat)
       qlowpixelMask = 0x0C630C63;
       redblueMask = 0x7C1F;
       greenMask = 0x3E0;
+      qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0x7BDE7BDE;
     } else {
       return 0;
     }
@@ -115,6 +119,7 @@ int Init_2xSaI(u32 BitFormat)
     lowPixelMask = 0x010101;
     qcolorMask = 0xfcfcfc;
     qlowpixelMask = 0x030303;
+    qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0xfefefe;
   } else
     return 0;
 

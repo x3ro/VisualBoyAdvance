@@ -35,6 +35,7 @@ static u8 *frm2;
 static u8 *frm3;
 
 extern int RGB_LOW_BITS_MASK;
+extern u32 qRGB_COLOR_MASK[2];
 
 static void Init()
 {
@@ -46,17 +47,9 @@ static void Init()
   // 3 frames ago
 }
 
-static u16 mask[4];
-
 #ifdef MMX
-void SmartIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
+static void SmartIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
 {
-  u16 colorMask = ~RGB_LOW_BITS_MASK;
-  mask[0] = colorMask;
-  mask[1] = colorMask;
-  mask[2] = colorMask;
-  mask[3] = colorMask;
-  
   u16 *src0 = (u16 *)srcPtr;
   u16 *src1 = (u16 *)frm1;
   u16 *src2 = (u16 *)frm2;
@@ -107,11 +100,11 @@ void SmartIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "pop %4\n"
                   "emms\n"
                   : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (src3)
-                  : "r" (count), "r" (mask)
+                  : "r" (count), "r" (qRGB_COLOR_MASK)
                   );
 #else
     __asm {
-      movq mm7, qword ptr [mask];
+      movq mm7, qword ptr [qRGB_COLOR_MASK];
       mov eax, src0;
       mov ebx, src1;
       mov ecx, src2;
@@ -216,12 +209,8 @@ void SmartIB(u8 *srcPtr, u32 srcPitch, int width, int height)
 }
 
 #ifdef MMX
-void SmartIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
+static void SmartIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
 {
-  u32 colorMask = 0xfefefe;
-  *((u32 *)mask) = colorMask;
-  *((u32 *)&mask[2]) = colorMask;
-  
   u32 *src0 = (u32 *)srcPtr;
   u32 *src1 = (u32 *)frm1;
   u32 *src2 = (u32 *)frm2;
@@ -272,11 +261,11 @@ void SmartIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "pop %4\n"
                   "emms\n"
                   : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (src3)
-                  : "r" (count), "r" (mask)
+                  : "r" (count), "r" (qRGB_COLOR_MASK)
                   );
 #else
     __asm {
-      movq mm7, qword ptr [mask];
+      movq mm7, qword ptr [qRGB_COLOR_MASK];
       mov eax, src0;
       mov ebx, src1;
       mov ecx, src2;
@@ -381,14 +370,8 @@ void SmartIB32(u8 *srcPtr, u32 srcPitch, int width, int height)
 }
 
 #ifdef MMX
-void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
+static void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
 {
-  u16 colorMask = ~RGB_LOW_BITS_MASK;
-  mask[0] = colorMask;
-  mask[1] = colorMask;
-  mask[2] = colorMask;
-  mask[3] = colorMask;
-  
   u16 *src0 = (u16 *)srcPtr;
   u16 *src1 = (u16 *)frm1;
 
@@ -419,11 +402,11 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "pop %2\n"
                   "emms\n"
                   : "+r" (src0), "+r" (src1)
-                  : "r" (count), "r" (mask)
+                  : "r" (count), "r" (qRGB_COLOR_MASK)
                   );
 #else
     __asm {
-      movq mm7, qword ptr [mask];
+      movq mm7, qword ptr [qRGB_COLOR_MASK];
       mov eax, src0;
       mov ebx, src1;
       mov edi, count;
@@ -487,12 +470,8 @@ void MotionBlurIB(u8 *srcPtr, u32 srcPitch, int width, int height)
 }
 
 #ifdef MMX
-void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
+static void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
 {
-  u32 colorMask = 0xfefefe;
-  *((u32 *)mask) = colorMask;
-  *((u32 *)&mask[2]) = colorMask;
-  
   u32 *src0 = (u32 *)srcPtr;
   u32 *src1 = (u32 *)frm1;
 
@@ -523,11 +502,11 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "pop %2\n"
                   "emms\n"
                   : "+r" (src0), "+r" (src1)
-                  : "r" (count), "r" (mask)
+                  : "r" (count), "r" (qRGB_COLOR_MASK)
                   );
 #else
     __asm {
-      movq mm7, qword ptr [mask];
+      movq mm7, qword ptr [qRGB_COLOR_MASK];
       mov eax, src0;
       mov ebx, src1;
       mov edi, count;

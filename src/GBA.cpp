@@ -502,13 +502,13 @@ inline void CPUUpdateTicks(int &cpuLoopTicks)
   if(timer0On && (timer0Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer0Ticks;
   }
-  if(timer1On && (timer1Ticks < cpuLoopTicks)) {
+  if(timer1On && !(TM1CNT & 4) && (timer1Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer1Ticks;
   }
-  if(timer2On && (timer2Ticks < cpuLoopTicks)) {
+  if(timer2On && !(TM2CNT & 4) && (timer2Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer2Ticks;
   }
-  if(timer3On && (timer3Ticks < cpuLoopTicks)) {
+  if(timer3On && !(TM3CNT & 4) && (timer3Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer3Ticks;
   }
 #ifdef PROFILING
@@ -2622,11 +2622,7 @@ void CPUUpdateRegister(u32 address, u16 value)
     CPUCheckDMA(0,8);
     break;
   case 0x100:
-    //    TM0D = value;
     timer0Reload = value;
-    //    if(timer0ClockReload == 1)
-    //      timer0Ticks = 0x10000 - TM0D;
-    //    UPDATE_REG(0x100, TM0D);
     break;
   case 0x102:
     timer0Ticks = timer0ClockReload = TIMER_TICKS[value & 3];        
@@ -2643,11 +2639,7 @@ void CPUUpdateRegister(u32 address, u16 value)
     //    CPUUpdateTicks();
     break;
   case 0x104:
-    //    TM1D = value;
     timer1Reload = value;
-    //    if(timer1ClockReload == 1)
-    //      timer1Ticks = 0x10000 - TM1D;
-    //    UPDATE_REG(0x104, TM1D);
     break;
   case 0x106:
     timer1Ticks = timer1ClockReload = TIMER_TICKS[value & 3];        
@@ -2661,14 +2653,9 @@ void CPUUpdateRegister(u32 address, u16 value)
     timer1On = value & 0x80 ? true : false;
     TM1CNT = value & 0xC7;
     UPDATE_REG(0x106, TM1CNT);
-    //    CPUUpdateTicks();
     break;
   case 0x108:
-    //    TM2D = value;
     timer2Reload = value;
-    //    if(timer2ClockReload == 1)
-    //      timer2Ticks = 0x10000 - TM2D;
-    //    UPDATE_REG(0x108, TM2D);
     break;
   case 0x10A:
     timer2Ticks = timer2ClockReload = TIMER_TICKS[value & 3];        
@@ -2676,20 +2663,15 @@ void CPUUpdateRegister(u32 address, u16 value)
       // reload the counter
       TM2D = timer2Reload;      
       if(timer2ClockReload == 1)
-        timer2Ticks = 0x10000 - TM1D;
-      UPDATE_REG(0x108, TM1D);
+        timer2Ticks = 0x10000 - TM2D;
+      UPDATE_REG(0x108, TM2D);
     }
     timer2On = value & 0x80 ? true : false;
     TM2CNT = value & 0xC7;
     UPDATE_REG(0x10A, TM2CNT);
-    //    CPUUpdateTicks();
     break;
   case 0x10C:
-    //    TM3D = value;
     timer3Reload = value;
-    //    if(timer3ClockReload == 1)
-    //      timer3Ticks = 0x10000 - TM3D;
-    //    UPDATE_REG(0x10C, TM3D);
     break;
   case 0x10E:
     timer3Ticks = timer3ClockReload = TIMER_TICKS[value & 3];        
@@ -2697,13 +2679,12 @@ void CPUUpdateRegister(u32 address, u16 value)
       // reload the counter
       TM3D = timer3Reload;      
       if(timer3ClockReload == 1)
-        timer3Ticks = 0x10000 - TM1D;
+        timer3Ticks = 0x10000 - TM3D;
       UPDATE_REG(0x10C, TM3D);
     }
     timer3On = value & 0x80 ? true : false;
     TM3CNT = value & 0xC7;
     UPDATE_REG(0x10E, TM3CNT);
-    //    CPUUpdateTicks();
     break;
   case 0x128:
     if(value & 0x80) {
@@ -3397,28 +3378,6 @@ void CPULoop(int ticks)
   int cpuLoopTicks = 0;
   int timerOverflow = 0;
   // variables used by the CPU core
-  u32 value;
-  int base;
-  int dest;
-  int source;
-  int shift;
-  int offset;
-  int mult;
-  int rs;
-  u32 address;
-  u32 temp;
-  u32 opcode;
-  bool C_OUT;
-  bool cond_res;
-  int destLo;
-  int destHi;
-  u64 uTemp;
-  s64 sTemp;
-  s64 m;
-  s64 s;
-  u32 newValue;
-  u32 umult;
-  u32 usource;
 
   extCpuLoopTicks = &cpuLoopTicks;
   extClockTicks = &clockTicks;
@@ -3542,6 +3501,9 @@ void CPULoop(int ticks)
             DISPSTAT &= 0xFFFD;
             if(VCOUNT == 160) {
               count++;
+              if((count % 10) == 0) {
+                system10Frames(60);
+              }
               if(count == 60) {
                 u32 time = systemGetClock();
                 if(time != lastTime) {

@@ -540,7 +540,7 @@
 #endif
 #endif
 
-opcode = CPUReadHalfWordQuick(armNextPC);
+u32 opcode = CPUReadHalfWordQuick(armNextPC);
 
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
@@ -562,20 +562,23 @@ switch(opcode >> 8) {
  case 0x05:
  case 0x06:
  case 0x07:
-   // LSL Rd, Rm, #Imm 5
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   shift = (opcode >> 6) & 0x1f;
-   
-   if(shift) {
-     LSL_RD_RM_I5;
-   } else {
-     value = reg[source].I;
+   {
+     // LSL Rd, Rm, #Imm 5
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     int shift = (opcode >> 6) & 0x1f;
+     u32 value;
+     
+     if(shift) {
+       LSL_RD_RM_I5;
+     } else {
+       value = reg[source].I;
+     }
+     reg[dest].I = value;
+     // C_FLAG set above
+     N_FLAG = (value & 0x80000000 ? true : false);
+     Z_FLAG = (value ? false : true);
    }
-   reg[dest].I = value;
-   // C_FLAG set above
-   N_FLAG = (value & 0x80000000 ? true : false);
-   Z_FLAG = (value ? false : true);
    break;
  case 0x08:
  case 0x09:
@@ -585,21 +588,24 @@ switch(opcode >> 8) {
  case 0x0d:
  case 0x0e:
  case 0x0f:
-   // LSR Rd, Rm, #Imm 5
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   shift = (opcode >> 6) & 0x1f;
-
-   if(shift) {
-     LSR_RD_RM_I5;
-   } else {
-     C_FLAG = reg[source].I & 0x80000000 ? true : false;
-     value = 0;
+   {
+     // LSR Rd, Rm, #Imm 5
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     int shift = (opcode >> 6) & 0x1f;
+     u32 value;
+     
+     if(shift) {
+       LSR_RD_RM_I5;
+     } else {
+       C_FLAG = reg[source].I & 0x80000000 ? true : false;
+       value = 0;
+     }
+     reg[dest].I = value;
+     // C_FLAG set above
+     N_FLAG = (value & 0x80000000 ? true : false);
+     Z_FLAG = (value ? false : true);
    }
-   reg[dest].I = value;
-   // C_FLAG set above
-   N_FLAG = (value & 0x80000000 ? true : false);
-   Z_FLAG = (value ? false : true);
    break;
  case 0x10:
  case 0x11:
@@ -609,58 +615,69 @@ switch(opcode >> 8) {
  case 0x15:
  case 0x16:
  case 0x17:
-   // ASR Rd, Rm, #Imm 5
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   shift = (opcode >> 6) & 0x1f;
-
-   if(shift) {
-     ASR_RD_RM_I5;
-   } else {
-     if(reg[source].I & 0x80000000) {
-       value = 0xFFFFFFFF;
-       C_FLAG = true;
+   {     
+     // ASR Rd, Rm, #Imm 5
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     int shift = (opcode >> 6) & 0x1f;
+     u32 value;
+     
+     if(shift) {
+       ASR_RD_RM_I5;
      } else {
-       value = 0;
-       C_FLAG = false;
+       if(reg[source].I & 0x80000000) {
+         value = 0xFFFFFFFF;
+         C_FLAG = true;
+       } else {
+         value = 0;
+         C_FLAG = false;
+       }
      }
+     reg[dest].I = value;
+     // C_FLAG set above
+     N_FLAG = (value & 0x80000000 ? true : false);
+     Z_FLAG = (value ? false :true);
    }
-   reg[dest].I = value;
-   // C_FLAG set above
-   N_FLAG = (value & 0x80000000 ? true : false);
-   Z_FLAG = (value ? false :true);
    break;
  case 0x18:
  case 0x19:
-   // ADD Rd, Rs, Rn
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   value = reg[(opcode>>6)& 0x07].I;
-   ADD_RD_RS_RN;
+   {
+     // ADD Rd, Rs, Rn
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     u32 value = reg[(opcode>>6)& 0x07].I;
+     ADD_RD_RS_RN;
+   }
    break;
  case 0x1a:
  case 0x1b:
-   // SUB Rd, Rs, Rn
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   value = reg[(opcode>>6)& 0x07].I;
-   SUB_RD_RS_RN;
+   {
+     // SUB Rd, Rs, Rn
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     u32 value = reg[(opcode>>6)& 0x07].I;
+     SUB_RD_RS_RN;
+   }
    break;
  case 0x1c:
  case 0x1d:
-   // ADD Rd, Rs, #Offset3
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   value = (opcode >> 6) & 7;
-   ADD_RD_RS_O3;
+   {
+     // ADD Rd, Rs, #Offset3
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     u32 value = (opcode >> 6) & 7;
+     ADD_RD_RS_O3;
+   }
    break;
  case 0x1e:
  case 0x1f:
-   // SUB Rd, Rs, #Offset3
-   dest = opcode & 0x07;
-   source = (opcode >> 3) & 0x07;
-   value = (opcode >> 6) & 7;
-   SUB_RD_RS_O3;
+   {
+     // SUB Rd, Rs, #Offset3
+     int dest = opcode & 0x07;
+     int source = (opcode >> 3) & 0x07;
+     u32 value = (opcode >> 6) & 7;
+     SUB_RD_RS_O3;
+   }
    break;
  case 0x20:
    // MOV R0, #Offset8
@@ -809,11 +826,12 @@ switch(opcode >> 8) {
  case 0x40:
    switch((opcode >> 6) & 3) {
    case 0x00:
-     // AND Rd, Rs
-     dest = opcode & 7;
-     reg[dest].I &= reg[(opcode >> 3)&7].I;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;
+     {
+       // AND Rd, Rs
+       int dest = opcode & 7;
+       reg[dest].I &= reg[(opcode >> 3)&7].I;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
 #ifdef BKPT_SUPPORT     
 #define THUMB_CONSOLE_OUTPUT(a,b) \
   if((opcode == 0x4000) && (reg[0].I == 0xC0DED00D)) {\
@@ -823,306 +841,346 @@ switch(opcode >> 8) {
 #else
 #define THUMB_CONSOLE_OUTPUT(a,b)
 #endif
-     THUMB_CONSOLE_OUTPUT(NULL, reg[2].I);
+       THUMB_CONSOLE_OUTPUT(NULL, reg[2].I);
+     }
      break;
    case 0x01:
      // EOR Rd, Rs
-     dest = opcode & 7;
-     reg[dest].I ^= reg[(opcode >> 3)&7].I;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;
+     {
+       int dest = opcode & 7;
+       reg[dest].I ^= reg[(opcode >> 3)&7].I;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
+     }
      break;
    case 0x02:
      // LSL Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].B.B0;
-     if(value) {
-       if(value == 32) {
-         value = 0;
-         C_FLAG = (reg[dest].I & 1 ? true : false);
-       } else if(value < 32) {
-         LSL_RD_RS;
-       } else {
-         value = 0;
-         C_FLAG = false;
+     {
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].B.B0;
+       if(value) {
+         if(value == 32) {
+           value = 0;
+           C_FLAG = (reg[dest].I & 1 ? true : false);
+         } else if(value < 32) {
+           LSL_RD_RS;
+         } else {
+           value = 0;
+           C_FLAG = false;
+         }
+         reg[dest].I = value;        
        }
-       reg[dest].I = value;        
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
+       clockTicks++;
      }
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;
-     clockTicks++;
      break;
    case 0x03:
-     // LSR Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].B.B0;
-     if(value) {
-       if(value == 32) {
-         value = 0;
-         C_FLAG = (reg[dest].I & 0x80000000 ? true : false);
-       } else if(value < 32) {
-         LSR_RD_RS;
-       } else {
-         value = 0;
-         C_FLAG = false;
+     {
+       // LSR Rd, Rs
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].B.B0;
+       if(value) {
+         if(value == 32) {
+           value = 0;
+           C_FLAG = (reg[dest].I & 0x80000000 ? true : false);
+         } else if(value < 32) {
+           LSR_RD_RS;
+         } else {
+           value = 0;
+           C_FLAG = false;
+         }
+         reg[dest].I = value;        
        }
-       reg[dest].I = value;        
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
+       clockTicks++;
      }
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;
-     clockTicks++;
      break;
    }
    break;
  case 0x41:
    switch((opcode >> 6) & 3) {
    case 0x00:
-     // ASR Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].B.B0;
-     // ASR
-     if(value) {
-       if(value < 32) {
-         ASR_RD_RS;
-         reg[dest].I = value;        
-       } else {
-         if(reg[dest].I & 0x80000000){
-           reg[dest].I = 0xFFFFFFFF;
-           C_FLAG = true;
+     {
+       // ASR Rd, Rs
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].B.B0;
+       // ASR
+       if(value) {
+         if(value < 32) {
+           ASR_RD_RS;
+           reg[dest].I = value;        
          } else {
-           reg[dest].I = 0x00000000;
-           C_FLAG = false;
+           if(reg[dest].I & 0x80000000){
+             reg[dest].I = 0xFFFFFFFF;
+             C_FLAG = true;
+           } else {
+             reg[dest].I = 0x00000000;
+             C_FLAG = false;
+           }
          }
        }
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
+       clockTicks++;
      }
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;
-     clockTicks++;
      break;
    case 0x01:
-     // ADC Rd, Rs
-     dest = opcode & 0x07;
-     value = reg[(opcode >> 3)&7].I;
-     // ADC
-     ADC_RD_RS;
+     {
+       // ADC Rd, Rs
+       int dest = opcode & 0x07;
+       u32 value = reg[(opcode >> 3)&7].I;
+       // ADC
+       ADC_RD_RS;
+     }
      break;
    case 0x02:
-     // SBC Rd, Rs
-     dest = opcode & 0x07;
-     value = reg[(opcode >> 3)&7].I;
-     
-     // SBC
-     SBC_RD_RS;
+     {
+       // SBC Rd, Rs
+       int dest = opcode & 0x07;
+       u32 value = reg[(opcode >> 3)&7].I;
+       
+       // SBC
+       SBC_RD_RS;
+     }
      break;
    case 0x03:
      // ROR Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].B.B0;
-     
-     if(value) {
-       value = value & 0x1f;
-       if(value == 0) {
-         C_FLAG = (reg[dest].I & 0x80000000 ? true : false);
-       } else {
-         ROR_RD_RS;
-         reg[dest].I = value;
+     {
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].B.B0;
+       
+       if(value) {
+         value = value & 0x1f;
+         if(value == 0) {
+           C_FLAG = (reg[dest].I & 0x80000000 ? true : false);
+         } else {
+           ROR_RD_RS;
+           reg[dest].I = value;
+         }
        }
+       clockTicks++;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+       Z_FLAG = reg[dest].I ? false : true;
      }
-     clockTicks++;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
-     Z_FLAG = reg[dest].I ? false : true;                          
      break;
    }
    break;
  case 0x42:
    switch((opcode >> 6) & 3) {
    case 0x00:
-     // TST Rd, Rs
-     value = reg[opcode & 7].I & reg[(opcode >> 3) & 7].I;
-     N_FLAG = value & 0x80000000 ? true : false;
-     Z_FLAG = value ? false : true;
+     {
+       // TST Rd, Rs
+       u32 value = reg[opcode & 7].I & reg[(opcode >> 3) & 7].I;
+       N_FLAG = value & 0x80000000 ? true : false;
+       Z_FLAG = value ? false : true;
+     }
      break;
    case 0x01:
-     // NEG Rd, Rs
-     dest = opcode & 7;
-     source = (opcode >> 3) & 7;
-     NEG_RD_RS;
+     {
+       // NEG Rd, Rs
+       int dest = opcode & 7;
+       int source = (opcode >> 3) & 7;
+       NEG_RD_RS;
+     }
      break;
    case 0x02:
-     // CMP Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].I;
-     CMP_RD_RS;
+     {
+       // CMP Rd, Rs
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].I;
+       CMP_RD_RS;
+     }
      break;
    case 0x03:
-     // CMN Rd, Rs
-     dest = opcode & 7;
-     value = reg[(opcode >> 3)&7].I;
-     // CMN
-     CMN_RD_RS;
+     {
+       // CMN Rd, Rs
+       int dest = opcode & 7;
+       u32 value = reg[(opcode >> 3)&7].I;
+       // CMN
+       CMN_RD_RS;
+     }
      break;
    }
    break;
  case 0x43:
    switch((opcode >> 6) & 3) {
    case 0x00:
-     // ORR Rd, Rs       
-     dest = opcode & 7;
-     reg[dest].I |= reg[(opcode >> 3) & 7].I;
-     Z_FLAG = reg[dest].I ? false : true;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     {
+       // ORR Rd, Rs       
+       int dest = opcode & 7;
+       reg[dest].I |= reg[(opcode >> 3) & 7].I;
+       Z_FLAG = reg[dest].I ? false : true;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     }
      break;
    case 0x01:
-     // MUL Rd, Rs
-     dest = opcode & 7;
-     reg[dest].I = reg[(opcode >> 3) & 7].I * reg[dest].I;
-     Z_FLAG = reg[dest].I ? false : true;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;   
+     {
+       // MUL Rd, Rs
+       int dest = opcode & 7;
+       reg[dest].I = reg[(opcode >> 3) & 7].I * reg[dest].I;
+       Z_FLAG = reg[dest].I ? false : true;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     }
      break;
    case 0x02:
-     // BIC Rd, Rs
-     dest = opcode & 7;
-     reg[dest].I &= (~reg[(opcode >> 3) & 7].I);
-     Z_FLAG = reg[dest].I ? false : true;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     {
+       // BIC Rd, Rs
+       int dest = opcode & 7;
+       reg[dest].I &= (~reg[(opcode >> 3) & 7].I);
+       Z_FLAG = reg[dest].I ? false : true;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     }
      break;
    case 0x03:
-     // MVN Rd, Rs
-     dest = opcode & 7;
-     reg[dest].I = ~reg[(opcode >> 3) & 7].I;
-     Z_FLAG = reg[dest].I ? false : true;
-     N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     {
+       // MVN Rd, Rs
+       int dest = opcode & 7;
+       reg[dest].I = ~reg[(opcode >> 3) & 7].I;
+       Z_FLAG = reg[dest].I ? false : true;
+       N_FLAG = reg[dest].I & 0x80000000 ? true : false;
+     }
      break;
    }
    break;
  case 0x44:
-   dest = opcode & 7;
-   base = (opcode >> 3) & 7;
-   switch((opcode >> 6)& 3) {
-   default:
-     goto unknown_thumb;
-   case 1:
-     // ADD Rd, Hs
-     reg[dest].I += reg[base+8].I;
-     break;
-   case 2:
-     // ADD Hd, Rs
-     reg[dest+8].I += reg[base].I;
-     if(dest == 7) {
-       reg[15].I &= 0xFFFFFFFE;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-       clockTicks++;
-     }       
-     break;
-   case 3:
-     // ADD Hd, Hs
-     reg[dest+8].I += reg[base+8].I;
-     if(dest == 7) {
-       reg[15].I &= 0xFFFFFFFE;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-       clockTicks++;     
+   {
+     int dest = opcode & 7;
+     int base = (opcode >> 3) & 7;
+     switch((opcode >> 6)& 3) {
+     default:
+       goto unknown_thumb;
+     case 1:
+       // ADD Rd, Hs
+       reg[dest].I += reg[base+8].I;
+       break;
+     case 2:
+       // ADD Hd, Rs
+       reg[dest+8].I += reg[base].I;
+       if(dest == 7) {
+         reg[15].I &= 0xFFFFFFFE;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+         clockTicks++;
+       }       
+       break;
+     case 3:
+       // ADD Hd, Hs
+       reg[dest+8].I += reg[base+8].I;
+       if(dest == 7) {
+         reg[15].I &= 0xFFFFFFFE;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+         clockTicks++;     
+       }
+       break;
      }
-     break;
    }
    break;
  case 0x45:
-   dest = opcode & 7;
-   base = (opcode >> 3) & 7;
-   switch((opcode >> 6) & 3) {
-   case 0:
-     // CMP Rd, Hs
-     value = reg[base].I;
-     CMP_RD_RS;
-     break;
-   case 1:
-     // CMP Rd, Hs
-     value = reg[base+8].I;
-     CMP_RD_RS;
-     break;
-   case 2:
-     // CMP Hd, Rs
-     value = reg[base].I;
-     dest += 8;
-     CMP_RD_RS;
-     break;
-   case 3:
-     // CMP Hd, Hs
-     value = reg[base+8].I;
-     dest += 8;
-     CMP_RD_RS;
-     break;
+   {
+     int dest = opcode & 7;
+     int base = (opcode >> 3) & 7;
+     u32 value;
+     switch((opcode >> 6) & 3) {
+     case 0:
+       // CMP Rd, Hs
+       value = reg[base].I;
+       CMP_RD_RS;
+       break;
+     case 1:
+       // CMP Rd, Hs
+       value = reg[base+8].I;
+       CMP_RD_RS;
+       break;
+     case 2:
+       // CMP Hd, Rs
+       value = reg[base].I;
+       dest += 8;
+       CMP_RD_RS;
+       break;
+     case 3:
+       // CMP Hd, Hs
+       value = reg[base+8].I;
+       dest += 8;
+       CMP_RD_RS;
+       break;
+     }
    }
    break;
  case 0x46:
-   dest = opcode & 7;
-   base = (opcode >> 3) & 7;
-   switch((opcode >> 6) & 3) {
-   case 0:
-     // this form should not be used...
-     // MOV Rd, Rs
-     reg[dest].I = reg[base].I;
-     break;
-   case 1:
-     // MOV Rd, Hs
-     reg[dest].I = reg[base+8].I;
-     break;
-   case 2:
-     // MOV Hd, Rs
-     reg[dest+8].I = reg[base].I;
-     if(dest == 7) {
-       reg[15].I &= 0xFFFFFFFE;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-       clockTicks++;
+   {
+     int dest = opcode & 7;
+     int base = (opcode >> 3) & 7;
+     switch((opcode >> 6) & 3) {
+     case 0:
+       // this form should not be used...
+       // MOV Rd, Rs
+       reg[dest].I = reg[base].I;
+       break;
+     case 1:
+       // MOV Rd, Hs
+       reg[dest].I = reg[base+8].I;
+       break;
+     case 2:
+       // MOV Hd, Rs
+       reg[dest+8].I = reg[base].I;
+       if(dest == 7) {
+         reg[15].I &= 0xFFFFFFFE;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+         clockTicks++;
+       }
+       break;
+     case 3:
+       // MOV Hd, Hs
+       reg[dest+8].I = reg[base+8].I;
+       if(dest == 7) {
+         reg[15].I &= 0xFFFFFFFE;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+         clockTicks++;
+       }   
+       break;
      }
-     break;
-   case 3:
-     // MOV Hd, Hs
-     reg[dest+8].I = reg[base+8].I;
-     if(dest == 7) {
-       reg[15].I &= 0xFFFFFFFE;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-       clockTicks++;
-     }   
-     break;
    }
    break;
  case 0x47:
-   base = (opcode >> 3) & 7;
-   switch((opcode >>6) & 3) {
-   case 0:
-     // BX Rs
-     reg[15].I = (reg[base].I) & 0xFFFFFFFE;
-     if(reg[base].I & 1) {
-       armState = false;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-     } else {
-       armState = true;
-       reg[15].I &= 0xFFFFFFFC;
-       armNextPC = reg[15].I;
-       reg[15].I += 4;
+   {
+     int base = (opcode >> 3) & 7;
+     switch((opcode >>6) & 3) {
+     case 0:
+       // BX Rs
+       reg[15].I = (reg[base].I) & 0xFFFFFFFE;
+       if(reg[base].I & 1) {
+         armState = false;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+       } else {
+         armState = true;
+         reg[15].I &= 0xFFFFFFFC;
+         armNextPC = reg[15].I;
+         reg[15].I += 4;
+       }
+       break;
+     case 1:
+       // BX Hs
+       reg[15].I = (reg[8+base].I) & 0xFFFFFFFE;
+       if(reg[8+base].I & 1) {
+         armState = false;
+         armNextPC = reg[15].I;
+         reg[15].I += 2;
+       } else {
+         armState = true;
+         reg[15].I &= 0xFFFFFFFC;       
+         armNextPC = reg[15].I;
+         reg[15].I += 4;
+       }
+       break;
+     default:
+       goto unknown_thumb;
      }
-     break;
-   case 1:
-     // BX Hs
-     reg[15].I = (reg[8+base].I) & 0xFFFFFFFE;
-     if(reg[8+base].I & 1) {
-       armState = false;
-       armNextPC = reg[15].I;
-       reg[15].I += 2;
-     } else {
-       armState = true;
-       reg[15].I &= 0xFFFFFFFC;       
-       armNextPC = reg[15].I;
-       reg[15].I += 4;
-     }
-     break;
-   default:
-     goto unknown_thumb;
    }
    break;
  case 0x48:
@@ -1368,11 +1426,13 @@ switch(opcode >> 8) {
    reg[7].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xb0:
-   // add offset to SP
-   offset = (opcode & 127) << 2;
-   if(opcode & 0x80)
-     offset = -offset;
-   reg[13].I += offset;
+   {
+     // add offset to SP
+     int offset = (opcode & 127) << 2;
+     if(opcode & 0x80)
+       offset = -offset;
+     reg[13].I += offset;
+   }
    break;
 #define PUSH_REG(val, r) \
   if(opcode & (val)) {\
@@ -1445,116 +1505,132 @@ switch(opcode >> 8) {
     offset = 1;\
   }
  case 0xc0:
-   address = reg[0].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 0);
-   STM_REG(2, 1, 0);
-   STM_REG(4, 2, 0);
-   STM_REG(8, 3, 0);
-   STM_REG(16, 4, 0);
-   STM_REG(32, 5, 0);
-   STM_REG(64, 6, 0);
-   STM_REG(128, 7, 0);
+   {
+     u32 address = reg[0].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 0);
+     STM_REG(2, 1, 0);
+     STM_REG(4, 2, 0);
+     STM_REG(8, 3, 0);
+     STM_REG(16, 4, 0);
+     STM_REG(32, 5, 0);
+     STM_REG(64, 6, 0);
+     STM_REG(128, 7, 0);
+   }
    break;   
  case 0xc1:
-   address = reg[1].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 1);
-   STM_REG(2, 1, 1);
-   STM_REG(4, 2, 1);
-   STM_REG(8, 3, 1);
-   STM_REG(16, 4, 1);
-   STM_REG(32, 5, 1);
-   STM_REG(64, 6, 1);
-   STM_REG(128, 7, 1);
+   {
+     u32 address = reg[1].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 1);
+     STM_REG(2, 1, 1);
+     STM_REG(4, 2, 1);
+     STM_REG(8, 3, 1);
+     STM_REG(16, 4, 1);
+     STM_REG(32, 5, 1);
+     STM_REG(64, 6, 1);
+     STM_REG(128, 7, 1);
+   }
    break;      
  case 0xc2:
-   address = reg[2].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 2);
-   STM_REG(2, 1, 2);
-   STM_REG(4, 2, 2);
-   STM_REG(8, 3, 2);
-   STM_REG(16, 4, 2);
-   STM_REG(32, 5, 2);
-   STM_REG(64, 6, 2);
-   STM_REG(128, 7, 2);
+   {
+     u32 address = reg[2].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 2);
+     STM_REG(2, 1, 2);
+     STM_REG(4, 2, 2);
+     STM_REG(8, 3, 2);
+     STM_REG(16, 4, 2);
+     STM_REG(32, 5, 2);
+     STM_REG(64, 6, 2);
+     STM_REG(128, 7, 2);
+   }
    break;      
  case 0xc3:
-   address = reg[3].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 3);
-   STM_REG(2, 1, 3);
-   STM_REG(4, 2, 3);
-   STM_REG(8, 3, 3);
-   STM_REG(16, 4, 3);
-   STM_REG(32, 5, 3);
-   STM_REG(64, 6, 3);
-   STM_REG(128, 7, 3);
+   {
+     u32 address = reg[3].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 3);
+     STM_REG(2, 1, 3);
+     STM_REG(4, 2, 3);
+     STM_REG(8, 3, 3);
+     STM_REG(16, 4, 3);
+     STM_REG(32, 5, 3);
+     STM_REG(64, 6, 3);
+     STM_REG(128, 7, 3);
+   }
    break;   
  case 0xc4:
-   address = reg[4].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 4);
-   STM_REG(2, 1, 4);
-   STM_REG(4, 2, 4);
-   STM_REG(8, 3, 4);
-   STM_REG(16, 4, 4);
-   STM_REG(32, 5, 4);
-   STM_REG(64, 6, 4);
-   STM_REG(128, 7, 4);
+   {
+     u32 address = reg[4].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 4);
+     STM_REG(2, 1, 4);
+     STM_REG(4, 2, 4);
+     STM_REG(8, 3, 4);
+     STM_REG(16, 4, 4);
+     STM_REG(32, 5, 4);
+     STM_REG(64, 6, 4);
+     STM_REG(128, 7, 4);
+   }
    break;   
  case 0xc5:
-   address = reg[5].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 5);
-   STM_REG(2, 1, 5);
-   STM_REG(4, 2, 5);
-   STM_REG(8, 3, 5);
-   STM_REG(16, 4, 5);
-   STM_REG(32, 5, 5);
-   STM_REG(64, 6, 5);
-   STM_REG(128, 7, 5);
+   {
+     u32 address = reg[5].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 5);
+     STM_REG(2, 1, 5);
+     STM_REG(4, 2, 5);
+     STM_REG(8, 3, 5);
+     STM_REG(16, 4, 5);
+     STM_REG(32, 5, 5);
+     STM_REG(64, 6, 5);
+     STM_REG(128, 7, 5);
+   }
    break;   
  case 0xc6:
-   address = reg[6].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 6);
-   STM_REG(2, 1, 6);
-   STM_REG(4, 2, 6);
-   STM_REG(8, 3, 6);
-   STM_REG(16, 4, 6);
-   STM_REG(32, 5, 6);
-   STM_REG(64, 6, 6);
-   STM_REG(128, 7, 6);
+   {
+     u32 address = reg[6].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 6);
+     STM_REG(2, 1, 6);
+     STM_REG(4, 2, 6);
+     STM_REG(8, 3, 6);
+     STM_REG(16, 4, 6);
+     STM_REG(32, 5, 6);
+     STM_REG(64, 6, 6);
+     STM_REG(128, 7, 6);
+   }
    break;   
  case 0xc7:
-   address = reg[7].I;
-   temp = address + 4*cpuBitsSet[opcode & 0xff];
-   offset = 0;
-   // store
-   STM_REG(1, 0, 7);
-   STM_REG(2, 1, 7);
-   STM_REG(4, 2, 7);
-   STM_REG(8, 3, 7);
-   STM_REG(16, 4, 7);
-   STM_REG(32, 5, 7);
-   STM_REG(64, 6, 7);
-   STM_REG(128, 7, 7);
+   {
+     u32 address = reg[7].I;
+     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     int offset = 0;
+     // store
+     STM_REG(1, 0, 7);
+     STM_REG(2, 1, 7);
+     STM_REG(4, 2, 7);
+     STM_REG(8, 3, 7);
+     STM_REG(16, 4, 7);
+     STM_REG(32, 5, 7);
+     STM_REG(64, 6, 7);
+     STM_REG(128, 7, 7);
+   }
    break;
 #define LDM_REG(val,r) \
   if(opcode & (val)) {\
@@ -1563,116 +1639,132 @@ switch(opcode >> 8) {
     clockTicks += 2;\
   }
  case 0xc8:
-   address = reg[0].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);
-   if(!(opcode & 1))
-     reg[0].I = address;
+   {
+     u32 address = reg[0].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);
+     if(!(opcode & 1))
+       reg[0].I = address;
+   }
    break;
  case 0xc9:
-   address = reg[1].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);
-   if(!(opcode & 2))
-     reg[1].I = address;
+   {
+     u32 address = reg[1].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);
+     if(!(opcode & 2))
+       reg[1].I = address;
+   }
    break;
  case 0xca:
-   address = reg[2].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);
-   if(!(opcode & 4))
-     reg[2].I = address;
+   {
+     u32 address = reg[2].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);
+     if(!(opcode & 4))
+       reg[2].I = address;
+   }
    break;
  case 0xcb:
-   address = reg[3].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);
-   if(!(opcode & 8))
-     reg[3].I = address;
+   {
+     u32 address = reg[3].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);
+     if(!(opcode & 8))
+       reg[3].I = address;
+   }
    break;
  case 0xcc:
-   address = reg[4].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);   
-   if(!(opcode & 16))
-     reg[4].I = address;
+   {
+     u32 address = reg[4].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);   
+     if(!(opcode & 16))
+       reg[4].I = address;
+   }
    break;
  case 0xcd:
-   address = reg[5].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);   
-   if(!(opcode & 32))
-     reg[5].I = address;
+   {
+     u32 address = reg[5].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);   
+     if(!(opcode & 32))
+       reg[5].I = address;
+   }
    break;
  case 0xce:
-   address = reg[6].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);   
-   if(!(opcode & 64))
-     reg[6].I = address;
+   {
+     u32 address = reg[6].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);   
+     if(!(opcode & 64))
+       reg[6].I = address;
+   }
    break;
  case 0xcf:
-   address = reg[7].I;
-   // load
-   LDM_REG(1, 0);
-   LDM_REG(2, 1);
-   LDM_REG(4, 2);
-   LDM_REG(8, 3);
-   LDM_REG(16, 4);
-   LDM_REG(32, 5);
-   LDM_REG(64, 6);
-   LDM_REG(128, 7);   
-   if(!(opcode & 128))
-     reg[7].I = address;
+   {
+     u32 address = reg[7].I;
+     // load
+     LDM_REG(1, 0);
+     LDM_REG(2, 1);
+     LDM_REG(4, 2);
+     LDM_REG(8, 3);
+     LDM_REG(16, 4);
+     LDM_REG(32, 5);
+     LDM_REG(64, 6);
+     LDM_REG(128, 7);   
+     if(!(opcode & 128))
+       reg[7].I = address;
+   }
    break;
  case 0xd0:
    if(Z_FLAG) {
@@ -1805,29 +1897,35 @@ switch(opcode >> 8) {
  case 0xed:
  case 0xee:
  case 0xef:
-   // unconditional branch
-   offset = (opcode & 0x3FF) << 1;
-   if(opcode & 0x0400)
-     offset |= 0xFFFFF800;
-   reg[15].I += offset;
-   armNextPC = reg[15].I;
-   reg[15].I += 2;
+   {
+     // unconditional branch
+     int offset = (opcode & 0x3FF) << 1;
+     if(opcode & 0x0400)
+       offset |= 0xFFFFF800;
+     reg[15].I += offset;
+     armNextPC = reg[15].I;
+     reg[15].I += 2;
+   }
    break;
  case 0xf0:
  case 0xf1:
  case 0xf2:
  case 0xf3:
-   // long branch with link
-   offset = (opcode & 0x7FF);
-   reg[14].I = reg[15].I + (offset << 12);       
+   {
+     // long branch with link
+     int offset = (opcode & 0x7FF);
+     reg[14].I = reg[15].I + (offset << 12);
+   }
    break;      
  case 0xf4:
  case 0xf5:
  case 0xf6:
  case 0xf7:
-   // long branch with link
-   offset = (opcode & 0x7FF);
-   reg[14].I = reg[15].I + ((offset << 12) | 0xFF800000);
+   {
+     // long branch with link
+     int offset = (opcode & 0x7FF);
+     reg[14].I = reg[15].I + ((offset << 12) | 0xFF800000);
+   }
    break;   
  case 0xf8:
  case 0xf9:
@@ -1837,13 +1935,15 @@ switch(opcode >> 8) {
  case 0xfd:
  case 0xfe:
  case 0xff:
-   // long branch with link
-   offset = (opcode & 0x7FF);
-   temp = reg[15].I-2;
-   reg[15].I = (reg[14].I + (offset<<1))&0xFFFFFFFE;
-   armNextPC = reg[15].I;
-   reg[15].I += 2;
-   reg[14].I = temp|1;
+   {
+     // long branch with link
+     int offset = (opcode & 0x7FF);
+     u32 temp = reg[15].I-2;
+     reg[15].I = (reg[14].I + (offset<<1))&0xFFFFFFFE;
+     armNextPC = reg[15].I;
+     reg[15].I += 2;
+     reg[14].I = temp|1;
+   }
    break;
 #ifdef BKPT_SUPPORT
  case 0xbe:
