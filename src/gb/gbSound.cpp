@@ -118,6 +118,7 @@ extern int soundEchoIndex;
 extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
+extern bool soundOffFlag;
 
 bool gbDigitalSound = false;
 
@@ -853,10 +854,12 @@ extern void soundShutdown();
 void gbSoundSetQuality(int quality)
 {
   if(soundQuality != quality && systemCanChangeSoundQuality()) {
-    soundShutdown();
+    if(!soundOffFlag)
+      soundShutdown();
     soundQuality = quality;
     soundNextPosition = 0;
-    soundInit();
+    if(!soundOffFlag)
+      soundInit();
     SOUND_CLOCK_TICKS = (gbSpeed ? 2 : 1) * 24 * soundQuality;
     soundIndex = 0;
     soundBufferIndex = 0;

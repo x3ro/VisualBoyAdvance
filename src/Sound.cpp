@@ -1284,10 +1284,12 @@ bool soundInit()
 void soundSetQuality(int quality)
 {
   if(soundQuality != quality && systemCanChangeSoundQuality()) {
-    soundShutdown();
+    if(!soundOffFlag)
+      soundShutdown();
     soundQuality = quality;
     soundNextPosition = 0;
-    soundInit();
+    if(!soundOffFlag)
+      soundInit();
     SOUND_CLOCK_TICKS = USE_TICKS_AS * soundQuality;
     soundIndex = 0;
     soundBufferIndex = 0;
