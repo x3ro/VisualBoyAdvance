@@ -196,16 +196,19 @@ bool OpenGLDisplay::initialize()
       GetWindowRect(GetDesktopWindow(), &r);
       fsWidth = r.right - r.left;
       fsHeight = r.bottom - r.top;
-      
+
+      /* Need to fix this code later. For now, Fullscreen takes the whole
+	 screen.
       int scaleX = (fsWidth / sizeX);
       int scaleY = (fsHeight / sizeY);
       int min = scaleX < scaleY ? scaleX : scaleY;
       surfaceSizeX = sizeX * min;
       surfaceSizeY = sizeY * min;
       if(fullScreenStretch) {
+      */
         surfaceSizeX = fsWidth;
         surfaceSizeY = fsHeight;
-      }
+	//      }
     }
     break;
   }
@@ -226,7 +229,7 @@ bool OpenGLDisplay::initialize()
   if(videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
-    styleEx = WS_EX_TOPMOST;
+    styleEx = 0;
 
   if(videoOption <= VIDEO_4X)
     AdjustWindowRectEx(&dest, style, TRUE, styleEx);

@@ -199,7 +199,7 @@ bool GDIDisplay::initialize()
   if(videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
-    styleEx = WS_EX_TOPMOST;
+    styleEx = 0;
 
   if(videoOption <= VIDEO_4X)
     AdjustWindowRectEx(&dest, style, TRUE, styleEx);
@@ -403,7 +403,7 @@ void GDIDisplay::render()
         fontDisplayString((u8*)filterData,
                           p,
                           10,
-                          filterHeight-10,
+                          filterHeight*2-10,
                           buffer);      
     } else {
       if(showSpeedTransparent)

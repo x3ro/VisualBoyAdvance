@@ -2821,7 +2821,9 @@ void updateWindowSize(int value)
       int min = scaleX < scaleY ? scaleX : scaleY;
       surfaceSizeX = min * sizeX;
       surfaceSizeY = min * sizeY;
-      if(fullScreenStretch) {
+      if((fullScreenStretch && (display != NULL && 
+	 (display->getType() != DIRECT_3D)))
+	 || (display != NULL && display->getType() == OPENGL)) {
         surfaceSizeX = fsWidth;
         surfaceSizeY = fsHeight;
       }

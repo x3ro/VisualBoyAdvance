@@ -236,10 +236,10 @@ bool Direct3DDisplay::initialize()
       int min = scaleX < scaleY ? scaleX : scaleY;
       surfaceSizeX = sizeX * min;
       surfaceSizeY = sizeY * min;
-      if(fullScreenStretch) {
-        surfaceSizeX = fsWidth;
-        surfaceSizeY = fsHeight;
-      }
+      //      if(fullScreenStretch) {
+      //        surfaceSizeX = fsWidth;
+      //        surfaceSizeY = fsHeight;
+      //      }
     }
     break;
   }
@@ -260,7 +260,7 @@ bool Direct3DDisplay::initialize()
   if(videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
-    styleEx = WS_EX_TOPMOST;
+    styleEx = 0;
 
   if(videoOption <= VIDEO_4X)
     AdjustWindowRectEx(&dest, style, TRUE, styleEx);
