@@ -337,7 +337,13 @@ Command line options (override settings in configuration file)
                                128 - DMA 3
 
 Long options only:
+       --ifb-none             No interframe blending
+       --ifb-motion-blur      Interframe motion blur
+       --ifb-smart            Smart interframe blending
        --no-ips               Do not apply IPS patch
+       --no-mmx               Disable MMX support
+       --no-show-speed        Don't show emulation speed
+       --show-speed           Show emulation speed
 
 Known bugs
 ----------

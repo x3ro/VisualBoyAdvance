@@ -1,3 +1,11 @@
+2003-01-11  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPULoop): set emulation speed value
+	* src/win32/Win32.cpp: added support for fullscreen speed display
+	* src/win32/Win32.cpp: support for triple buffering in fullscreen mode
+	* src/gb/GB.cpp (gbEmulate): set emulation speed value
+	* src/SDL.cpp: added support for fullscreen speed display
+
 2003-01-08  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (systemMessage): fixed problem displaying error messages in fullscreen mode

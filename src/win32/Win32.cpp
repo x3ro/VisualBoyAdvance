@@ -33,6 +33,7 @@
 #include "Reg.h"
 #include "../GBA.h"
 #include "../NLS.h"
+#include "../Font.h"
 #include "../Globals.h"
 #include "WinResUtil.h"
 #include "../Sound.h"
@@ -65,6 +66,7 @@ HINSTANCE            dsoundDLL    = NULL;
 LPDIRECTDRAW7        pDirectDraw  = NULL;
 LPDIRECTDRAWSURFACE7 ddsPrimary   = NULL;
 LPDIRECTDRAWSURFACE7 ddsOffscreen = NULL;
+LPDIRECTDRAWSURFACE7 ddsFlip      = NULL;
 LPDIRECTDRAWCLIPPER  ddsClipper   = NULL;
 LPDIRECTSOUND        pDirectSound = NULL;
 LPDIRECTSOUNDBUFFER  dsbPrimary   = NULL;
@@ -90,6 +92,7 @@ BOOL aviRecording = FALSE;
 CAVIFile *aviRecorder = NULL;
 char aviRecordName[2048];
 
+BOOL showSpeed = TRUE;
 BOOL recentFreeze = FALSE;
 BOOL speedupToggle = FALSE;
 BOOL removeIntros = FALSE;
@@ -106,6 +109,7 @@ int nCmdShow = 0;
 UINT configDialogTimerId  = 0;
 BOOL ddrawEmulationOnly = FALSE;
 BOOL ddrawUseVideoMemory = FALSE;
+BOOL tripleBuffering = TRUE;
 int threadPriority = 2;
 int autoFire = 0;
 bool autoFireToggle = false;
@@ -142,6 +146,7 @@ int emulating = 0;
 bool debugger = false;
 int winFlashSize = 0x10000;
 
+int systemSpeed = 0;
 bool systemSoundOn = false;
 u32 systemColorMap32[0x10000];
 u16 systemColorMap16[0x10000];
@@ -467,6 +472,11 @@ void shutdownDirectDraw()
     if(ddsClipper != NULL) {
       ddsClipper->Release();
       ddsClipper = NULL;
+    }
+
+    if(ddsFlip != NULL) {
+      ddsFlip->Release();
+      ddsFlip = NULL;
     }
 
     if(ddsOffscreen != NULL) {
@@ -1373,12 +1383,14 @@ void updateVideoMenu(HMENU menu)
                 CHECKMENUSTATE(ddrawEmulationOnly));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY,
                 CHECKMENUSTATE(ddrawUseVideoMemory));
+  CheckMenuItem(menu, ID_OPTIONS_VIDEO_TRIPLEBUFFERING,
+                CHECKMENUSTATE(tripleBuffering));
 
   HMENU sub = GetSubMenu(menu, 15);
   if(sub == NULL)
     sub= GetSubMenu(menu, 16);
   if(sub == NULL)
-    sub = GetSubMenu(menu, 17);
+    sub = GetSubMenu(menu, 18);
   if(sub != NULL)
     updateLayersMenu(sub);
 }
@@ -1429,7 +1441,9 @@ void updateEmulatorMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH,
                 CHECKMENUSTATE(autoIPS));
   EnableMenuItem(menu, ID_OPTIONS_EMULATOR_USEBIOSFILE,
-                 ENABLEMENU(biosFileName[0]));  
+                 ENABLEMENU(biosFileName[0]));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED,
+                CHECKMENUSTATE(showSpeed));
 
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_PNGFORMAT,
                 CHECKMENUSTATE(captureFormat == 0));
@@ -1439,6 +1453,8 @@ void updateEmulatorMenu(HMENU menu)
   HMENU sub = GetSubMenu(menu, 7);
   if(sub == NULL)
     sub = GetSubMenu(menu, 8);
+  if(sub == NULL)
+    sub = GetSubMenu(menu, 9);
 
   updateSaveTypeMenu(menu);
 }
@@ -2092,6 +2108,23 @@ u32 systemReadJoypadExtended()
   return res;
 }
 
+void winClearFlipSurfaces()
+{
+  if(videoOption <= VIDEO_4X || !tripleBuffering || ddsFlip == NULL)
+    return;
+
+  DDBLTFX fx;
+  ZeroMemory(&fx, sizeof(fx));
+  fx.dwSize = sizeof(fx);
+  fx.dwFillColor = 0;
+  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
+  ddsPrimary->Flip(NULL, 0);
+  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
+  ddsPrimary->Flip(NULL, 0);
+  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
+  ddsPrimary->Flip(NULL, 0);    
+}
+
 void systemDrawScreen()
 {
   HRESULT hret;
@@ -2412,24 +2445,48 @@ void systemDrawScreen()
         }      
       }
     }
+    if(videoOption > VIDEO_4X && showSpeed) {
+      char buffer[30];
+      sprintf(buffer, "%d%%", systemSpeed);
+      fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
+                              ddsDesc.lPitch,
+                              rect.left+10,
+                              rect.bottom-10,
+                              buffer);
+    }
   }
+  
   hret = ddsOffscreen->Unlock(NULL);
   
   if(hret == DD_OK) {
-    hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect,DDBLT_ASYNC,NULL);
-    
-    if(hret == DDERR_SURFACELOST) {
-      hret = ddsPrimary->Restore();
-      
+    ddsOffscreen->PageLock(0);
+    if(tripleBuffering && videoOption > VIDEO_4X) {
+      hret = ddsFlip->Blt(&dest, ddsOffscreen, &rect, DDBLT_WAIT, NULL);
       if(hret == DD_OK) {
-        hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect, DDBLT_ASYNC, NULL);
+        if(menuToggle) {
+          ddsPrimary->SetClipper(ddsClipper);
+          hret = ddsPrimary->Blt(NULL, ddsFlip, NULL, DDBLT_WAIT, NULL);
+        } else
+          hret = ddsPrimary->Flip(NULL, 0);
+      }
+    } else {
+      hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect,DDBLT_ASYNC,NULL);
+      
+      if(hret == DDERR_SURFACELOST) {
+        hret = ddsPrimary->Restore();
+        
+        if(hret == DD_OK) {
+          hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect, DDBLT_ASYNC, NULL);
+        }
       }
     }
+    ddsOffscreen->PageUnlock(0);
   }
 
   if(screenMessage) {
     if(((GetTickCount() - screenMessageTime) < 3000) &&
        !disableStatusMessage) {
+      ddsPrimary->SetClipper(ddsClipper);
       HDC hdc;
       ddsPrimary->GetDC(&hdc);
       SetTextColor(hdc, RGB(255,0,0));
@@ -2491,87 +2548,7 @@ void adjustDestRect()
     dest.bottom -=m;
   }
 
-  if(videoOption == VIDEO_320x240) {
-    if(cartridgeType == 0) {
-      dest.top += 40;
-      dest.bottom += 40;
-      dest.left += 40;
-      dest.right += 40;
-    } else {
-      if(gbBorderOn) {
-        dest.top += 8;
-        dest.bottom += 8;
-        dest.left += 32;
-        dest.right += 32;
-      } else {
-        dest.top += 48;
-        dest.bottom += 48;
-        dest.left += 80;
-        dest.right += 80;
-      }
-    }
-    if(fullScreenStretch) {
-      dest.top = 0+menuSkip;
-      dest.left = 0;
-      dest.right = 320;
-      dest.bottom = 240;
-    }
-  }
-
-  if(videoOption == VIDEO_640x480) {
-    if(cartridgeType == 0) {
-      dest.top += 80;
-      dest.bottom += 80;
-      dest.left += 80;
-      dest.right += 80;
-    } else {
-      if(gbBorderOn) {
-        dest.top += 16;
-        dest.bottom += 16;
-        dest.left += 64;
-        dest.right += 64;
-      } else {
-        dest.top += 24;
-        dest.bottom += 24;
-        dest.left += 80;
-        dest.right += 80;
-      }
-    }
-    if(fullScreenStretch) {
-      dest.top = 0+menuSkip;
-      dest.left = 0;
-      dest.right = 640;
-      dest.bottom = 480;
-    }          
-  }
-  if(videoOption == VIDEO_800x600) {
-    if(cartridgeType == 0) {
-      dest.top += 60;
-      dest.bottom += 60;
-      dest.left += 40;
-      dest.right += 40;
-    } else {
-      if(gbBorderOn) {
-        dest.top += 76;
-        dest.bottom += 76;
-        dest.left += 144;
-        dest.right += 144;
-      } else {
-        dest.top += 12;
-        dest.bottom += 12;
-        dest.left += 80;
-        dest.right += 80;
-      }
-    }
-    if(fullScreenStretch) {
-      dest.top = 0+menuSkip;
-      dest.left = 0;
-      dest.right = 800;
-      dest.bottom = 600;
-    }          
-  }
-
-  if(videoOption == VIDEO_OTHER) {
+  if(videoOption > VIDEO_4X) {
     int top = (fsHeight - surfaceSizeY) / 2;
     int left = (fsWidth - surfaceSizeX) / 2;
     dest.top += top;
@@ -2782,14 +2759,12 @@ void updateWindowSize(int value)
     DestroyWindow(hWindow);
     hWindow = NULL;
     videoOption = value;
-    OutputDebugString("Shutdown complete\n");
     if(!initDirectDraw()) {
       if(videoOption == VIDEO_320x240 ||
          videoOption == VIDEO_640x480 ||
          videoOption == VIDEO_800x600 ||
          videoOption == VIDEO_OTHER)
         regSetDwordValue("video", VIDEO_1X);
-      OutputDebugString("InitDDraw failed\n");
       changingVideoSize = FALSE;
       fileExit();
       return;
@@ -2848,49 +2823,8 @@ void updateWindowSize(int value)
     surfaceSizeY = sizeY * 4;
     break;
   case VIDEO_320x240:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
-    if(fullScreenStretch) {
-      surfaceSizeX = 320;
-      surfaceSizeY = 240;
-    }
-    break;
   case VIDEO_640x480:
-    if(cartridgeType == 0) {
-      surfaceSizeX = sizeX * 2;
-      surfaceSizeY = sizeY * 2;
-    } else {
-      if(gbBorderOn) {
-        surfaceSizeX = sizeX * 2;
-        surfaceSizeY = sizeY * 2;
-      } else {
-        surfaceSizeX = sizeX * 3;
-        surfaceSizeY = sizeY * 3;
-      }      
-    }
-    if(fullScreenStretch) {
-      surfaceSizeX = 640;
-      surfaceSizeY = 480;
-    }
-    break;
   case VIDEO_800x600:
-    if(cartridgeType == 0) {
-      surfaceSizeX = sizeX * 3;
-      surfaceSizeY = sizeY * 3;
-    } else {
-      if(gbBorderOn) {
-        surfaceSizeX = sizeX * 2;
-        surfaceSizeY = sizeY * 2;
-      } else {
-        surfaceSizeX = sizeX * 4;
-        surfaceSizeY = sizeY * 4;
-      }      
-    }
-    if(fullScreenStretch) {
-      surfaceSizeX = 800;
-      surfaceSizeY = 600;
-    }
-    break;
   case VIDEO_OTHER:
     {
       int scaleX = 1;
@@ -2968,12 +2902,21 @@ void updateVideoSize(UINT id)
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN320X240:
     value = VIDEO_320x240;
+    fsWidth = 320;
+    fsHeight = 240;
+    fsColorDepth = 16;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN640X480:
     value = VIDEO_640x480;
+    fsWidth = 640;
+    fsHeight = 480;
+    fsColorDepth = 16;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
     value = VIDEO_800x600;
+    fsWidth = 800;
+    fsHeight = 600;
+    fsColorDepth = 16;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN:
     value = VIDEO_OTHER;
@@ -3115,7 +3058,7 @@ void fileImportEepromFile()
   ofn.lpstrTitle = winResLoadString(IDS_SELECT_BATTERY_FILE);
   ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-  if(videoOption ==  VIDEO_320x240) {
+  if(videoOption == VIDEO_320x240) {
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
     ofn.Flags |= OFN_ENABLETEMPLATE;
   }
@@ -3425,6 +3368,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_ACTIVATE:
     {
       BOOL a = (wParam == WA_ACTIVE) || (wParam == WA_CLICKACTIVE);
+      //      if(videoOption > VIDEO_4X && menuToggle && tripleBuffering)
+      //        a = FALSE;
       if(a && pDevices) {
         active = a;
         // Pause if minimized or not the top window
@@ -3446,6 +3391,13 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     if(paused && emulating)
       systemDrawScreen();
+    break;
+  case WM_ACTIVATEAPP:
+    if(tripleBuffering && videoOption > VIDEO_4X) {
+      if(wParam) {
+        winClearFlipSurfaces();
+      }
+    }
     break;
   case WM_DESTROY:
     if(!changingVideoSize) {
@@ -3804,6 +3756,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       fullScreenStretch = !fullScreenStretch;
       regSetDwordValue("stretch", fullScreenStretch);
       updateWindowSize(videoOption);
+      winClearFlipSurfaces();
       break;
     case ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY:
       ddrawEmulationOnly = !ddrawEmulationOnly;
@@ -3814,6 +3767,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ddrawUseVideoMemory = false;
         regSetDwordValue("ddrawUseVideoMemory", ddrawUseVideoMemory);   
       }
+      systemMessage(IDS_SETTING_WILL_BE_EFFECTIVE,
+                    "Setting will be effective the next time you start the emulator");
+      break;
+    case ID_OPTIONS_VIDEO_TRIPLEBUFFERING:
+      regSetDwordValue("tripleBuffering", !tripleBuffering);
       systemMessage(IDS_SETTING_WILL_BE_EFFECTIVE,
                     "Setting will be effective the next time you start the emulator");
       break;
@@ -3876,6 +3834,12 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_EMULATOR_BMPFORMAT:
       captureFormat = 1;
       regSetDwordValue("captureFormat", 1);      
+      break;
+    case ID_OPTIONS_EMULATOR_SHOWSPEED:
+      showSpeed = !showSpeed;
+      regSetDwordValue("showSpeed", showSpeed);
+      if(!showSpeed)
+        systemSetTitle("VisualBoyAdvance");
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC:
       cpuSaveType = 0;
@@ -4339,29 +4303,8 @@ BOOL initDirectDraw()
     surfaceSizeY = sizeY * 4;
     break;
   case VIDEO_320x240:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
-    if(fullScreenStretch) {
-      surfaceSizeX = 320;
-      surfaceSizeY = 240;
-    }
-    break;
   case VIDEO_640x480:
-    surfaceSizeX = sizeX * 2;
-    surfaceSizeY = sizeY * 2;
-    if(fullScreenStretch) {
-      surfaceSizeX = 640;
-      surfaceSizeY = 480;
-    }    
-    break;
   case VIDEO_800x600:
-    surfaceSizeX = sizeX * 3;
-    surfaceSizeY = sizeY * 3;
-    if(fullScreenStretch) {
-      surfaceSizeX = 800;
-      surfaceSizeY = 600;
-    }    
-    break;
   case VIDEO_OTHER:
     {
       int scaleX = (fsWidth / sizeX);
@@ -4475,6 +4418,7 @@ BOOL initDirectDraw()
 
   mode320Available = FALSE;
   mode640Available = FALSE;
+  mode800Available = FALSE;
   // check for available fullscreen modes
   pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, NULL,
                                 checkModesAvailable);
@@ -4495,66 +4439,14 @@ BOOL initDirectDraw()
     //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWLEVEL), hret);
     return FALSE;
   }
-
-  if(videoOption == VIDEO_640x480) {
-    hret = pDirectDraw->SetDisplayMode(640,
-                                       480,
-                                       16,
-                                       0,
-                                       0);
-    
-    if(hret != DD_OK) {
-      log("Error SetDisplayMode %08x\n", hret);      
-      videoOption = VIDEO_1X;
-      regSetDwordValue("video", videoOption);
-      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
-      return FALSE;
-    }
-  }
-  if(videoOption == VIDEO_320x240) {
-    hret = pDirectDraw->SetDisplayMode(320,
-                                       240,
-                                       16,
-                                       0,
-                                       0);
-    if(hret != DD_OK) {
-      log("Error SetDisplayMode %08x\n", hret);      
-      videoOption = VIDEO_1X;
-      regSetDwordValue("video", videoOption);
-      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
-      return FALSE;
-    }
-  }
-
-  if(videoOption == VIDEO_800x600) {
-    hret = pDirectDraw->SetDisplayMode(800,
-                                       600,
-                                       16,
-                                       0,
-                                       0);
-    if(hret != DD_OK) {
-      log("Error SetDisplayMode %08x\n", hret);      
-      videoOption = VIDEO_1X;
-      regSetDwordValue("video", videoOption);
-      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
-      return FALSE;
-    }
-  }
-
-  if(videoOption == VIDEO_OTHER) {
-    char buffer[50];
-    OutputDebugString("Setting resoulution\n");
-    sprintf(buffer, "W: %d H: %d D: %d\n", fsWidth, fsHeight, fsColorDepth);
-    OutputDebugString(buffer);
+  
+  if(videoOption > VIDEO_4X) {
     hret = pDirectDraw->SetDisplayMode(fsWidth,
                                        fsHeight,
                                        fsColorDepth,
                                        0,
                                        0);
     if(hret != DD_OK) {
-      sprintf(buffer, "SDM %08x\n", hret);
-      OutputDebugString(buffer);
-      log("Error SetDisplayMode %08x\n", hret);      
       videoOption = VIDEO_1X;
       regSetDwordValue("video", videoOption);
       //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
@@ -4567,6 +4459,14 @@ BOOL initDirectDraw()
   ddsd.dwSize = sizeof(ddsd);
   ddsd.dwFlags = DDSD_CAPS;
   ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+  if(videoOption > VIDEO_4X) {
+    if(tripleBuffering) {
+      // setup triple buffering
+      ddsd.dwFlags |= DDSD_BACKBUFFERCOUNT;
+      ddsd.ddsCaps.dwCaps |= DDSCAPS_COMPLEX | DDSCAPS_FLIP;
+      ddsd.dwBackBufferCount = 2;
+    }
+  }
   
   hret = pDirectDraw->CreateSurface(&ddsd, &ddsPrimary, NULL);
   if(hret != DD_OK) {
@@ -4575,12 +4475,34 @@ BOOL initDirectDraw()
     return FALSE;
   }
 
+  if(videoOption > VIDEO_4X && tripleBuffering) {
+    DDSCAPS2 caps;
+    ZeroMemory(&caps, sizeof(caps));
+    // this gets the third surface. The front one is the primary,
+    // the second is the backbuffer and the third is the flip
+    // surface
+    caps.dwCaps = DDSCAPS_BACKBUFFER;
+    
+    hret = ddsPrimary->GetAttachedSurface(&caps, &ddsFlip);
+    if(hret != DD_OK) {
+      systemMessage(0, "Failed to get attached surface %08x", hret);
+      return FALSE;
+    }
+    winClearFlipSurfaces();
+  }
+
   // create clipper in all modes to avoid paint problems
   //  if(videoOption <= VIDEO_4X) {
     hret = pDirectDraw->CreateClipper(0, &ddsClipper, NULL);
     if(hret == DD_OK) {
       ddsClipper->SetHWnd(0, hWindow);
-      ddsPrimary->SetClipper(ddsClipper);
+      if(videoOption > VIDEO_4X) {
+        if(tripleBuffering)
+          ddsFlip->SetClipper(ddsClipper);
+        else
+          ddsPrimary->SetClipper(ddsClipper);
+      } else
+        ddsPrimary->SetClipper(ddsClipper);
     }
     //  }
 
@@ -4879,6 +4801,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   ddrawEmulationOnly = regQueryDwordValue("ddrawEmulationOnly", 0);
   ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", 0);
+  tripleBuffering = regQueryDwordValue("tripleBuffering", TRUE) ? TRUE : FALSE;
 
   filterType = regQueryDwordValue("filter", 0);
   if(filterType < 0 || filterType > 10)
@@ -4887,6 +4810,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   disableMMX = regQueryDwordValue("disableMMX", 0) ? true: false;
 
   disableStatusMessage = regQueryDwordValue("disableStatus", 0) ? true : false;
+
+  showSpeed = regQueryDwordValue("showSpeed", TRUE) ? TRUE : FALSE;
 
   winGbPrinterEnabled = regQueryDwordValue("gbPrinter", 0);
 
@@ -4915,6 +4840,24 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   winFlashSize = regQueryDwordValue("flashSize", 0x10000);
   if(winFlashSize != 0x10000 && winFlashSize != 0x20000)
     winFlashSize = 0x10000;
+
+  switch(videoOption) {
+  case VIDEO_320x240:
+    fsWidth = 320;
+    fsHeight = 240;
+    fsColorDepth = 16;
+    break;
+  case VIDEO_640x480:
+    fsWidth = 640;
+    fsHeight = 480;
+    fsColorDepth = 16;
+    break;
+  case VIDEO_800x600:
+    fsWidth = 800;
+    fsHeight = 600;
+    fsColorDepth = 16;
+    break;
+  }
 
   if(!initDirectDraw()) {
     if(videoOption >= VIDEO_320x240)
@@ -4994,6 +4937,9 @@ void fileToggleMenu()
   BOOL res = FALSE;
   
   if(menuToggle) {
+    if(tripleBuffering) {
+      pDirectDraw->FlipToGDISurface();
+    }
     updateMenuBar();
   } else {
     res = SetMenu(hWindow,NULL);
@@ -5315,10 +5261,9 @@ BOOL fileOpen()
     winLoadCheatListDefault();
   
   addRecentFile(szFile);
-  
+
   updateWindowSize(videoOption);
   
-  BOOL flag = TRUE;
   emulating = TRUE;
 
   if(screenSaverState)
@@ -6020,6 +5965,17 @@ void systemSetTitle(char *title)
 {
   if(hWindow != NULL) {
     SetWindowText(hWindow, title);
+  }
+}
+
+void systemShowSpeed(int speed)
+{
+  systemSpeed = speed;
+  if(videoOption <= VIDEO_4X && showSpeed) {
+    char buffer[80];
+
+    sprintf(buffer, "VisualBoyAdvance - %d%%", speed);
+    systemSetTitle(buffer);
   }
 }
 

@@ -162,6 +162,10 @@ SOURCE=..\src\Flash.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\Font.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\GBA.cpp
 
 !IF  "$(CFG)" == "GBA - Win32 Release"

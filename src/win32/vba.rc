@@ -1250,6 +1250,8 @@ BEGIN
 
             MENUITEM "DDraw Use &Video Memory",     ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY
 
+            MENUITEM "Triple Buffering",            ID_OPTIONS_VIDEO_TRIPLEBUFFERING
+
             MENUITEM SEPARATOR
             POPUP "&Layers"
             BEGIN
@@ -1288,6 +1290,8 @@ BEGIN
             MENUITEM "Remove intros (GBA)",         ID_OPTIONS_EMULATOR_REMOVEINTROSGBA
 
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
+
+            MENUITEM "Show speed",                  ID_OPTIONS_EMULATOR_SHOWSPEED
 
             POPUP "Save Type"
             BEGIN
