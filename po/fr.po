@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VisualBoyAdvance 1.7.2\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-04-02 03:28+0200\n"
-"PO-Revision-Date: 2004-04-02 03:24+0200\n"
+"POT-Creation-Date: 2004-04-15 04:56+0200\n"
+"PO-Revision-Date: 2004-04-15 04:57+0200\n"
 "Last-Translator: Sébastien Guignot <kxu@tsys.org>\n"
 "Language-Team: French <@>\n"
 "MIME-Version: 1.0\n"
@@ -565,24 +565,36 @@ msgstr "Émulateur pour Gameboy™ et GameboyAdvance™."
 msgid "<small>Copyright © 1999-2004 Forgotten</small>"
 msgstr "<small>Copyright © 1999-2004 Forgotten</small>"
 
-#: src/gtk/window.cpp:506
+#: src/gtk/vba.glade:1778
+msgid "Throttle"
+msgstr "Vitesse"
+
+#: src/gtk/vba.glade:1838
+msgid "Throttle : "
+msgstr "Vitesse : "
+
+#: src/gtk/vba.glade:1878
+msgid " %"
+msgstr " %"
+
+#: src/gtk/window.cpp:683
 #, c-format
 msgid "Unknown file type %s"
 msgstr "Type de fichier inconnu %s"
 
-#: src/gtk/window.cpp:579
+#: src/gtk/window.cpp:756
 #, c-format
 msgid "Failed to load file %s"
 msgstr "Le chargement du fichier %s a échoué"
 
-#: src/gtk/window.cpp:607
+#: src/gtk/window.cpp:786
 msgid "Loaded battery"
 msgstr "Sauvegarde chargée"
 
-#: src/gtk/window.cpp:618
+#: src/gtk/window.cpp:797
 msgid "Saved battery"
 msgstr "Sauvegarde effectuée"
 
-#: src/gtk/window.cpp:685
+#: src/gtk/window.cpp:838
 msgid "Open a ROM"
 msgstr "Ouvrir une ROM"

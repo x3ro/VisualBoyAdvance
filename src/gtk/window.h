@@ -82,10 +82,13 @@ private:
 
   static Window * m_poInstance;
 
+  Glib::RefPtr<Gnome::Glade::Xml> m_poXml;
+
   std::string       m_sUserDataDir;
   std::string       m_sConfigFile;
   Config::File      m_oConfig;
-  Config::Section * m_poScreenConfig;
+  Config::Section * m_poCoreConfig;
+  Config::Section * m_poDisplayConfig;
 
   Gtk::FileSelection * m_poFileOpenDialog;
   ScreenArea *         m_poScreenArea;
@@ -93,20 +96,24 @@ private:
 
   SigC::Connection m_oEmuSig;
 
-  bool           m_bPaused;
+  int m_iScreenWidth;
+  int m_iScreenHeight;
+
   std::string    m_sRomFile;
   ECartridge     m_eCartridge;
   EmulatedSystem m_stEmulator;
   Keymap         m_oKeymap;
   u32            m_uiJoypadState;
+  bool           m_bWasEmulating;
   bool           m_bAutoFrameskip;
-
-  int m_iScreenWidth;
-  int m_iScreenHeight;
+  int            m_iThrottle;
+  u32            m_uiThrottleLastTime;
+  u32            m_uiThrottleDelay;
 
   void vInitSystem();
   void vInitSDL();
   void vInitConfig();
+  void vCheckConfig();
   void vLoadConfig(const std::string & _sFilename);
   void vSaveConfig(const std::string & _sFilename);
   void vLoadKeymap();
@@ -120,6 +127,7 @@ private:
   void vStartEmu();
   void vStopEmu();
   void vSetThrottle(int _iPercent);
+  void vSelectBestThrottleItem();
 };
 
 } // namespace VBA

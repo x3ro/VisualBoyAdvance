@@ -88,6 +88,7 @@ public:
 
   inline std::string sGetName() const { return m_sName; }
 
+  bool bKeyExists(const std::string & _rsKey);
   void vSetKey(const std::string & _rsKey, const std::string & _rsValue);
   std::string sGetKey(const std::string & _rsKey) const;
   void vRemoveKey(const std::string & _rsKey);
@@ -129,10 +130,13 @@ public:
   File(const std::string & _rsFilename);
   virtual ~File();
 
+  bool bSectionExists(const std::string & _rsName);
   Section * poAddSection(const std::string & _rsName);
   Section * poGetSection(const std::string & _rsName);
   void vRemoveSection(const std::string & _rsName);
-  void vLoad(const std::string & _rsFilename);
+  void vLoad(const std::string & _rsFilename,
+             bool _bAddSection = true,
+             bool _bAddKey = true);
   void vSave(const std::string & _rsFilename);
   void vClear();
 

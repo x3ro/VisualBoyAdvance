@@ -64,7 +64,8 @@ typedef void (*FilterIB)(u8 *, u32, int, int);
 
 enum EFilter2x
 {
-  FilterNone,
+  FirstFilter,
+  FilterNone = FirstFilter,
   Filter2xSaI,
   FilterSuper2xSaI,
   FilterSuperEagle,
@@ -77,14 +78,17 @@ enum EFilter2x
   FilterScanlines,
   FilterScanlinesTV,
   FilterHq2x,
-  FilterLq2x
+  FilterLq2x,
+  LastFilter = FilterLq2x
 };
 
 enum EFilterIB
 {
-  FilterIBNone,
+  FirstFilterIB,
+  FilterIBNone = FirstFilterIB,
   FilterIBSmart,
-  FilterIBMotionBlur
+  FilterIBMotionBlur,
+  LastFilterIB = FilterIBMotionBlur
 };
 
 enum EFilterDepth

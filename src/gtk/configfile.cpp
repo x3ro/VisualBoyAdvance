@@ -44,6 +44,18 @@ Section::Section(const string & _rsName) :
 {
 }
 
+bool Section::bKeyExists(const string & _rsKey)
+{
+  for (iterator it = begin(); it != end(); it++)
+  {
+    if (it->m_sKey == _rsKey)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 void Section::vSetKey(const string & _rsKey, const string & _rsValue)
 {
   for (iterator it = begin(); it != end(); it++)
@@ -94,6 +106,18 @@ File::~File()
 {
 }
 
+bool File::bSectionExists(const string & _rsName)
+{
+  for (iterator it = begin(); it != end(); it++)
+  {
+    if (it->sGetName() == _rsName)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 Section * File::poAddSection(const string & _rsName)
 {
   Section * poSection = NULL;
@@ -136,7 +160,9 @@ void File::vRemoveSection(const string & _rsName)
   }
 }
 
-void File::vLoad(const string & _rsFilename)
+void File::vLoad(const string & _rsFilename,
+                 bool _bAddSection,
+                 bool _bAddKey)
 {
   string sBuffer = Glib::file_get_contents(_rsFilename);
   Section * poSection = NULL;
@@ -150,7 +176,21 @@ void File::vLoad(const string & _rsFilename)
       if ((tmp = strchr(lines[i], ']')))
       {
         *tmp = '\0';
-        poSection = poAddSection(&lines[i][1]);
+        if (_bAddSection)
+        {
+          poSection = poAddSection(&lines[i][1]);
+        }
+        else
+        {
+          try
+          {
+            poSection = poGetSection(&lines[i][1]);
+          }
+          catch (...)
+          {
+            poSection = NULL;
+          }
+        }
       }
     }
     else if (lines[i][0] != '#' && poSection != NULL)
@@ -159,7 +199,10 @@ void File::vLoad(const string & _rsFilename)
       {
         *tmp = '\0';
         tmp++;
-        poSection->vSetKey(lines[i], tmp);
+        if (_bAddKey || poSection->bKeyExists(lines[i]))
+        {
+          poSection->vSetKey(lines[i], tmp);
+        }
       }
     }
     i++;

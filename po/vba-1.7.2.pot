@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-04-02 03:28+0200\n"
+"POT-Creation-Date: 2004-04-15 04:56+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -564,24 +564,36 @@ msgstr ""
 msgid "<small>Copyright © 1999-2004 Forgotten</small>"
 msgstr ""
 
-#: src/gtk/window.cpp:506
+#: src/gtk/vba.glade:1778
+msgid "Throttle"
+msgstr ""
+
+#: src/gtk/vba.glade:1838
+msgid "Throttle : "
+msgstr ""
+
+#: src/gtk/vba.glade:1878
+msgid " %"
+msgstr ""
+
+#: src/gtk/window.cpp:683
 #, c-format
 msgid "Unknown file type %s"
 msgstr ""
 
-#: src/gtk/window.cpp:579
+#: src/gtk/window.cpp:756
 #, c-format
 msgid "Failed to load file %s"
 msgstr ""
 
-#: src/gtk/window.cpp:607
+#: src/gtk/window.cpp:786
 msgid "Loaded battery"
 msgstr ""
 
-#: src/gtk/window.cpp:618
+#: src/gtk/window.cpp:797
 msgid "Saved battery"
 msgstr ""
 
-#: src/gtk/window.cpp:685
+#: src/gtk/window.cpp:838
 msgid "Open a ROM"
 msgstr ""

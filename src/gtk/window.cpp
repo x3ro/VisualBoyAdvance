@@ -45,6 +45,7 @@ using Gnome::Glade::Xml;
 
 Window * Window::m_poInstance = NULL;
 
+// GB/GBA screen sizes
 const int iGBScreenWidth   = 160;
 const int iGBScreenHeight  = 144;
 const int iSGBScreenWidth  = 256;
@@ -52,13 +53,26 @@ const int iSGBScreenHeight = 224;
 const int iGBAScreenWidth  = 240;
 const int iGBAScreenHeight = 160;
 
+// Config limits
+const int iFrameskipMin = 0;
+const int iFrameskipMax = 9;
+const int iThrottleMin  = 5;
+const int iThrottleMax  = 1000;
+const int iScaleMin     = 1;
+const int iScaleMax     = 6;
+const int iFilter2xMin  = (int)FirstFilter;
+const int iFilter2xMax  = (int)LastFilter;
+const int iFilterIBMin  = (int)FirstFilterIB;
+const int iFilterIBMax  = (int)LastFilterIB;
+
 Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   Gtk::Window(_pstWindow),
+  m_poXml(_poXml),
   m_poFileOpenDialog(NULL),
-  m_eCartridge(NO_CARTRIDGE),
-  m_uiJoypadState(0),
   m_iScreenWidth(iGBAScreenWidth),
-  m_iScreenHeight(iGBAScreenHeight)
+  m_iScreenHeight(iGBAScreenHeight),
+  m_eCartridge(NO_CARTRIDGE),
+  m_uiJoypadState(0)
 {
   vInitSystem();
   vInitSDL();
@@ -84,6 +98,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   if (Glib::file_test(m_sConfigFile, Glib::FILE_TEST_EXISTS))
   {
     vLoadConfig(m_sConfigFile);
+    vCheckConfig();
   }
   else
   {
@@ -117,7 +132,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
-    int          m_iFrameskip;
+    const int    m_iFrameskip;
   }
   astFrameskip[] =
   {
@@ -134,13 +149,13 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Frameskip9",          9 }
   };
   int iDefaultFrameskip;
-  if (m_poScreenConfig->sGetKey("frameskip") == "auto")
+  if (m_poCoreConfig->sGetKey("frameskip") == "auto")
   {
     iDefaultFrameskip = -1;
   }
   else
   {
-    iDefaultFrameskip = m_poScreenConfig->oGetKey<int>("frameskip");
+    iDefaultFrameskip = m_poCoreConfig->oGetKey<int>("frameskip");
   }
   for (guint i = 0; i < sizeof(astFrameskip) / sizeof(astFrameskip[0]); i++)
   {
@@ -160,7 +175,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
-    int          m_iThrottle;
+    const int    m_iThrottle;
   }
   astThrottle[] =
   {
@@ -177,7 +192,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                      SigC::slot(*this, &Window::vOnThrottleOther),
                                      poCMI));
 
-  int iDefaultThrottle = m_poScreenConfig->oGetKey<int>("throttle");
+  int iDefaultThrottle = m_poCoreConfig->oGetKey<int>("throttle");
   for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astThrottle[i].m_csName));
@@ -196,7 +211,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
-    int          m_iScale;
+    const int    m_iScale;
   }
   astVideoScale[] =
   {
@@ -207,7 +222,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "Video5x", 5 },
     { "Video6x", 6 }
   };
-  int iDefaultScale = m_poScreenConfig->oGetKey<int>("scale");
+  int iDefaultScale = m_poDisplayConfig->oGetKey<int>("scale");
   for (guint i = 0; i < sizeof(astVideoScale) / sizeof(astVideoScale[0]); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astVideoScale[i].m_csName));
@@ -226,19 +241,19 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   struct
   {
     const char * m_csName;
-    int          m_iLayer;
-    bool         m_bChecked;
+    const int    m_iLayer;
+    const bool   m_bChecked;
   }
   astLayer[] =
   {
-    { "LayersBg0",    0, m_poScreenConfig->oGetKey<bool>("layer_bg0")    },
-    { "LayersBg1",    1, m_poScreenConfig->oGetKey<bool>("layer_bg1")    },
-    { "LayersBg2",    2, m_poScreenConfig->oGetKey<bool>("layer_bg2")    },
-    { "LayersBg3",    3, m_poScreenConfig->oGetKey<bool>("layer_bg3")    },
-    { "LayersObj",    4, m_poScreenConfig->oGetKey<bool>("layer_obj")    },
-    { "LayersWin0",   5, m_poScreenConfig->oGetKey<bool>("layer_win0")   },
-    { "LayersWin1",   6, m_poScreenConfig->oGetKey<bool>("layer_win1")   },
-    { "LayersObjWin", 7, m_poScreenConfig->oGetKey<bool>("layer_objwin") }
+    { "LayersBg0",    0, m_poCoreConfig->oGetKey<bool>("layer_bg0")    },
+    { "LayersBg1",    1, m_poCoreConfig->oGetKey<bool>("layer_bg1")    },
+    { "LayersBg2",    2, m_poCoreConfig->oGetKey<bool>("layer_bg2")    },
+    { "LayersBg3",    3, m_poCoreConfig->oGetKey<bool>("layer_bg3")    },
+    { "LayersObj",    4, m_poCoreConfig->oGetKey<bool>("layer_obj")    },
+    { "LayersWin0",   5, m_poCoreConfig->oGetKey<bool>("layer_win0")   },
+    { "LayersWin1",   6, m_poCoreConfig->oGetKey<bool>("layer_win1")   },
+    { "LayersObjWin", 7, m_poCoreConfig->oGetKey<bool>("layer_objwin") }
   };
   for (guint i = 0; i < sizeof(astLayer) / sizeof(astLayer[0]); i++)
   {
@@ -254,8 +269,8 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   //
   struct
   {
-    const char * m_csName;
-    EFilter2x    m_eFilter2x;
+    const char *    m_csName;
+    const EFilter2x m_eFilter2x;
   }
   astFilter2x[] =
   {
@@ -274,7 +289,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "FilterHq2x",          FilterHq2x         },
     { "FilterLq2x",          FilterLq2x         }
   };
-  EFilter2x eDefaultFilter2x = (EFilter2x)m_poScreenConfig->oGetKey<int>("filter2x");
+  EFilter2x eDefaultFilter2x = (EFilter2x)m_poDisplayConfig->oGetKey<int>("filter2x");
   for (guint i = 0; i < sizeof(astFilter2x) / sizeof(astFilter2x[0]); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilter2x[i].m_csName));
@@ -290,7 +305,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilterDisableMmx"));
 #ifdef MMX
-  poCMI->set_active(m_poScreenConfig->oGetKey<bool>("filter_disable_mmx"));
+  poCMI->set_active(m_poDisplayConfig->oGetKey<bool>("filter_disable_mmx"));
   vOnDisableMMXToggled(poCMI);
   poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
                                     SigC::slot(*this, &Window::vOnDisableMMXToggled),
@@ -304,8 +319,8 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   //
   struct
   {
-    const char * m_csName;
-    EFilterIB    m_eFilterIB;
+    const char *    m_csName;
+    const EFilterIB m_eFilterIB;
   }
   astFilterIB[] =
   {
@@ -313,7 +328,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     { "IFBSmart",      FilterIBSmart      },
     { "IFBMotionBlur", FilterIBMotionBlur }
   };
-  EFilterIB eDefaultFilterIB = (EFilterIB)m_poScreenConfig->oGetKey<int>("filterIB");
+  EFilterIB eDefaultFilterIB = (EFilterIB)m_poDisplayConfig->oGetKey<int>("filterIB");
   for (guint i = 0; i < sizeof(astFilterIB) / sizeof(astFilterIB[0]); i++)
   {
     poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astFilterIB[i].m_csName));
@@ -407,9 +422,7 @@ void Window::vInitSDL()
   if (bDone)
     return;
 
-  int iFlags = (SDL_INIT_AUDIO
-                | SDL_INIT_TIMER // useful for SDL_GetTicks ?
-                | SDL_INIT_NOPARACHUTE);
+  int iFlags = (SDL_INIT_AUDIO | SDL_INIT_NOPARACHUTE);
 
   if (SDL_Init(iFlags) < 0)
   {
@@ -424,30 +437,83 @@ void Window::vInitConfig()
 {
   m_oConfig.vClear();
 
-  m_poScreenConfig = m_oConfig.poAddSection("Screen");
-  m_poScreenConfig->vSetKey     ("frameskip",           "auto"         );
-  m_poScreenConfig->vSetKey     ("throttle",            0              );
-  m_poScreenConfig->vSetKey     ("scale",               1              );
-  m_poScreenConfig->vSetKey     ("layer_bg0",           true           );
-  m_poScreenConfig->vSetKey     ("layer_bg1",           true           );
-  m_poScreenConfig->vSetKey     ("layer_bg2",           true           );
-  m_poScreenConfig->vSetKey     ("layer_bg3",           true           );
-  m_poScreenConfig->vSetKey     ("layer_obj",           true           );
-  m_poScreenConfig->vSetKey     ("layer_win0",          true           );
-  m_poScreenConfig->vSetKey     ("layer_win1",          true           );
-  m_poScreenConfig->vSetKey     ("layer_objwin",        true           );
-  m_poScreenConfig->vSetKey<int>("filter2x",            FilterNone     );
-  m_poScreenConfig->vSetKey<int>("filterIB",            FilterIBNone   );
+  // Core section
+  //
+  m_poCoreConfig = m_oConfig.poAddSection("Core");
+  m_poCoreConfig->vSetKey("frameskip",    "auto" );
+  m_poCoreConfig->vSetKey("throttle",     0      );
+  m_poCoreConfig->vSetKey("layer_bg0",    true   );
+  m_poCoreConfig->vSetKey("layer_bg1",    true   );
+  m_poCoreConfig->vSetKey("layer_bg2",    true   );
+  m_poCoreConfig->vSetKey("layer_bg3",    true   );
+  m_poCoreConfig->vSetKey("layer_obj",    true   );
+  m_poCoreConfig->vSetKey("layer_win0",   true   );
+  m_poCoreConfig->vSetKey("layer_win1",   true   );
+  m_poCoreConfig->vSetKey("layer_objwin", true   );
+
+  // Display section
+  //
+  m_poDisplayConfig = m_oConfig.poAddSection("Display");
+  m_poDisplayConfig->vSetKey     ("scale",               1            );
+  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone   );
+  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone );
 #ifdef MMX
-  m_poScreenConfig->vSetKey     ("filter_disable_mmx",  false          );
+  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false        );
 #endif // MMX
+}
+
+void Window::vCheckConfig()
+{
+  int iValue;
+  int iAdjusted;
+
+  if (m_poCoreConfig->sGetKey("frameskip") != "auto")
+  {
+    iValue = m_poCoreConfig->oGetKey<int>("frameskip");
+    iAdjusted = CLAMP(iValue, iFrameskipMin, iFrameskipMax);
+    if (iValue != iAdjusted)
+    {
+      m_poCoreConfig->vSetKey("frameskip", iAdjusted);
+    }
+  }
+
+  iValue = m_poCoreConfig->oGetKey<int>("throttle");
+  if (iValue != 0)
+  {
+    iAdjusted = CLAMP(iValue, iThrottleMin, iThrottleMax);
+    if (iValue != iAdjusted)
+    {
+      m_poCoreConfig->vSetKey("throttle", iAdjusted);
+    }
+  }
+
+  iValue = m_poDisplayConfig->oGetKey<int>("scale");
+  iAdjusted = CLAMP(iValue, iScaleMin, iScaleMax);
+  if (iValue != iAdjusted)
+  {
+    m_poDisplayConfig->vSetKey("scale", iAdjusted);
+  }
+
+  iValue = m_poDisplayConfig->oGetKey<int>("filter2x");
+  iAdjusted = CLAMP(iValue, iFilter2xMin, iFilter2xMax);
+  if (iValue != iAdjusted)
+  {
+    m_poDisplayConfig->vSetKey("filter2x", iAdjusted);
+  }
+
+  iValue = m_poDisplayConfig->oGetKey<int>("filterIB");
+  iAdjusted = CLAMP(iValue, iFilterIBMin, iFilterIBMax);
+  if (iValue != iAdjusted)
+  {
+    m_poDisplayConfig->vSetKey("filterIB", iAdjusted);
+  }
 }
 
 void Window::vLoadConfig(const std::string & _sFilename)
 {
   try
   {
-    m_oConfig.vLoad(_sFilename);
+    m_oConfig.vLoad(_sFilename, false, false);
   }
   catch (const Glib::Error & e)
   {
@@ -457,8 +523,6 @@ void Window::vLoadConfig(const std::string & _sFilename)
                                Gtk::BUTTONS_CLOSE);
     oDialog.run();
   }
-
-  // TODO : check that values are valid
 }
 
 void Window::vSaveConfig(const std::string & _sFilename)
@@ -504,7 +568,7 @@ void Window::vUpdateScreen()
   g_return_if_fail(m_iScreenWidth >= 1 && m_iScreenHeight >= 1);
 
   m_poScreenArea->vSetSize(m_iScreenWidth, m_iScreenHeight);
-  m_poScreenArea->vSetScale(m_poScreenConfig->oGetKey<int>("scale"));
+  m_poScreenArea->vSetScale(m_poDisplayConfig->oGetKey<int>("scale"));
 
   resize(1, 1);
 
@@ -530,66 +594,81 @@ void Window::vDrawDefaultScreen()
 
 void Window::vComputeFrameskip(int _iRate)
 {
-#if 0
-  u32 time = SDL_GetTicks();
-  if(!wasPaused && autoFrameSkip && !throttle) {
-    u32 diff = time - autoFrameSkipLastTime;
-    int speed = 100;
+  static u32 uiLastTime = 0;
+  static int iFrameskipAdjust = 0;
 
-    if(diff)
-      speed = (1000000/rate)/diff;
-    
-    if(speed >= 98) {
-      frameskipadjust++;
+  u32 uiTime = SDL_GetTicks();
 
-      if(frameskipadjust >= 3) {
-        frameskipadjust=0;
-        if(systemFrameSkip > 0)
-          systemFrameSkip--;
+  if (m_bWasEmulating)
+  {
+    int iWantedSpeed = 100;
+
+    if (m_iThrottle > 0)
+    {
+      if (! speedup)
+      {
+        u32 uiDiff  = uiTime - m_uiThrottleLastTime;
+        int iTarget = 1000000 / (_iRate * m_iThrottle);
+        int iDelay  = iTarget - uiDiff;
+        if (iDelay > 0)
+        {
+          m_uiThrottleDelay = iDelay;
+        }
       }
-    } else {
-      if(speed  < 80)
-        frameskipadjust -= (90 - speed)/5;
-      else if(systemFrameSkip < 9)
-        frameskipadjust--;
+      iWantedSpeed = m_iThrottle;
+    }
 
-      if(frameskipadjust <= -2) {
-        frameskipadjust += 2;
-        if(systemFrameSkip < 9)
-          systemFrameSkip++;
+    if (m_bAutoFrameskip)
+    {
+      u32 uiDiff = uiTime - uiLastTime;
+      int iSpeed = iWantedSpeed;
+
+      if (uiDiff != 0)
+      {
+        iSpeed = (1000000 / _iRate) / uiDiff;
       }
-    }    
-  }
-  if(!wasPaused && throttle) {
-    if(!speedup) {
-      u32 diff = time - throttleLastTime;
-      
-      int target = (1000000/(rate*throttle));
-      int d = (target - diff);
-      
-      if(d > 0) {
-        SDL_Delay(d);
+
+      if (iSpeed >= iWantedSpeed - 2)
+      {
+        iFrameskipAdjust++;
+        if (iFrameskipAdjust >= 3)
+        {
+          iFrameskipAdjust = 0;
+          if (systemFrameSkip > 0)
+          {
+            systemFrameSkip--;
+          }
+        }
+      }
+      else
+      {
+        if (iSpeed < iWantedSpeed - 20)
+        {
+          iFrameskipAdjust -= ((iWantedSpeed - 10) - iSpeed) / 5;
+        }
+        else if (systemFrameSkip < 9)
+        {
+          iFrameskipAdjust--;
+        }
+
+        if (iFrameskipAdjust <= -2)
+        {
+          iFrameskipAdjust += 2;
+          if (systemFrameSkip < 9)
+          {
+            systemFrameSkip++;
+          }
+        }
       }
     }
-    throttleLastTime = systemGetClock();
   }
-  if(rewindMemory) {
-    if(++rewindCounter >= rewindTimer) {
-      rewindSaveNeeded = true;
-      rewindCounter = 0;
-    }
+  else
+  {
+    m_bWasEmulating = true;
   }
 
-  if(systemSaveUpdateCounter) {
-    if(--systemSaveUpdateCounter <= SYSTEM_SAVE_NOT_UPDATED) {
-      sdlWriteBattery();
-      systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
-    }
-  }
-
-  wasPaused = false;
-  autoFrameSkipLastTime = time;
-#endif // 0
+  uiLastTime = uiTime;
+  m_uiThrottleLastTime = uiTime;
 }
 
 bool Window::bLoadROM(const std::string & _rsFilename)
@@ -683,6 +762,8 @@ bool Window::bLoadROM(const std::string & _rsFilename)
   vUpdateScreen();
 
   emulating = 1;
+  m_bWasEmulating = false;
+  m_uiThrottleDelay = 0;
 
   if (m_poFilePauseItem->get_active())
   {
@@ -742,12 +823,40 @@ void Window::vStartEmu()
 void Window::vStopEmu()
 {
   m_oEmuSig.disconnect();
+  m_bWasEmulating = false;
 }
 
 void Window::vSetThrottle(int _iPercent)
 {
-  // TODO
-  m_poScreenConfig->vSetKey("throttle", _iPercent);
+  m_iThrottle = _iPercent;
+  m_poCoreConfig->vSetKey("throttle", _iPercent);
+}
+
+void Window::vSelectBestThrottleItem()
+{
+  struct
+  {
+    const char * m_csName;
+    const int    m_iThrottle;
+  }
+  astThrottle[] =
+  {
+    { "ThrottleNoThrottle",   0 },
+    { "Throttle25",          25 },
+    { "Throttle50",          50 },
+    { "Throttle100",        100 },
+    { "Throttle150",        150 },
+    { "Throttle200",        200 }
+  };
+  for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
+  {
+    Gtk::CheckMenuItem * poCMI;
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(m_poXml->get_widget(astThrottle[i].m_csName));
+    if (astThrottle[i].m_iThrottle == m_iThrottle)
+    {
+      poCMI->set_active();
+    }
+  }
 }
 
 void Window::vOnFileOpen()
@@ -818,14 +927,15 @@ void Window::vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue)
 
   if (_iValue >= 0 && _iValue <= 9)
   {
-    m_poScreenConfig->vSetKey("frameskip", _iValue);
+    m_poCoreConfig->vSetKey("frameskip", _iValue);
     gbFrameSkip      = _iValue;
     systemFrameSkip  = _iValue;
     m_bAutoFrameskip = false;
   }
   else
   {
-    m_poScreenConfig->vSetKey("frameskip", "auto");
+    m_poCoreConfig->vSetKey("frameskip", "auto");
+    systemFrameSkip  = 0;
     m_bAutoFrameskip = true;
   }
 }
@@ -838,6 +948,12 @@ void Window::vOnThrottleToggled(Gtk::CheckMenuItem * _poCMI, int _iPercent)
   }
 
   vSetThrottle(_iPercent);
+
+  // Initialize the frameskip adjustment each time throttle is changed
+  if (m_bAutoFrameskip)
+  {
+    systemFrameSkip = 0;
+  }
 }
 
 void Window::vOnThrottleOther(Gtk::CheckMenuItem * _poCMI)
@@ -847,7 +963,30 @@ void Window::vOnThrottleOther(Gtk::CheckMenuItem * _poCMI)
     return;
   }
 
-  // TODO
+  Glib::RefPtr<Xml> poXml;
+  poXml = Xml::create(PKGDATADIR "/vba.glade", "ThrottleDialog");
+
+  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("ThrottleDialog"));
+  Gtk::SpinButton * poSpin = dynamic_cast<Gtk::SpinButton *>(poXml->get_widget("ThrottleSpin"));
+
+  poDialog->set_transient_for(*this);
+
+  if (m_iThrottle != 0)
+  {
+    poSpin->set_value(m_iThrottle);
+  }
+  else
+  {
+    poSpin->set_value(100);
+  }
+
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    vSetThrottle(poSpin->get_value_as_int());
+  }
+
+  delete poDialog;
+  vSelectBestThrottleItem();
 }
 
 void Window::vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale)
@@ -857,7 +996,7 @@ void Window::vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale)
     return;
   }
 
-  m_poScreenConfig->vSetKey("scale", _iScale);
+  m_poDisplayConfig->vSetKey("scale", _iScale);
   vUpdateScreen();
 }
 
@@ -885,7 +1024,7 @@ void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
     "layer_win1",
     "layer_objwin"
   };
-  m_poScreenConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
+  m_poCoreConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
 }
 
 void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
@@ -900,7 +1039,7 @@ void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
   {
     vDrawScreen();
   }
-  m_poScreenConfig->vSetKey("filter2x", _iFilter2x);
+  m_poDisplayConfig->vSetKey("filter2x", _iFilter2x);
 }
 
 void Window::vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB)
@@ -915,14 +1054,14 @@ void Window::vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB)
   {
     vDrawScreen();
   }
-  m_poScreenConfig->vSetKey("filterIB", _iFilterIB);
+  m_poDisplayConfig->vSetKey("filterIB", _iFilterIB);
 }
 
 #ifdef MMX
 void Window::vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI)
 {
   cpu_mmx = ! _poCMI->get_active();
-  m_poScreenConfig->vSetKey("filter_disable_mmx", _poCMI->get_active());
+  m_poDisplayConfig->vSetKey("filter_disable_mmx", _poCMI->get_active());
 }
 #endif // MMX
 
@@ -942,6 +1081,20 @@ void Window::vOnHelpAbout()
 
 bool Window::bOnEmuIdle()
 {
+  if (m_uiThrottleDelay != 0)
+  {
+    u32 uiTime = SDL_GetTicks();
+    if (uiTime - m_uiThrottleLastTime >= m_uiThrottleDelay)
+    {
+      m_uiThrottleDelay = 0;
+      m_uiThrottleLastTime = uiTime;
+    }
+    else
+    {
+      return true;
+    }
+  }
+
   m_stEmulator.emuMain(m_stEmulator.emuCount);
   return true;
 }
