@@ -207,10 +207,12 @@ void flashWrite(u32 address, u8 byte)
       memset(&flashSaveMemory[(flashBank << 16) + (address & 0xF000)],
              0,
              0x1000);
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
       flashReadState = FLASH_ERASE_COMPLETE;
     } else if(byte == 0x10) {
       // CHIP ERASE
       memset(flashSaveMemory, 0, flashSize);
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
       flashReadState = FLASH_ERASE_COMPLETE;
     } else {
       flashState = FLASH_READ_ARRAY;
@@ -230,6 +232,7 @@ void flashWrite(u32 address, u8 byte)
     break;
   case FLASH_PROGRAM:
     flashSaveMemory[(flashBank<<16)+address] = byte;
+    systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
     flashState = FLASH_READ_ARRAY;
     flashReadState = FLASH_READ_ARRAY;
     break;

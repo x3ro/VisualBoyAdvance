@@ -147,6 +147,7 @@ int systemColorDepth = 0;
 int systemDebug = 0;
 int systemVerbose = 0;
 int systemFrameSkip = 0;
+int systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
 int srcPitch = 0;
 int srcWidth = 0;
@@ -2175,6 +2176,8 @@ int main(int argc, char **argv)
     systemGbPalette[i++] = 0;
   }
 
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+
   if(optind < argc) {
     char *szFile = argv[optind];
 
@@ -2872,6 +2875,14 @@ void system10Frames(int rate)
       rewindCounter = 0;
     }
   }
+
+  if(systemSaveUpdateCounter) {
+    if(--systemSaveUpdateCounter <= SYSTEM_SAVE_NOT_UPDATED) {
+      sdlWriteBattery();
+      systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+    }
+  }
+
   wasPaused = false;
   autoFrameSkipLastTime = time;
 }

@@ -118,6 +118,7 @@ int systemGreenShift = 0;
 int systemColorDepth = 16;
 int systemVerbose = 0;
 int systemDebug = 0;
+int systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
 void winSignal(int,int);
 void winOutput(char *, u32);
@@ -267,6 +268,8 @@ VBA::VBA()
   romSize = 0;
   
   updateCount = 0;
+
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
   ZeroMemory(&emulator, sizeof(emulator));
 
@@ -976,6 +979,13 @@ void system10Frames(int rate)
       theApp.rewindCounter = 0;
     }
   }
+  if(systemSaveUpdateCounter) {
+    if(--systemSaveUpdateCounter <= SYSTEM_SAVE_NOT_UPDATED) {
+      ((MainWnd *)theApp.m_pMainWnd)->writeBatteryFile();
+      systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+    }
+  }
+
   theApp.wasPaused = false;
   theApp.autoFrameSkipLastTime = time;
 }

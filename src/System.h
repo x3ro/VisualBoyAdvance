@@ -116,5 +116,9 @@ extern int systemColorDepth;
 extern int systemDebug;
 extern int systemVerbose;
 extern int systemFrameSkip;
+extern int systemSaveUpdateCounter;
+
+#define SYSTEM_SAVE_UPDATED 30
+#define SYSTEM_SAVE_NOT_UPDATED 0
 
 #endif //VBA_SYSTEM_H

@@ -469,7 +469,7 @@ bool MainWnd::FileRun()
                   "Unsupported file type: %s", theApp.szFile);
     return false;
   }
-
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
   theApp.cartridgeType = (int)type;
   if(type == IMAGE_GB) {
     if(!gbLoadRom(theApp.szFile))

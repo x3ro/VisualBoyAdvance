@@ -1648,6 +1648,8 @@ void gbReset()
 
   gbSoundReset();
 
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+
   gbLastTime = systemGetClock();
   gbFrameCount = 0;
 }
@@ -1923,15 +1925,16 @@ bool gbWriteBatteryFile(const char *file)
 
 bool gbReadBatteryFile(const char *file)
 {
+  bool res = false;
   if(gbBattery) {
     int type = gbRom[0x147];
     
     switch(type) {
     case 0x03:
-      return gbReadSaveMBC1(file);
+      res = gbReadSaveMBC1(file);
       break;
     case 0x06:
-      return gbReadSaveMBC2(file);
+      res = gbReadSaveMBC2(file);
       break;
     case 0x0f:
     case 0x10:
@@ -1946,22 +1949,24 @@ bool gbReadBatteryFile(const char *file)
         gbDataMBC3.mapperDays = lt->tm_yday & 255;
         gbDataMBC3.mapperControl = (gbDataMBC3.mapperControl & 0xfe) |
           (lt->tm_yday > 255 ? 1: 0);
-        return false;
+        res = false;
+        break;
       }
-      return true;
+      res = true;
       break;
     case 0x1b:
     case 0x1e:
-      return gbReadSaveMBC5(file);
+      res = gbReadSaveMBC5(file);
       break;
     case 0x22:
-      return gbReadSaveMBC7(file);
+      res = gbReadSaveMBC7(file);
     case 0xff:
-      return gbReadSaveMBC1(file);
+      res = gbReadSaveMBC1(file);
       break;
     }
   }
-  return false;
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+  return res;
 }
 
 bool gbReadGSASnapshot(const char *fileName)
@@ -2343,6 +2348,8 @@ static bool gbReadSaveState(gzFile gzFile)
   if(version > GBSAVE_GAME_VERSION_1)
     gbCheatsReadGame(gzFile, version);
 
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+
   return true;
 }
 
@@ -2424,6 +2431,8 @@ void gbCleanUp()
     free(gbWram);
     gbWram = NULL;
   }
+
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 }
 
 bool gbLoadRom(const char *szFile)
@@ -2433,6 +2442,8 @@ bool gbLoadRom(const char *szFile)
   if(gbRom != NULL) {
     gbCleanUp();
   }
+
+  systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
   gbRom = utilLoad(szFile,
                    utilIsGBImage,

@@ -17,6 +17,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "../GBA.h"
+#include "../Port.h"
 #include "gbGlobals.h"
 #include "gbMemory.h"
 
@@ -96,6 +97,7 @@ void mapperMBC1RAM(u16 address, u8 value)
   if(gbDataMBC1.mapperRAMEnable) {
     if(gbRamSize) {
       gbMemoryMap[address >> 12][address & 0x0fff] = value;
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
     }
   }
 }
@@ -165,6 +167,7 @@ void mapperMBC2RAM(u16 address, u8 value)
   if(gbDataMBC2.mapperRAMEnable) {
     if(gbRamSize && address < 0xa200) {
       gbMemoryMap[address >> 12][address & 0x0fff] = value;
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
     }
   }
 }
@@ -309,6 +312,7 @@ void mapperMBC3RAM(u16 address, u8 value)
     if(gbDataMBC3.mapperRAMBank != -1) {
       if(gbRamSize) {
         gbMemoryMap[address>>12][address & 0x0fff] = value;
+        systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
       }
     } else {
       time(&gbDataMBC3.mapperLastTime);
@@ -457,6 +461,7 @@ void mapperMBC5RAM(u16 address, u8 value)
   if(gbDataMBC5.mapperRAMEnable) {
     if(gbRamSize) {
       gbMemoryMap[address >> 12][address & 0x0fff] = value;
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
     }
   }
 }
@@ -581,6 +586,7 @@ void mapperMBC7RAM(u16 address, u8 value)
         if(gbDataMBC7.writeEnable) {
           gbMemory[0xa000+gbDataMBC7.address*2]=gbDataMBC7.buffer>>8;
           gbMemory[0xa000+gbDataMBC7.address*2+1]=gbDataMBC7.buffer&0xff;
+          systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
         }
         gbDataMBC7.state=0;
         gbDataMBC7.value=1;
@@ -648,13 +654,15 @@ void mapperMBC7RAM(u16 address, u8 value)
                   for(int i=0;i<256;i++) {
                     gbMemory[0xa000+i*2] = gbDataMBC7.buffer >> 8;
                     gbMemory[0xa000+i*2+1] = gbDataMBC7.buffer & 0xff;
+                    systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
                   }
                 }
                 gbDataMBC7.state=5;
               } else if((gbDataMBC7.address>>6) == 2) {
                 if (gbDataMBC7.writeEnable) {
                   for(int i=0;i<256;i++)
-                    *((u16 *)&gbMemory[0xa000+i*2]) = 0xffff;
+                    WRITE16LE((u16 *)&gbMemory[0xa000+i*2], 0xffff);
+                  systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
                 }
                 gbDataMBC7.state=5;
               } else if((gbDataMBC7.address>>6)==3) {
@@ -788,6 +796,7 @@ void mapperHuC1RAM(u16 address, u8 value)
   if(gbDataHuC1.mapperRAMEnable) {
     if(gbRamSize) {
       gbMemoryMap[address >> 12][address & 0x0fff] = value;
+      systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
     }
   }
 }
@@ -887,6 +896,7 @@ void mapperHuC3RAM(u16 address, u8 value)
     if(gbDataHuC3.mapperRAMEnable) {
       if(gbRamSize) {
         gbMemoryMap[address >> 12][address & 0x0fff] = value;
+        systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
       }
     }
   } else {
@@ -955,8 +965,3 @@ void memoryUpdateMapHuC3()
     gbMemoryMap[0x0b] = &gbRam[tmpAddress + 0x1000];
   }
 }
-
-
-
-
-
