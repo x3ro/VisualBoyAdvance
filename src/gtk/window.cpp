@@ -881,8 +881,6 @@ Window::~Window()
 
 void Window::vInitSystem()
 {
-  Init_2xSaI(32);
-
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   systemRedShift    = 3;
   systemGreenShift  = 11;
@@ -933,6 +931,8 @@ void Window::vInitSystem()
     systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
     systemGbPalette[i++] = 0;
   }
+
+  Init_2xSaI(32);
 }
 
 void Window::vInitSDL()

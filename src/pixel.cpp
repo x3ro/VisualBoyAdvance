@@ -96,13 +96,11 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   while (--height);
 }
 
-#define RGB32_LOW_BITS_MASK 0x010101
-
 void Pixelate32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
-  u32 colorMask = ~RGB32_LOW_BITS_MASK;
+  u32 colorMask = ~RGB_LOW_BITS_MASK & 0xffFFff;
   
   nextLine = dstPtr + dstPitch;
   
