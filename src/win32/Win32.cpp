@@ -2390,12 +2390,6 @@ u32 systemReadJoypad(int which)
   if(checkKey(joypad[i][KEY_BUTTON_L]))
     res |= 512;
   
-  // disallow L+R or U+D of being pressed at the same time
-  if((res & 48) == 48)
-    res &= ~16;
-  if((res & 192) == 192)
-    res &= ~128;
-
   if(checkKey(joypad[i][KEY_BUTTON_SPEED]) || speedupToggle)
     res |= 1024;
   if(checkKey(joypad[i][KEY_BUTTON_CAPTURE]))
@@ -2409,6 +2403,12 @@ u32 systemReadJoypad(int which)
       res |= autoFire;
     autoFireToggle = !autoFireToggle;
   }
+
+  // disallow L+R or U+D of being pressed at the same time
+  if((res & 48) == 48)
+    res &= ~16;
+  if((res & 192) == 192)
+    res &= ~128;
   
   return res;
 }
