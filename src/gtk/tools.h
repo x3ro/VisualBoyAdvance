@@ -21,12 +21,20 @@
 #define __VBA_TOOLS_H__
 
 #include <string>
+#include <glibmm/ustring.h>
 
 namespace VBA
 {
 
-std::string sCutSuffix(const std::string & _sString,
-                       const std::string & _sSep = std::string("."));
+std::string sCutSuffix(const std::string & _rsString,
+                       const std::string & _rsSep = ".");
+
+Glib::ustring sCutSuffix(const Glib::ustring & _rsString,
+                         const Glib::ustring & _rsSep = ".");
+
+bool bHasSuffix(const Glib::ustring & _rsString,
+                const Glib::ustring & _rsSuffix,
+                bool _bCaseSensitive = true);
 
 }
 

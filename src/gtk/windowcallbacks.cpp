@@ -53,14 +53,79 @@ void Window::vOnFileOpen()
 {
   if (m_poFileOpenDialog == NULL)
   {
-    m_poFileOpenDialog = new Gtk::FileSelection(_("Open"));
-    m_poFileOpenDialog->set_transient_for(*this);
+    std::string sGBDir  = m_poDirConfig->sGetKey("gb_roms");
+    std::string sGBADir = m_poDirConfig->sGetKey("gba_roms");
 
-    std::string sDir = m_poDirConfig->sGetKey("gba_roms");
-    if (sDir != "")
+#ifdef GTKMM20
+
+    Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Open"));
+    poDialog->set_transient_for(*this);
+
+    if (sGBADir != "")
     {
-      m_poFileOpenDialog->set_filename(sDir + "/");
+      poDialog->set_filename(sGBADir + "/");
     }
+    else if (sGBDir != "")
+    {
+      poDialog->set_filename(sGBDir + "/");
+    }
+
+#else // ! GTKMM20
+
+    Gtk::FileChooserDialog * poDialog = new Gtk::FileChooserDialog(*this, _("Open"));
+    poDialog->add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+    poDialog->add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
+
+    if (sGBDir != "")
+    {
+      poDialog->add_shortcut_folder(sGBDir);
+      poDialog->set_current_folder(sGBDir);
+    }
+
+    if (sGBADir != "" && sGBADir != sGBDir)
+    {
+      poDialog->add_shortcut_folder(sGBADir);
+      poDialog->set_current_folder(sGBADir);
+    }
+
+    const char * acsPattern[] =
+    {
+      // GBA
+      "*.[bB][iI][nN]", "*.[aA][gG][bB]", "*.[gG][bB][aA]",
+      // GB
+      "*.[gG][bB]", "*.[sS][gG][bB]", "*.[cC][gG][bB]", "*.[gG][bB][cC]",
+      // Both
+      "*.[mM][bB]", "*.[eE][lL][fF]", "*.[zZ][iI][pP]", "*.[zZ]", "*.[gG][zZ]"
+    };
+
+    Gtk::FileFilter oAllGBAFilter;
+    oAllGBAFilter.set_name(_("All Gameboy Advance files"));
+    for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
+    {
+      oAllGBAFilter.add_pattern(acsPattern[i]);
+    }
+
+    Gtk::FileFilter oGBAFilter;
+    oGBAFilter.set_name(_("Gameboy Advance files"));
+    for (int i = 0; i < 3; i++)
+    {
+      oGBAFilter.add_pattern(acsPattern[i]);
+    }
+
+    Gtk::FileFilter oGBFilter;
+    oGBFilter.set_name(_("Gameboy files"));
+    for (int i = 3; i < 7; i++)
+    {
+      oGBFilter.add_pattern(acsPattern[i]);
+    }
+
+    poDialog->add_filter(oAllGBAFilter);
+    poDialog->add_filter(oGBAFilter);
+    poDialog->add_filter(oGBFilter);
+
+#endif // ! GTKMM20
+
+    m_poFileOpenDialog = poDialog;
   }
 
   while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
@@ -71,6 +136,135 @@ void Window::vOnFileOpen()
     }
   }
   m_poFileOpenDialog->hide();
+}
+
+void Window::vOnLoadGame()
+{
+  std::string sSaveDir = m_poDirConfig->sGetKey("saves");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Load game"));
+  oDialog.set_transient_for(*this);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
+  }
+  else
+  {
+    oDialog.set_filename(sSaveDir + "/");
+  }
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Load game"));
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_current_folder(sSaveDir);
+    oDialog.add_shortcut_folder(sSaveDir);
+  }
+
+  Gtk::FileFilter oSaveFilter;
+  oSaveFilter.set_name(_("VisualBoyAdvance save game"));
+  oSaveFilter.add_pattern("*.[sS][gG][mM]");
+
+  oDialog.add_filter(oSaveFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    if (m_stEmulator.emuReadState(oDialog.get_filename().c_str()))
+    {
+      break;
+    }
+  }
+}
+
+void Window::vOnSaveGame()
+{
+  Glib::ustring sSaveDir = m_poDirConfig->sGetKey("saves");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Save game"));
+  oDialog.set_transient_for(*this);
+
+  Glib::ustring sDefaultFile;
+  if (sSaveDir == "")
+  {
+    sDefaultFile = sCutSuffix(m_sRomFile) + ".sgm";
+  }
+  else
+  {
+    sDefaultFile = sSaveDir + "/"
+      + sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sgm";
+  }
+  oDialog.set_filename(sDefaultFile);
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Save game"),
+                                 Gtk::FILE_CHOOSER_ACTION_SAVE);
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::SAVE,   Gtk::RESPONSE_OK);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_current_folder(sSaveDir);
+    oDialog.add_shortcut_folder(sSaveDir);
+  }
+  oDialog.set_current_name(sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sgm");
+
+  Gtk::FileFilter oSaveFilter;
+  oSaveFilter.set_name(_("VisualBoyAdvance save game"));
+  oSaveFilter.add_pattern("*.[sS][gG][mM]");
+
+  oDialog.add_filter(oSaveFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    Glib::ustring sFile = oDialog.get_filename();
+    if (! bHasSuffix(sFile, ".sgm", false))
+    {
+      sFile += ".sgm";
+    }
+
+    if (Glib::file_test(oDialog.get_filename(), Glib::FILE_TEST_EXISTS))
+    {
+      Gtk::MessageDialog oConfirm(*this,
+                                  _("File already exists. Overwrite it?"),
+#ifndef GTKMM20
+                                  false,
+#endif // ! GTKMM20
+                                  Gtk::MESSAGE_QUESTION,
+                                  Gtk::BUTTONS_YES_NO,
+                                  true);
+      if (oConfirm.run() != Gtk::RESPONSE_YES)
+      {
+        continue;
+      }
+    }
+
+    if (m_stEmulator.emuWriteState(sFile.c_str()))
+    {
+      break;
+    }
+  }
 }
 
 void Window::vOnLoadGameMostRecent()
@@ -90,7 +284,7 @@ void Window::vOnLoadGameMostRecent()
 
   if (iMostRecent >= 0)
   {
-    vOnLoadGame(iMostRecent + 1);
+    vOnLoadGameSlot(iMostRecent + 1);
   }
 }
 
@@ -99,7 +293,7 @@ void Window::vOnLoadGameAutoToggled(Gtk::CheckMenuItem * _poCMI)
   m_poCoreConfig->vSetKey("load_game_auto", _poCMI->get_active());
 }
 
-void Window::vOnLoadGame(int _iSlot)
+void Window::vOnLoadGameSlot(int _iSlot)
 {
   int i = _iSlot - 1;
   if (! m_astGameSlot[i].m_bEmpty)
@@ -126,15 +320,15 @@ void Window::vOnSaveGameOldest()
 
   if (iOldest >= 0)
   {
-    vOnSaveGame(iOldest + 1);
+    vOnSaveGameSlot(iOldest + 1);
   }
   else
   {
-    vOnSaveGame(1);
+    vOnSaveGameSlot(1);
   }
 }
 
-void Window::vOnSaveGame(int _iSlot)
+void Window::vOnSaveGameSlot(int _iSlot)
 {
   int i = _iSlot - 1;
   m_stEmulator.emuWriteState(m_astGameSlot[i].m_sFile.c_str());
@@ -176,6 +370,7 @@ void Window::vOnRecentReset()
 
 void Window::vOnRecentFreezeToggled(Gtk::CheckMenuItem * _poCMI)
 {
+  m_poRecentResetItem->set_sensitive(! _poCMI->get_active());
   m_poHistoryConfig->vSetKey("freeze", _poCMI->get_active());
 }
 
@@ -392,17 +587,19 @@ void Window::vOnDirectoryReset(Gtk::Entry * _poEntry)
 
 void Window::vOnDirectorySelect(Gtk::Entry * _poEntry)
 {
-  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select directory"));
-  poDialog->set_transient_for(*this);
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Select directory"));
+  oDialog.set_transient_for(*this);
 
   if (_poEntry->get_text() != "")
   {
-    poDialog->set_filename(_poEntry->get_text() + "/");
+    oDialog.set_filename(_poEntry->get_text() + "/");
   }
 
-  if (poDialog->run() == Gtk::RESPONSE_OK)
+  if (oDialog.run() == Gtk::RESPONSE_OK)
   {
-    std::string sFile = poDialog->get_filename();
+    std::string sFile = oDialog.get_filename();
     if (! Glib::file_test(sFile, Glib::FILE_TEST_IS_DIR))
     {
       sFile = Glib::path_get_dirname(sFile);
@@ -410,7 +607,25 @@ void Window::vOnDirectorySelect(Gtk::Entry * _poEntry)
     _poEntry->set_text(sFile);
   }
 
-  delete poDialog;
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Select directory"),
+                                 Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::OK,     Gtk::RESPONSE_OK);
+
+  if (_poEntry->get_text() != "")
+  {
+    oDialog.add_shortcut_folder(_poEntry->get_text());
+    oDialog.set_current_folder(_poEntry->get_text());
+  }
+
+  if (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    _poEntry->set_text(oDialog.get_filename());
+  }
+
+#endif // ! GTKMM20
 }
 
 void Window::vOnPauseWhenInactiveToggled(Gtk::CheckMenuItem * _poCMI)
@@ -420,25 +635,60 @@ void Window::vOnPauseWhenInactiveToggled(Gtk::CheckMenuItem * _poCMI)
 
 void Window::vOnSelectBios()
 {
-  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select BIOS file"));
-  poDialog->set_transient_for(*this);
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Select BIOS file"));
+  oDialog.set_transient_for(*this);
 
   if (m_poCoreConfig->sGetKey("bios_file") != "")
   {
-    poDialog->set_filename(m_poCoreConfig->sGetKey("bios_file"));
+    oDialog.set_filename(m_poCoreConfig->sGetKey("bios_file"));
   }
 
-  while (poDialog->run() == Gtk::RESPONSE_OK)
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Select BIOS file"));
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
+
+  if (m_poCoreConfig->sGetKey("bios_file") != "")
   {
-    if (Glib::file_test(poDialog->get_filename(), Glib::FILE_TEST_IS_REGULAR))
+    oDialog.set_filename(m_poCoreConfig->sGetKey("bios_file"));
+  }
+
+  const char * acsPattern[] =
+  {
+    "*.[bB][iI][nN]", "*.[aA][gG][bB]", "*.[gG][bB][aA]",
+    "*.[bB][iI][oO][sS]", "*.[zZ][iI][pP]", "*.[zZ]", "*.[gG][zZ]"
+  };
+
+  Gtk::FileFilter oAllFilter;
+  oAllFilter.set_name(_("All files"));
+  oAllFilter.add_pattern("*");
+
+  Gtk::FileFilter oBiosFilter;
+  oBiosFilter.set_name(_("Gameboy Advance BIOS"));
+  for (guint i = 0; i < sizeof(acsPattern) / sizeof(acsPattern[0]); i++)
+  {
+    oBiosFilter.add_pattern(acsPattern[i]);
+  }
+
+  oDialog.add_filter(oAllFilter);
+  oDialog.add_filter(oBiosFilter);
+
+  oDialog.set_filter(oBiosFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    if (Glib::file_test(oDialog.get_filename(), Glib::FILE_TEST_IS_REGULAR))
     {
-      m_poCoreConfig->vSetKey("bios_file", poDialog->get_filename());
+      m_poCoreConfig->vSetKey("bios_file", oDialog.get_filename());
       m_poUseBiosItem->set_sensitive();
       break;
     }
   }
-
-  delete poDialog;
 }
 
 void Window::vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI)
@@ -739,11 +989,14 @@ bool Window::on_key_press_event(GdkEventKey * _pstEvent)
 {
   EKey eKey;
 
-  if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
+  if ((_pstEvent->state & Gtk::AccelGroup::get_default_mod_mask())
       || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
   {
     return Gtk::Window::on_key_press_event(_pstEvent);
   }
+
+  // TEST
+  printf("scan code: %hd\n", _pstEvent->hardware_keycode);
 
   switch (eKey)
   {
@@ -797,7 +1050,7 @@ bool Window::on_key_release_event(GdkEventKey * _pstEvent)
 {
   EKey eKey;
 
-  if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
+  if ((_pstEvent->state & Gtk::AccelGroup::get_default_mod_mask())
       || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
   {
     return Gtk::Window::on_key_release_event(_pstEvent);

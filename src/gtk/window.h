@@ -127,11 +127,13 @@ protected:
   };
 
   virtual void vOnFileOpen();
+  virtual void vOnLoadGame();
+  virtual void vOnSaveGame();
   virtual void vOnLoadGameMostRecent();
   virtual void vOnLoadGameAutoToggled(Gtk::CheckMenuItem * _poCMI);
-  virtual void vOnLoadGame(int _iSlot);
+  virtual void vOnLoadGameSlot(int _iSlot);
   virtual void vOnSaveGameOldest();
-  virtual void vOnSaveGame(int _iSlot);
+  virtual void vOnSaveGameSlot(int _iSlot);
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
   virtual void vOnRecentReset();
@@ -215,9 +217,14 @@ private:
   Config::Section * m_poDisplayConfig;
   Config::Section * m_poSoundConfig;
 
+#ifdef GTKMM20
   Gtk::FileSelection * m_poFileOpenDialog;
+#else // ! GTKMM20
+  Gtk::FileChooserDialog * m_poFileOpenDialog;
+#endif // ! GTKMM20
   ScreenArea *         m_poScreenArea;
   Gtk::Menu *          m_poRecentMenu;
+  Gtk::MenuItem *      m_poRecentResetItem;
   Gtk::CheckMenuItem * m_poFilePauseItem;
   Gtk::CheckMenuItem * m_poUseBiosItem;
   Gtk::CheckMenuItem * m_poSoundOffItem;

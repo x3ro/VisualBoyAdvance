@@ -22,10 +22,45 @@
 namespace VBA
 {
 
-std::string sCutSuffix(const std::string & _sString,
-                       const std::string & _sSep)
+std::string sCutSuffix(const std::string & _rsString,
+                       const std::string & _rsSep)
 {
-  return _sString.substr(0, _sString.find_last_of(_sSep));
+  return _rsString.substr(0, _rsString.find_last_of(_rsSep));
+}
+
+Glib::ustring sCutSuffix(const Glib::ustring & _rsString,
+                         const Glib::ustring & _rsSep)
+{
+  return _rsString.substr(0, _rsString.find_last_of(_rsSep));
+}
+
+bool bHasSuffix(const Glib::ustring & _rsString,
+                const Glib::ustring & _rsSuffix,
+                bool _bCaseSensitive)
+{
+  if (_rsSuffix.size() > _rsString.size())
+  {
+    return false;
+  }
+
+  Glib::ustring sEnd = _rsString.substr(_rsString.size() - _rsSuffix.size());
+
+  if (_bCaseSensitive)
+  {
+    if (_rsSuffix == sEnd)
+    {
+      return true;
+    }
+  }
+  else
+  {
+    if (_rsSuffix.lowercase() == sEnd.lowercase())
+    {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace VBA

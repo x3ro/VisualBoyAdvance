@@ -130,6 +130,14 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileOpen"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
 
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileLoad"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnLoadGame));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileSave"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnSaveGame));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
   for (int i = 0; i < 10; i++)
   {
     char csName[20];
@@ -139,10 +147,10 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     m_apoSaveGameItem[i] = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(csName));
 
     m_apoLoadGameItem[i]->signal_activate().connect(SigC::bind<int>(
-                                                      SigC::slot(*this, &Window::vOnLoadGame),
+                                                      SigC::slot(*this, &Window::vOnLoadGameSlot),
                                                       i + 1));
     m_apoSaveGameItem[i]->signal_activate().connect(SigC::bind<int>(
-                                                      SigC::slot(*this, &Window::vOnSaveGame),
+                                                      SigC::slot(*this, &Window::vOnSaveGameSlot),
                                                       i + 1));
   }
   vUpdateGameSlots();
@@ -186,8 +194,8 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   m_poRecentMenu = dynamic_cast<Gtk::Menu *>(_poXml->get_widget("RecentMenu_menu"));
   vUpdateHistoryMenu();
 
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("RecentReset"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnRecentReset));
+  m_poRecentResetItem = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("RecentReset"));
+  m_poRecentResetItem->signal_activate().connect(SigC::slot(*this, &Window::vOnRecentReset));
 
   poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("RecentFreeze"));
   poCMI->set_active(m_poHistoryConfig->oGetKey<bool>("freeze"));
