@@ -99,7 +99,7 @@ VisualBoyAdvance_SOURCES = \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
 	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp \
-	getopt.c getopt1.c getopt.h
+	getopt.c getopt1.c getopt.h memgzio.h memgzio.c
 
 
 VisualBoyAdvance_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
@@ -115,7 +115,8 @@ TestEmu_SOURCES = \
 	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
-	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp
+	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp \
+	memgzio.c memgzio.h
 
 
 TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
@@ -139,13 +140,13 @@ admame.o simple2x.o bilinear.o interframe.o Font.o unzip.o Cheats.o \
 EEprom.o Flash.o GBA.o Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o \
 Mode4.o Mode5.o Sound.o Sram.o Util.o armdis.o bios.o elf.o expr.o \
 expr-lex.o exprNode.o debugger.o remote.o RTC.o agbprint.o scanline.o \
-getopt.o getopt1.o
+getopt.o getopt1.o memgzio.o
 VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a
 TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
 Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
 Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
-debugger.o remote.o RTC.o agbprint.o scanline.o
+debugger.o remote.o RTC.o agbprint.o scanline.o memgzio.o
 TestEmu_DEPENDENCIES =  gb/libgb.a
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
@@ -169,9 +170,9 @@ DEP_FILES =  .deps/2xSaI.P .deps/Cheats.P .deps/EEprom.P .deps/Flash.P \
 .deps/Util.P .deps/admame.P .deps/agbprint.P .deps/armdis.P \
 .deps/bilinear.P .deps/bios.P .deps/debugger.P .deps/elf.P \
 .deps/expr-lex.P .deps/expr.P .deps/exprNode.P .deps/getopt.P \
-.deps/getopt1.P .deps/interframe.P .deps/motionblur.P .deps/pixel.P \
-.deps/remote.P .deps/scanline.P .deps/simple2x.P .deps/tvmode.P \
-.deps/unzip.P
+.deps/getopt1.P .deps/interframe.P .deps/memgzio.P .deps/motionblur.P \
+.deps/pixel.P .deps/remote.P .deps/scanline.P .deps/simple2x.P \
+.deps/tvmode.P .deps/unzip.P
 SOURCES = $(VisualBoyAdvance_SOURCES) $(TestEmu_SOURCES)
 OBJECTS = $(VisualBoyAdvance_OBJECTS) $(TestEmu_OBJECTS)
 

@@ -1848,7 +1848,7 @@ void usage(char *cmd)
         printf("  -3 , --video-3x             3x\n");
         printf("  -4 , --video 4x             4x\n");        
         printf("  -F , --fullscreen           Full screen\n");
-        printf("  -G , --gdb==PROTOCOL        GNU Remote Stub mode:\n");
+        printf("  -G , --gdb=PROTOCOL         GNU Remote Stub mode:\n");
         printf("                               tcp      - use TCP at port 55555\n");
         printf("                               tcp:PORT - use TCP at port PORT\n");
         printf("                               pipe     - use pipe transport\n");

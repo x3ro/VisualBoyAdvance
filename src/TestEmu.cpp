@@ -531,3 +531,7 @@ bool systemPauseOnFrame()
 {
   return false;
 }
+
+void systemGbBorderOn()
+{
+}

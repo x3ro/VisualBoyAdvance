@@ -13,7 +13,7 @@ VisualBoyAdvance_SOURCES = \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
 	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp \
-	getopt.c getopt1.c getopt.h
+	getopt.c getopt1.c getopt.h memgzio.h memgzio.c
 
 VisualBoyAdvance_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
@@ -28,7 +28,8 @@ TestEmu_SOURCES = \
 	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
-	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp
+	thumb.h RTC.cpp RTC.h agbprint.cpp agbprint.h scanline.cpp \
+	memgzio.c memgzio.h
 
 TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 

@@ -19,6 +19,7 @@
 
 2003-07-15  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/TestEmu.cpp (systemGbBorderOn): fixed TestEmu compilation
 	* src/SDL.cpp: added save type NONE support
 	* src/win32/Win32.cpp (helpBugReport): fixed bug with bug report when emulating GB/GBC program
 
