@@ -349,7 +349,12 @@ void MainWnd::OnFileImportBatteryfile()
   CString filter = winLoadFilter(IDS_FILTER_SAV);
   CString title = winResLoadString(IDS_SELECT_BATTERY_FILE);
 
-  FileDlg dlg(this, "", filter, 0, "", exts, "", title, false);
+  CString saveDir = regQueryStringValue("batteryDir", NULL);
+
+  if(saveDir.IsEmpty())
+    saveDir = getDirFromFile(theApp.filename);
+
+  FileDlg dlg(this, "", filter, 0, "", exts, saveDir, title, false);
   
   if(dlg.DoModal() == IDCANCEL)
     return;
@@ -460,13 +465,18 @@ void MainWnd::OnFileExportBatteryfile()
   CString filter = winLoadFilter(IDS_FILTER_SAV);
   CString title = winResLoadString(IDS_SELECT_BATTERY_FILE);
 
+  CString saveDir = regQueryStringValue("batteryDir", NULL);
+
+  if(saveDir.IsEmpty())
+    saveDir = getDirFromFile(theApp.filename);
+
   FileDlg dlg(this,
               name,
               filter,
               1,
               "SAV",
               exts,
-              "",
+              saveDir,
               title,
               true);
 
