@@ -1,8 +1,11 @@
-bin_PROGRAMS = gVisualBoyAdvance
+bin_PROGRAMS = gvba
 
 noinst_LIBRARIES = libgba.a
 
-gVisualBoyAdvance_SOURCES = \
+gvba_SOURCES = \
+	configfile.cpp		\
+	configfile.h		\
+	filters.cpp		\
 	filters.h		\
 	input.cpp		\
 	input.h			\
@@ -16,14 +19,14 @@ gVisualBoyAdvance_SOURCES = \
 	window.cpp		\
 	window.h
 
-gVisualBoyAdvance_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
+gvba_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
 
-gVisualBoyAdvance_CPPFLAGS = \
+gvba_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)\"			\
 	-DLOCALEDIR=\"$(datadir)/locale\"		\
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
 
-gVisualBoyAdvance_CXXFLAGS = @GTKMM_CFLAGS@ @SDL_CFLAGS@
+gvba_CXXFLAGS = @GTKMM_CFLAGS@ @SDL_CFLAGS@
 
 libgba_a_SOURCES = \
 	../2xSaI.cpp		\

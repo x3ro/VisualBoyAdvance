@@ -56,8 +56,47 @@ void SmartIB32     (u8 *, u32, int, int);
 void MotionBlurIB  (u8 *, u32, int, int);
 void MotionBlurIB32(u8 *, u32, int, int);
 
+namespace VBA
+{
+
 typedef void (*Filter2x)(u8 *, u32, u8 *, u8 *, u32, int, int);
 typedef void (*FilterIB)(u8 *, u32, int, int);
+
+enum EFilter2x
+{
+  FilterNone,
+  Filter2xSaI,
+  FilterSuper2xSaI,
+  FilterSuperEagle,
+  FilterPixelate,
+  FilterMotionBlur,
+  FilterAdMame2x,
+  FilterSimple2x,
+  FilterBilinear,
+  FilterBilinearPlus,
+  FilterScanlines,
+  FilterScanlinesTV,
+  FilterHq2x,
+  FilterLq2x
+};
+
+enum EFilterIB
+{
+  FilterIBNone,
+  FilterIBSmart,
+  FilterIBMotionBlur
+};
+
+enum EFilterDepth
+{
+  FilterDepth16,
+  FilterDepth32
+};
+
+Filter2x pvGetFilter2x(EFilter2x _eFilter2x, EFilterDepth _eDepth);
+FilterIB pvGetFilterIB(EFilterIB _eFilterIB, EFilterDepth _eDepth);
+
+} // namespace VBA
 
 
 #endif // __VBA_FILTERS_H__

@@ -25,9 +25,10 @@
 
 #include <string>
 
+#include "configfile.h"
 #include "screenarea.h"
-#include "input.h"
 #include "filters.h"
+#include "input.h"
 
 namespace VBA
 {
@@ -37,6 +38,8 @@ class Window : public Gtk::Window
   friend class Gnome::Glade::Xml;
 
 public:
+  virtual ~Window();
+
   inline static Window * poGetInstance() { return m_poInstance; }
 
   void vDrawScreen();
@@ -52,15 +55,34 @@ public:
   inline ECartridge eGetCartridge() { return m_eCartridge; }
 
 protected:
+  virtual void vOnFileOpen();
+  virtual void vOnFilePauseToggled();
+  virtual void vOnFileReset();
+  virtual void vOnFileClose();
+  virtual void vOnFileExit();
+  virtual void vOnFrameskipSelected(int _iValue);
+  virtual void vOnThrottleSelected(int _iPercent);
+  virtual void vOnThrottleOther();
+  virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
+  virtual void vOnVideoScaleSelected(int _iScale);
+  virtual void vOnFilter2xSelected(EFilter2x _eFilter2x);
+  virtual void vOnFilterIBSelected(EFilterIB _eFilterIB);
+  virtual void vOnHelpAbout();
+  virtual bool bOnEmuIdle();
+
   virtual bool on_key_press_event(GdkEventKey * _pstEvent);
   virtual bool on_key_release_event(GdkEventKey * _pstEvent);
 
 private:
   Window(GtkWindow * _pstWindow,
          const Glib::RefPtr<Gnome::Glade::Xml> & _poXml);
-  ~Window();
 
   static Window * m_poInstance;
+
+  std::string       m_sUserDataDir;
+  std::string       m_sConfigFile;
+  Config::File      m_oConfig;
+  Config::Section * m_poScreenConfig;
 
   Gtk::FileSelection * m_poFileOpenDialog;
   ScreenArea *         m_poScreenArea;
@@ -68,21 +90,21 @@ private:
 
   SigC::Connection m_oEmuSig;
 
-  std::string    m_sFilename;
+  std::string    m_sRomFile;
   ECartridge     m_eCartridge;
   EmulatedSystem m_stEmulator;
   Keymap         m_oKeymap;
   u32            m_uiJoypadState;
+  bool           m_bAutoFrameskip;
 
   int m_iScreenWidth;
   int m_iScreenHeight;
-  int m_iScreenScale;
-
-  Filter2x m_vFilter2x;
-  FilterIB m_vFilterIB;
 
   void vInitSystem();
   void vInitSDL();
+  void vInitConfig();
+  void vLoadConfig(const std::string & _sFilename);
+  void vSaveConfig(const std::string & _sFilename);
   void vLoadKeymap();
   void vUpdateScreen();
   void vDrawDefaultScreen();
@@ -93,18 +115,8 @@ private:
   void vSaveState(int _iNum);
   void vStartEmu();
   void vStopEmu();
-
-  void vOnFileOpen();
-  void vOnFilePause();
-  void vOnFileReset();
-  void vOnFileClose();
-  void vOnFileQuit();
-  void vOnVideoZoom1x();
-  void vOnVideoZoom2x();
-  void vOnVideoZoom3x();
-  void vOnVideoZoom4x();
-  void vOnHelpAbout();
-  bool bOnEmuIdle();
+  void vSetThrottle(int _iPercent);
+  void vSetLayer(int _iLayer, bool _bVisible);
 };
 
 } // namespace VBA

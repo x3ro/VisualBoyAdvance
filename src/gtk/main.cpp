@@ -54,6 +54,7 @@ int main(int argc, char * argv[])
   poXml->get_widget_derived<VBA::Window>("MainWindow", poWindow);
 
   Gtk::Main::run(*poWindow);
+  delete poWindow;
 
   return 0;
 }

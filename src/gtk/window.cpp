@@ -18,6 +18,9 @@
 
 #include "window.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <SDL.h>
 
 #include "../GBA.h"
@@ -51,44 +54,248 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   m_eCartridge(NO_CARTRIDGE),
   m_uiJoypadState(0),
   m_iScreenWidth(iGBAScreenWidth),
-  m_iScreenHeight(iGBAScreenHeight),
-  m_iScreenScale(1),
-  m_vFilter2x(NULL),
-  m_vFilterIB(NULL)
+  m_iScreenHeight(iGBAScreenHeight)
 {
   vInitSystem();
   vInitSDL();
-  vLoadKeymap();
 
   Gtk::Container * poC;
   poC = dynamic_cast<Gtk::Container *>(_poXml->get_widget("ScreenContainer"));
   m_poScreenArea = Gtk::manage(new ScreenArea(m_iScreenWidth, m_iScreenHeight));
   poC->add(*m_poScreenArea);
   vDrawDefaultScreen();
-  m_poScreenArea->vSetFilter2x(SuperEagle32); // TEST
   m_poScreenArea->show();
 
-  m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
-  m_poFilePauseItem->signal_toggled().connect(SigC::slot(*this, &Window::vOnFilePause));
+  // Get config
+  //
+  vInitConfig();
 
-  Gtk::MenuItem * poMI;
+  m_sUserDataDir = Glib::get_home_dir() + "/.gvba";
+  m_sConfigFile  = m_sUserDataDir + "/config";
+
+  if (! Glib::file_test(m_sUserDataDir, Glib::FILE_TEST_EXISTS))
+  {
+    mkdir(m_sUserDataDir.c_str(), 0777);
+  }
+  if (Glib::file_test(m_sConfigFile, Glib::FILE_TEST_EXISTS))
+  {
+    vLoadConfig(m_sConfigFile);
+  }
+  else
+  {
+    vSaveConfig(m_sConfigFile);
+  }
+
+  vLoadKeymap();
+
+  Gtk::MenuItem *      poMI;
+  Gtk::CheckMenuItem * poCMI;
+
+  // File menu
+  //
+  m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
+  m_poFilePauseItem->signal_toggled().connect(SigC::slot(*this, &Window::vOnFilePauseToggled));
+
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileOpen"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileReset"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileReset));
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileClose"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileClose));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileQuit"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileQuit));
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileExit"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileExit));
 
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("VideoZoom1x"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnVideoZoom1x));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("VideoZoom2x"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnVideoZoom2x));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("VideoZoom3x"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnVideoZoom3x));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("VideoZoom4x"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnVideoZoom4x));
+  // Frameskip menu
+  //
+  struct
+  {
+    const char * m_csName;
+    int          m_iFrameskip;
+  }
+  astFrameskip[] =
+  {
+    { "FrameskipAutomatic", -1 },
+    { "Frameskip0",          0 },
+    { "Frameskip1",          1 },
+    { "Frameskip2",          2 },
+    { "Frameskip3",          3 },
+    { "Frameskip4",          4 },
+    { "Frameskip5",          5 },
+    { "Frameskip6",          6 },
+    { "Frameskip7",          7 },
+    { "Frameskip8",          8 },
+    { "Frameskip9",          9 }
+  };
+  int iDefaultFrameskip;
+  if (m_poScreenConfig->sGetKey("frameskip") == "auto")
+  {
+    iDefaultFrameskip = -1;
+  }
+  else
+  {
+    iDefaultFrameskip = m_poScreenConfig->oGetKey<int>("frameskip");
+  }
+  for (guint i = 0; i < sizeof(astFrameskip) / sizeof(astFrameskip[0]); i++)
+  {
+    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFrameskip[i].m_csName));
+    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnFrameskipSelected),
+                                                    astFrameskip[i].m_iFrameskip));
+    if (astFrameskip[i].m_iFrameskip == iDefaultFrameskip)
+    {
+      poMI->activate();
+    }
+  }
+
+  // Throttle menu
+  //
+  struct
+  {
+    const char * m_csName;
+    int          m_iThrottle;
+  }
+  astThrottle[] =
+  {
+    { "ThrottleNoThrottle",   0 },
+    { "Throttle25",          25 },
+    { "Throttle50",          50 },
+    { "Throttle100",        100 },
+    { "Throttle150",        150 },
+    { "Throttle200",        200 }
+  };
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("ThrottleOther"));
+  poMI->activate();
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnThrottleOther));
+
+  int iDefaultThrottle = m_poScreenConfig->oGetKey<int>("throttle");
+  for (guint i = 0; i < sizeof(astThrottle) / sizeof(astThrottle[0]); i++)
+  {
+    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astThrottle[i].m_csName));
+    if (astThrottle[i].m_iThrottle == iDefaultThrottle)
+    {
+      poMI->activate();
+    }
+    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnThrottleSelected),
+                                                    astThrottle[i].m_iThrottle));
+  }
+  vSetThrottle(iDefaultThrottle);
+
+  // Video menu
+  //
+  struct
+  {
+    const char * m_csName;
+    int          m_iScale;
+  }
+  astVideoScale[] =
+  {
+    { "Video1x", 1 },
+    { "Video2x", 2 },
+    { "Video3x", 3 },
+    { "Video4x", 4 },
+    { "Video5x", 5 },
+    { "Video6x", 6 }
+  };
+  int iDefaultScale = m_poScreenConfig->oGetKey<int>("scale");
+  for (guint i = 0; i < sizeof(astVideoScale) / sizeof(astVideoScale[0]); i++)
+  {
+    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astVideoScale[i].m_csName));
+    poMI->signal_activate().connect(SigC::bind<int>(SigC::slot(*this, &Window::vOnVideoScaleSelected),
+                                                    astVideoScale[i].m_iScale));
+    if (astVideoScale[i].m_iScale == iDefaultScale)
+    {
+      poMI->activate();
+    }
+  }
+
+  // Layers menu
+  //
+  struct
+  {
+    const char * m_csName;
+    int          m_iLayer;
+    bool         m_bChecked;
+  }
+  astLayer[] =
+  {
+    { "LayersBg0",    0, m_poScreenConfig->oGetKey<bool>("layer_bg0")    },
+    { "LayersBg1",    1, m_poScreenConfig->oGetKey<bool>("layer_bg1")    },
+    { "LayersBg2",    2, m_poScreenConfig->oGetKey<bool>("layer_bg2")    },
+    { "LayersBg3",    3, m_poScreenConfig->oGetKey<bool>("layer_bg3")    },
+    { "LayersObj",    4, m_poScreenConfig->oGetKey<bool>("layer_obj")    },
+    { "LayersWin0",   5, m_poScreenConfig->oGetKey<bool>("layer_win0")   },
+    { "LayersWin1",   6, m_poScreenConfig->oGetKey<bool>("layer_win1")   },
+    { "LayersObjWin", 7, m_poScreenConfig->oGetKey<bool>("layer_objwin") }
+  };
+  for (guint i = 0; i < sizeof(astLayer) / sizeof(astLayer[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astLayer[i].m_csName));
+    poCMI->set_active(astLayer[i].m_bChecked);
+    vSetLayer(astLayer[i].m_iLayer, astLayer[i].m_bChecked);
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnLayerToggled),
+                                      poCMI, astLayer[i].m_iLayer));
+  }
+
+  // Filter menu
+  //
+  struct
+  {
+    const char * m_csName;
+    EFilter2x    m_eFilter2x;
+  }
+  astFilter2x[] =
+  {
+    { "FilterNone",          FilterNone         },
+    { "FilterTVMode",        FilterScanlinesTV  },
+    { "Filter2xSaI",         Filter2xSaI        },
+    { "FilterSuper2xSaI",    FilterSuper2xSaI   },
+    { "FilterSuperEagle",    FilterSuperEagle   },
+    { "FilterPixelate",      FilterPixelate     },
+    { "FilterMotionBlur",    FilterMotionBlur   },
+    { "FilterAdvanceMame2x", FilterAdMame2x     },
+    { "FilterSimple2x",      FilterSimple2x     },
+    { "FilterBilinear",      FilterBilinear     },
+    { "FilterBilinearPlus",  FilterBilinearPlus },
+    { "FilterScanlines",     FilterScanlines    },
+    { "FilterHq2x",          FilterHq2x         },
+    { "FilterLq2x",          FilterLq2x         }
+  };
+  EFilter2x eDefaultFilter2x = (EFilter2x)m_poScreenConfig->oGetKey<int>("filter2x");
+  for (guint i = 0; i < sizeof(astFilter2x) / sizeof(astFilter2x[0]); i++)
+  {
+    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFilter2x[i].m_csName));
+    poMI->signal_activate().connect(SigC::bind<EFilter2x>(SigC::slot(*this, &Window::vOnFilter2xSelected),
+                                                          astFilter2x[i].m_eFilter2x));
+    if (astFilter2x[i].m_eFilter2x == eDefaultFilter2x)
+    {
+      poMI->activate();
+    }
+  }
+
+  // Interframe blending menu
+  //
+  struct
+  {
+    const char * m_csName;
+    EFilterIB    m_eFilterIB;
+  }
+  astFilterIB[] =
+  {
+    { "IFBNone",       FilterIBNone       },
+    { "IFBSmart",      FilterIBSmart      },
+    { "IFBMotionBlur", FilterIBMotionBlur }
+  };
+  EFilterIB eDefaultFilterIB = (EFilterIB)m_poScreenConfig->oGetKey<int>("filterIB");
+  for (guint i = 0; i < sizeof(astFilterIB) / sizeof(astFilterIB[0]); i++)
+  {
+    poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(astFilterIB[i].m_csName));
+    poMI->signal_activate().connect(SigC::bind<EFilterIB>(SigC::slot(*this, &Window::vOnFilterIBSelected),
+                                                          astFilterIB[i].m_eFilterIB));
+    if (astFilterIB[i].m_eFilterIB == eDefaultFilterIB)
+    {
+      poMI->activate();
+    }
+  }
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("HelpAbout"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnHelpAbout));
@@ -106,6 +313,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 Window::~Window()
 {
   vOnFileClose();
+  vSaveConfig(m_sConfigFile);
 
   if (m_poFileOpenDialog != NULL)
   {
@@ -135,7 +343,7 @@ void Window::vInitSystem()
   systemDebug = 0;
   systemVerbose = 0;
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
-  systemFrameSkip = 5; // TEST
+  systemFrameSkip = 0;
   systemSoundOn = false;
 
   emulating = 0;
@@ -156,6 +364,7 @@ void Window::vInitSystem()
 #endif
   }
 
+  gbFrameSkip = 0;
   // TODO : GB init and 16-bit color map (?)
 }
 
@@ -167,7 +376,7 @@ void Window::vInitSDL()
     return;
 
   int iFlags = (SDL_INIT_AUDIO
-                | SDL_INIT_TIMER
+                | SDL_INIT_TIMER // useful for SDL_GetTicks ?
                 | SDL_INIT_NOPARACHUTE);
 
   if (SDL_Init(iFlags) < 0)
@@ -177,6 +386,60 @@ void Window::vInitSDL()
   }
 
   bDone = true;
+}
+
+void Window::vInitConfig()
+{
+  m_oConfig.vClear();
+
+  m_poScreenConfig = m_oConfig.poAddSection("Screen");
+  m_poScreenConfig->vSetKey     ("frameskip",    "auto"         );
+  m_poScreenConfig->vSetKey     ("throttle",     0              );
+  m_poScreenConfig->vSetKey     ("scale",        1              );
+  m_poScreenConfig->vSetKey     ("layer_bg0",    true           );
+  m_poScreenConfig->vSetKey     ("layer_bg1",    true           );
+  m_poScreenConfig->vSetKey     ("layer_bg2",    true           );
+  m_poScreenConfig->vSetKey     ("layer_bg3",    true           );
+  m_poScreenConfig->vSetKey     ("layer_obj",    true           );
+  m_poScreenConfig->vSetKey     ("layer_win0",   true           );
+  m_poScreenConfig->vSetKey     ("layer_win1",   true           );
+  m_poScreenConfig->vSetKey     ("layer_objwin", true           );
+  m_poScreenConfig->vSetKey<int>("filter2x",     FilterNone     );
+  m_poScreenConfig->vSetKey<int>("filterIB",     FilterIBNone   );
+}
+
+void Window::vLoadConfig(const std::string & _sFilename)
+{
+  try
+  {
+    m_oConfig.vLoad(_sFilename);
+  }
+  catch (const Glib::Error & e)
+  {
+    Gtk::MessageDialog oDialog(*this,
+                               e.what(),
+                               Gtk::MESSAGE_ERROR,
+                               Gtk::BUTTONS_CLOSE);
+    oDialog.run();
+  }
+
+  // TODO : check that values are valid
+}
+
+void Window::vSaveConfig(const std::string & _sFilename)
+{
+  try
+  {
+    m_oConfig.vSave(_sFilename);
+  }
+  catch (const Glib::Error & e)
+  {
+    Gtk::MessageDialog oDialog(*this,
+                               e.what(),
+                               Gtk::MESSAGE_ERROR,
+                               Gtk::BUTTONS_CLOSE);
+    oDialog.run();
+  }
 }
 
 void Window::vLoadKeymap()
@@ -203,12 +466,10 @@ void Window::vLoadKeymap()
 
 void Window::vUpdateScreen()
 {
-  g_return_if_fail(m_iScreenWidth >= 1
-                   && m_iScreenHeight >= 1
-                   && m_iScreenScale >= 1);
+  g_return_if_fail(m_iScreenWidth >= 1 && m_iScreenHeight >= 1);
 
   m_poScreenArea->vSetSize(m_iScreenWidth, m_iScreenHeight);
-  m_poScreenArea->vSetScale(m_iScreenScale);
+  m_poScreenArea->vSetScale(m_poScreenConfig->oGetKey<int>("scale"));
 
   resize(1, 1);
 
@@ -236,7 +497,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
 {
   vOnFileClose();
 
-  m_sFilename = _rsFilename;
+  m_sRomFile = _rsFilename;
   const char * csFilename = _rsFilename.c_str();
 
   IMAGE_TYPE eType = utilFindType(csFilename);
@@ -281,9 +542,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
         gbBorderColumnSkip = 0;
         gbBorderRowSkip    = 0;
       }
-
-      // TODO
-      //systemFrameSkip = gbFrameSkip;
     }
   }
   else if (eType == IMAGE_GBA)
@@ -313,9 +571,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
 
       m_iScreenWidth  = iGBAScreenWidth;
       m_iScreenHeight = iGBAScreenHeight;
-
-      // TODO
-      //systemFrameSkip = frameSkip;
     }
   }
 
@@ -346,7 +601,7 @@ void Window::vLoadBattery()
 {
   // TODO : from battery dir
 
-  std::string sBattery = sCutSuffix(m_sFilename) + ".sav";
+  std::string sBattery = sCutSuffix(m_sRomFile) + ".sav";
   if (m_stEmulator.emuReadBattery(sBattery.c_str()))
   {
     systemScreenMessage(_("Loaded battery"));
@@ -357,7 +612,7 @@ void Window::vSaveBattery()
 {
   // TODO : from battery dir
 
-  std::string sBattery = sCutSuffix(m_sFilename) + ".sav";
+  std::string sBattery = sCutSuffix(m_sRomFile) + ".sav";
   if (m_stEmulator.emuWriteBattery(sBattery.c_str()))
   {
     systemScreenMessage(_("Saved battery"));
@@ -390,28 +645,61 @@ void Window::vStopEmu()
   m_oEmuSig.disconnect();
 }
 
+void Window::vSetThrottle(int _iPercent)
+{
+  // TODO
+  m_poScreenConfig->vSetKey("throttle", _iPercent);
+}
+
+void Window::vSetLayer(int _iLayer, bool _bVisible)
+{
+  int iMask = (0x0100 << _iLayer);
+  if (_bVisible)
+  {
+    layerSettings |= iMask;
+  }
+  else
+  {
+    layerSettings &= ~iMask;
+  }
+  layerEnable = DISPCNT & layerSettings;
+
+  const char * acsLayers[] =
+  {
+    "layer_bg0",
+    "layer_bg1",
+    "layer_bg2",
+    "layer_bg3",
+    "layer_obj",
+    "layer_win0",
+    "layer_win1",
+    "layer_objwin"
+  };
+  m_poScreenConfig->vSetKey(acsLayers[_iLayer], _bVisible);
+}
+
 void Window::vOnFileOpen()
 {
   if (m_poFileOpenDialog == NULL)
   {
     m_poFileOpenDialog = new Gtk::FileSelection(_("Open a ROM"));
+    m_poFileOpenDialog->set_transient_for(*this);
   }
 
   m_poFileOpenDialog->show();
 
-  int iResponse = m_poFileOpenDialog->run();
-  if (iResponse == Gtk::RESPONSE_OK)
+  while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
   {
-    if (! bLoadROM(m_poFileOpenDialog->get_filename()))
+    if (bLoadROM(m_poFileOpenDialog->get_filename()))
     {
-      return;
+      break;
     }
   }
 
   m_poFileOpenDialog->hide();
 }
 
-void Window::vOnFilePause()
+void Window::vOnFilePauseToggled()
 {
   if (emulating)
   {
@@ -449,33 +737,66 @@ void Window::vOnFileClose()
   vDrawDefaultScreen();
 }
 
-void Window::vOnFileQuit()
+void Window::vOnFileExit()
 {
   hide();
 }
 
-void Window::vOnVideoZoom1x()
+void Window::vOnFrameskipSelected(int _iValue)
 {
-  m_iScreenScale = 1;
+  if (_iValue >= 0 && _iValue <= 9)
+  {
+    m_poScreenConfig->vSetKey("frameskip", _iValue);
+    gbFrameSkip      = _iValue;
+    systemFrameSkip  = _iValue;
+    m_bAutoFrameskip = false;
+  }
+  else
+  {
+    m_poScreenConfig->vSetKey("frameskip", "auto");
+    m_bAutoFrameskip = true;
+  }
+}
+
+void Window::vOnThrottleSelected(int _iPercent)
+{
+  vSetThrottle(_iPercent);
+}
+
+void Window::vOnThrottleOther()
+{
+  // TODO
+}
+
+void Window::vOnVideoScaleSelected(int _iScale)
+{
+  m_poScreenConfig->vSetKey("scale", _iScale);
   vUpdateScreen();
 }
 
-void Window::vOnVideoZoom2x()
+void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
 {
-  m_iScreenScale = 2;
-  vUpdateScreen();
+  vSetLayer(_iLayer, _poCMI->get_active());
 }
 
-void Window::vOnVideoZoom3x()
+void Window::vOnFilter2xSelected(EFilter2x _eFilter2x)
 {
-  m_iScreenScale = 3;
-  vUpdateScreen();
+  m_poScreenArea->vSetFilter2x(_eFilter2x);
+  if (emulating)
+  {
+    vDrawScreen();
+  }
+  m_poScreenConfig->vSetKey<int>("filter2x", _eFilter2x);
 }
 
-void Window::vOnVideoZoom4x()
+void Window::vOnFilterIBSelected(EFilterIB _eFilterIB)
 {
-  m_iScreenScale = 4;
-  vUpdateScreen();
+  m_poScreenArea->vSetFilterIB(_eFilterIB);
+  if (emulating)
+  {
+    vDrawScreen();
+  }
+  m_poScreenConfig->vSetKey<int>("filterIB", _eFilterIB);
 }
 
 void Window::vOnHelpAbout()
@@ -486,6 +807,7 @@ void Window::vOnHelpAbout()
   Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("AboutDialog"));
   Gtk::Label *  poLabel  = dynamic_cast<Gtk::Label *>(poXml->get_widget("VersionLabel"));
 
+  poDialog->set_transient_for(*this);
   poLabel->set_markup("<b><big>" PACKAGE " " VERSION "</big></b>");
   poDialog->run();
   delete poDialog;
@@ -566,7 +888,7 @@ bool Window::on_key_release_event(GdkEventKey * _pstEvent)
   if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
       || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KEY_NONE)
   {
-    return Gtk::Window::on_key_press_event(_pstEvent);
+    return Gtk::Window::on_key_release_event(_pstEvent);
   }
 
   switch (eKey)

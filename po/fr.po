@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VisualBoyAdvance 1.7.2\n"
 "Report-Msgid-Bugs-To: undefined\n"
-"POT-Creation-Date: 2004-03-29 19:53+0200\n"
-"PO-Revision-Date: 2004-03-29 20:04+0200\n"
+"POT-Creation-Date: 2004-04-02 03:28+0200\n"
+"PO-Revision-Date: 2004-04-02 03:24+0200\n"
 "Last-Translator: Sébastien Guignot <kxu@tsys.org>\n"
 "Language-Team: French <@>\n"
 "MIME-Version: 1.0\n"
@@ -25,76 +25,564 @@ msgstr "VisualBoyAdvance"
 msgid "_File"
 msgstr "_Fichier"
 
-#: src/gtk/vba.glade:52
+#: src/gtk/vba.glade:44
+msgid "_Open..."
+msgstr "_Ouvrir..."
+
+#: src/gtk/vba.glade:71
+msgid "_Load..."
+msgstr "_Charger..."
+
+#: src/gtk/vba.glade:80
+msgid "_Save..."
+msgstr "_Enregistrer..."
+
+#: src/gtk/vba.glade:89
+msgid "Loa_d game"
+msgstr "C_harger une partie"
+
+#: src/gtk/vba.glade:97
+msgid "S_ave game"
+msgstr "E_nregistrer une partie"
+
+#: src/gtk/vba.glade:111
 msgid "_Pause"
 msgstr "_Pause"
 
-#: src/gtk/vba.glade:61
+#: src/gtk/vba.glade:121
 msgid "_Reset"
 msgstr "_Reset"
 
-#: src/gtk/vba.glade:107
+#: src/gtk/vba.glade:136
+msgid "Rece_nt"
+msgstr "Récen_t"
+
+#: src/gtk/vba.glade:150
+msgid "_Import"
+msgstr "_Importer"
+
+#: src/gtk/vba.glade:158
+msgid "E_xport"
+msgstr "E_xporter"
+
+#: src/gtk/vba.glade:172
+msgid "Screen capt_ure..."
+msgstr "Capt_ure d'écran..."
+
+#: src/gtk/vba.glade:180
+msgid "RO_M information..."
+msgstr "Informations sur la RO_M..."
+
+#: src/gtk/vba.glade:194
+msgid "_Close"
+msgstr "_Fermer"
+
+#: src/gtk/vba.glade:214
+msgid "_Exit"
+msgstr "_Quitter"
+
+#: src/gtk/vba.glade:239
+msgid "_Options"
+msgstr "_Options"
+
+#: src/gtk/vba.glade:248
+msgid "_Frameskip"
+msgstr ""
+
+#: src/gtk/vba.glade:257
+msgid "_Throttle"
+msgstr "_Vitesse"
+
+#: src/gtk/vba.glade:266
+msgid "_No throttle"
+msgstr "_Aucune"
+
+#: src/gtk/vba.glade:275 src/gtk/vba.glade:994
+msgid "25%"
+msgstr "25%"
+
+#: src/gtk/vba.glade:285 src/gtk/vba.glade:1003
+msgid "50%"
+msgstr "50%"
+
+#: src/gtk/vba.glade:295 src/gtk/vba.glade:1013
+msgid "100%"
+msgstr "100%"
+
+#: src/gtk/vba.glade:305
+msgid "150%"
+msgstr "150%"
+
+#: src/gtk/vba.glade:315 src/gtk/vba.glade:1023
+msgid "200%"
+msgstr "200%"
+
+#: src/gtk/vba.glade:325
+msgid "_Other..."
+msgstr "A_utre..."
+
+#: src/gtk/vba.glade:345 src/gtk/vba.glade:689 src/gtk/vba.glade:1094
+msgid "_Automatic"
+msgstr "_Automatique"
+
+#: src/gtk/vba.glade:354
+msgid "_0"
+msgstr "_0"
+
+#: src/gtk/vba.glade:364 src/gtk/vba.glade:1432
+msgid "_1"
+msgstr "_1"
+
+#: src/gtk/vba.glade:374 src/gtk/vba.glade:1441
+msgid "_2"
+msgstr "_2"
+
+#: src/gtk/vba.glade:384 src/gtk/vba.glade:1451
+msgid "_3"
+msgstr "_3"
+
+#: src/gtk/vba.glade:394 src/gtk/vba.glade:1461
+msgid "_4"
+msgstr "_4"
+
+#: src/gtk/vba.glade:404
+msgid "_5"
+msgstr "_5"
+
+#: src/gtk/vba.glade:414
+msgid "_6"
+msgstr "_6"
+
+#: src/gtk/vba.glade:424
+msgid "_7"
+msgstr "_7"
+
+#: src/gtk/vba.glade:434
+msgid "_8"
+msgstr "_8"
+
+#: src/gtk/vba.glade:444
+msgid "_9"
+msgstr "_9"
+
+#: src/gtk/vba.glade:458
 msgid "_Video"
 msgstr "_Vidéo"
 
-#: src/gtk/vba.glade:116
-msgid "_Zoom"
-msgstr "_Zoom"
-
-#: src/gtk/vba.glade:125
+#: src/gtk/vba.glade:467
 msgid "_1x"
 msgstr "_1x"
 
-#: src/gtk/vba.glade:134
+#: src/gtk/vba.glade:476
 msgid "_2x"
 msgstr "_2x"
 
-#: src/gtk/vba.glade:144
+#: src/gtk/vba.glade:486
 msgid "_3x"
 msgstr "_3x"
 
-#: src/gtk/vba.glade:154
+#: src/gtk/vba.glade:496
 msgid "_4x"
 msgstr "_4x"
 
-#: src/gtk/vba.glade:172
+#: src/gtk/vba.glade:506
+msgid "_5x"
+msgstr "_5x"
+
+#: src/gtk/vba.glade:516
+msgid "_6x"
+msgstr "_6x"
+
+#: src/gtk/vba.glade:532
+msgid "_Layers"
+msgstr ""
+
+#: src/gtk/vba.glade:541
+msgid "BG0"
+msgstr "BG0"
+
+#: src/gtk/vba.glade:551
+msgid "BG1"
+msgstr "BG1"
+
+#: src/gtk/vba.glade:561
+msgid "BG2"
+msgstr "BG2"
+
+#: src/gtk/vba.glade:571
+msgid "BG3"
+msgstr "BG3"
+
+#: src/gtk/vba.glade:581
+msgid "OBJ"
+msgstr "OBJ"
+
+#: src/gtk/vba.glade:591
+msgid "WIN0"
+msgstr "WIN0"
+
+#: src/gtk/vba.glade:601
+msgid "WIN1"
+msgstr "WIN1"
+
+#: src/gtk/vba.glade:611
+msgid "OBJWIN"
+msgstr "OBJWIN"
+
+#: src/gtk/vba.glade:629
+msgid "_Emulator"
+msgstr "_Émulateur"
+
+#: src/gtk/vba.glade:638
+msgid "Show speed"
+msgstr "Affichage de la vitesse"
+
+#: src/gtk/vba.glade:647 src/gtk/vba.glade:738
+msgid "None"
+msgstr "Aucun"
+
+#: src/gtk/vba.glade:656
+msgid "Percentage"
+msgstr "Pourcentage"
+
+#: src/gtk/vba.glade:666
+msgid "Detailed"
+msgstr "Détaillé"
+
+#: src/gtk/vba.glade:680
+msgid "Save type"
+msgstr "Type de sauvegarde"
+
+#: src/gtk/vba.glade:698
+msgid "EEPROM"
+msgstr "EEPROM"
+
+#: src/gtk/vba.glade:708
+msgid "SRAM"
+msgstr "SRAM"
+
+#: src/gtk/vba.glade:718
+msgid "Flash"
+msgstr "Flash"
+
+#: src/gtk/vba.glade:728
+msgid "EEPROM+Sensor"
+msgstr "EEPROM+Sensor"
+
+#: src/gtk/vba.glade:754
+msgid "Flash 64K"
+msgstr "Flash 64K"
+
+#: src/gtk/vba.glade:763
+msgid "Flash 128K"
+msgstr "Flash 128K"
+
+#: src/gtk/vba.glade:777
+msgid "_Use BIOS file"
+msgstr "_Utiliser un fichier BIOS"
+
+#: src/gtk/vba.glade:786
+msgid "_Select BIOS file..."
+msgstr "_Sélectionner le fichier BIOS..."
+
+#: src/gtk/vba.glade:798
+msgid "_Sound"
+msgstr "_Son"
+
+#: src/gtk/vba.glade:807
+msgid "O_ff"
+msgstr ""
+
+#: src/gtk/vba.glade:816
+msgid "_Mute"
+msgstr "_Muet"
+
+#: src/gtk/vba.glade:826
+msgid "_On"
+msgstr ""
+
+#: src/gtk/vba.glade:842
+msgid "Use old synchronization"
+msgstr "Utiliser l'ancienne synchronisation"
+
+#: src/gtk/vba.glade:857
+msgid "Echo"
+msgstr "Écho"
+
+#: src/gtk/vba.glade:866
+msgid "Low pass filter"
+msgstr ""
+
+#: src/gtk/vba.glade:875
+msgid "Reverse stereo"
+msgstr ""
+
+#: src/gtk/vba.glade:890
+msgid "Channel _1"
+msgstr ""
+
+#: src/gtk/vba.glade:899
+msgid "Channel _2"
+msgstr ""
+
+#: src/gtk/vba.glade:908
+msgid "Channel _3"
+msgstr ""
+
+#: src/gtk/vba.glade:917
+msgid "Channel _4"
+msgstr ""
+
+#: src/gtk/vba.glade:926
+msgid "Channel _A"
+msgstr ""
+
+#: src/gtk/vba.glade:935
+msgid "Channel _B"
+msgstr ""
+
+#: src/gtk/vba.glade:950
+msgid "11 _Khz"
+msgstr "11 _Khz"
+
+#: src/gtk/vba.glade:959
+msgid "22 K_hz"
+msgstr "22 K_hz"
+
+#: src/gtk/vba.glade:969
+msgid "44 Kh_z"
+msgstr "44 Kh_z"
+
+#: src/gtk/vba.glade:985
+msgid "_Volume"
+msgstr "_Volume"
+
+#: src/gtk/vba.glade:1033
+msgid "300%"
+msgstr "300%"
+
+#: src/gtk/vba.glade:1043
+msgid "400%"
+msgstr "400%"
+
+#: src/gtk/vba.glade:1061
+msgid "_Gameboy"
+msgstr "_Gameboy"
+
+#: src/gtk/vba.glade:1070
+msgid "_Border"
+msgstr ""
+
+#: src/gtk/vba.glade:1079
+msgid "_Printer"
+msgstr ""
+
+#: src/gtk/vba.glade:1103
+msgid "_GBA"
+msgstr "_GBA"
+
+#: src/gtk/vba.glade:1113
+msgid "_CGB/GBC"
+msgstr "_CGB/GBC"
+
+#: src/gtk/vba.glade:1123
+msgid "_SGB"
+msgstr "_SGB"
+
+#: src/gtk/vba.glade:1133
+msgid "SGB_2"
+msgstr "SGB_2"
+
+#: src/gtk/vba.glade:1143
+msgid "G_B"
+msgstr "G_B"
+
+#: src/gtk/vba.glade:1157
+msgid "F_ilter"
+msgstr "_Filtre"
+
+#: src/gtk/vba.glade:1166
+msgid "Interframe _blending"
+msgstr ""
+
+#: src/gtk/vba.glade:1175 src/gtk/vba.glade:1214
+msgid "_None"
+msgstr "Aucu_n"
+
+#: src/gtk/vba.glade:1184
+msgid "_Smart"
+msgstr ""
+
+#: src/gtk/vba.glade:1194 src/gtk/vba.glade:1273
+msgid "_Motion Blur"
+msgstr ""
+
+#: src/gtk/vba.glade:1223
+msgid "_TV Mode"
+msgstr ""
+
+#: src/gtk/vba.glade:1233
+msgid "_2xSaI"
+msgstr ""
+
+#: src/gtk/vba.glade:1243
+msgid "_Super 2xSaI"
+msgstr ""
+
+#: src/gtk/vba.glade:1253
+msgid "Super _Eagle"
+msgstr ""
+
+#: src/gtk/vba.glade:1263
+msgid "_Pixelate"
+msgstr ""
+
+#: src/gtk/vba.glade:1283
+msgid "_AdvanceMAME 2x"
+msgstr ""
+
+#: src/gtk/vba.glade:1293
+msgid "S_imple 2x"
+msgstr ""
+
+#: src/gtk/vba.glade:1303
+msgid "Bilinea_r"
+msgstr ""
+
+#: src/gtk/vba.glade:1313
+msgid "Bilinear Pl_us"
+msgstr ""
+
+#: src/gtk/vba.glade:1323
+msgid "S_canlines"
+msgstr ""
+
+#: src/gtk/vba.glade:1333
+msgid "h_q2x"
+msgstr ""
+
+#: src/gtk/vba.glade:1343
+msgid "_lq2x"
+msgstr ""
+
+#: src/gtk/vba.glade:1359
+msgid "_Disable MMX"
+msgstr "_Désactiver MMX"
+
+#: src/gtk/vba.glade:1372
+msgid "_Joypad"
+msgstr ""
+
+#: src/gtk/vba.glade:1381
+msgid "_Configure"
+msgstr "_Configurer"
+
+#: src/gtk/vba.glade:1390
+msgid "_1..."
+msgstr "_1..."
+
+#: src/gtk/vba.glade:1398
+msgid "_2..."
+msgstr "_2..."
+
+#: src/gtk/vba.glade:1406
+msgid "_3..."
+msgstr "_3..."
+
+#: src/gtk/vba.glade:1414
+msgid "_4..."
+msgstr "_4..."
+
+#: src/gtk/vba.glade:1477
+msgid "_Motion configure..."
+msgstr ""
+
+#: src/gtk/vba.glade:1491
+msgid "_Autofire"
+msgstr ""
+
+#: src/gtk/vba.glade:1500
+msgid "_A"
+msgstr "_A"
+
+#: src/gtk/vba.glade:1510
+msgid "_B"
+msgstr "_B"
+
+#: src/gtk/vba.glade:1520
+msgid "_L"
+msgstr "_L"
+
+#: src/gtk/vba.glade:1530
+msgid "_R"
+msgstr "_R"
+
+#: src/gtk/vba.glade:1552
+msgid "_Tools"
+msgstr "Ou_tils"
+
+#: src/gtk/vba.glade:1561
+msgid "_GDB"
+msgstr "_GDB"
+
+#: src/gtk/vba.glade:1570
+msgid "_Wait for connection..."
+msgstr ""
+
+#: src/gtk/vba.glade:1578
+msgid "_Load and wait..."
+msgstr ""
+
+#: src/gtk/vba.glade:1586
+msgid "_Break into GDB"
+msgstr ""
+
+#: src/gtk/vba.glade:1594
+msgid "_Disconnect"
+msgstr ""
+
+#: src/gtk/vba.glade:1606
+msgid "_Cheats"
+msgstr ""
+
+#: src/gtk/vba.glade:1618
 msgid "_Help"
 msgstr "_Aide"
 
-#: src/gtk/vba.glade:181
+#: src/gtk/vba.glade:1627
 msgid "_About"
 msgstr "À _propos"
 
-#: src/gtk/vba.glade:222
+#: src/gtk/vba.glade:1668
 msgid "About VBA"
 msgstr "À propos de VBA"
 
-#: src/gtk/vba.glade:287
+#: src/gtk/vba.glade:1733
 msgid "An emulator for Gameboy™ and GameboyAdvance™."
 msgstr "Émulateur pour Gameboy™ et GameboyAdvance™."
 
-#: src/gtk/vba.glade:309
+#: src/gtk/vba.glade:1755
 msgid "<small>Copyright © 1999-2004 Forgotten</small>"
 msgstr "<small>Copyright © 1999-2004 Forgotten</small>"
 
-#: src/gtk/window.cpp:245
+#: src/gtk/window.cpp:506
 #, c-format
 msgid "Unknown file type %s"
 msgstr "Type de fichier inconnu %s"
 
-#: src/gtk/window.cpp:324
+#: src/gtk/window.cpp:579
 #, c-format
 msgid "Failed to load file %s"
 msgstr "Le chargement du fichier %s a échoué"
 
-#: src/gtk/window.cpp:352
+#: src/gtk/window.cpp:607
 msgid "Loaded battery"
 msgstr "Sauvegarde chargée"
 
-#: src/gtk/window.cpp:363
+#: src/gtk/window.cpp:618
 msgid "Saved battery"
 msgstr "Sauvegarde effectuée"
 
-#: src/gtk/window.cpp:397
+#: src/gtk/window.cpp:685
 msgid "Open a ROM"
 msgstr "Ouvrir une ROM"

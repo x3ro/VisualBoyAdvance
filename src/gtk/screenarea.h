@@ -35,8 +35,9 @@ public:
 
   void vSetSize(int _iWidth, int _iHeight);
   void vSetScale(int _iScale);
-  void vSetFilter2x(Filter2x _vFilter);
-  void vDrawPixels(const u8 * _puiData);
+  void vSetFilter2x(EFilter2x _eFilter2x);
+  void vSetFilterIB(EFilterIB _eFilterIB);
+  void vDrawPixels(u8 * _puiData);
   void vDrawColor(u32 _uiColor); // 0xRRGGBB
 
 protected:
@@ -52,6 +53,7 @@ private:
   u32 *    m_puiPixels;
   u8 *     m_puiDelta;
   Filter2x m_vFilter2x;
+  FilterIB m_vFilterIB;
 
   void vUpdateSize();
 };

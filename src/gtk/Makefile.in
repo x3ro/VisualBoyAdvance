@@ -150,11 +150,14 @@ target_alias = @target_alias@
 target_cpu = @target_cpu@
 target_os = @target_os@
 target_vendor = @target_vendor@
-bin_PROGRAMS = gVisualBoyAdvance
+bin_PROGRAMS = gvba
 
 noinst_LIBRARIES = libgba.a
 
-gVisualBoyAdvance_SOURCES = \
+gvba_SOURCES = \
+	configfile.cpp		\
+	configfile.h		\
+	filters.cpp		\
 	filters.h		\
 	input.cpp		\
 	input.h			\
@@ -169,15 +172,15 @@ gVisualBoyAdvance_SOURCES = \
 	window.h
 
 
-gVisualBoyAdvance_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
+gvba_LDADD = libgba.a @VBA_LIBS@ @GTKMM_LIBS@ @LIBINTL@ @SDL_LIBS@
 
-gVisualBoyAdvance_CPPFLAGS = \
+gvba_CPPFLAGS = \
 	-DPKGDATADIR=\"$(pkgdatadir)\"			\
 	-DLOCALEDIR=\"$(datadir)/locale\"		\
 	-DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\"
 
 
-gVisualBoyAdvance_CXXFLAGS = @GTKMM_CFLAGS@ @SDL_CFLAGS@
+gvba_CXXFLAGS = @GTKMM_CFLAGS@ @SDL_CFLAGS@
 
 libgba_a_SOURCES = \
 	../2xSaI.cpp		\
@@ -277,28 +280,27 @@ am_libgba_a_OBJECTS = libgba_a-2xSaI.$(OBJEXT) libgba_a-Cheats.$(OBJEXT) \
 	libgba_a-scanline.$(OBJEXT) libgba_a-simple2x.$(OBJEXT) \
 	libgba_a-unzip.$(OBJEXT)
 libgba_a_OBJECTS = $(am_libgba_a_OBJECTS)
-bin_PROGRAMS = gVisualBoyAdvance$(EXEEXT)
+bin_PROGRAMS = gvba$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS)
 
-am_gVisualBoyAdvance_OBJECTS = gVisualBoyAdvance-input.$(OBJEXT) \
-	gVisualBoyAdvance-main.$(OBJEXT) \
-	gVisualBoyAdvance-screenarea.$(OBJEXT) \
-	gVisualBoyAdvance-system.$(OBJEXT) \
-	gVisualBoyAdvance-tools.$(OBJEXT) \
-	gVisualBoyAdvance-window.$(OBJEXT)
-gVisualBoyAdvance_OBJECTS = $(am_gVisualBoyAdvance_OBJECTS)
-gVisualBoyAdvance_DEPENDENCIES = libgba.a
-gVisualBoyAdvance_LDFLAGS =
+am_gvba_OBJECTS = gvba-configfile.$(OBJEXT) gvba-filters.$(OBJEXT) \
+	gvba-input.$(OBJEXT) gvba-main.$(OBJEXT) \
+	gvba-screenarea.$(OBJEXT) gvba-system.$(OBJEXT) \
+	gvba-tools.$(OBJEXT) gvba-window.$(OBJEXT)
+gvba_OBJECTS = $(am_gvba_OBJECTS)
+gvba_DEPENDENCIES = libgba.a
+gvba_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
-@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/gVisualBoyAdvance-input.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/gVisualBoyAdvance-main.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/gVisualBoyAdvance-screenarea.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/gVisualBoyAdvance-system.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/gVisualBoyAdvance-tools.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/gVisualBoyAdvance-window.Po \
+@AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/gvba-configfile.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-filters.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-input.Po ./$(DEPDIR)/gvba-main.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-screenarea.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-system.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-tools.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/gvba-window.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libgba_a-2xSaI.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libgba_a-Cheats.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/libgba_a-EEprom.Po \
@@ -343,11 +345,11 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-DIST_SOURCES = $(libgba_a_SOURCES) $(gVisualBoyAdvance_SOURCES)
+DIST_SOURCES = $(libgba_a_SOURCES) $(gvba_SOURCES)
 DATA = $(dist_pkgdata_DATA)
 
 DIST_COMMON = $(dist_pkgdata_DATA) $(srcdir)/Makefile.in Makefile.am
-SOURCES = $(libgba_a_SOURCES) $(gVisualBoyAdvance_SOURCES)
+SOURCES = $(libgba_a_SOURCES) $(gvba_SOURCES)
 
 all: all-am
 
@@ -391,9 +393,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-gVisualBoyAdvance$(EXEEXT): $(gVisualBoyAdvance_OBJECTS) $(gVisualBoyAdvance_DEPENDENCIES) 
-	@rm -f gVisualBoyAdvance$(EXEEXT)
-	$(CXXLINK) $(gVisualBoyAdvance_LDFLAGS) $(gVisualBoyAdvance_OBJECTS) $(gVisualBoyAdvance_LDADD) $(LIBS)
+gvba$(EXEEXT): $(gvba_OBJECTS) $(gvba_DEPENDENCIES) 
+	@rm -f gvba$(EXEEXT)
+	$(CXXLINK) $(gvba_LDFLAGS) $(gvba_OBJECTS) $(gvba_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT) core *.core
@@ -401,12 +403,14 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-input.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-main.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-screenarea.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-system.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-tools.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gVisualBoyAdvance-window.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-configfile.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-filters.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-input.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-main.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-screenarea.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-system.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-tools.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gvba-window.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgba_a-2xSaI.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgba_a-Cheats.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libgba_a-EEprom.Po@am__quote@
@@ -1257,137 +1261,181 @@ libgba_a-unzip.obj: ../unzip.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libgba_a_CPPFLAGS) $(CPPFLAGS) $(libgba_a_CXXFLAGS) $(CXXFLAGS) -c -o libgba_a-unzip.obj `if test -f '../unzip.cpp'; then $(CYGPATH_W) '../unzip.cpp'; else $(CYGPATH_W) '$(srcdir)/../unzip.cpp'; fi`
 
-gVisualBoyAdvance-input.o: input.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-input.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-input.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-input.o `test -f 'input.cpp' || echo '$(srcdir)/'`input.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-input.Tpo" "$(DEPDIR)/gVisualBoyAdvance-input.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-input.Tpo"; exit 1; \
+gvba-configfile.o: configfile.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-configfile.o -MD -MP -MF "$(DEPDIR)/gvba-configfile.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-configfile.o `test -f 'configfile.cpp' || echo '$(srcdir)/'`configfile.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-configfile.Tpo" "$(DEPDIR)/gvba-configfile.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-configfile.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='input.cpp' object='gVisualBoyAdvance-input.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-input.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-input.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='configfile.cpp' object='gvba-configfile.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-configfile.Po' tmpdepfile='$(DEPDIR)/gvba-configfile.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-input.o `test -f 'input.cpp' || echo '$(srcdir)/'`input.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-configfile.o `test -f 'configfile.cpp' || echo '$(srcdir)/'`configfile.cpp
 
-gVisualBoyAdvance-input.obj: input.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-input.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-input.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-input.obj `if test -f 'input.cpp'; then $(CYGPATH_W) 'input.cpp'; else $(CYGPATH_W) '$(srcdir)/input.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-input.Tpo" "$(DEPDIR)/gVisualBoyAdvance-input.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-input.Tpo"; exit 1; \
+gvba-configfile.obj: configfile.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-configfile.obj -MD -MP -MF "$(DEPDIR)/gvba-configfile.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-configfile.obj `if test -f 'configfile.cpp'; then $(CYGPATH_W) 'configfile.cpp'; else $(CYGPATH_W) '$(srcdir)/configfile.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-configfile.Tpo" "$(DEPDIR)/gvba-configfile.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-configfile.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='input.cpp' object='gVisualBoyAdvance-input.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-input.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-input.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='configfile.cpp' object='gvba-configfile.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-configfile.Po' tmpdepfile='$(DEPDIR)/gvba-configfile.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-input.obj `if test -f 'input.cpp'; then $(CYGPATH_W) 'input.cpp'; else $(CYGPATH_W) '$(srcdir)/input.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-configfile.obj `if test -f 'configfile.cpp'; then $(CYGPATH_W) 'configfile.cpp'; else $(CYGPATH_W) '$(srcdir)/configfile.cpp'; fi`
 
-gVisualBoyAdvance-main.o: main.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-main.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-main.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-main.o `test -f 'main.cpp' || echo '$(srcdir)/'`main.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-main.Tpo" "$(DEPDIR)/gVisualBoyAdvance-main.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-main.Tpo"; exit 1; \
+gvba-filters.o: filters.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-filters.o -MD -MP -MF "$(DEPDIR)/gvba-filters.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-filters.o `test -f 'filters.cpp' || echo '$(srcdir)/'`filters.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-filters.Tpo" "$(DEPDIR)/gvba-filters.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-filters.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cpp' object='gVisualBoyAdvance-main.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-main.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-main.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='filters.cpp' object='gvba-filters.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-filters.Po' tmpdepfile='$(DEPDIR)/gvba-filters.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-main.o `test -f 'main.cpp' || echo '$(srcdir)/'`main.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-filters.o `test -f 'filters.cpp' || echo '$(srcdir)/'`filters.cpp
 
-gVisualBoyAdvance-main.obj: main.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-main.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-main.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-main.obj `if test -f 'main.cpp'; then $(CYGPATH_W) 'main.cpp'; else $(CYGPATH_W) '$(srcdir)/main.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-main.Tpo" "$(DEPDIR)/gVisualBoyAdvance-main.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-main.Tpo"; exit 1; \
+gvba-filters.obj: filters.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-filters.obj -MD -MP -MF "$(DEPDIR)/gvba-filters.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-filters.obj `if test -f 'filters.cpp'; then $(CYGPATH_W) 'filters.cpp'; else $(CYGPATH_W) '$(srcdir)/filters.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-filters.Tpo" "$(DEPDIR)/gvba-filters.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-filters.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cpp' object='gVisualBoyAdvance-main.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-main.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-main.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='filters.cpp' object='gvba-filters.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-filters.Po' tmpdepfile='$(DEPDIR)/gvba-filters.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-main.obj `if test -f 'main.cpp'; then $(CYGPATH_W) 'main.cpp'; else $(CYGPATH_W) '$(srcdir)/main.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-filters.obj `if test -f 'filters.cpp'; then $(CYGPATH_W) 'filters.cpp'; else $(CYGPATH_W) '$(srcdir)/filters.cpp'; fi`
 
-gVisualBoyAdvance-screenarea.o: screenarea.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-screenarea.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-screenarea.o `test -f 'screenarea.cpp' || echo '$(srcdir)/'`screenarea.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo" "$(DEPDIR)/gVisualBoyAdvance-screenarea.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo"; exit 1; \
+gvba-input.o: input.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-input.o -MD -MP -MF "$(DEPDIR)/gvba-input.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-input.o `test -f 'input.cpp' || echo '$(srcdir)/'`input.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-input.Tpo" "$(DEPDIR)/gvba-input.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-input.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='screenarea.cpp' object='gVisualBoyAdvance-screenarea.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-screenarea.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-screenarea.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='input.cpp' object='gvba-input.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-input.Po' tmpdepfile='$(DEPDIR)/gvba-input.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-screenarea.o `test -f 'screenarea.cpp' || echo '$(srcdir)/'`screenarea.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-input.o `test -f 'input.cpp' || echo '$(srcdir)/'`input.cpp
 
-gVisualBoyAdvance-screenarea.obj: screenarea.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-screenarea.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-screenarea.obj `if test -f 'screenarea.cpp'; then $(CYGPATH_W) 'screenarea.cpp'; else $(CYGPATH_W) '$(srcdir)/screenarea.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo" "$(DEPDIR)/gVisualBoyAdvance-screenarea.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-screenarea.Tpo"; exit 1; \
+gvba-input.obj: input.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-input.obj -MD -MP -MF "$(DEPDIR)/gvba-input.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-input.obj `if test -f 'input.cpp'; then $(CYGPATH_W) 'input.cpp'; else $(CYGPATH_W) '$(srcdir)/input.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-input.Tpo" "$(DEPDIR)/gvba-input.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-input.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='screenarea.cpp' object='gVisualBoyAdvance-screenarea.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-screenarea.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-screenarea.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='input.cpp' object='gvba-input.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-input.Po' tmpdepfile='$(DEPDIR)/gvba-input.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-screenarea.obj `if test -f 'screenarea.cpp'; then $(CYGPATH_W) 'screenarea.cpp'; else $(CYGPATH_W) '$(srcdir)/screenarea.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-input.obj `if test -f 'input.cpp'; then $(CYGPATH_W) 'input.cpp'; else $(CYGPATH_W) '$(srcdir)/input.cpp'; fi`
 
-gVisualBoyAdvance-system.o: system.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-system.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-system.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-system.o `test -f 'system.cpp' || echo '$(srcdir)/'`system.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-system.Tpo" "$(DEPDIR)/gVisualBoyAdvance-system.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-system.Tpo"; exit 1; \
+gvba-main.o: main.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-main.o -MD -MP -MF "$(DEPDIR)/gvba-main.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-main.o `test -f 'main.cpp' || echo '$(srcdir)/'`main.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-main.Tpo" "$(DEPDIR)/gvba-main.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-main.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='system.cpp' object='gVisualBoyAdvance-system.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-system.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-system.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cpp' object='gvba-main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-main.Po' tmpdepfile='$(DEPDIR)/gvba-main.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-system.o `test -f 'system.cpp' || echo '$(srcdir)/'`system.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-main.o `test -f 'main.cpp' || echo '$(srcdir)/'`main.cpp
 
-gVisualBoyAdvance-system.obj: system.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-system.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-system.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-system.obj `if test -f 'system.cpp'; then $(CYGPATH_W) 'system.cpp'; else $(CYGPATH_W) '$(srcdir)/system.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-system.Tpo" "$(DEPDIR)/gVisualBoyAdvance-system.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-system.Tpo"; exit 1; \
+gvba-main.obj: main.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-main.obj -MD -MP -MF "$(DEPDIR)/gvba-main.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-main.obj `if test -f 'main.cpp'; then $(CYGPATH_W) 'main.cpp'; else $(CYGPATH_W) '$(srcdir)/main.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-main.Tpo" "$(DEPDIR)/gvba-main.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-main.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='system.cpp' object='gVisualBoyAdvance-system.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-system.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-system.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='main.cpp' object='gvba-main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-main.Po' tmpdepfile='$(DEPDIR)/gvba-main.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-system.obj `if test -f 'system.cpp'; then $(CYGPATH_W) 'system.cpp'; else $(CYGPATH_W) '$(srcdir)/system.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-main.obj `if test -f 'main.cpp'; then $(CYGPATH_W) 'main.cpp'; else $(CYGPATH_W) '$(srcdir)/main.cpp'; fi`
 
-gVisualBoyAdvance-tools.o: tools.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-tools.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-tools.o `test -f 'tools.cpp' || echo '$(srcdir)/'`tools.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo" "$(DEPDIR)/gVisualBoyAdvance-tools.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo"; exit 1; \
+gvba-screenarea.o: screenarea.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-screenarea.o -MD -MP -MF "$(DEPDIR)/gvba-screenarea.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-screenarea.o `test -f 'screenarea.cpp' || echo '$(srcdir)/'`screenarea.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-screenarea.Tpo" "$(DEPDIR)/gvba-screenarea.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-screenarea.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tools.cpp' object='gVisualBoyAdvance-tools.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-tools.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-tools.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='screenarea.cpp' object='gvba-screenarea.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-screenarea.Po' tmpdepfile='$(DEPDIR)/gvba-screenarea.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-tools.o `test -f 'tools.cpp' || echo '$(srcdir)/'`tools.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-screenarea.o `test -f 'screenarea.cpp' || echo '$(srcdir)/'`screenarea.cpp
 
-gVisualBoyAdvance-tools.obj: tools.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-tools.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-tools.obj `if test -f 'tools.cpp'; then $(CYGPATH_W) 'tools.cpp'; else $(CYGPATH_W) '$(srcdir)/tools.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo" "$(DEPDIR)/gVisualBoyAdvance-tools.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-tools.Tpo"; exit 1; \
+gvba-screenarea.obj: screenarea.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-screenarea.obj -MD -MP -MF "$(DEPDIR)/gvba-screenarea.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-screenarea.obj `if test -f 'screenarea.cpp'; then $(CYGPATH_W) 'screenarea.cpp'; else $(CYGPATH_W) '$(srcdir)/screenarea.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-screenarea.Tpo" "$(DEPDIR)/gvba-screenarea.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-screenarea.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tools.cpp' object='gVisualBoyAdvance-tools.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-tools.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-tools.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='screenarea.cpp' object='gvba-screenarea.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-screenarea.Po' tmpdepfile='$(DEPDIR)/gvba-screenarea.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-tools.obj `if test -f 'tools.cpp'; then $(CYGPATH_W) 'tools.cpp'; else $(CYGPATH_W) '$(srcdir)/tools.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-screenarea.obj `if test -f 'screenarea.cpp'; then $(CYGPATH_W) 'screenarea.cpp'; else $(CYGPATH_W) '$(srcdir)/screenarea.cpp'; fi`
 
-gVisualBoyAdvance-window.o: window.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-window.o -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-window.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-window.o `test -f 'window.cpp' || echo '$(srcdir)/'`window.cpp; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-window.Tpo" "$(DEPDIR)/gVisualBoyAdvance-window.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-window.Tpo"; exit 1; \
+gvba-system.o: system.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-system.o -MD -MP -MF "$(DEPDIR)/gvba-system.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-system.o `test -f 'system.cpp' || echo '$(srcdir)/'`system.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-system.Tpo" "$(DEPDIR)/gvba-system.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-system.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='window.cpp' object='gVisualBoyAdvance-window.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-window.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='system.cpp' object='gvba-system.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-system.Po' tmpdepfile='$(DEPDIR)/gvba-system.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-window.o `test -f 'window.cpp' || echo '$(srcdir)/'`window.cpp
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-system.o `test -f 'system.cpp' || echo '$(srcdir)/'`system.cpp
 
-gVisualBoyAdvance-window.obj: window.cpp
-@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -MT gVisualBoyAdvance-window.obj -MD -MP -MF "$(DEPDIR)/gVisualBoyAdvance-window.Tpo" \
-@am__fastdepCXX_TRUE@	  -c -o gVisualBoyAdvance-window.obj `if test -f 'window.cpp'; then $(CYGPATH_W) 'window.cpp'; else $(CYGPATH_W) '$(srcdir)/window.cpp'; fi`; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gVisualBoyAdvance-window.Tpo" "$(DEPDIR)/gVisualBoyAdvance-window.Po"; \
-@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gVisualBoyAdvance-window.Tpo"; exit 1; \
+gvba-system.obj: system.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-system.obj -MD -MP -MF "$(DEPDIR)/gvba-system.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-system.obj `if test -f 'system.cpp'; then $(CYGPATH_W) 'system.cpp'; else $(CYGPATH_W) '$(srcdir)/system.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-system.Tpo" "$(DEPDIR)/gvba-system.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-system.Tpo"; exit 1; \
 @am__fastdepCXX_TRUE@	fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='window.cpp' object='gVisualBoyAdvance-window.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gVisualBoyAdvance-window.Po' tmpdepfile='$(DEPDIR)/gVisualBoyAdvance-window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='system.cpp' object='gvba-system.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-system.Po' tmpdepfile='$(DEPDIR)/gvba-system.TPo' @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gVisualBoyAdvance_CPPFLAGS) $(CPPFLAGS) $(gVisualBoyAdvance_CXXFLAGS) $(CXXFLAGS) -c -o gVisualBoyAdvance-window.obj `if test -f 'window.cpp'; then $(CYGPATH_W) 'window.cpp'; else $(CYGPATH_W) '$(srcdir)/window.cpp'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-system.obj `if test -f 'system.cpp'; then $(CYGPATH_W) 'system.cpp'; else $(CYGPATH_W) '$(srcdir)/system.cpp'; fi`
+
+gvba-tools.o: tools.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-tools.o -MD -MP -MF "$(DEPDIR)/gvba-tools.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-tools.o `test -f 'tools.cpp' || echo '$(srcdir)/'`tools.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-tools.Tpo" "$(DEPDIR)/gvba-tools.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-tools.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tools.cpp' object='gvba-tools.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-tools.Po' tmpdepfile='$(DEPDIR)/gvba-tools.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-tools.o `test -f 'tools.cpp' || echo '$(srcdir)/'`tools.cpp
+
+gvba-tools.obj: tools.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-tools.obj -MD -MP -MF "$(DEPDIR)/gvba-tools.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-tools.obj `if test -f 'tools.cpp'; then $(CYGPATH_W) 'tools.cpp'; else $(CYGPATH_W) '$(srcdir)/tools.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-tools.Tpo" "$(DEPDIR)/gvba-tools.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-tools.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='tools.cpp' object='gvba-tools.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-tools.Po' tmpdepfile='$(DEPDIR)/gvba-tools.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-tools.obj `if test -f 'tools.cpp'; then $(CYGPATH_W) 'tools.cpp'; else $(CYGPATH_W) '$(srcdir)/tools.cpp'; fi`
+
+gvba-window.o: window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-window.o -MD -MP -MF "$(DEPDIR)/gvba-window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-window.o `test -f 'window.cpp' || echo '$(srcdir)/'`window.cpp; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-window.Tpo" "$(DEPDIR)/gvba-window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='window.cpp' object='gvba-window.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-window.Po' tmpdepfile='$(DEPDIR)/gvba-window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-window.o `test -f 'window.cpp' || echo '$(srcdir)/'`window.cpp
+
+gvba-window.obj: window.cpp
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -MT gvba-window.obj -MD -MP -MF "$(DEPDIR)/gvba-window.Tpo" \
+@am__fastdepCXX_TRUE@	  -c -o gvba-window.obj `if test -f 'window.cpp'; then $(CYGPATH_W) 'window.cpp'; else $(CYGPATH_W) '$(srcdir)/window.cpp'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/gvba-window.Tpo" "$(DEPDIR)/gvba-window.Po"; \
+@am__fastdepCXX_TRUE@	else rm -f "$(DEPDIR)/gvba-window.Tpo"; exit 1; \
+@am__fastdepCXX_TRUE@	fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='window.cpp' object='gvba-window.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	depfile='$(DEPDIR)/gvba-window.Po' tmpdepfile='$(DEPDIR)/gvba-window.TPo' @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(gvba_CPPFLAGS) $(CPPFLAGS) $(gvba_CXXFLAGS) $(CXXFLAGS) -c -o gvba-window.obj `if test -f 'window.cpp'; then $(CYGPATH_W) 'window.cpp'; else $(CYGPATH_W) '$(srcdir)/window.cpp'; fi`
 uninstall-info-am:
 dist_pkgdataDATA_INSTALL = $(INSTALL_DATA)
 install-dist_pkgdataDATA: $(dist_pkgdata_DATA)

@@ -26,7 +26,8 @@ namespace VBA
 ScreenArea::ScreenArea(int _iWidth, int _iHeight, int _iScale) :
   m_puiPixels(NULL),
   m_puiDelta(NULL),
-  m_vFilter2x(NULL)
+  m_vFilter2x(NULL),
+  m_vFilterIB(NULL)
 {
   g_assert(_iWidth >= 1 && _iHeight >= 1 && _iScale >= 1);
 
@@ -74,13 +75,26 @@ void ScreenArea::vSetScale(int _iScale)
   }
 }
 
-void ScreenArea::vSetFilter2x(Filter2x _vFilter2x)
+void ScreenArea::vSetFilter2x(EFilter2x _eFilter2x)
 {
-  m_vFilter2x = _vFilter2x;
+  m_vFilter2x = pvGetFilter2x(_eFilter2x, FilterDepth32);
 }
 
-void ScreenArea::vDrawPixels(const u8 * _puiData)
+void ScreenArea::vSetFilterIB(EFilterIB _eFilterIB)
 {
+  m_vFilterIB = pvGetFilterIB(_eFilterIB, FilterDepth32);
+}
+
+void ScreenArea::vDrawPixels(u8 * _puiData)
+{
+  if (m_vFilterIB != NULL)
+  {
+    m_vFilterIB(_puiData + m_iAreaWidth * 2 + 4,
+                m_iAreaWidth * 2 + 4,
+                m_iWidth,
+                m_iHeight);
+  }
+
   if (m_iScale == 1)
   {
     u32 * puiSrc = (u32 *)_puiData + m_iWidth + 1;
@@ -96,7 +110,7 @@ void ScreenArea::vDrawPixels(const u8 * _puiData)
   }
   else if (m_iScale == 2 && m_vFilter2x != NULL)
   {
-    m_vFilter2x(const_cast<u8 *>(_puiData) + m_iAreaWidth * 2 + 4,
+    m_vFilter2x(_puiData + m_iAreaWidth * 2 + 4,
                 m_iAreaWidth * 2 + 4,
                 m_puiDelta,
                 (u8 *)m_puiPixels,
