@@ -1375,6 +1375,16 @@ BEGIN
         END
         POPUP "F&ilter"
         BEGIN
+            POPUP "Interframe Blending"
+            BEGIN
+                MENUITEM "None",                        ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE
+
+                MENUITEM "Motion Blur",                 ID_OPTIONS_FILTER_INTERFRAMEBLENDING_MOTIONBLUR
+
+                MENUITEM "Smart",                       ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART
+
+            END
+            MENUITEM SEPARATOR
             MENUITEM "&Normal",                     ID_OPTIONS_FILTER_NORMAL
             MENUITEM "&TV Mode",                    ID_OPTIONS_FILTER_TVMODE
             MENUITEM "&2xSaI",                      ID_OPTIONS_FILTER_2XSAI

@@ -145,6 +145,10 @@ SOURCE=..\src\Globals.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\interframe.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\Mode0.cpp
 # End Source File
 # Begin Source File

@@ -82,6 +82,11 @@ extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 
+extern void SmartIB(u8*,u32,int,int);
+extern void SmartIB32(u8*,u32,int,int);
+extern void MotionBlurIB(u8*,u32,int,int);
+extern void MotionBlurIB32(u8*,u32,int,int);
+
 void Init_Overlay(SDL_Surface *surface, int overlaytype);
 void Quit_Overlay(void);
 void Draw_Overlay(SDL_Surface *surface, int size);
@@ -156,6 +161,8 @@ u32 systemColorMap32[0x10000];
 u16 systemColorMap16[0x10000];
 u16 systemGbPalette[24];
 void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
+void (*ifbFunction)(u8*,u32,int,int) = NULL;
+int ifbType = 0;
 char filename[2048];
 char ipsname[2048];
 char biosFileName[2048];
@@ -271,6 +278,9 @@ struct option sdlOptions[] = {
   { "fullscreen", no_argument, &fullscreen, 1 },
   { "gdb", required_argument, 0, 'G' },
   { "help", no_argument, &sdlPrintUsage, 1 },
+  { "ifb-none", no_argument, &ifbType, 0 },
+  { "ifb-motion-blur", no_argument, &ifbType, 1 },
+  { "ifb-smart", no_argument, &ifbType, 2 },
   { "ips", required_argument, 0, 'i' },
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
@@ -886,7 +896,7 @@ void sdlReadPreferences(FILE *f)
     if(p)
       *p = 0;
     
-    char *token = strtok(s, " \t\n\r");
+    char *token = strtok(s, " \t\n\r=");
 
     if(!token)
       continue;
@@ -1010,6 +1020,10 @@ soundQuality);
       sdlFlashSize = sdlFromHex(value);
       if(sdlFlashSize != 0 && sdlFlashSize != 1)
         sdlFlashSize = 0;
+    } else if(!strcmp(key, "ifbType")) {
+      ifbType = sdlFromHex(value);
+      if(ifbType < 0 || ifbType > 2)
+        ifbType = 0;
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1563,7 +1577,10 @@ void usage(char *cmd)
         printf("                               128 - DMA 3\n");
         printf("\n");
         printf("Long options only:\n");
-        printf("       --no-ips               Do not apply IPS patch\n");  
+        printf("       --ifb-none             No interframe blending\n");
+        printf("       --ifb-motion-blur      Interframe motion blur\n");
+        printf("       --ifb-smart            Smart interframe blending\n");
+        printf("       --no-ips               Do not apply IPS patch\n");
 }
 
 int main(int argc, char **argv)
@@ -2189,6 +2206,35 @@ int main(int argc, char **argv)
     }
   }
   
+  if(systemColorDepth == 16) {
+    switch(ifbType) {
+    case 0:
+    default:
+      ifbFunction = NULL;
+      break;
+    case 1:
+      ifbFunction = MotionBlurIB;
+      break;
+    case 2:
+      ifbFunction = SmartIB;
+      break;
+    }
+  } else if(systemColorDepth == 32) {
+    switch(ifbType) {
+    case 0:
+    default:
+      ifbFunction = NULL;
+      break;
+    case 1:
+      ifbFunction = MotionBlurIB32;
+      break;
+    case 2:
+      ifbFunction = SmartIB32;
+      break;
+    }
+  } else
+    ifbFunction = NULL;
+  
   emulating = 1;
   soundInit();
   
@@ -2267,6 +2313,13 @@ void systemDrawScreen()
     } else {
       screenMessage = false;
     }
+  }
+
+  if(ifbFunction) {
+    if(systemColorDepth == 16)
+      ifbFunction(pix+destWidth+2, destWidth+2, srcWidth, srcHeight);
+    else
+      ifbFunction(pix+destWidth*2+4, destWidth*2+4, srcWidth, srcHeight);
   }
   
   if(filterFunction) {

@@ -117,6 +117,8 @@ BOOL mode800Available = FALSE;
 BOOL changingVideoSize = FALSE;
 u8 *delta[257*244*4];
 void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
+void (*ifbFunction)(u8*,u32,int,int) = NULL;
+int ifbType = 0;
 int filterType = 0;
 int filterWidth = 0;
 int filterHeight = 0;
@@ -308,6 +310,7 @@ void readBatteryFile();
 BOOL initDirectDraw();
 BOOL initDirectInput();
 void winCenterWindow(HWND);
+
 extern int Init_2xSaI(u32);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
@@ -329,6 +332,12 @@ extern void Bilinear(u8*,u32,u8*,u8*,u32,int,int);
 extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
+
+extern void SmartIB(u8*,u32,int,int);
+extern void SmartIB32(u8*,u32,int,int);
+extern void MotionBlurIB(u8*,u32,int,int);
+extern void MotionBlurIB32(u8*,u32,int,int);
+
 extern void winGBARomInfo(u8*);
 extern void winGBRomInfo(u8*);
 extern void winCheatsDialog();
@@ -1576,6 +1585,16 @@ void updateFilterMenu(HMENU menu)
                  ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_DISABLEMMX,
                 CHECKMENUSTATE(disableMMX));
+
+  HMENU sub = GetSubMenu(menu, 0);
+  if(sub == NULL)
+    return;
+  CheckMenuItem(sub, ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE,
+                CHECKMENUSTATE(ifbType == 0));
+  CheckMenuItem(sub, ID_OPTIONS_FILTER_INTERFRAMEBLENDING_MOTIONBLUR,
+                CHECKMENUSTATE(ifbType == 1));
+  CheckMenuItem(sub, ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART,
+                CHECKMENUSTATE(ifbType == 2));  
 }
 
 void updateJoypadMenu(HMENU menu)
@@ -2125,6 +2144,15 @@ void systemDrawScreen()
     delete bmp;
   }
   
+  if(ifbFunction) {
+    if(systemColorDepth == 16)
+      ifbFunction(pix+filterWidth*2+2, filterWidth*2+2,
+                  filterWidth, filterHeight);
+    else
+      ifbFunction(pix+filterWidth*4+4, filterWidth*4+4,
+                  filterWidth, filterHeight);
+  }
+  
   if(vsync && !speedup) {
     hret = pDirectDraw->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
   }
@@ -2530,6 +2558,38 @@ void adjustDestRect()
       dest.bottom = 600;
     }          
   }  
+}
+
+void updateIFB()
+{
+  if(systemColorDepth == 16) {
+    switch(ifbType) {
+    case 0:
+    default:
+      ifbFunction = NULL;
+      break;
+    case 1:
+      ifbFunction = MotionBlurIB;
+      break;
+    case 2:
+      ifbFunction = SmartIB;
+      break;
+    }
+  } else if(systemColorDepth == 32) {
+    switch(ifbType) {
+    case 0:
+    default:
+      ifbFunction = NULL;
+      break;
+    case 1:
+      ifbFunction = MotionBlurIB32;
+      break;
+    case 2:
+      ifbFunction = SmartIB32;
+      break;
+    }
+  } else
+    ifbFunction = NULL;
 }
 
 void updateFilter()
@@ -3998,6 +4058,21 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("filter", filterType);
       updateFilter();
       break;
+    case ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE:
+      ifbType = 0;
+      regSetDwordValue("ifbType", ifbType);
+      updateIFB();
+      break;      
+    case ID_OPTIONS_FILTER_INTERFRAMEBLENDING_MOTIONBLUR:
+      ifbType = 1;
+      regSetDwordValue("ifbType", ifbType);
+      updateIFB();
+      break;      
+    case ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART:
+      ifbType = 2;
+      regSetDwordValue("ifbType", ifbType);
+      updateIFB();
+      break;      
     case ID_OPTIONS_FILTER_DISABLEMMX:
       disableMMX = !disableMMX;
       if(!disableMMX)
@@ -4714,6 +4789,10 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   cpuSaveType = regQueryDwordValue("saveType", 0);
   if(cpuSaveType < 0 || cpuSaveType > 4)
     cpuSaveType = 0;
+
+  ifbType = regQueryDwordValue("ifbType", 0);
+  if(ifbType < 0 || ifbType > 2)
+    ifbType = 0;
 
   winFlashSize = regQueryDwordValue("flashSize", 0x10000);
   if(winFlashSize != 0x10000 && winFlashSize != 0x20000)

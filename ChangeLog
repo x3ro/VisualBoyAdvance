@@ -1,3 +1,9 @@
+2003-01-05  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Commands.cpp: added interframe blending commands
+	* src/win32/Win32.cpp: added interframe blending support
+	* src/SDL.cpp: added interframe blending support
+
 2003-01-03  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp: added bilinear filter support

@@ -2,6 +2,7 @@ Version 1.4:
 
 Core changes:
 - added bilinear and bilinear plus filters
+- added interframe blending support
 
 Version 1.3.1:
 
