@@ -102,7 +102,7 @@ void MainWnd::OnCheatsLoadcheatlist()
   CString filter = winLoadFilter(IDS_FILTER_CHEAT_LIST);
   CString title = winResLoadString(IDS_SELECT_CHEAT_LIST_NAME);
 
-  FileDlg dlg(this, filename, filter, 0, "CLT", exts, theApp.dir, title, true);
+  FileDlg dlg(this, filename, filter, 0, "CLT", exts, saveDir, title, false);
 
   if(dlg.DoModal() == IDOK) {
     winLoadCheatList(dlg.GetPathName());
@@ -141,7 +141,7 @@ void MainWnd::OnCheatsSavecheatlist()
   CString filter = winLoadFilter(IDS_FILTER_CHEAT_LIST);
   CString title = winResLoadString(IDS_SELECT_CHEAT_LIST_NAME);
 
-  FileDlg dlg(this, filename, filter, 0, "CLT", exts, theApp.dir, title, false);
+  FileDlg dlg(this, filename, filter, 0, "CLT", exts, saveDir, title, true);
 
   if(dlg.DoModal() == IDOK) {
     winSaveCheatList(dlg.GetPathName());
@@ -152,3 +152,14 @@ void MainWnd::OnUpdateCheatsSavecheatlist(CCmdUI* pCmdUI)
 {
   pCmdUI->Enable(emulating);
 }
+
+void MainWnd::OnCheatsDisablecheats() 
+{
+  cheatsEnabled = !cheatsEnabled;
+}
+
+void MainWnd::OnUpdateCheatsDisablecheats(CCmdUI* pCmdUI) 
+{
+  pCmdUI->SetCheck(cheatsEnabled);
+}
+
