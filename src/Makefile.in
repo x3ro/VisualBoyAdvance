@@ -89,7 +89,7 @@ bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
 	SDL.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
-	simple2x.cpp bilinear.cpp Font.cpp unzip.cpp \
+	simple2x.cpp bilinear.cpp interframe.cpp Font.cpp unzip.cpp \
 	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
 	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
 	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
@@ -133,10 +133,10 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 VisualBoyAdvance_OBJECTS =  SDL.o 2xSaI.o tvmode.o pixel.o motionblur.o \
-admame.o simple2x.o bilinear.o Font.o unzip.o Cheats.o EEprom.o Flash.o \
-GBA.o Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o \
-Sound.o Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o \
-exprNode.o debugger.o remote.o
+admame.o simple2x.o bilinear.o interframe.o Font.o unzip.o Cheats.o \
+EEprom.o Flash.o GBA.o Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o \
+Mode4.o Mode5.o Sound.o Sram.o Util.o armdis.o bios.o elf.o expr.o \
+expr-lex.o exprNode.o debugger.o remote.o
 VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a prof/libprof.a
 TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
@@ -165,8 +165,8 @@ DEP_FILES =  .deps/2xSaI.P .deps/Cheats.P .deps/EEprom.P .deps/Flash.P \
 .deps/SDL.P .deps/Sound.P .deps/Sram.P .deps/TestEmu.P .deps/Util.P \
 .deps/admame.P .deps/armdis.P .deps/bilinear.P .deps/bios.P \
 .deps/debugger.P .deps/elf.P .deps/expr-lex.P .deps/expr.P \
-.deps/exprNode.P .deps/motionblur.P .deps/pixel.P .deps/remote.P \
-.deps/simple2x.P .deps/tvmode.P .deps/unzip.P
+.deps/exprNode.P .deps/interframe.P .deps/motionblur.P .deps/pixel.P \
+.deps/remote.P .deps/simple2x.P .deps/tvmode.P .deps/unzip.P
 SOURCES = $(VisualBoyAdvance_SOURCES) $(TestEmu_SOURCES)
 OBJECTS = $(VisualBoyAdvance_OBJECTS) $(TestEmu_OBJECTS)
 

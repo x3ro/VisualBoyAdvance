@@ -4,7 +4,7 @@ bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
 	SDL.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
-	simple2x.cpp bilinear.cpp Font.cpp unzip.cpp \
+	simple2x.cpp bilinear.cpp interframe.cpp Font.cpp unzip.cpp \
 	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
 	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
 	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
