@@ -3483,7 +3483,9 @@ void CPULoop(int ticks)
               }
               
               u32 ext = (joy >> 10);
-              int cheatTicks = cheatsCheckKeys(P1^0x3FF, ext);
+              int cheatTicks = 0;
+              if(cheatsEnabled)
+                cheatsCheckKeys(P1^0x3FF, ext);
               cpuDmaTicksToUpdate += cheatTicks;
               speedup = (ext & 1) ? true : false;
               capture = (ext & 2) ? true : false;

@@ -44,6 +44,7 @@ int layerEnable = 0xff00;
 bool speedHack = false;
 int cpuSaveType = 0;
 bool cpuEnhancedDetection = true;
+bool cheatsEnabled = true;
 
 u8 *bios = NULL;
 u8 *rom = NULL;

@@ -32,6 +32,8 @@ gbCheat gbCheatList[100];
 int gbCheatNumber = 0;
 bool gbCheatMap[0x10000];
 
+extern bool cheatsEnabled;
+
 #define GBCHEAT_IS_HEX(a) ( ((a)>='A' && (a) <='F') || ((a) >='0' && (a) <= '9'))
 #define GBCHEAT_HEX_VALUE(a) ( (a) >= 'A' ? (a) - 'A' + 10 : (a) - '0')
 
@@ -425,6 +427,9 @@ bool gbCheatReadGSCodeFile(const char *fileName)
 
 u8 gbCheatRead(u16 address)
 {
+  if(!cheatsEnabled)
+    return gbMemoryMap[address>>12][address & 0xFFF];
+
   for(int i = 0; i < gbCheatNumber; i++) {
     if(gbCheatList[i].enabled && gbCheatList[i].address == address) {
       switch(gbCheatList[i].code) {
