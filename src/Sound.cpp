@@ -298,9 +298,8 @@ void soundEvent(u32 address, u8 data)
     ioMem[address] = data;    
     break;
   case NR12:
-    sound1EnvelopeVolume = data >> 4;
     sound1EnvelopeUpDown = data & 0x08;
-    sound1EnvelopeATLReload = sound1EnvelopeATL = 689 * (data & 7);
+    sound1EnvelopeATLReload = 689 * (data & 7);    
     ioMem[address] = data;    
     break;
   case NR13:
@@ -345,9 +344,8 @@ void soundEvent(u32 address, u8 data)
     ioMem[address] = data;    
     break;
   case NR22:
-    sound2EnvelopeVolume = data >> 4;
     sound2EnvelopeUpDown = data & 0x08;
-    sound2EnvelopeATLReload = sound2EnvelopeATL = 689 * (data & 7);
+    sound2EnvelopeATLReload = 689 * (data & 7);
     ioMem[address] = data;    
     break;
   case NR23:
@@ -436,9 +434,8 @@ void soundEvent(u32 address, u8 data)
     ioMem[address] = data;    
     break;
   case NR42:
-    sound4EnvelopeVolume = data >> 4;
     sound4EnvelopeUpDown = data & 0x08;
-    sound4EnvelopeATLReload = sound4EnvelopeATL = 689 * (data & 7);
+    sound4EnvelopeATLReload = 689 * (data & 7);
     ioMem[address] = data;    
     break;
   case NR43:
