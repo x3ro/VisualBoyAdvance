@@ -1082,7 +1082,10 @@ void utilGBAFindSave(const u8 *data, const int size)
     }
     p++;
   } 
-  
+  // if not matches found, then set it to NONE
+  if(saveType == 0) {
+    saveType = 5;
+  }
   rtcEnable(rtcFound);
   cpuSaveType = saveType;
   flashSetSize(flashSize);
