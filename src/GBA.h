@@ -63,7 +63,7 @@ typedef union {
   volatile u32 I;
 #else
 	u32 I;
-@endif
+#endif
 } reg_pair;
 
 #ifndef NO_GBA_MAP
