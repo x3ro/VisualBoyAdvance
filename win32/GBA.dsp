@@ -26,7 +26,7 @@ CFG=GBA - Win32 Debug
 # PROP AllowPerConfigDependencies 1
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=cl.exe
+CPP=xicl6.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -52,7 +52,7 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
 # ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /nodefaultlib:"libm" /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
 
@@ -78,7 +78,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
 # ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBC" /nodefaultlib:"libm" /out:"Debug/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
 # SUBTRACT LINK32 /verbose /profile
@@ -106,7 +106,7 @@ LINK32=link.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=link.exe
+LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
 # ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /map /machine:I386 /nodefaultlib:"libm" /out:"ReleaseNoDev/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
 # SUBTRACT LINK32 /verbose /pdb:none
@@ -419,6 +419,10 @@ SOURCE=..\src\win32\DirectDraw.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\Display.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\GDIDisplay.cpp
 # End Source File
 # Begin Source File
@@ -465,10 +469,6 @@ SOURCE=..\src\win32\Controls.cpp
 # Begin Source File
 
 SOURCE=..\src\win32\DirectoriesDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\Display.cpp
 # End Source File
 # Begin Source File
 
@@ -520,6 +520,15 @@ SOURCE=..\src\win32\Throttle.cpp
 # Begin Source File
 
 SOURCE=..\src\win32\vba.rc
+
+!IF  "$(CFG)" == "GBA - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
+
+!ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -546,6 +555,10 @@ SOURCE=..\src\win32\Wnd.cpp
 SOURCE=..\src\win32\WriteAVI.cpp
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\src\win32\skinButton.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
