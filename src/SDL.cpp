@@ -1092,6 +1092,8 @@ void sdlReadPreferences(FILE *f)
       fullscreen = sdlFromHex(value) ? 1 : 0;
     } else if(!strcmp(key, "useBios")) {
       useBios = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "skipBios")) {
+      skipBios = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "biosFile")) {
       strcpy(biosFileName, value);
     } else if(!strcmp(key, "filter")) {

@@ -690,13 +690,14 @@
 #define ID_OPTIONS_GAMEBOY_BORDERAUTOMATIC 40256
 #define ID_OPTIONS_EMULATOR_REWIND      40257
 #define ID_TOOLS_REWIND                 40258
+#define ID_OPTIONS_EMULATOR_SKIPBIOS    40259
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        150
-#define _APS_NEXT_COMMAND_VALUE         40259
+#define _APS_NEXT_COMMAND_VALUE         40260
 #define _APS_NEXT_CONTROL_VALUE         1248
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

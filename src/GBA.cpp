@@ -3059,7 +3059,7 @@ void CPUReset()
     reg[R13_SVC].I = 0x03007FE0;
     armIrqEnable = true;
   } else {
-    if(useBios) {
+    if(useBios && !skipBios) {
       reg[15].I = 0x00000000;
       armMode = 0x13;
       armIrqEnable = false;      

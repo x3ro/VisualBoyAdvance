@@ -148,6 +148,7 @@ BOOL winPauseNextFrame = FALSE;
 BOOL vsync = FALSE;
 BOOL menuToggle = TRUE;
 BOOL useBiosFile = FALSE;
+BOOL skipBiosFile = FALSE;
 BOOL pauseWhenInactive = TRUE;
 int nCmdShow = 0;
 
@@ -1707,6 +1708,8 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(disableStatusMessage));  
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_USEBIOSFILE,
                 CHECKMENUSTATE(useBiosFile));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SKIPBIOS,
+                CHECKMENUSTATE(skipBiosFile));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_PAUSEWHENINACTIVE,
                 CHECKMENUSTATE(pauseWhenInactive));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SPEEDUPTOGGLE,
@@ -4166,6 +4169,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         regSetDwordValue("useBios", useBiosFile);
       }
       break;
+    case ID_OPTIONS_EMULATOR_SKIPBIOS:
+      skipBiosFile = !skipBiosFile;
+      regSetDwordValue("skipBios", skipBiosFile);
+      break;
     case ID_OPTIONS_EMULATOR_SELECTBIOSFILE:
       winCheckFullscreen();      
       if(emulatorSelectBiosFile()) {
@@ -4934,6 +4941,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   useBiosFile = regQueryDwordValue("useBios", 0) ? true: false;
 
+  skipBiosFile = regQueryDwordValue("skipBios", 0) ? true : false;
+
   char * c = regQueryStringValue("biosFile", NULL);
 
   if(c) {
@@ -5449,6 +5458,7 @@ BOOL fileOpen()
   }
 
   if(type == IMAGE_GBA) {
+    skipBios = skipBiosFile ? true : false;
     CPUInit(biosFileName, useBiosFile ? true : false);
     CPUReset();
   }
