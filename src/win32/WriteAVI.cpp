@@ -28,6 +28,8 @@
 
 #include "WriteAVI.h"
 
+extern HWND hWindow;
+
 CAVIFile::CAVIFile()
   : bOK(true), nFrames(0), sFrames(0)
 {
@@ -56,7 +58,7 @@ CAVIFile::~CAVIFile()
 
   if(psound)
     AVIStreamClose(psound);
-  
+
   if (pfile)
     AVIFileClose(pfile);
 
@@ -73,7 +75,6 @@ void CAVIFile::SetFormat(BITMAPINFOHEADER *bh)
 
 void CAVIFile::SetSoundFormat(WAVEFORMATEX *f)
 {
-  /*
   memcpy(&soundFormat, f, sizeof(soundFormat));
   memset(&soundhdr, 0, sizeof(soundhdr));
   
@@ -81,8 +82,7 @@ void CAVIFile::SetSoundFormat(WAVEFORMATEX *f)
   soundhdr.dwQuality              = (DWORD)-1;
   soundhdr.dwScale                = f->nBlockAlign;
   soundhdr.dwInitialFrames        = 1;
-  soundhdr.dwRate                 = f->nSamplesPerSec*f->nChannels*
-    f->nBlockAlign;
+  soundhdr.dwRate                 = f->nAvgBytesPerSec;
   soundhdr.dwSampleSize           = f->nBlockAlign;
 
   HRESULT hr = AVIFileCreateStream(pfile, &psound, &soundhdr);
@@ -103,10 +103,7 @@ void CAVIFile::SetSoundFormat(WAVEFORMATEX *f)
   }
 
   soundAdded = true;
-  */
 }
-
-extern HWND hWindow;
 
 bool CAVIFile::Open(const char *filename)
 {
@@ -169,7 +166,7 @@ bool CAVIFile::AddSound(const int frame, const char *sound, int len)
 {
   if(!bOK)
     return false;
-  /*
+
   int samples = len / soundFormat.nBlockAlign;
   ULONG nTotalBytesWritten = 0;
   HRESULT hr = S_OK;
@@ -192,7 +189,6 @@ bool CAVIFile::AddSound(const int frame, const char *sound, int len)
     bOK = false;
     return false;
   }
-  */
 
   return true;
 }
