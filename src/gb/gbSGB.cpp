@@ -21,6 +21,7 @@
 #include <memory.h>
 
 #include "../System.h"
+#include "../Port.h"
 #include "GB.h"
 #include "gbGlobals.h"
 
@@ -315,7 +316,7 @@ void gbSgbPicture()
   u16 *paletteAddr = (u16 *)&gbSgbScreenBuffer[2048];
   
   for(int i = 64; i < 128; i++) {
-    gbPalette[i] = *paletteAddr++;
+    gbPalette[i] = FROM16LE(*paletteAddr++);
   }
 
   if(gbBorderOn) 
@@ -333,16 +334,16 @@ void gbSgbPicture()
 
 void gbSgbSetPalette(int a,int b,u16 *p)
 {
-  u16 bit00 = *p++;
+  u16 bit00 = FROM16LE(*p++);
   int i;
   
   for(i = 1; i < 4; i++) {
-    gbPalette[a*4+i] = *p++;
+    gbPalette[a*4+i] = FROM16LE(*p++);
   }
   gbPalette[a*4] = bit00;
   
   for(i = 1; i < 4; i++) {
-    gbPalette[b*4+i] = *p++;
+    gbPalette[b*4+i] = FROM16LE(*p++);
   }
   gbPalette[b*4] = bit00;
 }
@@ -354,7 +355,7 @@ void gbSgbScpPalette()
   u16 *fromAddress = (u16 *)gbSgbScreenBuffer;
   
   for(int i = 0; i < 512*4; i++) {
-    gbSgbSCPPalette[i] = *fromAddress++;
+    gbSgbSCPPalette[i] = FROM16LE(*fromAddress++);
   }
 }
 
@@ -372,16 +373,16 @@ void gbSgbSetATF(int n)
 
 void gbSgbSetPalette()
 {
-  u16 pal = (*((u16 *)&gbSgbPacket[1]))&511;
+  u16 pal = FROM16LE((*((u16 *)&gbSgbPacket[1])))&511;
   memcpy(&gbPalette[0], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = (*((u16 *)&gbSgbPacket[3]))&511;
+  pal = FROM16LE((*((u16 *)&gbSgbPacket[3])))&511;
   memcpy(&gbPalette[4], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = (*((u16 *)&gbSgbPacket[5]))&511;
+  pal = FROM16LE((*((u16 *)&gbSgbPacket[5])))&511;
   memcpy(&gbPalette[8], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = (*((u16 *)&gbSgbPacket[7]))&511;
+  pal = FROM16LE((*((u16 *)&gbSgbPacket[7])))&511;
   memcpy(&gbPalette[12], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
   u8 atf = gbSgbPacket[9];
@@ -538,7 +539,7 @@ void gbSgbAttributeCharacter()
 {
   u8 startH = gbSgbPacket[1] & 0x1f;
   u8 startV = gbSgbPacket[2] & 0x1f;
-  int nDataSet = *((u16 *)&gbSgbPacket[3]);
+  int nDataSet = FROM16LE(*((u16 *)&gbSgbPacket[3]));
   int style = gbSgbPacket[5] & 1;
   if(startH > 19)
     startH = 19;
