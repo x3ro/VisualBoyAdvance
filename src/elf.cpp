@@ -2659,6 +2659,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
         memcpy(&workRAM[READ32LE(&ph->paddr) & 0x3ffff],
                data + READ32LE(&ph->offset),
                READ32LE(&ph->filesz));
+        size += READ32LE(&ph->filesz);
       }      
     } else {
       if(READ32LE(&ph->paddr) >= 0x8000000 &&
@@ -2708,6 +2709,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
           memcpy(&workRAM[READ32LE(&sh[i]->addr) & 0x3ffff], data +
                  READ32LE(&sh[i]->offset),
                  READ32LE(&sh[i]->size));
+                   size += READ32LE(&sh[i]->size);
         }      
       } else {
         if(READ32LE(&sh[i]->addr) >= 0x8000000 &&
