@@ -860,13 +860,28 @@ void AddGSACodeDlg::OnOk()
 {  
   char desc[100];
   char buffer[1024];
+  char part1[10];
+  char part2[10];
+  char code[20];
   GetWindowText(GetDlgItem(IDC_CODE), buffer, 1024);
   GetWindowText(GetDlgItem(IDC_DESC), desc, 100);
   
   char *s = strtok(buffer, "\n\r");
+  part1[0] = 0;
   while(s) {
-    s[16] = 0;
-    cheatsAddGSACode(s, desc);
+    if(strlen(s) > 16)
+      s[16] = 0;
+    if(strlen(s) == 8) {
+      if(part1[0]) {
+        strcpy(part2, s);
+        sprintf(code, "%s%s", part1, part2);
+        cheatsAddGSACode(code, desc, true);
+        part1[0] = 0;
+      } else {
+        strcpy(part1, s);
+      }
+    } else
+      cheatsAddGSACode(s, desc, false);
     s = strtok(NULL, "\n\r");
   }
   EndDialog(TRUE);

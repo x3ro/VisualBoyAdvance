@@ -133,7 +133,7 @@ extern int  cheatsGetCount(int);
 
 extern void cheatsAdd(char *,char *,u32,u32,int,int,bool);
 extern void cheatsAddCheatCode(char *code, char *desc);
-extern void cheatsAddGSACode(char *code, char *desc);
+extern void cheatsAddGSACode(char *code, char *desc, bool v3);
 extern void cheatsAddCBACode(char *code, char *desc);
 extern bool cheatsImportGSACodeFile(char *name, int game);
 extern void cheatsDelete(int number, bool restore);
