@@ -361,6 +361,8 @@
 #define IDS_FILTER_VMV                  1131
 #define IDS_SELECT_MOVIE_NAME           1132
 #define IDS_BUG_REPORT                  1133
+#define IDS_UNSUPPORTED_MOVIE_VERSION   1134
+#define IDS_END_OF_MOVIE                1135
 #define IDC_COLOR                       1136
 #define IDC_SAVE_BG                     1137
 #define IDC_SAVE_OBJ                    1138

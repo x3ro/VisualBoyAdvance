@@ -2402,7 +2402,7 @@ static void movieReadNext()
     } else
       movieEnd = true;
     if(movieEnd) {
-      systemScreenMessage("end of movie");
+      systemScreenMessage((char *)winResLoadString(IDS_END_OF_MOVIE));
       moviePlaying = false;
       fclose(movieFile);
       movieFile = NULL;
@@ -6191,6 +6191,16 @@ void fileMoviePlay()
                   (const char *)movieName);
     return;
   }
+  int version = 0;
+  fread(&version, 1, sizeof(int), movieFile);
+  if(version != 1) {
+    systemMessage(IDS_UNSUPPORTED_MOVIE_VERSION, 
+                  "Unsupported movie version %d.",
+                  version);
+    fclose(movieFile);
+    movieFile = NULL;
+    return;
+  }
   movieName = movieName.Left(movieName.GetLength()-3)+"VM0";
   if(loadSaveGame(movieName)) {
     moviePlaying = true;
@@ -6255,6 +6265,10 @@ void fileMovieRecord()
                   (const char *)movieName);
     return;
   }
+
+  int version = 1;
+
+  fwrite(&version, 1, sizeof(int), movieFile);
 
   movieName = movieName.Left(movieName.GetLength()-3) + "VM0";
 
