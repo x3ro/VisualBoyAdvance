@@ -48,7 +48,7 @@
 #define GETCWD _getcwd
 #endif
 
-#ifdef __GNUC__
+#ifndef __GNUC__
 #define HAVE_DECL_GETOPT 0
 #define __STDC__ 1
 #include "getopt.h"
