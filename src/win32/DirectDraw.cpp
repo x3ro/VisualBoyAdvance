@@ -609,12 +609,6 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
     }
     break;
   }
-  for(int i = 0; i < 24;) {
-    systemGbPalette[i++] = (0x1f) | (0x1f << 5) | (0x1f << 10);
-    systemGbPalette[i++] = (0x15) | (0x15 << 5) | (0x15 << 10);
-    systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
-    systemGbPalette[i++] = 0;
-  }
   width = w;
   height = h;
   return true;
