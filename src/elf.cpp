@@ -292,10 +292,13 @@ char *elfGetAddressSymbol(u32 addr)
     while(func) {
       if(addr >= func->lowPC && addr < func->highPC) {
         int offset = addr - func->lowPC;
+        char *name = func->name;
+        if(!name)
+          name = "";
         if(offset)
-          sprintf(buffer, "%s+%d", func->name, offset);
+          sprintf(buffer, "%s+%d", name, offset);
         else
-          sprintf(buffer, func->name);
+          strcpy(buffer, name);
         return buffer;
       }
       func = func->next;
@@ -307,13 +310,19 @@ char *elfGetAddressSymbol(u32 addr)
       Symbol *s = &elfSymbols[i];
       if((addr >= s->value)  && addr < (s->value+s->size)) {
         int offset = addr-s->value;
+        char *name = s->name;
+        if(name == NULL)
+          name = "";
         if(offset)
-          sprintf(buffer, "%s+%d",s->name, addr-s->value);
+          sprintf(buffer, "%s+%d", name, addr-s->value);
         else
-          strcpy(buffer, s->name);
+          strcpy(buffer, name);
         return buffer;
       } else if(addr == s->value) {
-        strcpy(buffer, s->name);
+        if(s->name)
+          strcpy(buffer, s->name);
+        else
+          strcpy(buffer, "");
         return buffer;
       }
     }
