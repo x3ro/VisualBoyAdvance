@@ -28,7 +28,7 @@
 #include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
-#include "../Font.h"
+#include "../Text.h"
 #include "../gb/gbGlobals.h"
 
 #include "Reg.h"
@@ -657,17 +657,17 @@ void Direct3DDisplay::render()
                   systemFrameSkip,
                   theApp.showRenderedFrames);
         if(theApp.showSpeedTransparent)
-          fontDisplayStringTransp((u8*)locked.pBits,
-                                  locked.Pitch,
-                                  theApp.rect.left+10,
-                                  theApp.rect.bottom-10,
-                                  buffer);
+          drawTextTransp((u8*)locked.pBits,
+                         locked.Pitch,
+                         theApp.rect.left+10,
+                         theApp.rect.bottom-10,
+                         buffer);
         else
-          fontDisplayString((u8*)locked.pBits,
-                            locked.Pitch,
-                            theApp.rect.left+10,
-                            theApp.rect.bottom-10,
-                            buffer);
+          drawText((u8*)locked.pBits,
+                   locked.Pitch,
+                   theApp.rect.left+10,
+                   theApp.rect.bottom-10,
+                   buffer);
       }
       
       pTexture->UnlockRect(0);

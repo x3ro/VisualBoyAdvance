@@ -23,7 +23,7 @@
 #include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
-#include "../Font.h"
+#include "../Text.h"
 
 #include "Reg.h"
 #include "resource.h"
@@ -386,6 +386,49 @@ void OpenGLDisplay::render()
                           theApp.filterWidth*4*2,
                           theApp.filterWidth,
                           theApp.filterHeight);
+  }
+
+  if(theApp.videoOption > VIDEO_4X && theApp.showSpeed) {
+    char buffer[30];
+    if(theApp.showSpeed == 1)
+      sprintf(buffer, "%3d%%", systemSpeed);
+    else
+      sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
+              systemFrameSkip,
+              theApp.showRenderedFrames);
+
+    if(theApp.filterFunction) {
+      int p = theApp.filterWidth * 4;
+      if(systemColorDepth == 24)
+        p = theApp.filterWidth * 6;
+      else if(systemColorDepth == 32)
+        p = theApp.filterWidth * 8;
+      if(theApp.showSpeedTransparent)
+        drawTextTransp((u8*)filterData,
+                       p,
+                       10,
+                       theApp.filterHeight*2-10,
+                       buffer);
+      else
+        drawText((u8*)filterData,
+                 p,
+                 10,
+                 theApp.filterHeight*2-10,
+                 buffer);      
+    } else {
+      if(theApp.showSpeedTransparent)
+        drawTextTransp((u8*)pix,
+                       pitch,
+                       10,
+                       theApp.filterHeight-10,
+                       buffer);
+      else
+        drawText((u8*)pix,
+                 pitch,
+                 10,
+                 theApp.filterHeight-10,
+                 buffer);
+    }
   }
   
   // Texturemap complete texture to surface so we have free scaling 
