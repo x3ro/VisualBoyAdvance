@@ -1696,10 +1696,15 @@ BEGIN
 
                 MENUITEM "EEPROM+Sensor",               ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR
 
+                MENUITEM "None",                        ID_OPTIONS_EMULATOR_SAVETYPE_NONE
+
                 MENUITEM SEPARATOR
                 MENUITEM "Flash 64K",                   ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K
 
                 MENUITEM "Flash 128K",                  ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M
+
+                MENUITEM SEPARATOR
+                MENUITEM "Enhanced detection",          ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION
 
             END
             MENUITEM SEPARATOR

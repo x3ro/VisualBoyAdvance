@@ -94,7 +94,7 @@ extern bool CPUReadMemState(char *, int);
 extern bool CPUReadState(char *);
 extern bool CPUWriteMemState(char *, int);
 extern bool CPUWriteState(char *);
-extern bool CPULoadRom(char *);
+extern int CPULoadRom(char *);
 extern void CPUUpdateRegister(u32, u16);
 extern void CPUWriteHalfWord(u32, u16);
 extern void CPUWriteByte(u32, u8);

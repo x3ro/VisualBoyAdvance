@@ -1242,9 +1242,7 @@ void CPUCleanUp()
   emulating = 0;
 }
 
-
-
-bool CPULoadRom(char *szFile)
+int CPULoadRom(char *szFile)
 {
   int size = 0;  
   
@@ -1256,13 +1254,13 @@ bool CPULoadRom(char *szFile)
   if(rom == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "ROM");
-    return false;
+    return 0;
   }
   workRAM = (u8 *)calloc(1, 0x40000);
   if(workRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "WRAM");
-    return false;
+    return 0;
   }
 
   u8 *whereToLoad = rom;
@@ -1278,14 +1276,14 @@ bool CPULoadRom(char *szFile)
       rom = NULL;
       free(workRAM);
       workRAM = NULL;
-      return false;
+      return 0;
     }
     if(!elfRead(szFile, size, f)) {
       free(rom);
       rom = NULL;
       free(workRAM);
       workRAM = NULL;
-      return false;
+      return 0;
     }
   } else if(!utilLoad(szFile,
                       utilIsGBAImage,
@@ -1295,7 +1293,7 @@ bool CPULoadRom(char *szFile)
     rom = NULL;
     free(workRAM);
     workRAM = NULL;
-    return false;
+    return 0;
   }
 
   u16 *temp = (u16 *)(rom+((size+1)&~1));
@@ -1310,54 +1308,54 @@ bool CPULoadRom(char *szFile)
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "BIOS");
     CPUCleanUp();
-    return false;
+    return 0;
   }    
   internalRAM = (u8 *)calloc(1,0x8000);
   if(internalRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "IRAM");
     CPUCleanUp();
-    return false;
+    return 0;
   }    
   paletteRAM = (u8 *)calloc(1,0x400);
   if(paletteRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "PRAM");
     CPUCleanUp();
-    return false;
+    return 0;
   }      
   vram = (u8 *)calloc(1, 0x20000);
   if(vram == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "VRAM");
     CPUCleanUp();
-    return false;
+    return 0;
   }      
   oam = (u8 *)calloc(1, 0x400);
   if(oam == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "OAM");
     CPUCleanUp();
-    return false;
+    return 0;
   }      
   pix = (u8 *)calloc(1, 4 * 241 * 162);
   if(pix == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "PIX");
     CPUCleanUp();
-    return false;
+    return 0;
   }      
   ioMem = (u8 *)calloc(1, 0x400);
   if(ioMem == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "IO");
     CPUCleanUp();
-    return false;
+    return 0;
   }      
 
   CPUUpdateRenderBuffers(true);
 
-  return true;
+  return size;
 }
 
 void CPUUpdateRender()
@@ -3238,6 +3236,12 @@ void CPUReset()
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = true;
+    break;
+  case 5: // NONE
+    cpuSramEnabled = false;
+    cpuFlashEnabled = false;
+    cpuEEPROMEnabled = false;
+    cpuEEPROMSensorEnabled = false;
     break;
   } 
   

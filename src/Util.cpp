@@ -73,6 +73,12 @@ extern "C" {
 #include "System.h"
 #include "NLS.h"
 #include "Util.h"
+#include "Flash.h"
+#include "GBA.h"
+#include "Globals.h"
+#include "RTC.h"
+#include "Port.h"
+
 
 extern "C" {
 #include "memgzio.h"
@@ -1034,4 +1040,50 @@ int utilGzClose(gzFile file)
 long utilGzMemTell(gzFile file)
 {
   return memtell(file);
+}
+
+void utilGBAFindSave(const u8 *data, const int size)
+{
+  u32 *p = (u32 *)data;
+  u32 *end = (u32 *)(data + size);
+  int saveType = 0;
+  int flashSize = 0x10000;
+  bool rtcFound = false;
+
+  while(p  < end) {
+    u32 d = READ32LE(p);
+    
+    // EEPROM_V
+    if(d == 0x52504545) {
+      if(memcmp(p, "EEPROM_V", 8) == 0) {
+        if(saveType == 0)
+          saveType = 1;
+      }
+    } else if (d == 0x4D415253) {
+      if(memcmp(p, "SRAM_V", 6) == 0) {
+        if(saveType == 0)
+          saveType = 2;
+      }
+    } else if (d == 0x53414C46) {
+      if(memcmp(p, "FLASH1M_V", 9) == 0) {
+        if(saveType == 0) {
+          saveType = 3;
+          flashSize = 0x20000;
+        }
+      } else if(memcmp(p, "FLASH", 5) == 0) {
+        if(saveType == 0) {
+          saveType == 3;
+          flashSize = 0x10000;
+        }
+      }
+    } else if (d == 0x52494953) {
+      if(memcmp(p, "SIIRTC_V", 8) == 0)
+        rtcFound = true;
+    }
+    p++;
+  } 
+  
+  rtcEnable(rtcFound);
+  cpuSaveType = saveType;
+  flashSetSize(flashSize);
 }

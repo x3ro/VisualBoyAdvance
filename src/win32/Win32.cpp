@@ -1691,10 +1691,14 @@ void updateSaveTypeMenu(HMENU menu)
                 CHECKMENUSTATE(winSaveType == 3));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR,
                 CHECKMENUSTATE(winSaveType == 4));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_NONE,
+                CHECKMENUSTATE(winSaveType == 5));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K,
                 CHECKMENUSTATE(winFlashSize == 0x10000));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M,
                 CHECKMENUSTATE(winFlashSize == 0x20000));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION,
+                CHECKMENUSTATE(cpuEnhancedDetection));
 }
 
 void updateEmulatorMenu(HMENU menu)
@@ -4249,6 +4253,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       winSaveType = 4;
       regSetDwordValue("saveType", 4);
       break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_NONE:
+      winSaveType = 5;
+      regSetDwordValue("saveType", 5);
+      break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K:
       flashSetSize(0x10000);
       winFlashSize = 0x10000;
@@ -4258,6 +4266,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       flashSetSize(0x20000);
       winFlashSize = 0x20000;
       regSetDwordValue("flashSize", winFlashSize);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION:
+      cpuEnhancedDetection = !cpuEnhancedDetection;
+      regSetDwordValue("enhancedDetection", cpuEnhancedDetection);
       break;
     case ID_OPTIONS_EMULATOR_REWINDINTERVAL:
       {
@@ -5060,8 +5072,11 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   cpuDisableSfx = regQueryDwordValue("disableSfx", 0) ? true : false;
   
   winSaveType = regQueryDwordValue("saveType", 0);
-  if(winSaveType < 0 || winSaveType > 4)
+  if(winSaveType < 0 || winSaveType > 5)
     winSaveType = 0;
+  
+  cpuEnhancedDetection = regQueryDwordValue("enhancedDetection", 1) ? true :
+    false;
 
   ifbType = regQueryDwordValue("ifbType", 0);
   if(ifbType < 0 || ifbType > 2)
@@ -5425,13 +5440,17 @@ BOOL fileOpen()
       }
     }
   } else {
-    if(!CPULoadRom(szFile))
+    int size = CPULoadRom(szFile);
+    if(!size)
       return FALSE;
     
     flashSetSize(winFlashSize);
     rtcEnable(winRtcEnable);
     cpuSaveType = winSaveType;
 
+    if(cpuEnhancedDetection && winSaveType == 0) {
+      utilGBAFindSave(rom, size);
+    }
     GetModuleFileName(NULL, winBuffer, 2048);
 
     char *p = strrchr(winBuffer, '\\');
@@ -5462,7 +5481,7 @@ BOOL fileOpen()
                              "saveType",
                              -1,
                              winBuffer);
-    if(i != (UINT)-1 && (i < 5))
+    if(i != (UINT)-1 && (i <= 5))
       cpuSaveType = (int)i;
     
     emuWriteState = CPUWriteState;
@@ -7111,6 +7130,7 @@ void helpBugReport()
                       winFlashSize, flashSize);
   report.AppendFormat("RTC          : %d (%d)\r\n", winRtcEnable,
                       rtcIsEnabled());
+  report.AppendFormat("Enhanced Det.: %d", cpuEnhancedDetection);
   report.AppendFormat("AGBPrint     : %d\r\n", agbPrintIsEnabled());
   report.AppendFormat("Speed toggle : %d\r\n", speedupToggle);
   report.AppendFormat("Synchronize  : %d\r\n", synchronize);

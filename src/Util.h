@@ -59,4 +59,5 @@ extern int utilGzWrite(gzFile file, const voidp buffer, unsigned int len);
 extern int utilGzRead(gzFile file, voidp buffer, unsigned int len);
 extern int utilGzClose(gzFile file);
 extern long utilGzMemTell(gzFile file);
+extern void utilGBAFindSave(const u8 *, const int);
 #endif
