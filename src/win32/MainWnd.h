@@ -56,6 +56,7 @@ class MainWnd : public CWnd
   HACCEL m_hAccelTable;
   bool fileOpenSelect();
   afx_msg LRESULT OnConfirmMode(WPARAM, LPARAM);
+  afx_msg LRESULT OnMySysCommand(WPARAM, LPARAM);
   afx_msg void OnUpdateFileLoadGameSlot(CCmdUI *pCmdUI);
   afx_msg void OnUpdateFileSaveGameSlot(CCmdUI *pCmdUI);
   afx_msg void OnUpdateOptionsJoypadAutofire(CCmdUI *pCmdUI);

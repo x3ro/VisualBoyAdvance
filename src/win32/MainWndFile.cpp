@@ -53,10 +53,8 @@ void MainWnd::OnFilePause()
     if(theApp.paused) {
       theApp.wasPaused = true;
       soundPause();
-      theApp.enablePowerManagement();
     } else {
       soundResume();
-      theApp.disablePowerManagement();
     }
   }
 }
@@ -152,8 +150,6 @@ void MainWnd::OnFileClose()
   emulating = 0;
   RedrawWindow(NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
   systemSetTitle("VisualBoyAdvance");
-
-  theApp.enablePowerManagement();
 }
 
 void MainWnd::OnUpdateFileClose(CCmdUI* pCmdUI) 

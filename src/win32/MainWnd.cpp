@@ -413,6 +413,7 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_JOYPAD_AUTOFIRE_A, ID_OPTIONS_JOYPAD_AUTOFIRE_R, OnOptionsJoypadAutofire)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_JOYPAD_AUTOFIRE_A, ID_OPTIONS_JOYPAD_AUTOFIRE_R, OnUpdateOptionsJoypadAutofire)
   ON_MESSAGE(VBA_CONFIRM_MODE, OnConfirmMode)
+  ON_MESSAGE(WM_SYSCOMMAND, OnMySysCommand)
   END_MESSAGE_MAP()
 
 
@@ -421,8 +422,6 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
 
 void MainWnd::OnClose() 
 {
-  theApp.enablePowerManagement();
-
   CWnd::OnClose();
 
   delete this;
@@ -591,8 +590,6 @@ bool MainWnd::FileRun()
   theApp.rewindCount = 0;
   theApp.rewindCounter = 0;
   theApp.rewindSaveNeeded = false;
-  
-  theApp.disablePowerManagement();
   
   return true;
 }
@@ -1083,7 +1080,6 @@ void MainWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
     theApp.input->activate();
     if(!theApp.paused) {
       if(emulating) {
-        theApp.disablePowerManagement();
         soundResume();
       }
     }
@@ -1091,7 +1087,6 @@ void MainWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
     theApp.wasPaused = true;
     if(theApp.pauseWhenInactive) {
       if(emulating) {
-        theApp.enablePowerManagement();
         soundPause();
       }
       theApp.active = a;
@@ -1138,4 +1133,13 @@ void MainWnd::OnDropFiles(HDROP hDropInfo)
     }
   }
   DragFinish(hDropInfo);
+}
+
+LRESULT MainWnd::OnMySysCommand(WPARAM wParam, LPARAM lParam)
+{
+  if(emulating && !theApp.paused) {
+    if((wParam&0xFFF0) == SC_SCREENSAVE || (wParam&0xFFF0) == SC_MONITORPOWER)
+      return 0;
+  }
+  return Default();
 }

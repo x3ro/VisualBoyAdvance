@@ -221,8 +221,6 @@ class VBA : public CWinApp
   // Implementation
 
  public:
-  void disablePowerManagement();
-  void enablePowerManagement();
   void saveSettings();
   void movieReadNext();
   bool initInput();
