@@ -48,11 +48,11 @@ public:
 
   virtual BOOL OnEraseBkgnd(HDC);
   virtual void OnPaint();
-  virtual LRESULT OnLButtonUp(WPARAM, LPARAM);
-  virtual LRESULT OnLButtonDown(WPARAM, LPARAM);
-  virtual LRESULT OnMouseMove(WPARAM, LPARAM);
-  virtual LRESULT OnKillFocus(WPARAM, LPARAM);
-  virtual LRESULT OnCaptureChanged(WPARAM, LPARAM);
-  virtual LRESULT OnRButtonDown(WPARAM, LPARAM);
-  virtual LRESULT OnMouseLeave(WPARAM, LPARAM);
+  virtual LRESULT OnLButtonUpMsg(WPARAM, LPARAM);
+  virtual LRESULT OnLButtonDownMsg(WPARAM, LPARAM);
+  virtual LRESULT OnMouseMoveMsg(WPARAM, LPARAM);
+  virtual LRESULT OnKillFocusMsg(WPARAM, LPARAM);
+  virtual LRESULT OnCaptureChangedMsg(WPARAM, LPARAM);
+  virtual LRESULT OnRButtonDownMsg(WPARAM, LPARAM);
+  virtual LRESULT OnMouseLeaveMsg(WPARAM, LPARAM);
 };

@@ -27,13 +27,13 @@ BEGIN_MESSAGE_MAP(SkinButton, Wnd)
   ON_WM_ERASEBKGND()
   ON_WM_CREATE()
   ON_WM_PAINT()
-  ON_MESSAGE(WM_KILLFOCUS, OnKillFocus)
-  ON_MESSAGE(WM_LBUTTONUP, OnLButtonUp)
-  ON_MESSAGE(WM_LBUTTONDOWN, OnLButtonDown)
-  ON_MESSAGE(WM_MOUSEMOVE, OnMouseMove)
-  ON_MESSAGE(WM_CAPTURECHANGED, OnCaptureChanged)
-  ON_MESSAGE(WM_CONTEXTMENU, OnRButtonDown)
-  ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeave)
+  ON_MESSAGE(WM_KILLFOCUS, OnKillFocusMsg)
+  ON_MESSAGE(WM_LBUTTONUP, OnLButtonUpMsg)
+  ON_MESSAGE(WM_LBUTTONDOWN, OnLButtonDownMsg)
+  ON_MESSAGE(WM_MOUSEMOVE, OnMouseMoveMsg)
+  ON_MESSAGE(WM_CAPTURECHANGED, OnCaptureChangedMsg)
+  ON_MESSAGE(WM_CONTEXTMENU, OnRButtonDownMsg)
+  ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeaveMsg)
 END_MESSAGE_MAP()
 
 SkinButton::SkinButton()
@@ -190,7 +190,7 @@ void SkinButton::OnPaint()
   EndPaint(hWnd, &ps);
 }
 
-LRESULT SkinButton::OnLButtonDown(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnLButtonDownMsg(WPARAM wParam, LPARAM lParam)
 {
   if(idCommand != 0)
     return Wnd::Default(WM_LBUTTONDOWN, wParam, lParam);
@@ -211,7 +211,7 @@ LRESULT SkinButton::OnLButtonDown(WPARAM wParam, LPARAM lParam)
   return SendMessage(GetParent(getHandle()), WM_LBUTTONDOWN, wParam, lParam);
 }
 
-LRESULT SkinButton::OnLButtonUp(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
 {
   POINT pt;
   pt.x = GET_X_LPARAM(lParam);
@@ -240,7 +240,7 @@ LRESULT SkinButton::OnLButtonUp(WPARAM wParam, LPARAM lParam)
   return SendMessage(::GetParent(getHandle()), WM_LBUTTONUP, wParam, lParam);
 }
 
-LRESULT SkinButton::OnMouseMove(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnMouseMoveMsg(WPARAM wParam, LPARAM lParam)
 {
   if(wParam * MK_LBUTTON && !mouseOver)
     return Wnd::Default(WM_MOUSEMOVE, wParam, lParam);
@@ -276,14 +276,14 @@ LRESULT SkinButton::OnMouseMove(WPARAM wParam, LPARAM lParam)
   return Wnd::Default(WM_MOUSEMOVE, wParam, lParam);
 }
 
-LRESULT SkinButton::OnKillFocus(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnKillFocusMsg(WPARAM wParam, LPARAM lParam)
 {
   mouseOver = false;
   Invalidate();
   return Wnd::Default(WM_KILLFOCUS, wParam, lParam);
 }
 
-LRESULT SkinButton::OnCaptureChanged(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnCaptureChangedMsg(WPARAM wParam, LPARAM lParam)
 {
   if(mouseOver) {
     ReleaseCapture();
@@ -292,12 +292,12 @@ LRESULT SkinButton::OnCaptureChanged(WPARAM wParam, LPARAM lParam)
   return Wnd::Default(WM_CAPTURECHANGED, wParam, lParam);
 }
 
-LRESULT SkinButton::OnRButtonDown(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnRButtonDownMsg(WPARAM wParam, LPARAM lParam)
 {
   return 0;
 }
 
-LRESULT SkinButton::OnMouseLeave(WPARAM wParam, LPARAM lParam)
+LRESULT SkinButton::OnMouseLeaveMsg(WPARAM wParam, LPARAM lParam)
 {
   if(mouseOver) {
     ReleaseCapture();
