@@ -18,6 +18,7 @@
  */
 #include <math.h>
 #include <memory.h>
+#include <stdlib.h>
 
 #include "GBA.h"
 #include "bios.h"

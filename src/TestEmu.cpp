@@ -29,6 +29,7 @@
 #include "debugger.h"
 #include "Sound.h"
 #include "unzip.h"
+#include "Util.h"
 #include "gb/GB.h"
 #include "gb/gbGlobals.h"
 #ifdef GP_EMULATION
@@ -64,14 +65,14 @@ extern void CPUUpdateCPSR();
 extern void GPUpdateCPSR();
 #endif
 
-bool (*emuWriteState)(char *) = NULL;
-bool (*emuReadState)(char *) = NULL;
-bool (*emuWriteBattery)(char *) = NULL;
-bool (*emuReadBattery)(char *) = NULL;
+bool (*emuWriteState)(const char *) = NULL;
+bool (*emuReadState)(const char *) = NULL;
+bool (*emuWriteBattery)(const char *) = NULL;
+bool (*emuReadBattery)(const char *) = NULL;
 void (*emuReset)() = NULL;
 void (*emuCleanUp)() = NULL;
-bool (*emuWritePNG)(char *) = NULL;
-bool (*emuWriteBMP)(char *) = NULL;
+bool (*emuWritePNG)(const char *) = NULL;
+bool (*emuWriteBMP)(const char *) = NULL;
 void (*emuMain)(int) = NULL;
 void (*emuUpdateCPSR)() = NULL;
 int emuCount = 0;
@@ -118,9 +119,6 @@ extern void debuggerSignal(int,int);
 void (*dbgMain)() = debuggerMain;
 void (*dbgSignal)(int,int) = debuggerSignal;
 void (*dbgOutput)(char *, u32) = debuggerOutput;
-
-extern bool CPUIsGBAImage(char *);
-extern bool gbIsGameboyRom(char *);
 
 char *sdlGetFilename(char *name)
 {
@@ -229,12 +227,12 @@ int main(int argc, char **argv)
           exit(-1);
         }
         
-        if(gbIsGameboyRom(buffer)) {
+        if(utilIsGBImage(buffer)) {
           found = true;
           cartridgeType = 1;
           break;
         }
-        if(CPUIsGBAImage(buffer)) {
+        if(utilIsGBAImage(buffer)) {
           found = true;
           cartridgeType = 0;
           break;
@@ -255,7 +253,7 @@ int main(int argc, char **argv)
       unzClose(unz);
     }
     
-    if(gbIsGameboyRom(szFile) || cartridgeType == 1) {
+    if(utilIsGBImage(szFile) || cartridgeType == 1) {
       failed = !gbLoadRom(szFile);
       cartridgeType = 1;
       emuWriteState = gbWriteSaveState;
@@ -270,7 +268,7 @@ int main(int argc, char **argv)
       emuUpdateCPSR = NULL;
       emuHasDebugger = false;
       emuCount = 70000/4;
-    } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
+    } else if(utilIsGBAImage(szFile) || cartridgeType == 0) {
       failed = !CPULoadRom(szFile);
       cartridgeType = 0;
       emuWriteState = CPUWriteState;

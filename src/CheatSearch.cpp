@@ -19,7 +19,7 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#include "cheatSearch.h"
+#include "CheatSearch.h"
 
 CheatSearchBlock cheatSearchBlocks[4];
 

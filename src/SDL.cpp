@@ -72,8 +72,6 @@ extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);  
-extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
-extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
@@ -88,6 +86,8 @@ extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines32(u8*,u32,u8*,u8*,u32,int,int);
+extern void ScanlinesTV(u8*,u32,u8*,u8*,u32,int,int);
+extern void ScanlinesTV32(u8*,u32,u8*,u8*,u32,int,int);
 extern void hq2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void hq2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void lq2x(u8*,u32,u8*,u8*,u32,int,int);
@@ -2474,7 +2474,7 @@ int main(int argc, char **argv)
       filterFunction = NULL;
       break;
     case 1:
-      filterFunction = TVMode;
+      filterFunction = ScanlinesTV;
       break;
     case 2:
       filterFunction = _2xSaI;
@@ -2522,7 +2522,7 @@ int main(int argc, char **argv)
       filterFunction = NULL;
       break;
     case 1:
-      filterFunction = TVMode32;
+      filterFunction = ScanlinesTV32;
       break;
     case 2:
       filterFunction = _2xSaI32;
