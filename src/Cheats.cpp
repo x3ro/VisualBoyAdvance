@@ -494,11 +494,13 @@ void cheatsAdd(char *codeStr,
     bool normalCode = true;
     
     if(address == 0) {
-      code = 0xFFFF;
       cheatsList[x].enabled = false;
       cheatsList[x].status = 0;
       normalCode = false;
     }
+
+    if(size == UNKNOWN_CODE)
+      normalCode = false;
 
     // don't do anything in case of multi line codes
     if(isTrueMultilineCode(size))
@@ -932,7 +934,7 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
       systemMessage(MSG_GBA_CODE_WARNING, "Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly.",
                     buffer, buffer2);
     }
-    cheatsAdd(code, desc, 0, 0, 256, 0,true);
+    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, UNKNOWN_CODE,true);
     return;
   }
   if(isMultilineCode(cheatsNumber-1)) {
@@ -1514,7 +1516,7 @@ void cheatsAddCBACode(char *code, char *desc)
     u32 seed[8];
     cheatsCBAParseSeedCode(address, value, seed);
     cheatsCBAChangeEncryption(seed);
-    cheatsAdd(code, desc, 0, 0, 512, 0, false);
+    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, UNKNOWN_CODE, false);
   } else {
     if(cheatsCBAShouldDecrypt())
       cheatsCBADecrypt(array);
