@@ -27,10 +27,12 @@
 
 #include "SDL.h"
 #include "GBA.h"
+#include "Port.h"
 #include "Font.h"
 #include "debugger.h"
 #include "Sound.h"
 #include "unzip.h"
+#include "Util.h"
 #include "gb/GB.h"
 #include "gb/gbGlobals.h"
 #ifdef GP_EMULATION
@@ -134,6 +136,7 @@ u16 systemColorMap16[0x10000];
 u16 systemGbPalette[24];
 void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
 char filename[2048];
+char ipsname[2048];
 char biosFileName[2048];
 char captureDir[2048];
 char saveDir[2048];
@@ -851,9 +854,9 @@ soundQuality);
     } else if(!strcmp(key, "removeIntros")) {
       removeIntros = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "saveType")) {
-      saveType = sdlFromHex(value);
-      if(saveType < 0 || saveType > 4)
-        saveType = 0;
+      cpuSaveType = sdlFromHex(value);
+      if(cpuSaveType < 0 || cpuSaveType > 4)
+        cpuSaveType = 0;
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1590,6 +1593,15 @@ int main(int argc, char **argv)
 
   if(optind < argc) {
     char *szFile = argv[optind];
+
+    strcpy(filename, szFile);
+    char *p = strrchr(filename, '.');
+
+    if(p)
+      *p = 0;
+
+    sprintf(ipsname, "%s.ips", filename);
+    
     bool failed = false;
     if(CPUIsZipFile(szFile)) {
       unzFile unz = unzOpen(szFile);
@@ -1668,6 +1680,7 @@ int main(int argc, char **argv)
         emuUpdateCPSR = NULL;
         emuHasDebugger = false;
         emuCount = 70000/4;
+        utilApplyIPS(ipsname, gbRom);
       }
     } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
       failed = !CPULoadRom(szFile);
@@ -1685,9 +1698,14 @@ int main(int argc, char **argv)
         emuUpdateCPSR = CPUUpdateCPSR;
         emuHasDebugger = true;
         emuCount = 50000;
+
+        if(removeIntros && rom != NULL) {
+          *((u32 *)rom)= TO32LE(0xea00002e);
+        }
         
         CPUInit(biosFileName, useBios);
         CPUReset();
+        utilApplyIPS(ipsname, rom);
       }
 #ifdef GP_EMULATION
     } else if(GPIsGPImage(szFile) || cartridgeType == 2) {
@@ -1720,11 +1738,6 @@ int main(int argc, char **argv)
       systemMessage(0, "Failed to load file %s", szFile);
       exit(-1);
     }
-    strcpy(filename, szFile);
-    char *p = strrchr(filename, '.');
-    
-    if(p)
-      *p = 0;
   } else {
     cartridgeType = 0;
     strcpy(filename, "gnu_stub");

@@ -16,5 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#ifndef VBA_UTIL_H
+#define VBA_UTIL_H
 bool utilWritePNGFile(char *, int, int, u8 *);
 bool utilWriteBMPFile(char *, int, int, u8 *);
+void utilApplyIPS(char *ips, u8 *rom);
+#endif

@@ -1,3 +1,11 @@
+2002-11-12  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src\SDL.cpp (sdlReadPreferences): fixed incorrect variable being used for saveType
+	(main): removeIntros was not being used
+	(main): apply IPS patch automatically if it exists
+	* src/Util.cpp (utilApplyIPS): added IPS patching code
+	* src/win32/Win32.cpp (fileOpen): apply IPS patch automatically if it exists	
+
 2002-11-07  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp (main): fixed crash when trying load file that does not exist

@@ -1,4 +1,12 @@
-Version 1.2 (in progress):
+Version 1.3:
+
+Windows version:
+- automatically apply IPS patch if it exists
+SDL version:
+- automatically apply IPS patch if it exists
+- fixed configuration problem with saveType and removeIntros
+
+Version 1.2:
 
 Core changes:
 - added MidiKey2Freq bios call (thanks Chris Moeller)

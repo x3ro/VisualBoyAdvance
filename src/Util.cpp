@@ -288,3 +288,77 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
 
   return true;
 }
+
+// Read variable size MSB int from a file
+static int utilReadInt(FILE *f, int nbytes)
+{
+  long v = 0;
+  while (nbytes--) {
+    int c = fgetc(f);
+    if (c == EOF) 
+      return -1;
+    v = (v << 8) | (c & 0xFF);
+  }
+  return (v);
+}
+
+void utilApplyIPS(char *ips, u8 *rom)
+{
+  char buffer[10];
+  
+  FILE *patch = NULL;
+  int offset = 0;
+
+  if(!(patch = fopen (ips, "rb"))) {
+    return;
+  }
+
+  if(fread (buffer, 1, 5, patch) != 5 ||
+     strncmp (buffer, "PATCH", 5) != 0) {
+    fclose (patch);
+    return;
+  }
+  
+  for(;;) {
+    int len;
+    int c;
+
+    offset = utilReadInt(patch, 3);
+    if(offset == -1)
+      goto err;
+
+    // IPS end
+    if (offset == 0x454f46)
+      break;
+
+    len = utilReadInt(patch, 2);
+    if(len == -1)
+      goto err;
+
+    // if not zero, then it is a patch block
+    if (len) {
+      while(len--) {
+        c = fgetc(patch);
+        if(c == EOF) 
+          goto err;
+        rom[offset++] = (u8)c;
+      }
+    } else {
+      // RLE block
+      len = utilReadInt(patch, 2);
+      if(len == -1)
+        goto err;
+      c = fgetc(patch);
+      
+      if(c == EOF) 
+        goto err;
+
+      while(len--) 
+        rom[offset++] = (u8)c;
+    }
+  }
+
+ err:
+  if(patch)
+    fclose(patch);
+}

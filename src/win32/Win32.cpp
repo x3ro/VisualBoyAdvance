@@ -37,6 +37,7 @@
 #include "WinResUtil.h"
 #include "../Sound.h"
 #include "../unzip.h"
+#include "../Util.h"
 #include "resource.h"
 #include "../gb/GB.h"
 #include "../gb/gbCheats.h"
@@ -147,6 +148,7 @@ int systemDebug = 0;
 char dir[1024];
 char szFile[1024];
 char filename[2048];
+char ipsname[2048];
 char winBuffer[1024];
 char biosFileName[2048];
 
@@ -4720,7 +4722,9 @@ BOOL fileOpen()
   char *p = strrchr(filename, '.');
 
   if(p != NULL)
-    *p = 0;  
+    *p = 0;
+
+  sprintf(ipsname, "%s.ips", filename);  
 
   if(!dir[0]) {
     p = strrchr(filename, '\\');
@@ -4818,6 +4822,7 @@ BOOL fileOpen()
 #else
     emuCount = 1000;
 #endif
+    utilApplyIPS(ipsname, gbRom);
   } else {
     if(!CPULoadRom(szFile))
       return FALSE;
@@ -4839,6 +4844,7 @@ BOOL fileOpen()
     if(removeIntros && rom != NULL) {
       *((u32 *)rom)= 0xea00002e;
     }
+    utilApplyIPS(ipsname, rom);
   }
     
   if(soundInitialized) {
