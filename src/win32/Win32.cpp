@@ -77,6 +77,7 @@ int glType = 0;
 CSkin *skin = NULL;
 CStdString skinName = "";
 bool skinEnabled = false;
+int skinButtons = 0;
 HINSTANCE            dinputDLL    = NULL;
 HINSTANCE            dsoundDLL    = NULL;
 LPDIRECTSOUND        pDirectSound = NULL;
@@ -1113,6 +1114,7 @@ void updatePriority()
 
 void winUpdateSkin()
 {
+  skinButtons = 0;
   if(skin) {
     delete skin;
     skin = NULL;
@@ -2350,10 +2352,12 @@ bool systemReadJoypads()
 {
   bool ok = TRUE;
   for(int i = 0; i < numDevices; i++) {
-    if(i) {
-      ok = readJoystick(i);
-    } else
-      ok = readKeyboard();
+    if(pDevices[i].needed) {
+      if(i) {
+	ok = readJoystick(i);
+      } else
+	ok = readKeyboard();
+    }
   }
   return ok;
 }
@@ -2392,7 +2396,7 @@ u32 systemReadJoypad(int which)
     res |= 2048;
   if(checkKey(joypad[i][KEY_BUTTON_GS]))
     res |= 4096;
-
+  res |= skinButtons;
   if(autoFire) {
     res &= (~autoFire);
     if(autoFireToggle)
@@ -3606,6 +3610,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     winMouseOn();
     if(skin) {
       if(popup == NULL) {
+	winAccelMgr.UpdateMenu(menu);
         popup = CreatePopupMenu();
         if(menu != NULL) {
           int count = GetMenuItemCount(menu);
@@ -3663,6 +3668,9 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
   case WM_COMMAND:
     switch(wParam & 0xFFFF) {
+    case ID_SYSTEM_MINIMIZE:
+      ShowWindow(hWindow, SW_SHOWMINIMIZED);
+      break;
     case ID_FILE_OPEN:
       winCheckFullscreen();
       if(fileOpenSelect()) {
@@ -3874,18 +3882,22 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_VIDEO_RENDERMETHOD_GDI:
       renderMethod = GDI;
       updateRenderMethod(false);
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECTDRAW:
       renderMethod = DIRECT_DRAW;
       updateRenderMethod(false);
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECT3D:
       renderMethod = DIRECT_3D;
       updateRenderMethod(false);
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_RENDERMETHOD_OPENGL:
       renderMethod = OPENGL;
       updateRenderMethod(false);
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DNOFILTER:
       d3dFilter = 0;
@@ -3925,11 +3937,13 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_OPTIONS_VIDEO_RENDEROPTIONS_SELECTSKIN:
       winSelectSkin();
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN:
       skinEnabled = !skinEnabled;
       regSetDwordValue("skinEnabled", skinEnabled);
       updateRenderMethod(true);
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_LAYERS_BG0:
     case ID_OPTIONS_VIDEO_LAYERS_BG1:
@@ -3952,6 +3966,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
       updateVideoSize(wParam&0xffff);
       winConfirmMode();
+      winAccelMgr.UpdateMenu(menu);
       break;
     case ID_OPTIONS_VIDEO_FULLSCREEN:
       {
@@ -3984,6 +3999,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             winConfirmMode();            
           }
         }
+      winAccelMgr.UpdateMenu(menu);
       }
       break;
     case ID_OPTIONS_VIDEO_DISABLESFX:
