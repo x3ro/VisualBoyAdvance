@@ -1110,6 +1110,7 @@ BEGIN
         POPUP "Re&cent"
         BEGIN
             MENUITEM "&Reset",                      ID_FILE_RECENT_RESET
+            MENUITEM "&Freeze",                     ID_FILE_RECENT_FREEZE
             MENUITEM SEPARATOR
         END
         MENUITEM SEPARATOR

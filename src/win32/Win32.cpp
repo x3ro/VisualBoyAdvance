@@ -84,6 +84,7 @@ BOOL soundRecording = FALSE;
 char soundRecordName[2048];
 CWaveSoundWrite *soundRecorder = NULL;
 
+BOOL recentFreeze = FALSE;
 BOOL speedupToggle = FALSE;
 BOOL removeIntros = FALSE;
 BOOL soundInitialized = FALSE;
@@ -951,6 +952,9 @@ void resetRecentList()
 
 void addRecentFile(char *s)
 {
+  // Do not change recent list if frozen
+  if(recentFreeze)
+    return;
   int i = 0;
   char buffer[50];
   for(i = 0; i < 10; i++) {
@@ -1149,6 +1153,10 @@ void updateRecentMenu(HMENU menu)
 {
   if(menu == NULL)
     return;
+  
+  CheckMenuItem(menu, ID_FILE_RECENT_FREEZE,
+                CHECKMENUSTATE(recentFreeze));
+  
   int i;
   for(i = 0; i < 10; i++) {
     if(!RemoveMenu(menu, ID_FILE_MRU_FILE1+i, MF_BYCOMMAND))
@@ -3219,6 +3227,9 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_FILE_RECENT_RESET:
       resetRecentList();
+      break;
+    case ID_FILE_RECENT_FREEZE:
+      recentFreeze = !recentFreeze;
       break;
     case ID_FILE_MRU_FILE1:
     case ID_FILE_MRU_FILE2:
