@@ -1,4 +1,4 @@
-Welcome to VisualBoyAdvance version 1.5.1.
+Welcome to VisualBoyAdvance version 1.6.
 
 Compiling the sources
 ---------------------
@@ -35,6 +35,9 @@ Capture    - F12
 
 You can change the configuration above to use a joystick. Go to
 Options->Joypad->Configure... menu.
+
+The 1 thorugh 4 joypads allow you to have different settings which can be
+easily switched.
 
 System requirements
 -------------------
@@ -209,6 +212,7 @@ LICENSE
 Special Thanks
 --------------
 
+PokemonHacker for all his help improving the emulator.
 Costis for his help fixing some of the graphics bugs.
 Snes9x developers for the great emulator and source code.
 Gollum for some help and tips.

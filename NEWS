@@ -1,10 +1,11 @@
 Version 1.6:
 Core changes:
-- added rewind support
+- added rewind support (initially disabled)
 - added support for slowdown codes
 - added emulation of sprite priority bug (thanks PokemonHacker)
 - added simple emulation for BIOS call 0x2a
 - added enhanced save type detection option (default)
+- added DMA hack for an obscure case
 - improved loading speed
 - fixed sleep/stop state support
 - fixed bug caused by rendering optimizations
@@ -12,8 +13,10 @@ Core changes:
 - fixed DMA emulation
 - fixed priority between OBJ Window and regular windows
 - fixed thumb disassembly bug
-- fixed sound envelope bug when set to 0 to mute sound
-- fixed CpuFastSet/CpuSet bugs
+- fixed sound envelope bug when set to 0 to mute sound (thanks PokemonHacker)
+- fixed CpuFastSet/CpuSet bugs (thanks PokemonHacker)
+- fixed warning message when using AGBPrint
+- fixed DMA timings
 
 Windows:
 - added movie recording/playback (joypad movement recording)
@@ -29,6 +32,7 @@ Windows:
 - fixed bug saving keyboard settings in INI file
 - fixed map viewer click address in some cases
 - fixed map viewer rendering for 512x512 screens
+- fixed tile viewer click address and tile number in 256 color mode
 - allow customize to run in fullscreen mode (exception of 320x240 mode)
 
 SDL versions:

@@ -1,4 +1,4 @@
-Welcome to version 1.5.1 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
+Welcome to version 1.6 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
 emulator for Windows, Linux and BeOS.
 
 Features:
@@ -94,6 +94,7 @@ Key combinations during emulation:
 - Ctrl+N: pause on next frame
 - Ctrl+R: reset
 - Ctrl+P: pause
+- Ctrl+B: rewind (if enabled and available)
 - F11: enter built-in debugger
 - ESC: exit emulator
 
@@ -315,7 +316,7 @@ Command line options (override settings in configuration file)
   -3 , --video-3x             3x
   -4 , --video 4x             4x
   -F , --fullscreen           Full screen
-  -G , --gdb==PROTOCOL        GNU Remote Stub mode:
+  -G , --gdb=PROTOCOL         GNU Remote Stub mode:
                                tcp      - use TCP at port 55555
                                tcp:PORT - use TCP at port PORT
                                pipe     - use pipe transport
@@ -356,6 +357,7 @@ Command line options (override settings in configuration file)
        --save-sram             2 - SRAM
        --save-flash            3 - FLASH
        --save-sensor           4 - EEPROM+Sensor
+       --save-none             5 - NONE
   -v , --verbose=VERBOSE      Set verbose logging (trace.log)
                                  1 - SWI
                                  2 - Unaligned memory access
@@ -452,6 +454,7 @@ http://vboy.emuhq.com
 Special Thanks
 --------------
 
+PokemonHacker for all his help improving the emulator.
 Costis for his help fixing some of the graphics bugs.
 Snes9x developers for the great emulator and source code.
 Kreed for his great graphic filters

@@ -1,3 +1,15 @@
+2003-08-09  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp: fix DMA timings and add DMA hack fix
+	* src/Util.cpp (utilGBAFindSave): change search slightly
+	* src/agbprint.cpp (agbPrintWrite): return true to avoid warning message
+	* src/win32/TileViewer.cpp (OnMapInfo): fixed tile information when in 256 color mode
+	* src/win32/Win32.cpp (initApp): fix bug when initially switching to INI
+
+2003-08-02  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/TileViewer.cpp (render): fixed TileViewer for 256 color display (incorrect tile and address)
+
 2003-08-01  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (initApp): changed default rewind interval to 0 (disabled)
