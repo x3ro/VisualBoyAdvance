@@ -882,7 +882,7 @@ void AddGSACodeDlg::OnOk()
       }
     } else
       cheatsAddGSACode(s, desc, false);
-    s = strtok(NULL, "\n\r");
+    s = strtok(NULL, " \n\r");
   }
   EndDialog(TRUE);
 }
@@ -981,7 +981,7 @@ void AddCheatCodeDlg::OnOk()
     if(strlen(s) > 17)
       s[17] = 0;
     cheatsAddCheatCode(s, desc);
-    s = strtok(NULL, "\n\r");
+    s = strtok(NULL, " \n\r");
   }
   EndDialog(TRUE);
 }
@@ -1071,7 +1071,7 @@ BOOL AddCheatDlg::addCheat()
     break;
   }
   
-  cheatsAdd(code, buffer,address, value,-1, sizeType, false);
+  cheatsAdd(code, buffer,address, value,-1, sizeType);
   return TRUE;
 }
 

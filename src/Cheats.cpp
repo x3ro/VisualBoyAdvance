@@ -156,11 +156,103 @@ u8 cheatsCBACurrentSeed[12] = {
 #define CHEAT_PATCH_ROM_16BIT(a,v) \
   *((u16 *)&rom[(a) & 0x1ffffff]) = (v)
 
+static bool isMultilineWithData(int i)
+{
+  // we consider it a multiline code if it has more than one line of data
+  // otherwise, it can still be considered a single code
+  if(i < cheatsNumber && i >= 0)
+    switch(cheatsList[i].size) {
+    case INT_8_BIT_WRITE:
+    case INT_16_BIT_WRITE:
+    case INT_32_BIT_WRITE:
+    case GSA_16_BIT_ROM_PATCH:
+    case GSA_8_BIT_GS_WRITE:
+    case GSA_16_BIT_GS_WRITE:
+    case GSA_32_BIT_GS_WRITE:
+    case CBA_AND:
+    case CBA_IF_KEYS_PRESSED:
+    case CBA_IF_TRUE:
+    case CBA_IF_FALSE:
+    case GSA_8_BIT_IF_TRUE:
+    case GSA_32_BIT_IF_TRUE:
+    case GSA_8_BIT_IF_FALSE:
+    case GSA_32_BIT_IF_FALSE:
+    case GSA_8_BIT_FILL:
+    case GSA_16_BIT_FILL:
+    case GSA_8_BIT_IF_TRUE2:
+    case GSA_16_BIT_IF_TRUE2:
+    case GSA_32_BIT_IF_TRUE2:
+    case GSA_8_BIT_IF_FALSE2:
+    case GSA_16_BIT_IF_FALSE2:
+    case GSA_32_BIT_IF_FALSE2:
+      return false;
+      // the codes below have two lines of data
+    case CBA_SLIDE_CODE:
+    case GSA_8_BIT_GS_WRITE2:
+    case GSA_16_BIT_GS_WRITE2:
+    case GSA_32_BIT_GS_WRITE2:
+    case GSA_16_BIT_ROM_PATCH2:
+    case GSA_8_BIT_SLIDE:
+    case GSA_16_BIT_SLIDE:
+    case GSA_32_BIT_SLIDE:
+      return true;
+    }
+  return false;
+}
+
+static int getCodeLength(int num)
+{
+  if(num >= cheatsNumber || num < 0)
+    return 1;
+
+  // this is for all the codes that are true multiline
+  switch(cheatsList[num].size) {
+  case INT_8_BIT_WRITE:
+  case INT_16_BIT_WRITE:
+  case INT_32_BIT_WRITE:
+  case GSA_16_BIT_ROM_PATCH:
+  case GSA_8_BIT_GS_WRITE:
+  case GSA_16_BIT_GS_WRITE:
+  case GSA_32_BIT_GS_WRITE:
+  case CBA_AND:
+  case GSA_8_BIT_FILL:
+  case GSA_16_BIT_FILL:
+    return 1;
+  case CBA_IF_KEYS_PRESSED:
+  case CBA_IF_TRUE:
+  case CBA_IF_FALSE:
+  case CBA_SLIDE_CODE:
+  case GSA_8_BIT_GS_WRITE2:
+  case GSA_16_BIT_GS_WRITE2:
+  case GSA_32_BIT_GS_WRITE2:
+  case GSA_16_BIT_ROM_PATCH2:
+  case GSA_8_BIT_SLIDE:
+  case GSA_16_BIT_SLIDE:
+  case GSA_32_BIT_SLIDE:
+  case GSA_8_BIT_IF_TRUE:
+  case GSA_32_BIT_IF_TRUE:
+  case GSA_8_BIT_IF_FALSE:
+  case GSA_32_BIT_IF_FALSE:
+    return 2;
+  case GSA_8_BIT_IF_TRUE2:
+  case GSA_16_BIT_IF_TRUE2:
+  case GSA_32_BIT_IF_TRUE2:
+  case GSA_8_BIT_IF_FALSE2:
+  case GSA_16_BIT_IF_FALSE2:
+  case GSA_32_BIT_IF_FALSE2:
+    return 3;
+  }
+  return 1;
+}
+
 void cheatsCheckKeys(u32 keys, u32 extended)
 {
   for(int i = 0; i < cheatsNumber; i++) {
-    if(!cheatsList[i].enabled)
+    if(!cheatsList[i].enabled) {
+      // make sure we skip other lines in this code
+      i += getCodeLength(i)-1;
       continue;
+    }
     switch(cheatsList[i].size) {
     case INT_8_BIT_WRITE:
       CPUWriteByte(cheatsList[i].address, cheatsList[i].value);
@@ -171,7 +263,15 @@ void cheatsCheckKeys(u32 keys, u32 extended)
     case INT_32_BIT_WRITE:
       CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
       break;
-      // case GSA_16_BIT_ROM_PATCH: nothing to do for ROM patching
+    case GSA_16_BIT_ROM_PATCH:
+      if((cheatsList[i].status & 1) == 0) {
+        if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
+          cheatsList[i].oldValue = CPUReadHalfWord(cheatsList[i].address);
+          cheatsList[i].status |= 1;
+          CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
+        }
+      }
+      break;
     case GSA_8_BIT_GS_WRITE:
       if(extended & 4) {
         CPUWriteByte(cheatsList[i].address, cheatsList[i].value);
@@ -254,12 +354,13 @@ void cheatsCheckKeys(u32 keys, u32 extended)
     case GSA_16_BIT_ROM_PATCH2:
       i++;
       if(i < cheatsNumber) {
-        if(cheatsList[i-1].value == 0xFFFFFFFF) {
+        if((cheatsList[i-1].status & 1) == 0) {
           u32 addr = ((cheatsList[i-1].address & 0x00FFFFFF) << 1) + 0x8000000;
-          cheatsList[i-1].oldValue = CPUReadHalfWord(addr);
-          cheatsList[i-1].address = addr;
-          cheatsList[i-1].value = cheatsList[i].address & 0xFFFF;
-          CHEAT_PATCH_ROM_16BIT(addr,cheatsList[i].address & 0xFFFF);
+          if(CPUReadHalfWord(addr) != (cheatsList[i].address & 0xFFFF)) {
+            cheatsList[i-1].oldValue = CPUReadHalfWord(addr);
+            cheatsList[i-1].status |= 1;
+            CHEAT_PATCH_ROM_16BIT(addr,cheatsList[i].address & 0xFFFF);
+          }
         }
       }
       break;
@@ -387,98 +488,12 @@ void cheatsCheckKeys(u32 keys, u32 extended)
   }
 }
 
-static bool isMultilineCode(int i)
-{
-  // we consider it a multiline code if it has more than one line of data
-  // otherwise, it can still be considered a single code
-  if(i < cheatsNumber && i >= 0)
-    switch(cheatsList[i].size) {
-    case INT_8_BIT_WRITE:
-    case INT_16_BIT_WRITE:
-    case INT_32_BIT_WRITE:
-    case GSA_16_BIT_ROM_PATCH:
-    case GSA_8_BIT_GS_WRITE:
-    case GSA_16_BIT_GS_WRITE:
-    case GSA_32_BIT_GS_WRITE:
-    case CBA_AND:
-    case CBA_IF_KEYS_PRESSED:
-    case CBA_IF_TRUE:
-    case CBA_IF_FALSE:
-    case GSA_8_BIT_IF_TRUE:
-    case GSA_32_BIT_IF_TRUE:
-    case GSA_8_BIT_IF_FALSE:
-    case GSA_32_BIT_IF_FALSE:
-    case GSA_8_BIT_FILL:
-    case GSA_16_BIT_FILL:
-    case GSA_8_BIT_IF_TRUE2:
-    case GSA_16_BIT_IF_TRUE2:
-    case GSA_32_BIT_IF_TRUE2:
-    case GSA_8_BIT_IF_FALSE2:
-    case GSA_16_BIT_IF_FALSE2:
-    case GSA_32_BIT_IF_FALSE2:
-      return false;
-      // the codes below have two lines of data
-    case CBA_SLIDE_CODE:
-    case GSA_8_BIT_GS_WRITE2:
-    case GSA_16_BIT_GS_WRITE2:
-    case GSA_32_BIT_GS_WRITE2:
-    case GSA_16_BIT_ROM_PATCH2:
-    case GSA_8_BIT_SLIDE:
-    case GSA_16_BIT_SLIDE:
-    case GSA_32_BIT_SLIDE:
-      return true;
-    }
-  return false;
-}
-
-static bool isTrueMultilineCode(int code)
-{
-  // this is for all the codes that are true multiline
-  switch(code) {
-  case INT_8_BIT_WRITE:
-  case INT_16_BIT_WRITE:
-  case INT_32_BIT_WRITE:
-  case GSA_16_BIT_ROM_PATCH:
-  case GSA_8_BIT_GS_WRITE:
-  case GSA_16_BIT_GS_WRITE:
-  case GSA_32_BIT_GS_WRITE:
-  case CBA_AND:
-  case GSA_8_BIT_FILL:
-  case GSA_16_BIT_FILL:
-    return false;
-  case CBA_IF_KEYS_PRESSED:
-  case CBA_IF_TRUE:
-  case CBA_IF_FALSE:
-  case CBA_SLIDE_CODE:
-  case GSA_8_BIT_GS_WRITE2:
-  case GSA_16_BIT_GS_WRITE2:
-  case GSA_32_BIT_GS_WRITE2:
-  case GSA_16_BIT_ROM_PATCH2:
-  case GSA_8_BIT_SLIDE:
-  case GSA_16_BIT_SLIDE:
-  case GSA_32_BIT_SLIDE:
-  case GSA_8_BIT_IF_TRUE:
-  case GSA_32_BIT_IF_TRUE:
-  case GSA_8_BIT_IF_FALSE:
-  case GSA_32_BIT_IF_FALSE:
-  case GSA_8_BIT_IF_TRUE2:
-  case GSA_16_BIT_IF_TRUE2:
-  case GSA_32_BIT_IF_TRUE2:
-  case GSA_8_BIT_IF_FALSE2:
-  case GSA_16_BIT_IF_FALSE2:
-  case GSA_32_BIT_IF_FALSE2:
-    return true;
-  }
-  return false;
-}
-
 void cheatsAdd(char *codeStr,
                char *desc,
                u32 address,
                u32 value,
                int code,
-               int size,
-               bool freeze)
+               int size)
 {
   if(cheatsNumber < 100) {
     int x = cheatsNumber;
@@ -488,36 +503,30 @@ void cheatsAdd(char *codeStr,
     cheatsList[x].value = value;
     strcpy(cheatsList[x].codestring, codeStr);
     strcpy(cheatsList[x].desc, desc);
-    cheatsList[x].status = 2;
     cheatsList[x].enabled = true;
 
     bool normalCode = true;
     
     if(address == 0) {
       cheatsList[x].enabled = false;
-      cheatsList[x].status = 0;
       normalCode = false;
     }
 
     if(size == UNKNOWN_CODE)
       normalCode = false;
 
-    // don't do anything in case of multi line codes
-    if(isTrueMultilineCode(size))
-      normalCode = false;
-
-    if(normalCode) {
-      if(freeze)
-        cheatsList[x].status |= 1;
-      if(address < 0x8000000) {
-        cheatsList[x].oldValue = (size == 0 ? CPUReadByte(address) :
-                                  size == 1 ? CPUReadHalfWord(address) :
-                                  size == 3 ? CPUReadMemory(address) :
-                                  0);
-      } else {
-        cheatsList[x].oldValue = CPUReadHalfWord(address);
-        CHEAT_PATCH_ROM_16BIT(address,value);
-      }
+    // we only store the old value for this simple codes. ROM patching
+    // is taken care when it actually patches the ROM
+    switch(cheatsList[x].size) {
+    case INT_8_BIT_WRITE:
+      cheatsList[x].oldValue = CPUReadByte(address);
+      break;
+    case INT_16_BIT_WRITE:
+      cheatsList[x].oldValue = CPUReadHalfWord(address);
+      break;
+    case INT_32_BIT_WRITE:
+      cheatsList[x].oldValue = CPUReadMemory(address);
+      break;
     }
     cheatsNumber++;
   }
@@ -530,18 +539,27 @@ void cheatsDelete(int number, bool restore)
 
     if(restore) {
       switch(cheatsList[x].size) {
-      case 0:
+      case INT_8_BIT_WRITE:
         CPUWriteByte(cheatsList[x].address, (u8)cheatsList[x].oldValue);
         break;
-      case 1:
+      case INT_16_BIT_WRITE:
         CPUWriteHalfWord(cheatsList[x].address, (u16)cheatsList[x].oldValue);
         break;
-      case 2:
+      case INT_32_BIT_WRITE:
         CPUWriteMemory(cheatsList[x].address, cheatsList[x].oldValue);
         break;
-      case 3:
-        CHEAT_PATCH_ROM_16BIT(cheatsList[x].address,
-                              cheatsList[x].oldValue);  
+      case GSA_16_BIT_ROM_PATCH:
+        if(cheatsList[x].status & 1) {
+          CHEAT_PATCH_ROM_16BIT(cheatsList[x].address,
+                                cheatsList[x].oldValue);  
+        }
+        break;
+      case GSA_16_BIT_ROM_PATCH2:
+        if(cheatsList[x].status & 1) {
+          CHEAT_PATCH_ROM_16BIT(((cheatsList[x].address & 0x00FFFFFF) << 1)+
+                                0x8000000,
+                                cheatsList[x].oldValue);
+        }
         break;
       }
     }
@@ -563,36 +581,29 @@ void cheatsDeleteAll(bool restore)
 void cheatsEnable(int i)
 {
   if(i >= 0 && i < cheatsNumber) {
-    if(cheatsList[i].status & 1) {
-      u32 address = cheatsList[i].address;
-      switch(address >> 24) {
-      case 8:
-      case 9:
-        CHEAT_PATCH_ROM_16BIT(address,
-                              cheatsList[i].value);
-        break;
-      }
-    }
     cheatsList[i].enabled = true;
-    cheatsList[i].status |= 2;
   }
 }
 
 void cheatsDisable(int i)
 {
   if(i >= 0 && i < cheatsNumber) {
-    if(cheatsList[i].status & 1) {
-      u32 address = cheatsList[i].address;
-      switch(address >> 24) {
-      case 8:
-      case 9:
-        CHEAT_PATCH_ROM_16BIT(address,
+    switch(cheatsList[i].size) {
+    case GSA_16_BIT_ROM_PATCH:
+      if(cheatsList[i].status & 1) {
+        CHEAT_PATCH_ROM_16BIT(cheatsList[i].address,
                               cheatsList[i].oldValue);
-        break;  
       }
+      break;
+    case GSA_16_BIT_ROM_PATCH2:
+      if(cheatsList[i].status & 1) {
+        CHEAT_PATCH_ROM_16BIT(((cheatsList[i].address & 0x00FFFFFF) << 1)+
+                              0x8000000,
+                              cheatsList[i].oldValue);
+      }
+      break;
     }
     cheatsList[i].enabled = false;
-    cheatsList[i].status &= ~2;
   }
 }
 
@@ -863,7 +874,7 @@ bool cheatsVerifyCheatCode(char *code, char *desc)
     type = 1;
   if(len == 17)
     type = 2;
-  cheatsAdd(code, desc, address, value, type, type, true);
+  cheatsAdd(code, desc, address, value, type, type);
   return true;
 }
 
@@ -934,11 +945,12 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
       systemMessage(MSG_GBA_CODE_WARNING, "Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly.",
                     buffer, buffer2);
     }
-    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, UNKNOWN_CODE,true);
+    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, v3 ? 257 : 256, 
+              UNKNOWN_CODE);
     return;
   }
-  if(isMultilineCode(cheatsNumber-1)) {
-    cheatsAdd(code, desc, address, value, 256, UNKNOWN_CODE, false);
+  if(isMultilineWithData(cheatsNumber-1)) {
+    cheatsAdd(code, desc, address, value, v3 ? 257 : 256, UNKNOWN_CODE);
     return;
   }
   if(v3) {
@@ -951,81 +963,80 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
         addr = (value & 0x00F00000) << 4 | (value & 0x0003FFFF);
         switch(type) {
         case 0x08:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_8_BIT_GS_WRITE2, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_8_BIT_GS_WRITE2);
           break;
         case 0x09:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_16_BIT_GS_WRITE2, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_16_BIT_GS_WRITE2);
           break;
         case 0x0a:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_32_BIT_GS_WRITE2, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_32_BIT_GS_WRITE2);
           break;
         case 0x0c:
         case 0x0d:
         case 0x0e:
         case 0x0f:
-          cheatsAdd(code, desc, value & 0x00FFFFFF, 0xFFFFFFFF, 256, GSA_16_BIT_ROM_PATCH2, true);
+          cheatsAdd(code, desc, value & 0x00FFFFFF, 0xFFFFFFFF, 257, GSA_16_BIT_ROM_PATCH2);
           break;
         case 0x40:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_8_BIT_SLIDE, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_8_BIT_SLIDE);
           break;
         case 0x41:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_16_BIT_SLIDE, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_16_BIT_SLIDE);
           break;
         case 0x42:
-          cheatsAdd(code, desc, addr, 0, 256, GSA_32_BIT_SLIDE, true);
+          cheatsAdd(code, desc, addr, 0, 257, GSA_32_BIT_SLIDE);
           break;
         default:
-          cheatsAdd(code, desc, address & 0x00FFFFFF, value, 256, UNKNOWN_CODE,
-                    false);
+          cheatsAdd(code, desc, address & 0x00FFFFFF, value, 257, UNKNOWN_CODE);
           break;
         }
       } else
-        cheatsAdd(code, desc, addr, value, 256, GSA_8_BIT_FILL, true);
+        cheatsAdd(code, desc, addr, value, 257, GSA_8_BIT_FILL);
       break;
     case 0x01:
-      cheatsAdd(code, desc, addr, value, 256, GSA_16_BIT_FILL, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_16_BIT_FILL);
       break;
     case 0x02:
-      cheatsAdd(code, desc, addr, value, 256, INT_32_BIT_WRITE, true);
+      cheatsAdd(code, desc, addr, value, 257, INT_32_BIT_WRITE);
       break;
     case 0x04:
-      cheatsAdd(code, desc, addr, value, 256, GSA_8_BIT_IF_TRUE, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_8_BIT_IF_TRUE);
       break;
     case 0x05:
-      cheatsAdd(code, desc, addr, value, 256, CBA_IF_TRUE, true);
+      cheatsAdd(code, desc, addr, value, 257, CBA_IF_TRUE);
       break;
     case 0x06:
-      cheatsAdd(code, desc, addr, value, 256, GSA_32_BIT_IF_TRUE, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_32_BIT_IF_TRUE);
       break;
     case 0x08:
-      cheatsAdd(code, desc, addr, value, 256, GSA_8_BIT_IF_FALSE, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_8_BIT_IF_FALSE);
       break;
     case 0x09:
-      cheatsAdd(code, desc, addr, value, 256, CBA_IF_FALSE, true);
+      cheatsAdd(code, desc, addr, value, 257, CBA_IF_FALSE);
       break;
     case 0x0a:
-      cheatsAdd(code, desc, addr, value, 256, GSA_32_BIT_IF_FALSE, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_32_BIT_IF_FALSE);
       break;
     case 0x24:
-      cheatsAdd(code, desc, addr, value, 256, GSA_8_BIT_IF_TRUE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_8_BIT_IF_TRUE2);
       break;
     case 0x25:
-      cheatsAdd(code, desc, addr, value, 256, GSA_16_BIT_IF_TRUE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_16_BIT_IF_TRUE2);
       break;
     case 0x26:
-      cheatsAdd(code, desc, addr, value, 256, GSA_32_BIT_IF_TRUE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_32_BIT_IF_TRUE2);
       break;
     case 0x28:
-      cheatsAdd(code, desc, addr, value, 256, GSA_8_BIT_IF_FALSE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_8_BIT_IF_FALSE2);
       break;
     case 0x29:
-      cheatsAdd(code, desc, addr, value, 256, GSA_16_BIT_IF_FALSE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_16_BIT_IF_FALSE2);
       break;
     case 0x2a:
-      cheatsAdd(code, desc, addr, value, 256, GSA_32_BIT_IF_FALSE2, true);
+      cheatsAdd(code, desc, addr, value, 257, GSA_32_BIT_IF_FALSE2);
       break;
     default:
-      cheatsAdd(code, desc, addr, value, 256, UNKNOWN_CODE, false);
+      cheatsAdd(code, desc, addr, value, 257, UNKNOWN_CODE);
       break;
     }
   } else {
@@ -1034,52 +1045,52 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
     case 0:
     case 1:
     case 2:
-      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, type,true);
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, type);
       break;
     case 6:
       address <<= 1;
       type = (address >> 28) & 15;
       if(type == 0x0c) {
         cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, 
-                  GSA_16_BIT_ROM_PATCH, true);
+                  GSA_16_BIT_ROM_PATCH);
         break;
       }
       // unsupported code
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, 
-                UNKNOWN_CODE, false);
+                UNKNOWN_CODE);
       break;
     case 8:
       switch((address >> 20) & 15) {
       case 1:
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                  GSA_8_BIT_GS_WRITE, false);
+                  GSA_8_BIT_GS_WRITE);
         break;
       case 2:
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                  GSA_16_BIT_GS_WRITE, false);
+                  GSA_16_BIT_GS_WRITE);
         break;
       case 3:
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                  GSA_32_BIT_GS_WRITE, false);
+                  GSA_32_BIT_GS_WRITE);
       default:
         // unsupported code
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                  UNKNOWN_CODE, false);
+                  UNKNOWN_CODE);
         break;
       }
       break;
     case 0x0d:
       if(address != 0xDEADFACE) {
         cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 256, 
-                  CBA_IF_TRUE, false);
+                  CBA_IF_TRUE);
       } else
         cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                  UNKNOWN_CODE, false);
+                  UNKNOWN_CODE);
       break;
     default:
       // unsupported code
       cheatsAdd(code, desc, address & 0x0F0FFFFF, value, 256, 
-                UNKNOWN_CODE, false);
+                UNKNOWN_CODE);
       break;
     }
   }
@@ -1516,7 +1527,7 @@ void cheatsAddCBACode(char *code, char *desc)
     u32 seed[8];
     cheatsCBAParseSeedCode(address, value, seed);
     cheatsCBAChangeEncryption(seed);
-    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, UNKNOWN_CODE, false);
+    cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, UNKNOWN_CODE);
   } else {
     if(cheatsCBAShouldDecrypt())
       cheatsCBADecrypt(array);
@@ -1526,8 +1537,8 @@ void cheatsAddCBACode(char *code, char *desc)
     
     int type = (address >> 28) & 15;
 
-    if(isMultilineCode(cheatsNumber-1)) {
-      cheatsAdd(code, desc, address, value, 512, UNKNOWN_CODE, false);
+    if(isMultilineWithData(cheatsNumber-1)) {
+      cheatsAdd(code, desc, address, value, 512, UNKNOWN_CODE);
       return;
     }
     
@@ -1542,41 +1553,41 @@ void cheatsAddCBACode(char *code, char *desc)
                         "Warning: Codes seem to be for a different game.\nCodes may not work correctly.");
         }
         cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                  UNKNOWN_CODE, false);
+                  UNKNOWN_CODE);
       }
       break;
     case 0x03:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                INT_8_BIT_WRITE, true);
+                INT_8_BIT_WRITE);
       break;
     case 0x04:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                CBA_SLIDE_CODE, true);
+                CBA_SLIDE_CODE);
       break;
     case 0x06:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                CBA_AND, true);
+                CBA_AND);
       break;
     case 0x07:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                CBA_IF_TRUE, true);
+                CBA_IF_TRUE);
       break;
     case 0x08:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                INT_16_BIT_WRITE, true);
+                INT_16_BIT_WRITE);
       break;
     case 0x0a:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                CBA_IF_FALSE, true);
+                CBA_IF_FALSE);
       break;
     case 0x0d:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                CBA_IF_KEYS_PRESSED, true);
+                CBA_IF_KEYS_PRESSED);
       break;
     default:
       // unsupported code
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
-                UNKNOWN_CODE, false);
+                UNKNOWN_CODE);
       break;
     }
   }
@@ -1600,6 +1611,7 @@ void cheatsReadGame(gzFile file)
   bool firstCodeBreaker = true;
   
   for(int i = 0; i < cheatsNumber; i++) {
+    cheatsList[i].status = 0;
     if(!cheatsList[i].codestring[0]) {
       switch(cheatsList[i].size) {
       case 0:
@@ -1709,6 +1721,7 @@ bool cheatsLoadCheatList(char *file)
   bool firstCodeBreaker = true;
   
   for(int i = 0; i < count; i++) {
+    cheatsList[i].status = 0; // remove old status as it is not used
     if(!cheatsList[i].codestring[0]) {
       switch(cheatsList[i].size) {
       case 0:

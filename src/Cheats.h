@@ -131,7 +131,7 @@ extern void cheatsSearchValue(int, int, bool, u32);
 extern void cheatsUpdateValues();
 extern int  cheatsGetCount(int);
 
-extern void cheatsAdd(char *,char *,u32,u32,int,int,bool);
+extern void cheatsAdd(char *,char *,u32,u32,int,int);
 extern void cheatsAddCheatCode(char *code, char *desc);
 extern void cheatsAddGSACode(char *code, char *desc, bool v3);
 extern void cheatsAddCBACode(char *code, char *desc);
