@@ -95,7 +95,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,55,71,50,14
     ICON            IDI_ICON,IDC_STATIC,5,12,20,20
-    CTEXT           "VisualBoyAdvance version 1.2",IDC_STATIC,13,7,134,8
+    CTEXT           "VisualBoyAdvance version 1.3",IDC_STATIC,13,7,134,8
     CTEXT           "Copyright (c) 2001-02 by Forgotten",IDC_STATIC,31,35,
                     110,8
     CTEXT           "http://vboy.emuhq.com",IDC_URL,42,55,76,8
