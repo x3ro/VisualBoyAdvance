@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE YACC LEX LEXLIB LEX_OUTPUT_ROOT CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB NASM ac_ct_NASM SDL_CONFIG SDL_CFLAGS SDL_LIBS CPP EGREP VBA_MMX VBA_EXTRA VBA_GP VBA_PROF LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE YACC LEX LEXLIB LEX_OUTPUT_ROOT CXX CXXFLAGS ac_ct_CXX CXXDEPMODE am__fastdepCXX_TRUE am__fastdepCXX_FALSE RANLIB ac_ct_RANLIB NASM ac_ct_NASM SDL_CONFIG SDL_CFLAGS SDL_LIBS CPP EGREP VBA_MMX VBA_EXTRA VBA_PROF LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -861,7 +861,6 @@ if test -n "$ac_init_help"; then
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-gp             enable GP32 emulation (default is NO)
   --enable-c-core         enable C core (default is YES)
   --enable-dev            enable development features (default is YES)
   --disable-dependency-tracking Speeds up one-time builds
@@ -1787,23 +1786,6 @@ INSTALL_STRIP_PROGRAM="\${SHELL} \$(install_sh) -c -s"
 
 
 
-
-# Check whether --enable-gp or --disable-gp was given.
-if test "${enable_gp+set}" = set; then
-  enableval="$enable_gp"
-  ac_cv_use_gp=$enableval
-else
-  ac_cv_use_gp=no
-fi;
-echo "$as_me:$LINENO: checking whether to enable GP32 emulation" >&5
-echo $ECHO_N "checking whether to enable GP32 emulation... $ECHO_C" >&6
-if test "${ac_cv_use_gp+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_cv_use_gp=no
-fi
-echo "$as_me:$LINENO: result: $ac_cv_use_gp" >&5
-echo "${ECHO_T}$ac_cv_use_gp" >&6
 
 # Check whether --enable-c-core or --disable-c-core was given.
 if test "${enable_c_core+set}" = set; then
@@ -5727,12 +5709,6 @@ if test "${ac_cv_use_c_core}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
 fi
 
-if test "${ac_cv_use_gp}" = "yes"; then
-  VBA_EXTRA="$VBA_EXTRA gp"
-  VBA_GP=gp/libgp.a
-  CXXFLAGS="$CXXFLAGS -DGP_EMULATION"
-fi
-
 if test "${ac_cv_use_mmx}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DMMX"
   VBA_MMX=i386/lib386.a
@@ -5754,8 +5730,7 @@ fi
 
 
 
-
-                                                                      ac_config_files="$ac_config_files Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile"
+                                                            ac_config_files="$ac_config_files Makefile win32/Makefile src/Makefile src/gb/Makefile src/i386/Makefile src/prof/Makefile"
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -6341,7 +6316,6 @@ do
   "win32/Makefile" ) CONFIG_FILES="$CONFIG_FILES win32/Makefile" ;;
   "src/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
   "src/gb/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gb/Makefile" ;;
-  "src/gp/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/gp/Makefile" ;;
   "src/i386/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/i386/Makefile" ;;
   "src/prof/Makefile" ) CONFIG_FILES="$CONFIG_FILES src/prof/Makefile" ;;
   "depfiles" ) CONFIG_COMMANDS="$CONFIG_COMMANDS depfiles" ;;
@@ -6497,7 +6471,6 @@ s,@CPP@,$CPP,;t t
 s,@EGREP@,$EGREP,;t t
 s,@VBA_MMX@,$VBA_MMX,;t t
 s,@VBA_EXTRA@,$VBA_EXTRA,;t t
-s,@VBA_GP@,$VBA_GP,;t t
 s,@VBA_PROF@,$VBA_PROF,;t t
 s,@LIBOBJS@,$LIBOBJS,;t t
 s,@LTLIBOBJS@,$LTLIBOBJS,;t t
