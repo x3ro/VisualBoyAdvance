@@ -1,0 +1,474 @@
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = @SHELL@
+
+srcdir = @srcdir@
+top_srcdir = @top_srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+
+bindir = @bindir@
+sbindir = @sbindir@
+libexecdir = @libexecdir@
+datadir = @datadir@
+sysconfdir = @sysconfdir@
+sharedstatedir = @sharedstatedir@
+localstatedir = @localstatedir@
+libdir = @libdir@
+infodir = @infodir@
+mandir = @mandir@
+includedir = @includedir@
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/@PACKAGE@
+pkglibdir = $(libdir)/@PACKAGE@
+pkgincludedir = $(includedir)/@PACKAGE@
+
+top_builddir = ..
+
+ACLOCAL = @ACLOCAL@
+AUTOCONF = @AUTOCONF@
+AUTOMAKE = @AUTOMAKE@
+AUTOHEADER = @AUTOHEADER@
+
+INSTALL = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
+transform = @program_transform_name@
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = @host_alias@
+host_triplet = @host@
+CC = @CC@
+CXX = @CXX@
+LEX = @LEX@
+MAKEINFO = @MAKEINFO@
+NASM = @NASM@
+PACKAGE = @PACKAGE@
+RANLIB = @RANLIB@
+VBA_EXTRA = @VBA_EXTRA@
+VBA_GP = @VBA_GP@
+VBA_MMX = @VBA_MMX@
+VERSION = @VERSION@
+YACC = @YACC@
+
+SUBDIRS = gb @VBA_EXTRA@
+EXTRA_SUBDIRS = gp i386
+bin_PROGRAMS = VisualBoyAdvance TestEmu
+
+VisualBoyAdvance_SOURCES = \
+	SDL.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
+	simple2x.cpp Font.cpp unzip.cpp \
+	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
+	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
+	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
+	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp \
+	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
+	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
+	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
+
+
+VisualBoyAdvance_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
+
+TestEmu_SOURCES = \
+	TestEmu.cpp 2xSaI.cpp tvmode.cpp pixel.cpp motionblur.cpp admame.cpp \
+	simple2x.cpp Font.cpp unzip.cpp \
+	Cheats.cpp EEprom.cpp Flash.cpp GBA.cpp Gfx.cpp Globals.cpp \
+	Mode0.cpp Mode1.cpp Mode2.cpp Mode3.cpp Mode4.cpp Mode5.cpp \
+	Sound.cpp Sram.cpp Util.cpp armdis.cpp bios.cpp elf.cpp \
+	expr.cpp expr-lex.cpp exprNode.cpp debugger.cpp remote.cpp \
+	AutoBuild.h Cheats.h EEprom.h Flash.h Font.h GBA.h GBAinline.h \
+	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
+	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
+
+
+TestEmu_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+TestEmu_LDFLAGS = `sdl-config --libs`
+
+EXTRA_DIST = \
+	gp i386 win32 VisualBoyAdvance.cfg \
+	expr.l expr.y arm-new.cpp thumb.cpp getopt.c
+
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_CLEAN_FILES = 
+PROGRAMS =  $(bin_PROGRAMS)
+
+
+DEFS = @DEFS@ -I. -I$(srcdir) 
+CPPFLAGS = @CPPFLAGS@
+LDFLAGS = @LDFLAGS@
+LIBS = @LIBS@
+VisualBoyAdvance_OBJECTS =  SDL.o 2xSaI.o tvmode.o pixel.o motionblur.o \
+admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
+Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
+Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
+debugger.o remote.o
+VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a
+TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
+admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
+Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
+Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
+debugger.o remote.o
+TestEmu_DEPENDENCIES =  gb/libgb.a
+CXXFLAGS = @CXXFLAGS@
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+CXXLD = $(CXX)
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+SOURCES = $(VisualBoyAdvance_SOURCES) $(TestEmu_SOURCES)
+OBJECTS = $(VisualBoyAdvance_OBJECTS) $(TestEmu_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cpp .o .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps src/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+mostlyclean-binPROGRAMS:
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+distclean-binPROGRAMS:
+
+maintainer-clean-binPROGRAMS:
+
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  if test -f $$p; then \
+	    echo "  $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
+	     $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
+	done
+
+.c.o:
+	$(COMPILE) -c $<
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+VisualBoyAdvance: $(VisualBoyAdvance_OBJECTS) $(VisualBoyAdvance_DEPENDENCIES)
+	@rm -f VisualBoyAdvance
+	$(CXXLINK) $(VisualBoyAdvance_LDFLAGS) $(VisualBoyAdvance_OBJECTS) $(VisualBoyAdvance_LDADD) $(LIBS)
+
+TestEmu: $(TestEmu_OBJECTS) $(TestEmu_DEPENDENCIES)
+	@rm -f TestEmu
+	$(CXXLINK) $(TestEmu_LDFLAGS) $(TestEmu_OBJECTS) $(TestEmu_LDADD) $(LIBS)
+.cpp.o:
+	$(CXXCOMPILE) -c $<
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+
+@SET_MAKE@
+
+all-recursive install-data-recursive install-exec-recursive \
+installdirs-recursive install-recursive uninstall-recursive  \
+check-recursive installcheck-recursive info-recursive dvi-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	rev=''; list='$(SUBDIRS)'; for subdir in $$list; do \
+	  rev="$$subdir $$rev"; \
+	  test "$$subdir" != "." || dot_seen=yes; \
+	done; \
+	test "$$dot_seen" = "no" && rev=". $$rev"; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+   if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+   fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = src
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    chmod 777 $(distdir)/$$subdir; \
+	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
+2xSaI.o: 2xSaI.cpp System.h unzip.h
+admame.o: admame.cpp System.h unzip.h
+armdis.o: armdis.cpp System.h unzip.h Port.h GBA.h Cheats.h Globals.h \
+	EEprom.h Flash.h armdis.h elf.h
+bios.o: bios.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h GBAinline.h Port.h
+Cheats.o: Cheats.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h GBAinline.h Port.h NLS.h
+debugger.o: debugger.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
+	EEprom.h Flash.h Port.h armdis.h elf.h exprNode.h
+EEprom.o: EEprom.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h
+elf.o: elf.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Port.h elf.h NLS.h
+expr-lex.o: expr-lex.cpp expr.cpp.h
+expr.o: expr.cpp System.h unzip.h elf.h exprNode.h
+exprNode.o: exprNode.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
+	EEprom.h Flash.h Port.h elf.h exprNode.h
+Flash.o: Flash.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Sram.h
+Font.o: Font.cpp System.h unzip.h
+GBA.o: GBA.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h GBAinline.h Port.h Gfx.h Sound.h Sram.h bios.h NLS.h \
+	elf.h Util.h arm-new.cpp thumb.cpp
+Gfx.o: Gfx.cpp System.h unzip.h
+Globals.o: Globals.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
+	EEprom.h Flash.h
+Mode0.o: Mode0.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+Mode1.o: Mode1.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+Mode2.o: Mode2.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+Mode3.o: Mode3.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+Mode4.o: Mode4.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+Mode5.o: Mode5.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Gfx.h
+motionblur.o: motionblur.cpp System.h unzip.h
+pixel.o: pixel.cpp System.h unzip.h
+remote.o: remote.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h
+SDL.o: SDL.cpp AutoBuild.h GBA.h System.h unzip.h Cheats.h Globals.h \
+	EEprom.h Flash.h Font.h debugger.h Sound.h gb/GB.h \
+	gb/gbGlobals.h
+simple2x.o: simple2x.cpp System.h unzip.h
+Sound.o: Sound.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Sound.h
+Sram.o: Sram.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
+	Flash.h Sram.h
+TestEmu.o: TestEmu.cpp AutoBuild.h GBA.h System.h unzip.h Cheats.h \
+	Globals.h EEprom.h Flash.h Font.h debugger.h Sound.h gb/GB.h \
+	gb/gbGlobals.h
+tvmode.o: tvmode.cpp System.h unzip.h
+unzip.o: unzip.cpp unzip.h
+Util.o: Util.cpp System.h unzip.h NLS.h
+
+info-am:
+info: info-recursive
+dvi-am:
+dvi: dvi-recursive
+check-am: all-am
+check: check-recursive
+installcheck-am:
+installcheck: installcheck-recursive
+install-exec-am: install-binPROGRAMS
+install-exec: install-exec-recursive
+
+install-data-am:
+install-data: install-data-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-recursive
+uninstall-am: uninstall-binPROGRAMS
+uninstall: uninstall-recursive
+all-am: Makefile $(PROGRAMS)
+all-redirect: all-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs)  $(DESTDIR)$(bindir)
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
+		mostlyclean-tags mostlyclean-generic
+
+mostlyclean: mostlyclean-recursive
+
+clean-am:  clean-binPROGRAMS clean-compile clean-tags clean-generic \
+		mostlyclean-am
+
+clean: clean-recursive
+
+distclean-am:  distclean-binPROGRAMS distclean-compile distclean-tags \
+		distclean-generic clean-am
+
+distclean: distclean-recursive
+
+maintainer-clean-am:  maintainer-clean-binPROGRAMS \
+		maintainer-clean-compile maintainer-clean-tags \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-recursive
+
+.PHONY: mostlyclean-binPROGRAMS distclean-binPROGRAMS clean-binPROGRAMS \
+maintainer-clean-binPROGRAMS uninstall-binPROGRAMS install-binPROGRAMS \
+mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile install-data-recursive \
+uninstall-data-recursive install-exec-recursive \
+uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
+all-recursive check-recursive installcheck-recursive info-recursive \
+dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
+maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
+distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
+dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
+install-exec install-data-am install-data install-am install \
+uninstall-am uninstall all-redirect all-am all installdirs-am \
+installdirs mostlyclean-generic distclean-generic clean-generic \
+maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+
+
+dist-hook:
+	rm -rf `find $(distdir)/gp -name CVS`
+	rm -rf `find $(distdir)/i386 -name CVS`
+	rm -rf `find $(distdir)/win32 -name CVS`
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

@@ -1,0 +1,1654 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+#include "vba.rc2"
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "#include ""vba.rc2""\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_ICON                ICON    DISCARDABLE     "gbadvance.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPENDLG DIALOG DISCARDABLE  36, 24, 202, 117
+STYLE DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUP | WS_CAPTION | 
+    WS_SYSMENU
+CAPTION "Open"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "File &name:",1090,2,1,81,8
+    EDITTEXT        1152,0,10,104,12,ES_AUTOHSCROLL | ES_OEMCONVERT
+    LISTBOX         1120,1,24,104,53,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "&Folders:",-1,112,0,53,9
+    LTEXT           "",1088,113,10,86,9,SS_NOPREFIX
+    LISTBOX         1121,112,24,88,52,LBS_SORT | LBS_OWNERDRAWFIXED | 
+                    LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "List files of &type:",1089,1,75,81,9
+    COMBOBOX        1136,1,87,104,13,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Dri&ves:",1091,113,76,70,9
+    COMBOBOX        1137,112,87,71,68,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | 
+                    CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,24,102,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,90,102,50,14,WS_GROUP
+END
+
+IDD_ABOUT DIALOG DISCARDABLE  0, 0, 162, 92
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About VisualBoyAdvance"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,55,71,50,14
+    ICON            IDI_ICON,IDC_STATIC,5,12,20,20
+    CTEXT           "VisualBoyAdvance version 1.1",IDC_STATIC,13,7,134,8
+    CTEXT           "Copyright (c) 2001-02 by Forgotten",IDC_STATIC,31,35,
+                    110,8
+    CTEXT           "http://vboy.emuhq.com",IDC_URL,42,55,76,8
+    CTEXT           "Contribution by Costis",IDC_STATIC,30,45,102,8
+    CTEXT           "Emulator Version",IDC_STATIC,45,16,70,8
+    CTEXT           "",IDC_VERSION,59,25,43,8
+END
+
+IDD_DIRECTORIES DIALOG DISCARDABLE  0, 0, 284, 129
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Directories"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Browse...",IDC_ROM_DIR,174,7,50,14
+    PUSHBUTTON      "Browse...",IDC_GBROM_DIR,174,26,50,14
+    PUSHBUTTON      "Browse...",IDC_BATTERY_DIR,174,45,50,14
+    PUSHBUTTON      "Browse...",IDC_SAVE_DIR,174,64,50,14
+    PUSHBUTTON      "Browse...",IDC_CAPTURE_DIR,174,83,50,14
+    DEFPUSHBUTTON   "OK",IDOK,88,108,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,145,108,50,14
+    LTEXT           "ROM:",IDC_STATIC,7,9,20,8
+    LTEXT           "Battery:",IDC_STATIC,7,47,25,8
+    LTEXT           "Save Game:",IDC_STATIC,7,66,40,8
+    LTEXT           "Capture:",IDC_STATIC,7,85,28,8
+    EDITTEXT        IDC_ROM_PATH,49,7,121,14,ES_AUTOHSCROLL | WS_DISABLED
+    EDITTEXT        IDC_BATTERY_PATH,49,45,121,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    EDITTEXT        IDC_SAVE_PATH,49,64,121,14,ES_AUTOHSCROLL | WS_DISABLED
+    EDITTEXT        IDC_CAPTURE_PATH,49,83,121,14,ES_AUTOHSCROLL | 
+                    WS_DISABLED
+    LTEXT           "GB ROM:",IDC_STATIC,7,28,32,8
+    EDITTEXT        IDC_GBROM_PATH,49,26,121,14,ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON      "Reset",IDC_ROM_DIR_RESET,228,6,50,14
+    PUSHBUTTON      "Reset",IDC_GBROM_DIR_RESET,228,25,50,14
+    PUSHBUTTON      "Reset",IDC_BATTERY_DIR_RESET,228,45,50,14
+    PUSHBUTTON      "Reset",IDC_SAVE_DIR_RESET,228,64,50,14
+    PUSHBUTTON      "Reset",IDC_CAPTURE_DIR_RESET,228,83,50,14
+END
+
+IDD_CONFIG DIALOG DISCARDABLE  0, 0, 135, 211
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Joypad configuration"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_UP,47,5,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DOWN,47,19,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LEFT,47,33,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RIGHT,47,47,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_A,47,61,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_B,47,75,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_L,47,89,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_R,47,103,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_SELECT,47,117,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_START,47,131,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_SPEED,47,145,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_CAPTURE,47,159,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_BUTTON_GS,47,173,81,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",ID_OK,20,190,40,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,74,190,40,14
+    LTEXT           "Up:",IDC_STATIC,5,5,35,10
+    LTEXT           "Down:",IDC_STATIC,5,19,35,10
+    LTEXT           "Left:",IDC_STATIC,5,33,35,10
+    LTEXT           "Right:",IDC_STATIC,5,47,35,10
+    LTEXT           "Button A:",IDC_STATIC,5,61,35,10
+    LTEXT           "Button B:",IDC_STATIC,5,75,35,10
+    LTEXT           "Button L:",IDC_STATIC,5,89,35,10
+    LTEXT           "Button R:",IDC_STATIC,5,103,35,10
+    LTEXT           "Select:",IDC_STATIC,5,117,35,10
+    LTEXT           "Start:",IDC_STATIC,5,131,35,10
+    LTEXT           "Speed:",IDC_STATIC,5,145,35,10
+    LTEXT           "Capture:",IDC_STATIC,5,159,35,10
+    LTEXT           "GS:",IDC_STATIC,5,173,35,10
+END
+
+IDD_CHEATS DIALOG DISCARDABLE  0, 0, 276, 253
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Search for cheats"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | WS_BORDER | WS_TABSTOP,3,5,265,111
+    CONTROL         "Ol&d value",IDC_OLD_VALUE,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,11,129,46,10
+    CONTROL         "Specifi&c value",IDC_SPECIFIC_VALUE,"Button",
+                    BS_AUTORADIOBUTTON,11,141,61,10
+    CONTROL         "&8 bits",IDC_SIZE_8,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,11,167,33,10
+    CONTROL         "&16 bits",IDC_SIZE_16,"Button",BS_AUTORADIOBUTTON,11,
+                    179,37,10
+    CONTROL         "&32 bits",IDC_SIZE_32,"Button",BS_AUTORADIOBUTTON,11,
+                    191,37,10
+    CONTROL         "&Equal",IDC_EQ,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    100,128,34,10
+    CONTROL         "&Not equal",IDC_NE,"Button",BS_AUTORADIOBUTTON,100,140,
+                    47,10
+    CONTROL         "&Less than",IDC_LT,"Button",BS_AUTORADIOBUTTON,100,152,
+                    47,10
+    CONTROL         "Le&ss or equal",IDC_LE,"Button",BS_AUTORADIOBUTTON,100,
+                    164,58,10
+    CONTROL         "&Greather than",IDC_GT,"Button",BS_AUTORADIOBUTTON,100,
+                    176,59,10
+    CONTROL         "G&reater or equal",IDC_GE,"Button",BS_AUTORADIOBUTTON,
+                    100,188,67,10
+    CONTROL         "S&igned",IDC_SIGNED,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,202,130,38,10
+    CONTROL         "&Unsigned",IDC_UNSIGNED,"Button",BS_AUTORADIOBUTTON,202,
+                    142,46,10
+    CONTROL         "&Hexadecimal",IDC_HEXADECIMAL,"Button",
+                    BS_AUTORADIOBUTTON,202,154,57,10
+    CONTROL         "U&pdate values",IDC_UPDATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,192,192,62,10
+    EDITTEXT        IDC_VALUE,95,211,172,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Start",IDC_START,15,237,50,14,WS_GROUP
+    PUSHBUTTON      "S&earch",IDC_SEARCH,80,236,50,14
+    PUSHBUTTON      "&Add cheat",IDC_ADD_CHEAT,145,236,50,14
+    DEFPUSHBUTTON   "OK",ID_OK,210,236,50,14
+    GROUPBOX        "&Search type",IDC_STATIC,3,118,84,36
+    GROUPBOX        "&Data size",IDC_STATIC,3,158,84,44
+    GROUPBOX        "Compare type",IDC_STATIC,95,118,92,84
+    GROUPBOX        "Signed/Unsigned",IDC_STATIC,192,118,76,50
+    LTEXT           "Enter &value:",IDC_STATIC,3,214,69,8
+END
+
+IDD_ADD_CHEAT DIALOG DISCARDABLE  0, 0, 186, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add cheat"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_ADDRESS,60,6,123,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_VALUE,60,24,123,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,60,42,123,14,ES_AUTOHSCROLL
+    CONTROL         "&Freeze location",IDC_FREEZE,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,4,63,64,10
+    CONTROL         "8-bit",IDC_SIZE_8,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,11,87,29,10
+    CONTROL         "16-bit",IDC_SIZE_16,"Button",BS_AUTORADIOBUTTON,62,87,
+                    33,10
+    CONTROL         "32-bit",IDC_SIZE_32,"Button",BS_AUTORADIOBUTTON,117,87,
+                    33,10
+    CONTROL         "&Signed",IDC_SIGNED,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,11,114,38,10
+    CONTROL         "&Unsigned",IDC_UNSIGNED,"Button",BS_AUTORADIOBUTTON,62,
+                    115,46,10
+    CONTROL         "&Hexadecimal",IDC_HEXADECIMAL,"Button",
+                    BS_AUTORADIOBUTTON,117,115,57,10
+    DEFPUSHBUTTON   "&OK",ID_OK,36,133,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",ID_CANCEL,99,133,50,14
+    LTEXT           "&Value:",IDC_STATIC,3,27,54,8
+    GROUPBOX        "Number format",IDC_STATIC,3,105,180,24
+    LTEXT           "&Address:",IDC_STATIC,3,9,54,8
+    GROUPBOX        "Size",IDC_STATIC,3,77,180,24
+    LTEXT           "&Description:",IDC_STATIC,3,45,55,8
+END
+
+IDD_CHEAT_LIST DIALOG DISCARDABLE  0, 0, 280, 250
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Cheat list"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&Signed",IDC_SIGNED,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP | WS_TABSTOP,14,183,38,10
+    CONTROL         "&Unsigned",IDC_UNSIGNED,"Button",BS_AUTORADIOBUTTON,58,
+                    183,46,10
+    CONTROL         "&Hex",IDC_HEXADECIMAL,"Button",BS_AUTORADIOBUTTON,110,
+                    183,28,10
+    CONTROL         "Restore &previous values",IDC_RESTORE,"Button",
+                    BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,185,183,92,10
+    PUSHBUTTON      "&Code...",IDC_ADD_CODE,9,208,64,14,WS_GROUP
+    PUSHBUTTON      "C&heat...",IDC_ADD_CHEAT,75,208,64,14
+    PUSHBUTTON      "&Gameshark...",IDC_ADD_GAMESHARK,141,208,64,14
+    PUSHBUTTON      "CodeBreaker...",IDC_ADD_CODEBREAKER,206,208,64,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,9,230,64,14
+    PUSHBUTTON      "Remove A&ll",IDC_REMOVE_ALL,75,230,64,14
+    PUSHBUTTON      "&Enable/Dis.",IDC_ENABLE,141,230,64,14
+    DEFPUSHBUTTON   "&OK",ID_OK,206,230,64,14,WS_GROUP
+    CONTROL         "",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | WS_BORDER | 
+                    WS_GROUP | WS_TABSTOP,5,15,269,156
+    GROUPBOX        "Number type",IDC_STATIC,5,172,135,25
+    LTEXT           "Status legend:",IDC_STATIC,6,3,46,8
+    LTEXT           "E: Enabled",IDC_STATIC,150,3,36,8
+    LTEXT           "D: Disabled",IDC_STATIC,196,3,38,8
+    LTEXT           "F: Frozen",IDC_STATIC,244,3,30,8
+    GROUPBOX        "Add",IDC_STATIC,5,199,268,27
+END
+
+IDD_ASSOCIATIONS DIALOG DISCARDABLE  0, 0, 116, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Associations"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         ".gb",IDC_GB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,15,
+                    26,10
+    CONTROL         ".sgb",IDC_SGB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,
+                    29,29,10
+    CONTROL         ".cgb",IDC_CGB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,
+                    43,30,10
+    CONTROL         ".gbc",IDC_GBC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,
+                    57,30,10
+    CONTROL         ".gba",IDC_GBA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,
+                    13,30,10
+    CONTROL         ".agb",IDC_AGB,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,
+                    27,30,10
+    CONTROL         ".bin",IDC_BIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,
+                    41,27,10
+    DEFPUSHBUTTON   "OK",ID_OK,3,78,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,63,78,50,14
+    GROUPBOX        "GBA Types",IDC_STATIC,63,3,50,51
+    GROUPBOX        "GB Types",IDC_STATIC,3,3,50,69
+END
+
+IDD_GBA_ROM_INFO DIALOG DISCARDABLE  0, 0, 220, 142
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rom information"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",ID_OK,84,121,50,14
+    LTEXT           "Game title:",IDC_STATIC,7,10,60,8
+    LTEXT           "Game code:",IDC_STATIC,7,24,60,8
+    LTEXT           "Maker code:",IDC_STATIC,7,38,60,8
+    LTEXT           "Main unit code:",IDC_STATIC,7,66,60,8
+    LTEXT           "Device type:",IDC_STATIC,7,80,60,8
+    LTEXT           "ROM version:",IDC_STATIC,7,94,60,8
+    LTEXT           "CRC:",IDC_STATIC,7,108,60,8
+    LTEXT           "",IDC_ROM_TITLE,80,10,133,8
+    LTEXT           "",IDC_ROM_GAME_CODE,80,24,133,8
+    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8
+    LTEXT           "",IDC_ROM_UNIT_CODE,80,66,133,8
+    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,80,133,8
+    LTEXT           "",IDC_ROM_VERSION,80,94,133,8
+    LTEXT           "",IDC_ROM_CRC,80,108,133,8
+    LTEXT           "",IDC_ROM_MAKER_NAME,80,52,133,8
+    LTEXT           "Maker name:",IDC_STATIC,7,52,60,8
+END
+
+IDD_GB_ROM_INFO DIALOG DISCARDABLE  0, 0, 220, 225
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Rom information"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",ID_OK,84,200,50,14
+    LTEXT           "Game title:",IDC_STATIC,7,10,60,8
+    LTEXT           "Maker code:",IDC_STATIC,7,38,60,8
+    LTEXT           "Unit code:",IDC_STATIC,7,68,60,8
+    LTEXT           "Cartridge type:",IDC_STATIC,7,82,60,8
+    LTEXT           "ROM version:",IDC_STATIC,7,152,60,8
+    LTEXT           "CRC:",IDC_STATIC,7,166,60,8
+    LTEXT           "",IDC_ROM_TITLE,80,10,133,8
+    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8
+    LTEXT           "",IDC_ROM_UNIT_CODE,80,68,133,8
+    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,82,133,8
+    LTEXT           "",IDC_ROM_VERSION,80,152,133,8
+    LTEXT           "",IDC_ROM_CRC,80,166,133,8
+    LTEXT           "Color:",IDC_STATIC,7,24,60,8
+    LTEXT           "",IDC_ROM_COLOR,80,24,133,8
+    LTEXT           "ROM size:",IDC_STATIC,7,96,60,8
+    LTEXT           "",IDC_ROM_SIZE,80,96,133,8
+    LTEXT           "RAM size:",IDC_STATIC,7,110,60,8
+    LTEXT           "",IDC_ROM_RAM_SIZE,80,110,133,8
+    LTEXT           "Dest. code:",IDC_STATIC,7,124,60,8
+    LTEXT           "",IDC_ROM_DEST_CODE,80,124,133,8
+    LTEXT           "License code:",IDC_STATIC,7,138,60,8
+    LTEXT           "",IDC_ROM_LIC_CODE,80,138,133,8
+    LTEXT           "Checksum:",IDC_STATIC,7,180,60,8
+    LTEXT           "",IDC_ROM_CHECKSUM,80,180,133,8
+    LTEXT           "",IDC_ROM_MAKER_NAME2,80,52,133,8
+    LTEXT           "Maker name:",IDC_STATIC,7,52,60,8
+END
+
+IDD_GB_CHEAT_LIST DIALOG DISCARDABLE  0, 0, 286, 221
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Gameboy Cheat List"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_CHEAT_LIST,"SysListView32",LVS_REPORT | WS_BORDER | 
+                    WS_GROUP | WS_TABSTOP,9,20,269,156
+    PUSHBUTTON      "Add &GameGenie...",IDC_ADD_GG_CHEAT,9,183,80,14,
+                    WS_GROUP
+    PUSHBUTTON      "&Add GameShark...",IDC_ADD_GS_CHEAT,103,183,80,14,
+                    WS_GROUP
+    PUSHBUTTON      "&Remove",IDC_REMOVE,197,183,80,14
+    PUSHBUTTON      "Remove A&ll",IDC_REMOVE_ALL,9,202,80,14
+    PUSHBUTTON      "&Enable/Dis.",IDC_ENABLE,103,202,80,14
+    DEFPUSHBUTTON   "&OK",ID_OK,197,202,80,14
+    LTEXT           "Status legend:",IDC_STATIC,10,9,46,8
+    LTEXT           "E: Enabled",IDC_STATIC,195,9,36,8
+    LTEXT           "D: Disabled",IDC_STATIC,241,9,38,8
+END
+
+IDD_ADD_CHEAT_DLG DIALOG DISCARDABLE  0, 0, 182, 107
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Title"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_DESC,60,7,120,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CODE,60,23,120,58,ES_MULTILINE | ES_UPPERCASE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN
+    DEFPUSHBUTTON   "OK",ID_OK,33,86,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,99,86,50,14
+    LTEXT           "&Description:",IDC_STATIC,3,10,54,8
+    LTEXT           "&Code:",IDC_STATIC,3,29,54,8
+END
+
+IDD_GB_PRINTER DIALOG DISCARDABLE  0, 0, 178, 209
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GB Printer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "&1x",IDC_1X,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,
+                    166,22,10
+    CONTROL         "&2x",IDC_2X,"Button",BS_AUTORADIOBUTTON,55,166,23,10
+    CONTROL         "&3x",IDC_3X,"Button",BS_AUTORADIOBUTTON,98,166,23,10
+    CONTROL         "&4x",IDC_4X,"Button",BS_AUTORADIOBUTTON,141,166,23,10
+    DEFPUSHBUTTON   "&Print...",ID_PRINT,7,190,50,14,WS_GROUP
+    PUSHBUTTON      "&Save...",ID_SAVE,64,190,50,14
+    PUSHBUTTON      "&Close",ID_OK,121,190,50,14
+    CONTROL         "",IDC_GB_PRINTER,"Static",SS_BLACKFRAME | WS_GROUP,7,6,
+                    162,146
+    GROUPBOX        "Print Size",IDC_STATIC,7,156,162,25
+END
+
+IDD_MOTION_CONFIG DIALOG DISCARDABLE  0, 0, 135, 78
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Motion Sensor"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_EDIT_UP,47,2,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_DOWN,47,16,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_LEFT,47,30,81,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_RIGHT,47,44,81,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "OK",ID_OK,20,60,40,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,74,60,40,14
+    LTEXT           "Up:",IDC_STATIC,5,2,35,10
+    LTEXT           "Down:",IDC_STATIC,5,16,35,10
+    LTEXT           "Left:",IDC_STATIC,5,30,35,10
+    LTEXT           "Right:",IDC_STATIC,5,44,35,10
+END
+
+IDD_LANG_SELECT DIALOG DISCARDABLE  0, 0, 186, 68
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Language selection"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_LANG_STRING,140,25,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",ID_OK,30,49,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,104,49,50,14
+    LTEXT           "Current system language is:",IDC_STATIC,6,9,123,8
+    LTEXT           "Enter language name (3 letter):",IDC_STATIC,6,30,127,8
+    LTEXT           "",IDC_LANG_NAME,140,9,40,8
+END
+
+IDD_CODE_SELECT DIALOG DISCARDABLE  0, 0, 316, 235
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Select codes to import"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",ID_OK,91,214,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,174,214,50,14
+    LISTBOX         IDC_GAME_LIST,7,7,302,205,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_HSCROLL | 
+                    WS_TABSTOP
+END
+
+IDD_MAP_VIEW DIALOG DISCARDABLE  0, 0, 322, 238
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Map view"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Frame 0",IDC_FRAME_0,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,22,41,10
+    CONTROL         "Frame 1",IDC_FRAME_1,"Button",BS_AUTORADIOBUTTON,13,36,
+                    41,10
+    CONTROL         "BG0",IDC_BG0,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,
+                    63,30,10
+    CONTROL         "BG1",IDC_BG1,"Button",BS_AUTORADIOBUTTON,13,77,30,10
+    CONTROL         "BG2",IDC_BG2,"Button",BS_AUTORADIOBUTTON,13,91,30,10
+    CONTROL         "BG3",IDC_BG3,"Button",BS_AUTORADIOBUTTON,13,105,30,10
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,122,68,10
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,25,217,50,14,WS_GROUP
+    PUSHBUTTON      "&Save...",IDC_SAVE,88,217,50,14,WS_GROUP
+    PUSHBUTTON      "&Close",IDC_CLOSE,155,217,50,14
+    CONTROL         "MapView",IDC_MAP_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,187,15,128,128
+    CONTROL         "Zoom",IDC_MAP_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,7,148,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,187,164,
+                    48,47
+    LTEXT           "",IDC_R,245,173,50,8
+    LTEXT           "",IDC_G,245,185,50,8
+    LTEXT           "",IDC_B,245,197,50,8
+    GROUPBOX        "Frame",IDC_STATIC,7,11,63,37
+    GROUPBOX        "Background",IDC_STATIC,7,52,63,67
+    CONTROL         "Auto update",IDC_AUTO_UPDATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,134,55,10
+    LTEXT           "",IDC_XY,129,95,53,8
+    LTEXT           "Mode:",IDC_STATIC,80,15,34,8
+    LTEXT           "",IDC_MODE,130,15,53,8
+    LTEXT           "Map Base:",IDC_STATIC,80,25,35,8
+    LTEXT           "",IDC_MAPBASE,130,25,53,8
+    LTEXT           "Char Base:",IDC_STATIC,80,35,36,8
+    LTEXT           "",IDC_CHARBASE,130,35,53,8
+    LTEXT           "Size:",IDC_STATIC,80,45,37,8
+    LTEXT           "",IDC_DIM,130,45,53,8
+    LTEXT           "Colors:",IDC_STATIC,80,55,37,8
+    LTEXT           "",IDC_NUMCOLORS,130,55,53,8
+    LTEXT           "Priority:",IDC_STATIC,80,65,37,8
+    LTEXT           "",IDC_PRIORITY,130,65,53,8
+    LTEXT           "Mosaic:",IDC_STATIC,80,75,37,8
+    LTEXT           "",IDC_MOSAIC,130,75,53,8
+    LTEXT           "Overflow:",IDC_STATIC,80,85,37,8
+    LTEXT           "",IDC_OVERFLOW,130,85,53,8
+    LTEXT           "Address:",IDC_STATIC,80,105,37,8
+    LTEXT           "",IDC_ADDRESS,130,105,53,8
+    LTEXT           "Tile:",IDC_STATIC,80,115,37,8
+    LTEXT           "",IDC_TILE_NUM,130,115,53,8
+    LTEXT           "Flip:",IDC_STATIC,80,125,37,8
+    LTEXT           "",IDC_FLIP,130,125,53,8
+    LTEXT           "Palette:",IDC_STATIC,80,135,37,8
+    LTEXT           "",IDC_PALETTE_NUM,130,135,53,8
+END
+
+IDD_PALETTE_VIEW DIALOG DISCARDABLE  0, 0, 316, 266
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Palette View"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Save BG...",IDC_SAVE_BG,30,245,50,14
+    PUSHBUTTON      "Save OBJ...",IDC_SAVE_OBJ,98,245,50,14
+    PUSHBUTTON      "&Refresh",IDC_REFRESH2,166,245,50,14
+    PUSHBUTTON      "&Close",IDC_CLOSE,234,245,50,14
+    LTEXT           "",IDC_ADDRESS,53,168,50,8
+    LTEXT           "",IDC_R,53,180,50,8
+    LTEXT           "",IDC_G,53,192,50,8
+    LTEXT           "",IDC_B,53,204,50,8
+    LTEXT           "",IDC_VALUE,53,216,50,8
+    CONTROL         "Custom1",IDC_COLOR,"VbaColorControl",WS_TABSTOP,161,168,
+                    50,50
+    CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW,"VbaPaletteViewControl",
+                    WS_TABSTOP,12,30,128,128
+    CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW_OBJ,
+                    "VbaPaletteViewControl",WS_TABSTOP,166,30,128,128
+    GROUPBOX        "Background",IDC_STATIC,7,20,137,143
+    GROUPBOX        "Sprite",IDC_STATIC,161,20,137,143
+    LTEXT           "Address:",IDC_STATIC,7,168,38,8
+    LTEXT           "R:",IDC_STATIC,7,180,41,8
+    LTEXT           "G:",IDC_STATIC,7,192,43,8
+    LTEXT           "B:",IDC_STATIC,7,204,38,8
+    LTEXT           "Value:",IDC_STATIC,7,216,38,8
+    LTEXT           "Click on a color for more information",IDC_STATIC,7,7,
+                    302,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,229,71,10
+END
+
+IDD_MEM_VIEWER DIALOG DISCARDABLE  0, 0, 380, 171
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Memory viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_ADDRESSES,7,7,109,30,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    CONTROL         "8-bit",IDC_8_BIT,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    120,9,29,10
+    CONTROL         "16-bit",IDC_16_BIT,"Button",BS_AUTORADIOBUTTON,154,9,33,
+                    10
+    CONTROL         "32-bit",IDC_32_BIT,"Button",BS_AUTORADIOBUTTON,192,9,33,
+                    10
+    EDITTEXT        IDC_ADDRESS,238,7,82,14,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    ES_WANTRETURN | WS_GROUP
+    DEFPUSHBUTTON   "&Go",IDC_GO,323,7,50,14,WS_GROUP
+    CONTROL         "Viewer",IDC_VIEWER,"VbaMemoryViewer",WS_TABSTOP,7,22,
+                    366,112
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,117,150,50,14
+    PUSHBUTTON      "&Close",IDC_CLOSE,181,150,50,14
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,139,71,10
+END
+
+IDD_OAM_VIEW DIALOG DISCARDABLE  0, 0, 234, 185
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Oam Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_SPRITE,7,19,76,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    SCROLLBAR       IDC_SCROLLBAR,7,33,76,11
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,138,79,10
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,7,164,50,14,WS_GROUP
+    PUSHBUTTON      "&Save...",IDC_SAVE,91,164,50,14,WS_GROUP
+    PUSHBUTTON      "&Close",IDC_CLOSE,177,164,50,14
+    CONTROL         "MapView",IDC_OAM_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,87,7,64,64
+    CONTROL         "Zoom",IDC_OAM_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,163,7,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,87,79,48,
+                    47
+    LTEXT           "",IDC_POS,31,47,50,8
+    LTEXT           "",IDC_MODE,31,57,50,8
+    LTEXT           "",IDC_COLORS,31,67,50,8
+    LTEXT           "",IDC_PALETTE,31,77,50,8
+    LTEXT           "",IDC_TILE,31,87,50,8
+    LTEXT           "",IDC_PRIO,31,97,50,8
+    LTEXT           "",IDC_SIZE2,31,107,50,8
+    LTEXT           "",IDC_ROT,31,117,50,8
+    LTEXT           "",IDC_FLAGS,31,127,50,8
+    LTEXT           "",IDC_R,145,88,50,8
+    LTEXT           "",IDC_G,145,100,50,8
+    LTEXT           "",IDC_B,145,112,50,8
+    LTEXT           "Pos:",IDC_STATIC,7,47,24,8
+    LTEXT           "Mode:",IDC_STATIC,7,57,24,8
+    LTEXT           "Colors:",IDC_STATIC,7,67,24,8
+    LTEXT           "Pal:",IDC_STATIC,7,77,24,8
+    LTEXT           "Tile:",IDC_STATIC,7,87,24,8
+    LTEXT           "Prio:",IDC_STATIC,7,97,24,8
+    LTEXT           "Size:",IDC_STATIC,7,107,24,8
+    LTEXT           "Sprite:",IDC_STATIC,7,7,50,8
+    LTEXT           "Rot.:",IDC_STATIC,7,117,24,8
+    LTEXT           "Flags:",IDC_STATIC,7,127,24,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,150,71,10
+END
+
+IDD_ACCEL_EDITOR DIALOG DISCARDABLE  0, 0, 280, 121
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Accelerator editor"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Commands:",IDC_STATIC,9,9,38,8
+    LISTBOX         IDC_COMMANDS,9,18,100,67,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+                    LBS_DISABLENOSCROLL | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Current &Keys:",IDC_STATIC1,113,9,43,8
+    LISTBOX         IDC_CURRENTS,113,18,100,67,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",ID_OK,223,9,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,223,25,50,14
+    LTEXT           "Select &New Shortcut Key:",IDC_STATIC3,113,90,82,8
+    EDITTEXT        IDC_EDIT_KEY,113,102,100,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Assign",IDC_ASSIGN,223,70,50,14
+    PUSHBUTTON      "&Remove",IDC_REMOVE,223,86,50,14
+    PUSHBUTTON      "Re&set All",IDC_RESET,223,102,50,14
+    LTEXT           "Static",IDC_ALREADY_AFFECTED,9,102,100,12,
+                    SS_CENTERIMAGE
+    LTEXT           "Currently assigned to :",IDC_STATIC2,9,90,73,10
+END
+
+IDD_TILE_VIEWER DIALOG DISCARDABLE  0, 0, 326, 266
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Tile Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "16",IDC_16_COLORS,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,20,24,10
+    CONTROL         "256",IDC_256_COLORS,"Button",BS_AUTORADIOBUTTON,13,30,
+                    28,10
+    CONTROL         "0x6000000",IDC_CHARBASE_0,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,57,51,10
+    CONTROL         "0x6004000",IDC_CHARBASE_1,"Button",BS_AUTORADIOBUTTON,
+                    13,67,51,10
+    CONTROL         "0x6008000",IDC_CHARBASE_2,"Button",BS_AUTORADIOBUTTON,
+                    13,77,51,10
+    CONTROL         "0x600C000",IDC_CHARBASE_3,"Button",BS_AUTORADIOBUTTON,
+                    13,87,52,10
+    CONTROL         "0x6010000",IDC_CHARBASE_4,"Button",BS_AUTORADIOBUTTON,
+                    13,97,49,10
+    CONTROL         "Slider1",IDC_PALETTE_SLIDER,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_GROUP | WS_TABSTOP,1,124,76,22
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,149,79,10
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,245,50,14,WS_GROUP
+    PUSHBUTTON      "Save...",IDC_SAVE,85,245,50,14
+    PUSHBUTTON      "Close",IDC_CLOSE,269,245,50,14
+    CONTROL         "Custom1",IDC_TILE_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,191,7,128,128
+    GROUPBOX        "Colors",IDC_STATIC,7,7,66,38
+    GROUPBOX        "Char Base",IDC_STATIC,7,46,65,64
+    CONTROL         "Zoom",IDC_MAP_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,7,174,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,98,183,48,
+                    47
+    LTEXT           "",IDC_R,156,192,50,8
+    LTEXT           "",IDC_G,156,204,50,8
+    LTEXT           "",IDC_B,156,216,50,8
+    LTEXT           "Palette:",IDC_STATIC,7,113,65,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,160,71,10
+    LTEXT           "Tile:",IDC_STATIC,79,14,41,8
+    LTEXT           "Address:",IDC_STATIC,79,26,41,8
+    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8
+    LTEXT           "",IDC_ADDRESS,135,26,50,8
+END
+
+IDD_GB_COLORS DIALOG DISCARDABLE  0, 0, 169, 105
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Gameboy Mono Colors"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Default",IDC_DEFAULT,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,7,39,10
+    CONTROL         "User 1",IDC_USER1,"Button",BS_AUTORADIOBUTTON,67,7,37,
+                    10
+    CONTROL         "User 2",IDC_USER2,"Button",BS_AUTORADIOBUTTON,125,7,37,
+                    10
+    PUSHBUTTON      "",IDC_COLOR_BG0,15,29,28,14,WS_GROUP
+    PUSHBUTTON      "",IDC_COLOR_BG1,52,29,28,14
+    PUSHBUTTON      "",IDC_COLOR_BG2,89,29,28,14
+    PUSHBUTTON      "",IDC_COLOR_BG3,126,29,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB0,15,60,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB1,52,60,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB2,89,60,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB3,126,60,28,14
+    DEFPUSHBUTTON   "OK",ID_OK,59,84,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,111,84,50,14
+    GROUPBOX        "Background",IDC_STATIC,8,19,154,29
+    GROUPBOX        "Sprite",IDC_STATIC,8,49,154,30
+    PUSHBUTTON      "Reset",IDC_RESET,7,84,50,14
+END
+
+IDD_DISASSEMBLE DIALOG DISCARDABLE  0, 0, 402, 225
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Disassemble"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Automatic",IDC_AUTOMATIC,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,9,47,10
+    CONTROL         "ARM",IDC_ARM,"Button",BS_AUTORADIOBUTTON,62,9,32,10
+    CONTROL         "THUMB",IDC_THUMB,"Button",BS_AUTORADIOBUTTON,103,9,42,
+                    10
+    EDITTEXT        IDC_ADDRESS,158,7,65,14,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    WS_GROUP
+    PUSHBUTTON      "Go",IDC_GO,232,7,50,14
+    LISTBOX         IDC_DISASSEMBLE,7,25,276,161,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,191,71,10
+    PUSHBUTTON      "Refresh",IDC_REFRESH,120,204,50,14
+    PUSHBUTTON      "Next",IDC_NEXT,233,204,50,14
+    DEFPUSHBUTTON   "Close",IDC_CLOSE,346,204,50,14
+    LTEXT           "R0:",IDC_STATIC,309,7,18,8
+    LTEXT           "R1:",IDC_STATIC,309,15,18,8
+    LTEXT           "R2:",IDC_STATIC,309,23,18,8
+    LTEXT           "R3:",IDC_STATIC,309,31,18,8
+    LTEXT           "R4:",IDC_STATIC,309,39,18,8
+    LTEXT           "R5:",IDC_STATIC,309,47,18,8
+    LTEXT           "R6:",IDC_STATIC,309,55,18,8
+    LTEXT           "R7:",IDC_STATIC,309,63,18,8
+    LTEXT           "",IDC_R0,344,7,52,8
+    LTEXT           "",IDC_R1,344,15,52,8
+    LTEXT           "",IDC_R2,344,23,52,8
+    LTEXT           "",IDC_R3,344,31,52,8
+    LTEXT           "",IDC_R4,344,39,52,8
+    LTEXT           "",IDC_R5,344,47,52,8
+    LTEXT           "",IDC_R6,344,55,52,8
+    LTEXT           "",IDC_R7,344,63,52,8
+    LTEXT           "",IDC_R8,344,71,52,8
+    LTEXT           "",IDC_R9,344,79,52,8
+    LTEXT           "",IDC_R10,344,87,52,8
+    LTEXT           "",IDC_R11,344,95,52,8
+    LTEXT           "",IDC_R12,344,103,52,8
+    LTEXT           "",IDC_R13,344,111,52,8
+    LTEXT           "",IDC_R14,344,119,52,8
+    LTEXT           "",IDC_R15,344,127,52,8
+    LTEXT           "R8:",IDC_STATIC,309,71,18,8
+    LTEXT           "R9:",IDC_STATIC,309,79,18,8
+    LTEXT           "R10:",IDC_STATIC,309,87,18,8
+    LTEXT           "R11:",IDC_STATIC,309,95,18,8
+    LTEXT           "R12:",IDC_STATIC,309,103,18,8
+    LTEXT           "R13:",IDC_STATIC,309,111,18,8
+    LTEXT           "R14:",IDC_STATIC,309,119,18,8
+    LTEXT           "R15:",IDC_STATIC,309,127,18,8
+    LTEXT           "",IDC_R16,344,135,52,8
+    LTEXT           "R16:",IDC_STATIC,309,135,20,8
+    CONTROL         "N",IDC_N,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,309,146,21,10
+    CONTROL         "Z",IDC_Z,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,309,156,21,10
+    CONTROL         "C",IDC_C,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,309,166,21,10
+    CONTROL         "V",IDC_V,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,309,176,21,10
+    CONTROL         "F",IDC_F,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,342,156,20,10
+    CONTROL         "I",IDC_I,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,342,146,18,10
+    CONTROL         "T",IDC_T,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,342,166,21,10
+    LTEXT           "Mode:",IDC_STATIC,341,176,21,8
+    LTEXT           "",IDC_MODE,376,176,20,8
+    SCROLLBAR       IDC_VSCROLL,283,25,10,161,SBS_VERT
+    PUSHBUTTON      "Goto R15",IDC_GOPC,7,204,50,14
+END
+
+IDD_GDB_PORT DIALOG DISCARDABLE  0, 0, 186, 51
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "GDB connection"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",ID_OK,34,30,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,102,30,50,14
+    LTEXT           "Port to wait for connection:",IDC_STATIC,7,10,105,8
+    EDITTEXT        IDC_PORT,125,7,54,14,ES_RIGHT | ES_AUTOHSCROLL
+END
+
+IDD_GDB_WAITING DIALOG DISCARDABLE  0, 0, 186, 44
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Waiting..."
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Cancel",ID_CANCEL,67,23,50,14
+    LTEXT           "Waiting for connection on port:",IDC_STATIC,7,7,117,8
+    LTEXT           "",IDC_PORT,143,7,36,8
+END
+
+IDD_LOGGING DIALOG DISCARDABLE  0, 0, 366, 218
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "Logging"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "SWI",IDC_VERBOSE_SWI,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,17,87,10
+    CONTROL         "Unaligned memory",IDC_VERBOSE_UNALIGNED_ACCESS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,30,87,10
+    CONTROL         "Illegal write",IDC_VERBOSE_ILLEGAL_WRITE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,43,87,10
+    CONTROL         "Illegal read",IDC_VERBOSE_ILLEGAL_READ,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,56,87,10
+    CONTROL         "DMA 0",IDC_VERBOSE_DMA0,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,69,87,10
+    CONTROL         "DMA 1",IDC_VERBOSE_DMA1,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,82,87,10
+    CONTROL         "DMA 2",IDC_VERBOSE_DMA2,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,95,87,10
+    CONTROL         "DMA 3",IDC_VERBOSE_DMA3,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,108,87,10
+    EDITTEXT        IDC_LOG,107,7,252,183,ES_MULTILINE | ES_AUTOVSCROLL | 
+                    ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
+    PUSHBUTTON      "Save...",IDC_SAVE,75,197,50,14
+    PUSHBUTTON      "Clear",IDC_CLEAR,137,197,50,14
+    DEFPUSHBUTTON   "OK",ID_OK,197,197,50,14
+    GROUPBOX        "Verbose",IDC_STATIC,7,7,93,117
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_OPENDLG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 165
+    END
+
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 155
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 85
+    END
+
+    IDD_DIRECTORIES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 277
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 122
+    END
+
+    IDD_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 204
+    END
+
+    IDD_CHEATS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 269
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 246
+    END
+
+    IDD_ADD_CHEAT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 144
+    END
+
+    IDD_CHEAT_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 243
+    END
+
+    IDD_ASSOCIATIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 109
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+
+    IDD_GBA_ROM_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 135
+    END
+
+    IDD_GB_ROM_INFO, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 213
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GB_CHEAT_LIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 279
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 214
+    END
+
+    IDD_ADD_CHEAT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 175
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 100
+    END
+
+    IDD_GB_PRINTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 171
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 202
+    END
+
+    IDD_MOTION_CONFIG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 128
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 71
+    END
+
+    IDD_LANG_SELECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 61
+    END
+
+    IDD_CODE_SELECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 228
+    END
+
+    IDD_MAP_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 315
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 231
+    END
+
+    IDD_PALETTE_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 259
+    END
+
+    IDD_MEM_VIEWER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 373
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 164
+    END
+
+    IDD_OAM_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+
+    IDD_ACCEL_EDITOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 273
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 114
+    END
+
+    IDD_TILE_VIEWER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 319
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 259
+    END
+
+    IDD_GB_COLORS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 98
+    END
+
+    IDD_DISASSEMBLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 396
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GDB_PORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 44
+    END
+
+    IDD_GDB_WAITING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 37
+    END
+
+    IDD_LOGGING, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 359
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 211
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "Open Gameboy...",             ID_FILE_OPENGAMEBOY
+        MENUITEM SEPARATOR
+        MENUITEM "&Load...\tCtrl+L",            ID_FILE_LOAD
+        MENUITEM "&Save...\tCtrl+S",            ID_FILE_SAVE
+        POPUP "Loa&d Game"
+        BEGIN
+            MENUITEM "Slot #1\tF1",                 ID_FILE_LOADGAME_SLOT1
+            MENUITEM "Slot #2\tF2",                 ID_FILE_LOADGAME_SLOT2
+            MENUITEM "Slot #3\tF3",                 ID_FILE_LOADGAME_SLOT3
+            MENUITEM "Slot #4\tF4",                 ID_FILE_LOADGAME_SLOT4
+            MENUITEM "Slot #5\tF5",                 ID_FILE_LOADGAME_SLOT5
+            MENUITEM "Slot #6\tF6",                 ID_FILE_LOADGAME_SLOT6
+            MENUITEM "Slot #7\tF7",                 ID_FILE_LOADGAME_SLOT7
+            MENUITEM "Slot #8\tF8",                 ID_FILE_LOADGAME_SLOT8
+            MENUITEM "Slot #9\tF9",                 ID_FILE_LOADGAME_SLOT9
+            MENUITEM "Slot #10\tF10",               ID_FILE_LOADGAME_SLOT10
+        END
+        POPUP "S&ave Game"
+        BEGIN
+            MENUITEM "Slot #1\tShift+F1",           ID_FILE_SAVEGAME_SLOT1
+            MENUITEM "Slot #2\tShift+F2",           ID_FILE_SAVEGAME_SLOT2
+            MENUITEM "Slot #3\tShift+F3",           ID_FILE_SAVEGAME_SLOT3
+            MENUITEM "Slot #4\tShift+F4",           ID_FILE_SAVEGAME_SLOT4
+            MENUITEM "Slot #5\tShift+F5",           ID_FILE_SAVEGAME_SLOT5
+            MENUITEM "Slot #6\tShift+F6",           ID_FILE_SAVEGAME_SLOT6
+            MENUITEM "Slot #7\tShift+F7",           ID_FILE_SAVEGAME_SLOT7
+            MENUITEM "Slot #8\tShift+F8",           ID_FILE_SAVEGAME_SLOT8
+            MENUITEM "Slot #9\tShift+F9",           ID_FILE_SAVEGAME_SLOT9
+            MENUITEM "Slot #10\tShift+F10",         ID_FILE_SAVEGAME_SLOT10
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "&Pause\tCtrl+P",              ID_FILE_PAUSE
+        MENUITEM "&Reset\tCtrl+R",              ID_FILE_RESET
+        MENUITEM SEPARATOR
+        POPUP "Re&cent"
+        BEGIN
+            MENUITEM "&Reset",                      ID_FILE_RECENT_RESET
+            MENUITEM SEPARATOR
+        END
+        MENUITEM SEPARATOR
+        POPUP "&Import"
+        BEGIN
+            MENUITEM "&Battery file...",            ID_FILE_IMPORT_BATTERYFILE
+
+            MENUITEM "Gameshark &code file...",     ID_FILE_IMPORT_GAMESHARKCODEFILE
+
+            MENUITEM "&Gameshark Snapshot...",      ID_FILE_IMPORT_GAMESHARKSNAPSHOT
+
+        END
+        POPUP "E&xport"
+        BEGIN
+            MENUITEM "&Battery file...",            ID_FILE_EXPORT_BATTERYFILE
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "S&creen capture...",          ID_FILE_SCREENCAPTURE
+        MENUITEM "Ro&m information...",         ID_FILE_ROMINFORMATION
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "&Exit\tCtrl+X",               ID_FILE_EXIT
+    END
+    POPUP "&Options"
+    BEGIN
+        POPUP "&Frame skip"
+        BEGIN
+            MENUITEM "&0",                          ID_OPTIONS_VIDEO_FRAMESKIP_0
+
+            MENUITEM "&1",                          ID_OPTIONS_VIDEO_FRAMESKIP_1
+
+            MENUITEM "&2",                          ID_OPTIONS_VIDEO_FRAMESKIP_2
+
+            MENUITEM "&3",                          ID_OPTIONS_VIDEO_FRAMESKIP_3
+
+            MENUITEM "&4",                          ID_OPTIONS_VIDEO_FRAMESKIP_4
+
+            MENUITEM "&5",                          ID_OPTIONS_VIDEO_FRAMESKIP_5
+
+        END
+        POPUP "&Video"
+        BEGIN
+            MENUITEM "&Vsync",                      ID_OPTIONS_VIDEO_VSYNC
+            MENUITEM SEPARATOR
+            MENUITEM "x&1",                         ID_OPTIONS_VIDEO_X1
+            MENUITEM "x&2",                         ID_OPTIONS_VIDEO_X2
+            MENUITEM "x&3",                         ID_OPTIONS_VIDEO_X3
+            MENUITEM "x&4",                         ID_OPTIONS_VIDEO_X4
+            MENUITEM "&F&ull Screen (320x240)",     ID_OPTIONS_VIDEO_FULLSCREEN320X240
+
+            MENUITEM "Fu&ll Screen (640x480)",      ID_OPTIONS_VIDEO_FULLSCREEN640X480
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Disable SFX",                ID_OPTIONS_VIDEO_DISABLESFX
+
+            MENUITEM "Fullscreen stretch to &fit",  ID_OPTIONS_VIDEO_FULLSCREENSTRETCHTOFIT
+
+            MENUITEM SEPARATOR
+            MENUITEM "DDraw &Emulation Only",       ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY
+
+            MENUITEM "DDraw Use &Video Memory",     ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY
+
+            MENUITEM SEPARATOR
+            POPUP "&Layers"
+            BEGIN
+                MENUITEM "BG 0\tCtrl+1",                ID_OPTIONS_VIDEO_LAYERS_BG0
+
+                MENUITEM "BG 1\tCtrl+2",                ID_OPTIONS_VIDEO_LAYERS_BG1
+
+                MENUITEM "BG 2\tCtrl+3",                ID_OPTIONS_VIDEO_LAYERS_BG2
+
+                MENUITEM "BG 3\tCtrl+4",                ID_OPTIONS_VIDEO_LAYERS_BG3
+
+                MENUITEM "OBJ\tCtrl+5",                 ID_OPTIONS_VIDEO_LAYERS_OBJ
+
+                MENUITEM "WIN 0\tCtrl+6",               ID_OPTIONS_VIDEO_LAYERS_WIN0
+
+                MENUITEM "WIN 1\tCtrl+7",               ID_OPTIONS_VIDEO_LAYERS_WIN1
+
+                MENUITEM "OBJ WIN\tCtrl+8",             ID_OPTIONS_VIDEO_LAYERS_OBJWIN
+
+            END
+        END
+        POPUP "&Emulator"
+        BEGIN
+            MENUITEM "&Associate...",               ID_OPTIONS_EMULATOR_ASSOCIATE
+
+            MENUITEM "&Directories...",             ID_OPTIONS_EMULATOR_DIRECTORIES
+
+            MENUITEM "D&isable status messages",    ID_OPTIONS_EMULATOR_DISABLESTATUSMESSAGES
+
+            MENUITEM "&Synchronize",                ID_OPTIONS_EMULATOR_SYNCHRONIZE
+
+            MENUITEM "Pause when inactive window",  ID_OPTIONS_EMULATOR_PAUSEWHENINACTIVE
+
+            MENUITEM "Speed up toggle",             ID_OPTIONS_EMULATOR_SPEEDUPTOGGLE
+
+            MENUITEM "Remove intros (GBA)",         ID_OPTIONS_EMULATOR_REMOVEINTROSGBA
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Use BIOS file",              ID_OPTIONS_EMULATOR_USEBIOSFILE
+
+            MENUITEM "S&elect BIOS file...",        ID_OPTIONS_EMULATOR_SELECTBIOSFILE
+
+            MENUITEM SEPARATOR
+            MENUITEM "PNG format",                  ID_OPTIONS_EMULATOR_PNGFORMAT
+
+            MENUITEM "BMP format",                  ID_OPTIONS_EMULATOR_BMPFORMAT
+
+        END
+        POPUP "&Sound"
+        BEGIN
+            MENUITEM "O&ff",                        ID_OPTIONS_SOUND_OFF
+            MENUITEM "&Mute",                       ID_OPTIONS_SOUND_MUTE
+            MENUITEM "&On",                         ID_OPTIONS_SOUND_ON
+            MENUITEM SEPARATOR
+            MENUITEM "Use old synchronization",     ID_OPTIONS_SOUND_USEOLDSYNCHRONIZATION
+
+            MENUITEM SEPARATOR
+            MENUITEM "Echo",                        ID_OPTIONS_SOUND_ECHO
+            MENUITEM "Low pass filter",             ID_OPTIONS_SOUND_LOWPASSFILTER
+
+            MENUITEM "Reverse Stereo",              ID_OPTIONS_SOUND_REVERSESTEREO
+
+            MENUITEM SEPARATOR
+            MENUITEM "Channel &1",                  ID_OPTIONS_SOUND_CHANNEL1
+            , CHECKED
+            MENUITEM "Channel &2",                  ID_OPTIONS_SOUND_CHANNEL2
+            , CHECKED
+            MENUITEM "Channel &3",                  ID_OPTIONS_SOUND_CHANNEL3
+            , CHECKED
+            MENUITEM "Channel &4",                  ID_OPTIONS_SOUND_CHANNEL4
+            , CHECKED
+            MENUITEM "Direct Sound &A",             ID_OPTIONS_SOUND_DIRECTSOUNDA
+            , CHECKED
+            MENUITEM "Direct Sound &B",             ID_OPTIONS_SOUND_DIRECTSOUNDB
+            , CHECKED
+            MENUITEM SEPARATOR
+            MENUITEM "11 &Khz",                     ID_OPTIONS_SOUND_11KHZ
+            MENUITEM "22 K&hz",                     ID_OPTIONS_SOUND_22KHZ
+            MENUITEM "44 Kh&z",                     ID_OPTIONS_SOUND_44KHZ
+            MENUITEM SEPARATOR
+            MENUITEM "Start recording...",          ID_OPTIONS_SOUND_STARTRECORDING
+
+            MENUITEM "Stop recording",              ID_OPTIONS_SOUND_STOPRECORDING
+
+        END
+        POPUP "&Gameboy"
+        BEGIN
+            MENUITEM "&Border",                     ID_OPTIONS_GAMEBOY_BORDER
+
+            MENUITEM "&Printer",                    ID_OPTIONS_GAMEBOY_PRINTER
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Automatic",                  ID_OPTIONS_GAMEBOY_AUTOMATIC
+
+            MENUITEM "&GBA",                        ID_OPTIONS_GAMEBOY_GBA
+            MENUITEM "&CGB/GBC",                    ID_OPTIONS_GAMEBOY_CGB
+            MENUITEM "&SGB",                        ID_OPTIONS_GAMEBOY_SGB
+            MENUITEM "G&B",                         ID_OPTIONS_GAMEBOY_GB
+            MENUITEM SEPARATOR
+            MENUITEM "&Real Colors",                ID_OPTIONS_GAMEBOY_REALCOLORS
+
+            MENUITEM "G&ameboy Colors",             ID_OPTIONS_GAMEBOY_GAMEBOYCOLORS
+
+            MENUITEM SEPARATOR
+            MENUITEM "Colors...",                   ID_OPTIONS_GAMEBOY_COLORS
+
+        END
+        POPUP "&Priority"
+        BEGIN
+            MENUITEM "&Highest",                    ID_OPTIONS_PRIORITY_HIGHEST
+
+            MENUITEM "&Above Normal",               ID_OPTIONS_PRIORITY_ABOVENORMAL
+
+            MENUITEM "&Normal",                     ID_OPTIONS_PRIORITY_NORMAL
+
+            MENUITEM "&Below Normal",               ID_OPTIONS_PRIORITY_BELOWNORMAL
+
+        END
+        POPUP "F&ilter (16-bit)"
+        BEGIN
+            MENUITEM "&Normal",                     ID_OPTIONS_FILTER_NORMAL
+            MENUITEM "&TV Mode",                    ID_OPTIONS_FILTER_TVMODE
+            MENUITEM "&2xSaI",                      ID_OPTIONS_FILTER_2XSAI
+            MENUITEM "&Super 2xSaI",                ID_OPTIONS_FILTER_SUPER2XSAI
+
+            MENUITEM "Super &Eagle",                ID_OPTIONS_FILTER_SUPEREAGLE
+
+            MENUITEM "Pixelate (Experimental)",     ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL
+
+            MENUITEM "Motion Blur (Experimental)",  ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL
+
+            MENUITEM "AdvanceMAME Scale2x",         ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X
+
+            MENUITEM "Simple 2x",                   ID_OPTIONS_FILTER16BIT_SIMPLE2X
+
+            MENUITEM SEPARATOR
+            MENUITEM "&Disable MMX",                ID_OPTIONS_FILTER_DISABLEMMX
+
+        END
+        POPUP "&Joypad"
+        BEGIN
+            MENUITEM "&Configure...",               ID_OPTIONS_JOYPAD
+            MENUITEM "Motion Configure...",         ID_OPTIONS_JOYPAD_MOTIONCONFIGURE
+
+            MENUITEM SEPARATOR
+            POPUP "&Autofire"
+            BEGIN
+                MENUITEM "&A\tAlt+1",                   ID_OPTIONS_JOYPAD_AUTOFIRE_A
+
+                MENUITEM "&B\tAlt+2",                   ID_OPTIONS_JOYPAD_AUTOFIRE_B
+
+                MENUITEM "&L\tAlt+3",                   ID_OPTIONS_JOYPAD_AUTOFIRE_L
+
+                MENUITEM "&R\tAlt+4",                   ID_OPTIONS_JOYPAD_AUTOFIRE_R
+
+            END
+        END
+        POPUP "&Language"
+        BEGIN
+            MENUITEM "&System",                     ID_OPTIONS_LANGUAGE_SYSTEM
+
+            MENUITEM "&English",                    ID_OPTIONS_LANGUAGE_ENGLISH
+
+            MENUITEM "&Other...",                   ID_OPTIONS_LANGUAGE_OTHER
+
+        END
+    END
+    POPUP "&Cheats"
+    BEGIN
+        MENUITEM "&Search for cheats...\tCtrl+C", ID_CHEATS_SEARCHFORCHEATS
+        MENUITEM "&Cheat list...",              ID_CHEATS_CHEATLIST
+        MENUITEM SEPARATOR
+        MENUITEM "&Automatic save/load cheats", ID_CHEATS_AUTOMATICSAVELOADCHEATS
+
+        MENUITEM "&Load cheat list...",         ID_CHEATS_LOADCHEATLIST
+        MENUITEM "Sa&ve cheat list...",         ID_CHEATS_SAVECHEATLIST
+    END
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "Disassemble...",              ID_TOOLS_DISASSEMBLE
+        MENUITEM "Logging...",                  ID_TOOLS_LOGGING
+        MENUITEM "&Map Viewer...",              ID_TOOLS_MAPVIEW
+        MENUITEM "&Memory viewer...",           ID_TOOLS_MEMORYVIEWER
+        MENUITEM "OAM Viewer...",               ID_TOOLS_OAMVIEWER
+        MENUITEM "&Palette Viewer...",          ID_TOOLS_PALETTEVIEW
+        MENUITEM "Tile Viewer...",              ID_TOOLS_TILEVIEWER
+        MENUITEM SEPARATOR
+        MENUITEM "&Next frame\tCtrl+N",         ID_DEBUG_NEXTFRAME
+        POPUP "GDB"
+        BEGIN
+            MENUITEM "Wait for connection...",      ID_TOOLS_DEBUG_GDB
+            MENUITEM "Load and wait...",            ID_TOOLS_DEBUG_LOADANDWAIT
+
+            MENUITEM "Break into GDB",              ID_TOOLS_DEBUG_BREAK
+            MENUITEM "Disconnect",                  ID_TOOLS_DEBUG_DISCONNECT
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Customize...",                ID_TOOLS_CUSTOMIZE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...",                   ID_HELP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ACCELERATOR ACCELERATORS DISCARDABLE 
+BEGIN
+    "1",            ID_OPTIONS_VIDEO_LAYERS_BG0, VIRTKEY, CONTROL, NOINVERT
+    "1",            ID_OPTIONS_JOYPAD_AUTOFIRE_A, VIRTKEY, ALT, NOINVERT
+    "2",            ID_OPTIONS_VIDEO_LAYERS_BG1, VIRTKEY, CONTROL, NOINVERT
+    "2",            ID_OPTIONS_JOYPAD_AUTOFIRE_B, VIRTKEY, ALT, NOINVERT
+    "3",            ID_OPTIONS_VIDEO_LAYERS_BG2, VIRTKEY, CONTROL, NOINVERT
+    "3",            ID_OPTIONS_JOYPAD_AUTOFIRE_L, VIRTKEY, ALT, NOINVERT
+    "4",            ID_OPTIONS_VIDEO_LAYERS_BG3, VIRTKEY, CONTROL, NOINVERT
+    "4",            ID_OPTIONS_JOYPAD_AUTOFIRE_R, VIRTKEY, ALT, NOINVERT
+    "5",            ID_OPTIONS_VIDEO_LAYERS_OBJ, VIRTKEY, CONTROL, NOINVERT
+    "6",            ID_OPTIONS_VIDEO_LAYERS_WIN0, VIRTKEY, CONTROL, NOINVERT
+    "7",            ID_OPTIONS_VIDEO_LAYERS_WIN1, VIRTKEY, CONTROL, NOINVERT
+    "8",            ID_OPTIONS_VIDEO_LAYERS_OBJWIN, VIRTKEY, CONTROL, 
+                                                    NOINVERT
+    "C",            ID_CHEATS_SEARCHFORCHEATS, VIRTKEY, CONTROL, NOINVERT
+    "L",            ID_FILE_LOAD,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_DEBUG_NEXTFRAME,     VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PAUSE,          VIRTKEY, CONTROL, NOINVERT
+    "R",            ID_FILE_RESET,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          ID_FILE_LOADGAME_SLOT1, VIRTKEY, NOINVERT
+    VK_F1,          ID_FILE_MRU_FILE1,      VIRTKEY, CONTROL, NOINVERT
+    VK_F1,          ID_FILE_SAVEGAME_SLOT1, VIRTKEY, SHIFT, NOINVERT
+    VK_F10,         ID_FILE_LOADGAME_SLOT10, VIRTKEY, NOINVERT
+    VK_F10,         ID_FILE_MRU_FILE10,     VIRTKEY, CONTROL, NOINVERT
+    VK_F10,         ID_FILE_SAVEGAME_SLOT10, VIRTKEY, SHIFT, NOINVERT
+    VK_F2,          ID_FILE_LOADGAME_SLOT2, VIRTKEY, NOINVERT
+    VK_F2,          ID_FILE_MRU_FILE2,      VIRTKEY, CONTROL, NOINVERT
+    VK_F2,          ID_FILE_SAVEGAME_SLOT2, VIRTKEY, SHIFT, NOINVERT
+    VK_F3,          ID_FILE_LOADGAME_SLOT3, VIRTKEY, NOINVERT
+    VK_F3,          ID_FILE_MRU_FILE3,      VIRTKEY, CONTROL, NOINVERT
+    VK_F3,          ID_FILE_SAVEGAME_SLOT3, VIRTKEY, SHIFT, NOINVERT
+    VK_F4,          ID_FILE_LOADGAME_SLOT4, VIRTKEY, NOINVERT
+    VK_F4,          ID_FILE_MRU_FILE4,      VIRTKEY, CONTROL, NOINVERT
+    VK_F4,          ID_FILE_SAVEGAME_SLOT4, VIRTKEY, SHIFT, NOINVERT
+    VK_F5,          ID_FILE_LOADGAME_SLOT5, VIRTKEY, NOINVERT
+    VK_F5,          ID_FILE_MRU_FILE5,      VIRTKEY, CONTROL, NOINVERT
+    VK_F5,          ID_FILE_SAVEGAME_SLOT5, VIRTKEY, SHIFT, NOINVERT
+    VK_F6,          ID_FILE_LOADGAME_SLOT6, VIRTKEY, NOINVERT
+    VK_F6,          ID_FILE_MRU_FILE6,      VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_FILE_SAVEGAME_SLOT6, VIRTKEY, SHIFT, NOINVERT
+    VK_F7,          ID_FILE_LOADGAME_SLOT7, VIRTKEY, NOINVERT
+    VK_F7,          ID_FILE_MRU_FILE7,      VIRTKEY, CONTROL, NOINVERT
+    VK_F7,          ID_FILE_SAVEGAME_SLOT7, VIRTKEY, SHIFT, NOINVERT
+    VK_F8,          ID_FILE_LOADGAME_SLOT8, VIRTKEY, NOINVERT
+    VK_F8,          ID_FILE_MRU_FILE8,      VIRTKEY, CONTROL, NOINVERT
+    VK_F8,          ID_FILE_SAVEGAME_SLOT8, VIRTKEY, SHIFT, NOINVERT
+    VK_F9,          ID_FILE_LOADGAME_SLOT9, VIRTKEY, NOINVERT
+    VK_F9,          ID_FILE_MRU_FILE9,      VIRTKEY, CONTROL, NOINVERT
+    VK_F9,          ID_FILE_SAVEGAME_SLOT9, VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_FILE_EXIT,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// 24
+//
+
+1                       24      MOVEABLE PURE   "VisualBoyAdvance.exe.manifest"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNSUPPORTED_VBA_SGM "Unsupported VisualBoyAdvance save game version %d"
+    IDS_CANNOT_LOAD_SGM     "Cannot load save game for %s"
+    IDS_SAVE_GAME_NOT_USING_BIOS "Save game is not using the BIOS file"
+    IDS_SAVE_GAME_USING_BIOS "Save game is using the BIOS file"
+    IDS_UNSUPPORTED_SAVE_TYPE "Unsupported save type %d"
+    IDS_CANNOT_OPEN_FILE    "Cannot open file %s"
+    IDS_BAD_ZIP_FILE        "Bad ZIP file %s"
+    IDS_NO_IMAGE_ON_ZIP     "No image found on ZIP file %s"
+    IDS_ERROR_OPENING_IMAGE "Error opening image %s"
+    IDS_ERROR_READING_IMAGE "Error reading image %s"
+    IDS_UNSUPPORTED_BIOS_FUNCTION 
+                            "Unsupported BIOS function %02x called from %08x"
+    IDS_INVALID_BIOS_FILE_SIZE "Invalid BIOS file size"
+    IDS_INVALID_CHEAT_CODE  "Invalid cheat code '%s'. Supported formats are:\nXXXXXXXX:YY, XXXXXXXX:YYYY, XXXXXXXX:YYYYYYYY."
+    IDS_UNKNOWN_ARM_OPCDOE  "Unimplemented opcode %08x from %08x"
+    IDS_UNKNOWN_THUMB_OPCODE "Unknown opcode %04x from %08x"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CREATING_FILE "Error creating file %s"
+    IDS_FAILED_TO_READ_SGM  "Failed to read complete save game %s (%d)"
+    IDS_FAILED_TO_READ_RTC  "Failed to read RTC from save game %s (continuing)"
+    IDS_UNSUPPORTED_VB_SGM  "Unsupported VisualBoy save game version %d"
+    IDS_CANNOT_LOAD_SGM_FOR "Cannot load save game for %s. Playing %s"
+    IDS_ERROR_OPENING_IMAGE_FROM "Error opening image %s from zip file %s"
+    IDS_ERROR_READING_IMAGE_FROM "Error reading image %s from zip file %s"
+    IDS_UNSUPPORTED_ROM_SIZE "Unsupported rom size %02x"
+    IDS_UNSUPPORTED_RAM_SIZE "Unsupported ram size %02x"
+    IDS_UNKNOWN_CARTRIDGE_TYPE "Unknown cartridge type %02x"
+    IDS_MAXIMUM_NUMBER_OF_CHEATS "Maximum number of cheats reached."
+    IDS_INVALID_GAMESHARK_CODE "Invalid GameShark code: %s"
+    IDS_INVALID_GAMEGENIE_CODE "Invalid GameGenie code: %s"
+    IDS_INVALID_CHEAT_TO_REMOVE "Invalid cheat to remove %d"
+    IDS_INVALID_CHEAT_CODE_ADDRESS "Invalid cheat code address: %08x"
+    IDS_UNSUPPORTED_CHEAT_LIST_VERSION "Unsupported cheat list version %d"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DIRECTX_7_REQUIRED  "DirectX 7.0 or greater is required to run.\nDownload at http://www.microsoft.com/directx.\n\nError found at: %s"
+    IDS_DISABLING_VIDEO_MEMORY "Disabling Use Video Memory setting"
+    IDS_SETTING_WILL_BE_EFFECTIVE 
+                            "Setting will be effective the next time you start the emulator"
+    IDS_DISABLING_EMULATION_ONLY "Disabling Emulation Only setting"
+    IDS_FAILED_TO_OPEN_FILE "Failed to open file %s"
+    IDS_FAILED_TO_READ_ZIP_DIR "Failed to read zip directory for file %s"
+    IDS_UNSUPPORTED_FILE_TYPE "Unsupported file type: %s"
+    IDS_CANNOT_CREATE_DIRECTSOUND "Cannot create DirectSound %08x"
+    IDS_CANNOT_SETCOOPERATIVELEVEL "Cannot SetCooperativeLevel %08x"
+    IDS_CANNOT_CREATESOUNDBUFFER "Cannot CreateSoundBuffer %08x"
+    IDS_CANNOT_SETFORMAT_PRIMARY "Cannot SetFormat for primary %08x"
+    IDS_CANNOT_CREATESOUNDBUFFER_SEC "Cannot CreateSoundBuffer secondary %08x"
+    IDS_CANNOT_PLAY_PRIMARY "Cannot Play primary %08x"
+    IDS_SEARCH_PRODUCED_TOO_MANY 
+                            "Search produced %d results. Please refine better"
+    IDS_NUMBER_CANNOT_BE_EMPTY "Number cannot be empty"
+    IDS_INVALID_ADDRESS     "Invalid address: %08x"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_MISALIGNED_HALFWORD "Misaligned half-word address: %08x"
+    IDS_MISALIGNED_WORD     "Misaligned word address: %08x"
+    IDS_VALUE_CANNOT_BE_EMPTY "Value cannot be empty"
+    IDS_ERROR_ON_STARTDOC   "Error on StartDoc"
+    IDS_ERROR_ON_STARTPAGE  "Error on StartPage"
+    IDS_ERROR_PRINTING_ON_STRETCH "Error printing on StretchDIBits"
+    IDS_ERROR_ON_ENDPAGE    "Error on EndPage"
+    IDS_ERROR_ON_ENDDOC     "Error on EndDoc"
+    IDS_ERROR               "Error"
+    IDS_JOY_LEFT            "Joy %d Left"
+    IDS_JOY_RIGHT           "Joy %d Right"
+    IDS_JOY_UP              "Joy %d Up"
+    IDS_JOY_DOWN            "Joy %d Down"
+    IDS_JOY_BUTTON          "Joy %d %s"
+    IDS_SELECT_ROM_DIR      "Select ROM directory:"
+    IDS_SELECT_BATTERY_DIR  "Select Battery directory:"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SELECT_SAVE_DIR     "Select Save Directory:"
+    IDS_SELECT_CAPTURE_DIR  "Select Capture directory:"
+    IDS_SELECT_BIOS_FILE    "Select BIOS file"
+    IDS_RESET               "Reset"
+    IDS_AUTOFIRE_A_DISABLED "autofire A disabled"
+    IDS_AUTOFIRE_A          "autofire A"
+    IDS_AUTOFIRE_B_DISABLED "autofire B disabled"
+    IDS_AUTOFIRE_B          "autofire B"
+    IDS_AUTOFIRE_L_DISABLED "autofire L disabled"
+    IDS_AUTOFIRE_L          "autofire L"
+    IDS_AUTOFIRE_R_DISABLED "autofire R disabled"
+    IDS_AUTOFIRE_R          "autofire R"
+    IDS_SELECT_ROM          "Select ROM"
+    IDS_SELECT_SAVE_GAME_NAME "Select save game name"
+    IDS_LOADED_STATE        "Loaded state"
+    IDS_LOADED_STATE_N      "Loaded state %d"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_WROTE_STATE         "Wrote state"
+    IDS_WROTE_STATE_N       "Wrote state %d"
+    IDS_LOADED_BATTERY      "Loaded battery"
+    IDS_SELECT_CAPTURE_NAME "Select screen capture name"
+    IDS_SCREEN_CAPTURE      "Screen capture"
+    IDS_ADDRESS             "Address"
+    IDS_OLD_VALUE           "Old Value"
+    IDS_NEW_VALUE           "New Value"
+    IDS_ADD_CHEAT_CODE      "Add cheat code"
+    IDS_CODE                "Code"
+    IDS_DESCRIPTION         "Description"
+    IDS_STATUS              "Status"
+    IDS_ADD_GG_CODE         "Add GameGenie code"
+    IDS_ADD_GS_CODE         "Add GameShark code"
+    IDS_POCKET_PRINTER      "Pocket Printer"
+    IDS_UNKNOWN             "Unknown"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_NONE                "None"
+    IDS_FAILED_TO_LOAD_LIBRARY "Failed to load library %s"
+    IDS_FAILED_TO_GET_LOCINFO "Failed to get locale information"
+    IDS_SELECT_CHEAT_LIST_NAME "Select cheat list name"
+    IDS_FILTER_BIOS         "Gameboy Advance_*.BIN;*.AGB;*.GBA;*.BIOS__"
+    IDS_FILTER_ROM          "All Gameboy Advance_*.BIN;*.AGB;*.GBA;*.GB;*.SGB;*.CGB;*.GBC;*.ZIP;*.ELF;*.MB_Gameboy Advance_*.BIN;*.AGB;*.GBA;*.ZIP_Gameboy_*.GB;*.SGB;*.CGB;*.GBC;*.ZIP__"
+    IDS_FILTER_SGM          "VisualBoyAdvance Save Game_*.SGM__"
+    IDS_FILTER_CHEAT_LIST   "VisualBoyAdvance Cheat List_*.CLT__"
+    IDS_FILTER_PNG          "PNG Image_*.PNG_BMP Image_*.BMP__"
+    IDS_LOADED_CHEATS       "Loaded cheats"
+    IDS_ERROR_DISP_COLOR    "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode."
+    IDS_ADD_GSA_CODE        "Add GamesharkAdvance code"
+    IDS_FILTER_SPS          "Gameshark Snapshot_*.SPS__"
+    IDS_SELECT_SNAPSHOT_FILE "Select snapshot file"
+    IDS_FILTER_SAV          "Battery file_*.SAV_Flash save_*.DAT__"
+    IDS_SELECT_BATTERY_FILE "Select battery file"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_UNSUPPORTED_CHEAT_LIST_TYPE "Unsupported cheat list type %d"
+    IDS_INVALID_GSA_CODE    "Invalid GSA code. Format is XXXXXXXXYYYYYYYY."
+    IDS_CANNOT_IMPORT_SNAPSHOT_FOR 
+                            "Cannot import snapshot for %s. Current game is %s"
+    IDS_UNSUPPORTED_SNAPSHOT_FILE "Unsupported snapshot file %s"
+    IDS_UNSUPPORTED_ARM_MODE "Unsupported ARM mode %02x"
+    IDS_UNSUPPORTED_CODE_FILE "Unsupported code file %s"
+    IDS_GSA_CODE_WARNING    "Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly."
+    IDS_INVALID_CBA_CODE    "Invalid CBA code. Format is XXXXXXXX YYYY."
+    IDS_CBA_CODE_WARNING    "Warning: Codes seem to be for a different game.\nCodes may not work correctly."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_FILTER_GBS          "Gameboy Snapshot_*.GBS__"
+    IDS_FILTER_GCF          "Gameshark Code File_*.GCF__"
+    IDS_SELECT_CODE_FILE    "Select code file"
+    IDS_SAVE_WILL_BE_LOST   "Importing a snapshot file will erase any saved games and reset the emulator. Do you want to continue?"
+    IDS_CONFIRM_ACTION      "Please confirm action"
+    IDS_CODES_WILL_BE_LOST  "Importing a code file will erase any entered codes. Do you want to continue?"
+    IDS_FILTER_SPC          "Gameshark Code File_*.SPC__"
+    IDS_ADD_CBA_CODE        "Add CodeBreakerAdvance code"
+    IDS_FILTER_WAV          "Wave file_*.WAV__"
+    IDS_SELECT_WAV_NAME     "Select wave file name"
+    IDS_FILTER_GBROM        "All Gameboy_*.GB;*.SGB;*.CGB;*.GBC;*.ZIP_Gameboy_*.GB_Super Gameboy_*.SGB_Color Gameboy_*.CGB;*.GBC__"
+    IDS_FILTER_PAL          "Windows Palette (*.PAL)_*.PAL_PaintShop Palette (*.PAL)_*.PAL_Adobe Color Table (*.ACT)_*.ACT__"
+    IDS_SELECT_PALETTE_NAME "Select palette name:"
+    IDS_SEARCH_PRODUCED_NO_RESULTS "Search produced no results."
+    IDS_ERROR_BINDING       "Error binding socket. Port probably in use."
+    IDS_ERROR_LISTENING     "Error listening on socket."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_ERROR_CREATING_SOCKET "Error creating socket."
+    IDS_ACK_NOT_RECEIVED    "ACK not received from GDB."
+    IDS_ERROR_NOT_GBA_IMAGE "Error: not a GBA image."
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

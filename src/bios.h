@@ -1,0 +1,43 @@
+/*
+ * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
+ * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+#ifndef VBA_BIOS_H
+#define VBA_BIOS_H
+
+extern void BIOS_ArcTan2();
+extern void BIOS_BitUnPack();
+extern void BIOS_BgAffineSet();
+extern void BIOS_CpuSet();
+extern void BIOS_CpuFastSet();
+extern void BIOS_Diff8bitUnFilterWram();
+extern void BIOS_Diff8bitUnFilterVram();
+extern void BIOS_Diff16bitUnFilter();
+extern void BIOS_Div();
+extern void BIOS_DivARM();
+extern void BIOS_HuffUnComp();
+extern void BIOS_LZ77UnCompVram();
+extern void BIOS_LZ77UnCompWram();
+extern void BIOS_ObjAffineSet();
+extern void BIOS_RegisterRamReset();
+extern void BIOS_RegisterRamReset(u32);
+extern void BIOS_RLUnCompVram();
+extern void BIOS_RLUnCompWram();
+extern void BIOS_SoftReset();
+extern void BIOS_Sqrt();
+
+#endif // VBA_BIOS_H

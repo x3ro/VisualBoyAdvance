@@ -1,0 +1,2428 @@
+/*
+ * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
+ * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+#include <stdarg.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include "AutoBuild.h"
+
+#include "SDL.h"
+#include "GBA.h"
+#include "Font.h"
+#include "debugger.h"
+#include "Sound.h"
+#include "unzip.h"
+#include "gb/GB.h"
+#include "gb/gbGlobals.h"
+#ifdef GP_EMULATION
+#include "gp/GP.h"
+#endif
+
+#ifdef __GNUC__
+#include <unistd.h>
+#define GETCWD getcwd
+#else
+#include <direct.h>
+#define GETCWD _getcwd
+#endif
+
+#ifdef MMX
+extern "C" bool cpu_mmx;
+#endif
+extern bool soundEcho;
+extern bool soundLowPass;
+extern bool soundReverse;
+extern int Init_2xSaI(u32);
+extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);  
+extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
+extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);  
+extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
+extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
+extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
+extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
+
+void Init_Overlay(SDL_Surface *surface, int overlaytype);
+void Quit_Overlay(void);
+void Draw_Overlay(SDL_Surface *surface, int size);
+
+extern void remoteInit();
+extern void remoteCleanUp();
+extern void remoteStubMain();
+extern void remoteStubSignal(int,int);
+extern void remoteOutput(char *, u32);
+extern void remoteSetProtocol(int);
+extern void remoteSetPort(int);
+extern void debuggerOutput(char *, u32);
+
+extern void CPUUpdateCPSR();
+#ifdef GP_EMULATION
+extern void GPUpdateCPSR();
+#endif
+
+bool (*emuWriteState)(char *) = NULL;
+bool (*emuReadState)(char *) = NULL;
+bool (*emuWriteBattery)(char *) = NULL;
+bool (*emuReadBattery)(char *) = NULL;
+void (*emuReset)() = NULL;
+void (*emuCleanUp)() = NULL;
+bool (*emuWritePNG)(char *) = NULL;
+bool (*emuWriteBMP)(char *) = NULL;
+void (*emuMain)(int) = NULL;
+void (*emuUpdateCPSR)() = NULL;
+int emuCount = 0;
+bool emuHasDebugger = false;
+
+static u8 COPYRIGHT[] = {
+  0xa9, 0x96, 0x8c, 0x8a, 0x9e, 0x93, 0xbd, 0x90, 0x86, 0xbe, 0x9b, 0x89,
+  0x9e, 0x91, 0x9c, 0x9a, 0xdf, 0xd7, 0xbc, 0xd6, 0xdf, 0xce, 0xc6, 0xc6,
+  0xc6, 0xd3, 0xcd, 0xcf, 0xcf, 0xcf, 0xd3, 0xcd, 0xcf, 0xcf, 0xce, 0xdf,
+  0x9d, 0x86, 0xdf, 0xb9, 0x90, 0x8d, 0x98, 0x90, 0x8b, 0x8b, 0x9a, 0x91,
+  0x00
+};
+
+SDL_Surface *surface = NULL;
+SDL_Overlay *overlay = NULL;
+SDL_Rect overlay_rect;
+
+int systemRedShift = 0;
+int systemBlueShift = 0;
+int systemGreenShift = 0;
+int systemColorDepth = 0;
+int systemDebug = 0;
+int systemVerbose = 0;
+
+int srcPitch = 0;
+int srcWidth = 0;
+int srcHeight = 0;
+int destWidth = 0;
+int destHeight = 0;
+
+int filter = 0;
+u8 *delta = NULL;
+
+int cartridgeType = 3;
+int sizeOption = 0;
+int captureFormat = 0;
+
+int emulating = 0;
+int RGB_LOW_BITS_MASK=0x821;
+u32 systemColorMap32[0x10000];
+u16 systemColorMap16[0x10000];
+u16 systemGbPalette[24];
+void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
+char filename[2048];
+char biosFileName[2048];
+char captureDir[2048];
+char saveDir[2048];
+char batteryDir[2048];
+
+#define _stricmp strcasecmp
+
+bool sdlButtons[12] = { false, false, false, false, false, false, 
+                        false, false, false, false, false, false };
+
+int sdlNumDevices = 0;
+SDL_Joystick **sdlDevices = NULL;
+
+bool disableStatusMessages = false;
+bool paused = false;
+bool pauseNextFrame = false;
+bool debugger = false;
+bool debuggerStub = false;
+bool fullscreen = false;
+bool systemSoundOn = false;
+bool yuv = false;
+int yuvType = 0;
+bool removeIntros = false;
+
+extern void debuggerSignal(int,int);
+
+void (*dbgMain)() = debuggerMain;
+void (*dbgSignal)(int,int) = debuggerSignal;
+void (*dbgOutput)(char *, u32) = debuggerOutput;
+
+int  mouseCounter = 0;
+int autoFire = 0;
+bool autoFireToggle = false;
+
+bool screenMessage = false;
+char screenMessageBuffer[21];
+u32  screenMessageTime = 0;
+
+SDL_cond *cond = NULL;
+SDL_mutex *mutex = NULL;
+u8 sdlBuffer[4096];
+int sdlSoundLen = 0;
+
+#ifndef C_CORE
+u8 sdlStretcher[16384];
+int sdlStretcherPos;
+#else
+void (*sdlStretcher)(u8 *, u8*) = NULL;
+#endif
+
+enum {
+  KEY_LEFT, KEY_RIGHT,
+  KEY_UP, KEY_DOWN,
+  KEY_BUTTON_A, KEY_BUTTON_B,
+  KEY_BUTTON_START, KEY_BUTTON_SELECT,
+  KEY_BUTTON_L, KEY_BUTTON_R,
+  KEY_BUTTON_SPEED, KEY_BUTTON_CAPTURE
+};
+
+u16 joypad[12] = {
+  SDLK_LEFT,  SDLK_RIGHT,
+  SDLK_UP,    SDLK_DOWN,
+  SDLK_z,     SDLK_x,
+  SDLK_RETURN,SDLK_BACKSPACE,
+  SDLK_a,     SDLK_s,
+  SDLK_SPACE, SDLK_F12
+};
+
+u16 defaultJoypad[12] = {
+  SDLK_LEFT,  SDLK_RIGHT,
+  SDLK_UP,    SDLK_DOWN,
+  SDLK_z,     SDLK_x,
+  SDLK_RETURN,SDLK_BACKSPACE,
+  SDLK_a,     SDLK_s,
+  SDLK_SPACE, SDLK_F12
+};
+
+u16 motion[4] = {
+  SDLK_KP4, SDLK_KP6, SDLK_KP8, SDLK_KP2
+};
+
+u16 defaultMotion[4] = {
+  SDLK_KP4, SDLK_KP6, SDLK_KP8, SDLK_KP2
+};
+
+extern bool CPUIsGBAImage(char *);
+extern bool gbIsGameboyRom(char *);
+
+#ifndef C_CORE
+#define SDL_LONG(val) \
+  *((u32 *)&sdlStretcher[sdlStretcherPos]) = val;\
+  sdlStretcherPos+=4;
+
+#define SDL_AND_EAX(val) \
+  sdlStretcher[sdlStretcherPos++] = 0x25;\
+  SDL_LONG(val);
+
+#define SDL_AND_EBX(val) \
+  sdlStretcher[sdlStretcherPos++] = 0x81;\
+  sdlStretcher[sdlStretcherPos++] = 0xe3;\
+  SDL_LONG(val);
+
+#define SDL_OR_EAX_EBX \
+  sdlStretcher[sdlStretcherPos++] = 0x09;\
+  sdlStretcher[sdlStretcherPos++] = 0xd8;
+
+#define SDL_LOADL_EBX \
+  sdlStretcher[sdlStretcherPos++] = 0x8b;\
+  sdlStretcher[sdlStretcherPos++] = 0x1f;
+
+#define SDL_LOADW \
+  sdlStretcher[sdlStretcherPos++] = 0x66;\
+  sdlStretcher[sdlStretcherPos++] = 0x8b;\
+  sdlStretcher[sdlStretcherPos++] = 0x06;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc6;\
+  sdlStretcher[sdlStretcherPos++] = 0x02;  
+
+#define SDL_LOADL \
+  sdlStretcher[sdlStretcherPos++] = 0x8b;\
+  sdlStretcher[sdlStretcherPos++] = 0x06;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc6;\
+  sdlStretcher[sdlStretcherPos++] = 0x04;  
+
+#define SDL_LOADL2 \
+  sdlStretcher[sdlStretcherPos++] = 0x8b;\
+  sdlStretcher[sdlStretcherPos++] = 0x06;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc6;\
+  sdlStretcher[sdlStretcherPos++] = 0x03;  
+
+#define SDL_STOREW \
+  sdlStretcher[sdlStretcherPos++] = 0x66;\
+  sdlStretcher[sdlStretcherPos++] = 0x89;\
+  sdlStretcher[sdlStretcherPos++] = 0x07;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc7;\
+  sdlStretcher[sdlStretcherPos++] = 0x02;  
+
+#define SDL_STOREL \
+  sdlStretcher[sdlStretcherPos++] = 0x89;\
+  sdlStretcher[sdlStretcherPos++] = 0x07;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc7;\
+  sdlStretcher[sdlStretcherPos++] = 0x04;  
+
+#define SDL_STOREL2 \
+  sdlStretcher[sdlStretcherPos++] = 0x89;\
+  sdlStretcher[sdlStretcherPos++] = 0x07;\
+  sdlStretcher[sdlStretcherPos++] = 0x83;\
+  sdlStretcher[sdlStretcherPos++] = 0xc7;\
+  sdlStretcher[sdlStretcherPos++] = 0x03;  
+
+#define SDL_RET \
+  sdlStretcher[sdlStretcherPos++] = 0xc3;
+
+#define SDL_PUSH_EAX \
+  sdlStretcher[sdlStretcherPos++] = 0x50;
+
+#define SDL_PUSH_ECX \
+  sdlStretcher[sdlStretcherPos++] = 0x51;
+
+#define SDL_PUSH_EBX \
+  sdlStretcher[sdlStretcherPos++] = 0x53;
+
+#define SDL_PUSH_ESI \
+  sdlStretcher[sdlStretcherPos++] = 0x56;
+
+#define SDL_PUSH_EDI \
+  sdlStretcher[sdlStretcherPos++] = 0x57;
+
+#define SDL_POP_EAX \
+  sdlStretcher[sdlStretcherPos++] = 0x58;
+
+#define SDL_POP_ECX \
+  sdlStretcher[sdlStretcherPos++] = 0x59;
+
+#define SDL_POP_EBX \
+  sdlStretcher[sdlStretcherPos++] = 0x5b;
+
+#define SDL_POP_ESI \
+  sdlStretcher[sdlStretcherPos++] = 0x5e;
+
+#define SDL_POP_EDI \
+  sdlStretcher[sdlStretcherPos++] = 0x5f;
+
+#define SDL_MOV_ECX(val) \
+  sdlStretcher[sdlStretcherPos++] = 0xb9;\
+  SDL_LONG(val);
+
+#define SDL_REP_MOVSB \
+  sdlStretcher[sdlStretcherPos++] = 0xf3;\
+  sdlStretcher[sdlStretcherPos++] = 0xa4;
+
+#define SDL_REP_MOVSW \
+  sdlStretcher[sdlStretcherPos++] = 0xf3;\
+  sdlStretcher[sdlStretcherPos++] = 0x66;\
+  sdlStretcher[sdlStretcherPos++] = 0xa5;
+
+#define SDL_REP_MOVSL \
+  sdlStretcher[sdlStretcherPos++] = 0xf3;\
+  sdlStretcher[sdlStretcherPos++] = 0xa5;
+
+void sdlMakeStretcher(int width)
+{
+  switch(systemColorDepth) {
+  case 16:
+    if(sizeOption) {
+      SDL_PUSH_EAX;
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      for(int i = 0; i < width; i++) {
+        SDL_LOADW;
+        SDL_STOREW;
+        SDL_STOREW;
+        if(sizeOption > 1) {
+          SDL_STOREW;
+        }
+        if(sizeOption > 2) {
+          SDL_STOREW;
+        }
+      }
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_POP_EAX;
+      SDL_RET;
+    } else {
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      SDL_PUSH_ECX;
+      SDL_MOV_ECX(width);
+      SDL_REP_MOVSW;
+      SDL_POP_ECX;
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_RET;
+    }
+    break;
+  case 24:
+    if(sizeOption) {
+      SDL_PUSH_EAX;
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      int w = width - 1;
+      for(int i = 0; i < w; i++) {
+        SDL_LOADL2;
+        SDL_STOREL2;
+        SDL_STOREL2;
+        if(sizeOption > 1) {
+          SDL_STOREL2;
+        }
+        if(sizeOption > 2) {
+          SDL_STOREL2;
+        }
+      }
+      // need to write the last one
+      SDL_LOADL2;
+      SDL_STOREL2;
+      if(sizeOption > 1) {
+        SDL_STOREL2;
+      }
+      if(sizeOption > 2) {
+        SDL_STOREL2;
+      }
+      SDL_AND_EAX(0x00ffffff);
+      SDL_PUSH_EBX;
+      SDL_LOADL_EBX;
+      SDL_AND_EBX(0xff000000);
+      SDL_OR_EAX_EBX;
+      SDL_POP_EBX;
+      SDL_STOREL2;
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_POP_EAX;
+      SDL_RET;
+    } else {
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      SDL_PUSH_ECX;
+      SDL_MOV_ECX(3*width);
+      SDL_REP_MOVSB;
+      SDL_POP_ECX;
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_RET;
+    }
+    break;
+  case 32:
+    if(sizeOption) {
+      SDL_PUSH_EAX;
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      for(int i = 0; i < width; i++) {
+        SDL_LOADL;
+        SDL_STOREL;
+        SDL_STOREL;
+        if(sizeOption > 1) {
+          SDL_STOREL;
+        }
+        if(sizeOption > 2) {
+          SDL_STOREL;
+        }
+      }
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_POP_EAX;
+      SDL_RET;
+    } else {
+      SDL_PUSH_ESI;
+      SDL_PUSH_EDI;
+      SDL_PUSH_ECX;
+      SDL_MOV_ECX(width);
+      SDL_REP_MOVSL;
+      SDL_POP_ECX;
+      SDL_POP_EDI;
+      SDL_POP_ESI;
+      SDL_RET;
+    }
+    break;
+  }
+}
+
+#ifdef _MSC_VER
+#define SDL_CALL_STRETCHER \
+  {\
+    __asm mov eax, stretcher\
+    __asm mov edi, dest\
+    __asm mov esi, src\
+    __asm call eax\
+  }
+#else
+#define SDL_CALL_STRETCHER \
+        asm volatile("call *%%eax"::"a" (stretcher),"S" (src),"D" (dest))
+#endif
+#else
+#define SDL_CALL_STRETCHER \
+       sdlStretcher(src, dest)
+
+void sdlStretch16x1(u8 *src, u8 *dest)
+{
+  u16 *s = (u16 *)src;
+  u16 *d = (u16 *)dest;
+  for(int i = 0; i < srcWidth; i++)
+    *d++ = *s++;
+}
+
+void sdlStretch16x2(u8 *src, u8 *dest)
+{
+  u16 *s = (u16 *)src;
+  u16 *d = (u16 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void sdlStretch16x3(u8 *src, u8 *dest)
+{
+  u16 *s = (u16 *)src;
+  u16 *d = (u16 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void sdlStretch16x4(u8 *src, u8 *dest)
+{
+  u16 *s = (u16 *)src;
+  u16 *d = (u16 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void (*sdlStretcher16[4])(u8 *, u8 *) = {
+  sdlStretch16x1,
+  sdlStretch16x2,
+  sdlStretch16x3,
+  sdlStretch16x4
+};
+
+void sdlStretch32x1(u8 *src, u8 *dest)
+{
+  u32 *s = (u32 *)src;
+  u32 *d = (u32 *)dest;
+  for(int i = 0; i < srcWidth; i++)
+    *d++ = *s++;
+}
+
+void sdlStretch32x2(u8 *src, u8 *dest)
+{
+  u32 *s = (u32 *)src;
+  u32 *d = (u32 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void sdlStretch32x3(u8 *src, u8 *dest)
+{
+  u32 *s = (u32 *)src;
+  u32 *d = (u32 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void sdlStretch32x4(u8 *src, u8 *dest)
+{
+  u32 *s = (u32 *)src;
+  u32 *d = (u32 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s;
+    *d++ = *s++;
+  }
+}
+
+void (*sdlStretcher32[4])(u8 *, u8 *) = {
+  sdlStretch32x1,
+  sdlStretch32x2,
+  sdlStretch32x3,
+  sdlStretch32x4
+};
+
+void sdlStretch24x1(u8 *src, u8 *dest)
+{
+  u8 *s = src;
+  u8 *d = dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s++;
+    *d++ = *s++;
+    *d++ = *s++;
+  }
+}
+
+void sdlStretch24x2(u8 *src, u8 *dest)
+{
+  u8 *s = (u8 *)src;
+  u8 *d = (u8 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+  }
+}
+
+void sdlStretch24x3(u8 *src, u8 *dest)
+{
+  u8 *s = (u8 *)src;
+  u8 *d = (u8 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+  }
+}
+
+void sdlStretch24x4(u8 *src, u8 *dest)
+{
+  u8 *s = (u8 *)src;
+  u8 *d = (u8 *)dest;
+  for(int i = 0; i < srcWidth; i++) {
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+    *d++ = *s;
+    *d++ = *(s+1);
+    *d++ = *(s+2);
+    s += 3;
+  }
+}
+
+void (*sdlStretcher24[4])(u8 *, u8 *) = {
+  sdlStretch24x1,
+  sdlStretch24x2,
+  sdlStretch24x3,
+  sdlStretch24x4
+};
+
+#endif
+
+u32 sdlFromHex(char *s)
+{
+  u32 value;
+  sscanf(s, "%x", &value);
+  return value;
+}
+
+#ifdef __MSC__
+#define stat _stat
+#define S_IFDIR _S_IFDIR
+#endif
+
+void sdlCheckDirectory(char *dir)
+{
+  struct stat buf;
+
+  int len = strlen(dir);
+
+  char *p = dir + len - 1;
+
+  if(*p == '/' ||
+     *p == '\\')
+    *p = 0;
+  
+  if(stat(dir, &buf) == 0) {
+    if(!(buf.st_mode & S_IFDIR)) {
+      fprintf(stderr, "Error: %s is not a directory\n", dir);
+      dir[0] = 0;
+    }
+  } else {
+    fprintf(stderr, "Error: %s does not exist\n", dir);
+    dir[0] = 0;
+  }
+}
+
+char *sdlGetFilename(char *name)
+{
+  static char filebuffer[2048];
+
+  int len = strlen(name);
+  
+  char *p = name + len - 1;
+  
+  while(true) {
+    if(*p == '/' ||
+       *p == '\\') {
+      p++;
+      break;
+    }
+    len--;
+    p--;
+    if(len == 0)
+      break;
+  }
+  
+  if(len == 0)
+    strcpy(filebuffer, name);
+  else
+    strcpy(filebuffer, p);
+  return filebuffer;
+}
+
+void sdlReadPreferences()
+{
+  char buffer[2048];
+
+  if(GETCWD(buffer, 2048)) {
+    fprintf(stderr, "Searching for configuration file at: %s\n", buffer);
+  }
+  FILE *f = fopen("VisualBoyAdvance.cfg","r");
+
+  if(f == NULL) {
+    fprintf(stderr, "Configuration file NOT FOUND (using defaults)\n");
+    return;
+  } else
+    fprintf(stderr, "Reading configuration file.\n");
+  
+  while(1) {
+    char *s = fgets(buffer, 2048, f);
+
+    if(s == NULL)
+      break;
+
+    char *p  = strchr(s, '#');
+    
+    if(p)
+      *p = 0;
+    
+    char *token = strtok(s, " \t\n\r");
+
+    if(!token)
+      continue;
+
+    if(strlen(token) == 0)
+      continue;
+
+    char *key = token;
+    char *value = strtok(NULL, "\t\n\r");
+
+    if(value == NULL) {
+      fprintf(stderr, "Empty value for key %s\n", key);
+      continue;
+    }
+
+    if(!strcmp(key,"Joy0_Left")) {
+      joypad[KEY_LEFT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Right")) {
+      joypad[KEY_RIGHT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Up")) {
+      joypad[KEY_UP] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Down")) {
+      joypad[KEY_DOWN] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_A")) {
+      joypad[KEY_BUTTON_A] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_B")) {
+      joypad[KEY_BUTTON_B] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_L")) {
+      joypad[KEY_BUTTON_L] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_R")) {
+      joypad[KEY_BUTTON_R] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Start")) {
+      joypad[KEY_BUTTON_START] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Select")) {
+      joypad[KEY_BUTTON_SELECT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Speed")) {
+      joypad[KEY_BUTTON_SPEED] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy0_Capture")) {
+      joypad[KEY_BUTTON_CAPTURE] = sdlFromHex(value);
+    } else if(!strcmp(key, "Motion_Left")) {
+      motion[KEY_LEFT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Motion_Right")) {
+      motion[KEY_RIGHT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Motion_Up")) {
+      motion[KEY_UP] = sdlFromHex(value);
+    } else if(!strcmp(key, "Motion_Down")) {
+      motion[KEY_DOWN] = sdlFromHex(value);
+    } else if(!strcmp(key, "frameSkip")) {
+      frameSkip = sdlFromHex(value);
+      if(frameSkip < 0 || frameSkip > 5)
+        frameSkip = 2;
+    } else if(!strcmp(key, "gbFrameSkip")) {
+      gbFrameSkip = sdlFromHex(value);
+      if(gbFrameSkip < 0 || gbFrameSkip > 5)
+        gbFrameSkip = 0;      
+    } else if(!strcmp(key, "video")) {
+      sizeOption = sdlFromHex(value);
+      if(sizeOption < 0 || sizeOption > 3)
+        sizeOption = 1;
+    } else if(!strcmp(key, "fullScreen")) {
+      fullscreen = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "useBios")) {
+      useBios = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "biosFile")) {
+      strcpy(biosFileName, value);
+    } else if(!strcmp(key, "filter")) {
+      filter = sdlFromHex(value);
+      if(filter < 0 || filter > 8)
+        filter = 0;
+    } else if(!strcmp(key, "disableStatus")) {
+      disableStatusMessages = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "borderOn")) {
+      gbBorderOn = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "emulatorType")) {
+      gbEmulatorType = sdlFromHex(value);
+      if(gbEmulatorType < 0 || gbEmulatorType > 4)
+        gbEmulatorType = 1;
+    } else if(!strcmp(key, "colorOption")) {
+      gbColorOption = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "captureDir")) {
+      sdlCheckDirectory(value);
+      strcpy(captureDir, value);
+    } else if(!strcmp(key, "saveDir")) {
+      sdlCheckDirectory(value);
+      strcpy(saveDir, value);
+    } else if(!strcmp(key, "batteryDir")) {
+      sdlCheckDirectory(value);
+      strcpy(batteryDir, value);
+    } else if(!strcmp(key, "captureFormat")) {
+      captureFormat = sdlFromHex(value);
+    } else if(!strcmp(key, "soundQuality")) {
+      soundQuality = sdlFromHex(value);
+      switch(soundQuality) {
+      case 1:
+      case 2:
+      case 4:
+        break;
+      default:
+        fprintf(stderr, "Unknown sound quality %d. Defaulting to 22Khz\n", 
+soundQuality);
+        soundQuality = 2;
+        break;
+      }
+    } else if(!strcmp(key, "soundEcho")) {
+      soundEcho = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "soundLowPass")) {
+      soundLowPass = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "soundReverse")) {
+      soundReverse = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "removeIntros")) {
+      removeIntros = sdlFromHex(value) ? true : false;
+#ifdef MMX
+    } else if(!strcmp(key, "disableMMX")) {
+      cpu_mmx = sdlFromHex(value) ? false : true;
+#endif
+    } else {
+      fprintf(stderr, "Unknown configuration key %s\n", key);
+    }
+  }
+  fclose(f);
+}
+
+int sdlCalculateShift(u32 mask)
+{
+  int m = 0;
+  
+  while(mask) {
+    m++;
+    mask >>= 1;
+  }
+
+  return m-5;
+}
+
+int sdlCalculateMaskWidth(u32 mask)
+{
+  int m = 0;
+  int mask2 = mask;
+
+  while(mask2) {
+    m++;
+    mask2 >>= 1;
+  }
+
+  int m2 = 0;
+  mask2 = mask;
+  while(!(mask2 & 1)) {
+    m2++;
+    mask2 >>= 1;
+  }
+
+  return m - m2;
+}
+
+void sdlWriteState(int num)
+{
+  char stateName[2048];
+
+  if(saveDir[0])
+    sprintf(stateName, "%s/%s%d.sgm", saveDir, sdlGetFilename(filename),
+            num+1);
+  else
+    sprintf(stateName,"%s%d.sgm", filename, num+1);
+  if(emuWriteState)
+    emuWriteState(stateName);
+  sprintf(stateName, "Wrote state %d", num+1);
+  systemScreenMessage(stateName);
+}
+
+void sdlReadState(int num)
+{
+  char stateName[2048];
+
+  if(saveDir[0])
+    sprintf(stateName, "%s/%s%d.sgm", saveDir, sdlGetFilename(filename),
+            num+1);
+  else
+    sprintf(stateName,"%s%d.sgm", filename, num+1);
+
+  if(emuReadState)
+    emuReadState(stateName);
+
+  sprintf(stateName, "Loaded state %d", num+1);
+  systemScreenMessage(stateName);
+}
+
+void sdlWriteBattery()
+{
+  char buffer[1048];
+
+  if(batteryDir[0])
+    sprintf(buffer, "%s/%s.sav", batteryDir, sdlGetFilename(filename));
+  else  
+    sprintf(buffer, "%s.sav", filename);
+
+  emuWriteBattery(buffer);
+
+  systemScreenMessage("Wrote battery");
+}
+
+void sdlReadBattery()
+{
+  char buffer[1048];
+  
+  if(batteryDir[0])
+    sprintf(buffer, "%s/%s.sav", batteryDir, sdlGetFilename(filename));
+  else 
+    sprintf(buffer, "%s.sav", filename);
+  
+  bool res = false;
+
+  res = emuReadBattery(buffer);
+
+  if(res)
+    systemScreenMessage("Loaded battery");
+}
+
+#define MOD_KEYS    (KMOD_CTRL|KMOD_SHIFT|KMOD_ALT|KMOD_META)
+#define MOD_NOCTRL  (KMOD_SHIFT|KMOD_ALT|KMOD_META)
+#define MOD_NOALT   (KMOD_CTRL|KMOD_SHIFT|KMOD_META)
+#define MOD_NOSHIFT (KMOD_CTRL|KMOD_ALT|KMOD_META)
+
+void sdlUpdateKey(int key, bool down)
+{
+  for(int i = 0 ; i < 12; i++) {
+    if((joypad[i] & 0xf000) == 0) {
+      if(key == joypad[i])
+        sdlButtons[i] = down;
+    }
+  }
+}
+
+void sdlUpdateJoyButton(int which,
+                        int button,
+                        bool pressed)
+{
+  int i;
+  for(i = 0; i < 12; i++) {
+    int dev = (joypad[i] >> 12);
+    int b = joypad[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (b >= 128) && (b == (button+128))) {
+        sdlButtons[i] = pressed;
+      }
+    }
+  }
+}
+
+void sdlUpdateJoyHat(int which,
+                     int hat,
+                     int value)
+{
+  int i;
+  for(i = 0; i < 12; i++) {
+    int dev = (joypad[i] >> 12);
+    int a = joypad[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (a>=32) && (a < 48) && (((a&15)>>2) == hat)) {
+        int dir = a & 3;
+        int v = 0;
+        switch(dir) {
+        case 0:
+          v = value & SDL_HAT_UP;
+          break;
+        case 1:
+          v = value & SDL_HAT_DOWN;
+          break;
+        case 2:
+          v = value & SDL_HAT_RIGHT;
+          break;
+        case 3:
+          v = value & SDL_HAT_LEFT;
+          break;
+        }
+  sdlButtons[i] = (v ? true : false);
+      }
+    }
+  }    
+}
+
+void sdlUpdateJoyAxis(int which,
+                      int axis,
+                      int value)
+{
+  int i;
+  for(i = 0; i < 12; i++) {
+    int dev = (joypad[i] >> 12);
+    int a = joypad[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (a < 32) && ((a>>1) == axis)) {
+        sdlButtons[i] = (a & 1) ? (value > 16384) : (value < -16384);
+      }
+    }
+  }  
+}
+
+bool sdlCheckJoyKey(int key)
+{
+  int dev = (key >> 12) - 1;
+  int what = key & 0xfff;
+
+  if(what >= 128) {
+    // joystick button
+    int button = what - 128;
+
+    if(button >= SDL_JoystickNumButtons(sdlDevices[dev]))
+      return false;
+  } else if (what < 0x20) {
+    // joystick axis    
+    what >>= 1;
+    if(what >= SDL_JoystickNumAxes(sdlDevices[dev]))
+      return false;
+  } else if (what < 0x30) {
+    // joystick hat
+    what = (what & 15);
+    what >>= 2;
+    if(what >= SDL_JoystickNumHats(sdlDevices[dev]))
+      return false;
+  }
+
+  // no problem found
+  return true;
+}
+
+void sdlCheckKeys()
+{
+  sdlNumDevices = SDL_NumJoysticks();
+
+  if(sdlNumDevices)
+    sdlDevices = (SDL_Joystick **)calloc(1,sdlNumDevices *
+                                         sizeof(SDL_Joystick **));
+  int i;
+
+  bool usesJoy = false;
+  
+  for(i = 0; i < 12; i++) {
+    int dev = joypad[i] >> 12;
+    if(dev) {
+      dev--;
+      bool ok = false;
+      
+      if(sdlDevices) {
+        if(dev < sdlNumDevices) {
+          if(sdlDevices[dev] == NULL) {
+            sdlDevices[dev] = SDL_JoystickOpen(dev);
+          }
+
+          ok = sdlCheckJoyKey(joypad[i]);
+        } else
+          ok = false;
+      }
+      
+      if(!ok)
+        joypad[i] = defaultJoypad[i];
+      else
+        usesJoy = true;
+    }
+  }
+
+  for(i = 0; i < 4; i++) {
+    int dev = motion[i] >> 12;
+    if(dev) {
+      dev--;
+      bool ok = false;
+      
+      if(sdlDevices) {
+        if(dev < sdlNumDevices) {
+          if(sdlDevices[dev] == NULL) {
+            sdlDevices[dev] = SDL_JoystickOpen(dev);
+          }
+          
+          ok = sdlCheckJoyKey(joypad[i]);
+        } else
+          ok = false;
+      }
+      
+      if(!ok)
+        motion[i] = defaultMotion[i];
+      else
+        usesJoy = true;
+    }
+  }
+
+  if(usesJoy)
+    SDL_JoystickEventState(SDL_ENABLE);
+}
+
+void sdlPollEvents()
+{
+  SDL_Event event;
+  while(SDL_PollEvent(&event)) {
+    switch(event.type) {
+    case SDL_MOUSEMOTION:
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+      if(fullscreen) {
+        SDL_ShowCursor(SDL_ENABLE);
+        mouseCounter = 120;
+      }
+      break;
+    case SDL_JOYHATMOTION:
+      sdlUpdateJoyHat(event.jhat.which,
+                      event.jhat.hat,
+                      event.jhat.value);
+      break;
+    case SDL_JOYBUTTONDOWN:
+    case SDL_JOYBUTTONUP:
+      sdlUpdateJoyButton(event.jbutton.which,
+                         event.jbutton.button,
+                         event.jbutton.state == SDL_PRESSED);
+      break;
+    case SDL_JOYAXISMOTION:
+      sdlUpdateJoyAxis(event.jaxis.which,
+                       event.jaxis.axis,
+                       event.jaxis.value);
+      break;
+    case SDL_KEYDOWN:
+      sdlUpdateKey(event.key.keysym.sym, true);
+      break;
+    case SDL_KEYUP:
+      switch(event.key.keysym.sym) {
+      case SDLK_r:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          if(emulating) {
+            emuReset();
+
+            systemScreenMessage("Reset");
+          }
+        }
+        break;
+      case SDLK_p:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          paused = !paused;
+          SDL_PauseAudio(paused);
+        }
+        break;
+      case SDLK_ESCAPE:
+        emulating = 0;
+        break;
+      case SDLK_F11:
+        if(dbgMain != debuggerMain) {
+          if(armState) {
+            armNextPC -= 4;
+            reg[15].I -= 4;
+          } else {
+            armNextPC -= 2;
+            reg[15].I -= 2;
+          }
+        }
+        debugger = true;
+        break;
+      case SDLK_F1:
+      case SDLK_F2:
+      case SDLK_F3:
+      case SDLK_F4:
+      case SDLK_F5:
+      case SDLK_F6:
+      case SDLK_F7:
+      case SDLK_F8:
+      case SDLK_F9:
+      case SDLK_F10:
+        if(!(event.key.keysym.mod & MOD_NOSHIFT) &&
+           (event.key.keysym.mod & KMOD_SHIFT)) {
+          sdlWriteState(event.key.keysym.sym-SDLK_F1);
+        } else if(!(event.key.keysym.mod & MOD_KEYS)) {
+          sdlReadState(event.key.keysym.sym-SDLK_F1);
+        }
+        break;
+      case SDLK_1:
+      case SDLK_2:
+      case SDLK_3:
+      case SDLK_4:
+        if(!(event.key.keysym.mod & MOD_NOALT) &&
+           (event.key.keysym.mod & KMOD_ALT)) {
+          char *disableMessages[4] = 
+            { "autofire A disabled",
+              "autofire B disabled",
+              "autofire R disabled",
+              "autofire L disabled"};
+          char *enableMessages[4] = 
+            { "autofire A",
+              "autofire B",
+              "autofire R",
+              "autofire L"};
+          int mask = 1 << (event.key.keysym.sym - SDLK_1);
+    if(event.key.keysym.sym > SDLK_2)
+      mask <<= 6;
+          if(autoFire & mask) {
+            autoFire &= ~mask;
+            systemScreenMessage(disableMessages[event.key.keysym.sym - SDLK_1]);
+          } else {
+            autoFire |= mask;
+            systemScreenMessage(enableMessages[event.key.keysym.sym - SDLK_1]);
+          }
+        } if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+             (event.key.keysym.mod & KMOD_CTRL)) {
+          int mask = 0x0100 << (event.key.keysym.sym - SDLK_1);
+          layerSettings ^= mask;
+          layerEnable = DISPCNT & layerSettings;
+        }
+        break;
+      case SDLK_5:
+      case SDLK_6:
+      case SDLK_7:
+      case SDLK_8:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          int mask = 0x0100 << (event.key.keysym.sym - SDLK_1);
+          layerSettings ^= mask;
+          layerEnable = DISPCNT & layerSettings;
+        }
+        break;
+      case SDLK_n:
+        if(!(event.key.keysym.mod & MOD_NOCTRL) &&
+           (event.key.keysym.mod & KMOD_CTRL)) {
+          if(paused)
+            paused = false;
+          pauseNextFrame = true;
+        }
+        break;
+      }
+      sdlUpdateKey(event.key.keysym.sym, false);
+      break;
+    }
+  }
+}
+
+extern "C" int getopt(int argc, char *const *argv, const char *opts);
+extern "C" char *optarg;
+extern "C" int optind;
+
+void usage(char *cmd)
+{
+        printf("%s [options] file-name\n",cmd);
+        printf("  options:\n");
+        printf("  -1 1x\n");
+        printf("  -2 2x\n");
+        printf("  -3 3x\n");
+        printf("  -4 4x\n");        
+        printf("  -F Full screen\n");
+        printf("  -G<protocol> GNU Remote Stub mode:\n");
+        printf("    tcp        - use TCP at port 55555\n");
+        printf("    tcp:<port> - use TCP at port <port>\n");
+        printf("    pipe       - use pipe transport\n");
+        printf("  -N Don't parse debug information\n");
+        printf("  -Y<type> Use YUV overlay for drawing:\n");
+        printf("    0 - YV12\n");
+        printf("    1 - UYVY\n");
+        printf("    2 - YVYU\n");
+        printf("    3 - YUY2\n");
+        printf("    4 - IYUV\n");
+        printf("  -b<bios file> Use given bios file\n");
+        printf("  -d Enter debugger\n");        
+        printf("  -f<filter> Select filter:\n");
+        printf("    0 - normal mode\n");
+        printf("    1 - TV Mode\n");
+        printf("    2 - 2xSaI\n");
+        printf("    3 - Super 2xSaI\n");
+        printf("    4 - Super Eagle\n");
+        printf("    5 - Pixelate\n");
+        printf("    6 - Motion Blur\n");
+        printf("    7 - AdvanceMAME Scale2x\n");
+        printf("    8 - Simple2x\n");
+        printf("  -s<frameskip> Set frame skip (0...5)\n");
+        printf("  -v<verbose> Set verbose logging (trace.log)\n");
+        printf("    1   - SWI\n");
+        printf("    2   - Unaligned memory access\n");
+        printf("    4   - Illegal memory write\n");
+        printf("    8   - Illegal memory read\n");
+        printf("    16  - DMA 0\n");
+        printf("    32  - DMA 1\n");
+        printf("    64  - DMA 2\n");
+        printf("    128 - DMA 3\n");
+}
+
+int main(int argc, char **argv)
+{
+  fprintf(stderr,"VisualBoyAdvance-SDL version %s\n", VERSION);
+#ifdef __GNUC__
+  fprintf(stderr,"Linux version\n");
+#else
+  fprintf(stderr,"Windows version\n");
+#endif
+
+  captureDir[0] = 0;
+  saveDir[0] = 0;
+  batteryDir[0] = 0;
+  
+  char buffer[1024];
+
+  int op = -1;
+
+  frameSkip = 2;
+  gbBorderOn = 0;
+
+  parseDebug = true;
+
+  sdlReadPreferences();
+  
+  while((op = getopt(argc, argv, "FNY::G::D::b::df::s::v::1234")) != -1) {
+    switch(op) {
+    case 'b':
+      useBios = true;
+      strcpy(biosFileName, optarg);
+      break;
+    case 'd':
+      debugger = true;
+      break;
+    case 'Y':
+      yuv = true;
+      if(optarg) {
+        yuvType = atoi(optarg);
+        switch(yuvType) {
+        case 0:
+          yuvType = SDL_YV12_OVERLAY;
+          break;
+        case 1:
+          yuvType = SDL_UYVY_OVERLAY;
+          break;
+        case 2:
+          yuvType = SDL_YVYU_OVERLAY;
+          break;
+        case 3:
+          yuvType = SDL_YUY2_OVERLAY;
+          break;
+        case 4:
+          yuvType = SDL_IYUV_OVERLAY;
+          break;
+        default:
+          yuvType = SDL_YV12_OVERLAY;
+        }
+      } else
+        yuvType = SDL_YV12_OVERLAY;
+      break;
+    case 'G':
+      dbgMain = remoteStubMain;
+      dbgSignal = remoteStubSignal;
+      dbgOutput = remoteOutput;
+      debugger = true;
+      debuggerStub = true;
+      if(optarg) {
+        char *s = optarg;
+        if(strncmp(s,"tcp:", 4) == 0) {
+          s+=4;
+          int port = atoi(s);
+          remoteSetProtocol(0);
+          remoteSetPort(port);
+        } else if(strcmp(s,"tcp") == 0) {
+          remoteSetProtocol(0);
+        } else if(strcmp(s, "pipe") == 0) {
+          remoteSetProtocol(1);
+        } else {
+          fprintf(stderr, "Unknown protocol %s\n", s);
+          exit(-1);
+        }
+      } else {
+        remoteSetProtocol(0);
+      }
+      break;
+    case 'N':
+      parseDebug = false;
+      break;
+    case 'D':
+      if(optarg) {
+        systemDebug = atoi(optarg);
+      } else {
+        systemDebug = 1;
+      }
+      break;
+    case 'F':
+      fullscreen = true;
+      mouseCounter = 120;
+      break;
+    case 'f':
+      if(optarg) {
+        filter = atoi(optarg);
+      } else {
+        filter = 0;
+      }
+      break;
+    case 's':
+      if(optarg) {
+        int a = atoi(optarg);
+        if(a >= 0 && a <= 5) {
+          gbFrameSkip = a;
+          frameSkip = a;
+        }
+      } else {
+        frameSkip = 2;
+        gbFrameSkip = 0;
+      }
+    case 'v':
+      if(optarg) {
+        systemVerbose = atoi(optarg);
+      } else 
+        systemVerbose = 0;
+      break;
+    case '1':
+      sizeOption = 0;
+      break;
+    case '2':
+      sizeOption = 1;
+      break;
+    case '3':
+      sizeOption = 2;
+      break;
+    case '4':
+      sizeOption = 3;
+      break;
+    }
+  }
+
+  if(!debuggerStub) {
+    if(optind >= argc) {
+      systemMessage(0,"Missing image name");
+      usage(argv[0]);
+      exit(-1);
+    }
+  }
+
+  switch(filter) {
+  default:
+  case 0:
+    filterFunction = NULL;
+    break;
+  case 1:
+    filterFunction = TVMode;
+    break;
+  case 2:
+    filterFunction = _2xSaI;
+    break;
+  case 3:
+    filterFunction = Super2xSaI;
+    break;
+  case 4:
+    filterFunction = SuperEagle;
+    break;
+  case 5:
+    filterFunction = Pixelate;
+    break;
+  case 6:
+    filterFunction = MotionBlur;
+    break;
+  case 7:
+    filterFunction = AdMame2x;
+    break;
+  case 8:
+    filterFunction = Simple2x;
+    break;
+  }
+
+  if(filterFunction) {
+    sizeOption = 1;
+  }
+
+  for(int i = 0; i < 24;) {
+    systemGbPalette[i++] = (0x1f) | (0x1f << 5) | (0x1f << 10);
+    systemGbPalette[i++] = (0x15) | (0x15 << 5) | (0x15 << 10);
+    systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
+    systemGbPalette[i++] = 0;
+  }
+
+  if(optind < argc) {
+    char *szFile = argv[optind];
+    bool failed = false;
+    if(CPUIsZipFile(szFile)) {
+      unzFile unz = unzOpen(szFile);
+      
+      if(unz == NULL) {
+        systemMessage(0, "Cannot open file %s", szFile);
+        exit(-1);
+      }
+      int r = unzGoToFirstFile(unz);
+      
+      if(r != UNZ_OK) {
+        unzClose(unz);
+        systemMessage(0, "Bad ZIP file %s", szFile);
+        exit(-1);
+      }
+      
+      bool found = false;
+      
+      unz_file_info info;
+      
+      while(true) {
+        r = unzGetCurrentFileInfo(unz,
+                                  &info,
+                                  buffer,
+                                  sizeof(buffer),
+                                  NULL,
+                                  0,
+                                  NULL,
+                                  0);
+        
+        if(r != UNZ_OK) {
+          unzClose(unz);
+          systemMessage(0,"Bad ZIP file %s", szFile);
+          exit(-1);
+        }
+        
+        if(gbIsGameboyRom(buffer)) {
+          found = true;
+          cartridgeType = 1;
+          break;
+        }
+        if(CPUIsGBAImage(buffer)) {
+          found = true;
+          cartridgeType = 0;
+          break;
+        }
+        
+        r = unzGoToNextFile(unz);
+        
+        if(r != UNZ_OK)
+          break;
+      }
+      
+      if(!found) {
+        unzClose(unz);
+        systemMessage(0, "No image found on ZIP file %s", szFile);
+        exit(-1);
+      }
+      
+      unzClose(unz);
+    }
+    
+    if(gbIsGameboyRom(szFile) || cartridgeType == 1) {
+      failed = !gbLoadRom(szFile);
+      cartridgeType = 1;
+      emuWriteState = gbWriteSaveState;
+      emuReadState = gbReadSaveState;
+      emuWriteBattery = gbWriteBatteryFile;
+      emuReadBattery = gbReadBatteryFile;
+      emuReset = gbReset;
+      emuCleanUp = gbCleanUp;
+      emuWritePNG = gbWritePNGFile;
+      emuWriteBMP = gbWriteBMPFile;
+      emuMain = gbEmulate;
+      emuUpdateCPSR = NULL;
+      emuHasDebugger = false;
+      emuCount = 70000/4;
+    } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
+      failed = !CPULoadRom(szFile);
+      cartridgeType = 0;
+      emuWriteState = CPUWriteState;
+      emuReadState = CPUReadState;
+      emuWriteBattery = CPUWriteBatteryFile;
+      emuReadBattery = CPUReadBatteryFile;
+      emuReset = CPUReset;
+      emuCleanUp = CPUCleanUp;
+      emuWritePNG = CPUWritePNGFile;
+      emuWriteBMP = CPUWriteBMPFile;
+      emuMain = CPULoop;
+      emuUpdateCPSR = CPUUpdateCPSR;
+      emuHasDebugger = true;
+      emuCount = 50000;
+
+      CPUInit(biosFileName, useBios);
+      CPUReset();
+#ifdef GP_EMULATION
+    } else if(GPIsGPImage(szFile) || cartridgeType == 2) {
+      failed = !GPLoadRom(szFile);
+      cartridgeType = 2;
+      emuWriteState = GPWriteState;
+      emuReadState = GPReadState;
+      emuWriteBattery = GPWriteBatteryFile;
+      emuReadBattery = GPReadBatteryFile;
+      emuReset = GPReset;
+      emuCleanUp = GPCleanUp;
+      emuWritePNG = GPWritePNGFile;
+      emuWriteBMP = GPWriteBMPFile;
+      emuMain = GPLoop;
+      emuUpdateCPSR = GPUpdateCPSR;
+      emuHasDebugger = true;
+      emuCount = 50000;
+
+      GPInit();
+      GPReset();
+#endif
+    } else {
+      systemMessage(0, "Unknown file type %s", szFile);
+      exit(-1);
+    }
+    
+    if(failed) {
+      systemMessage(0, "Failed to load file %s", szFile);
+      exit(-1);
+    }
+    strcpy(filename, szFile);
+    char *p = strrchr(filename, '.');
+    
+    if(p)
+      *p = 0;
+  } else {
+    cartridgeType = 0;
+    strcpy(filename, "gnu_stub");
+    rom = (u8 *)malloc(0x2000000);
+    workRAM = (u8 *)calloc(1, 0x40000);
+    bios = (u8 *)calloc(1,0x4000);
+    internalRAM = (u8 *)calloc(1,0x8000);
+    paletteRAM = (u8 *)calloc(1,0x400);
+    vram = (u8 *)calloc(1, 0x20000);
+    oam = (u8 *)calloc(1, 0x400);
+    pix = (u8 *)calloc(1, 4 * 240 * 160);
+    ioMem = (u8 *)calloc(1, 0x400);
+
+    emuWriteState = CPUWriteState;
+    emuReadState = CPUReadState;
+    emuWriteBattery = CPUWriteBatteryFile;
+    emuReadBattery = CPUReadBatteryFile;
+    emuReset = CPUReset;
+    emuCleanUp = CPUCleanUp;
+    emuWritePNG = CPUWritePNGFile;
+    emuWriteBMP = CPUWriteBMPFile;
+    emuMain = CPULoop;
+    emuUpdateCPSR = CPUUpdateCPSR;
+    emuHasDebugger = true;
+    emuCount = 50000;    
+    
+    CPUInit(biosFileName, useBios);
+    CPUReset();    
+  }
+  
+  sdlReadBattery();
+  
+  if(debuggerStub) 
+    remoteInit();
+  
+  int flags = SDL_INIT_VIDEO|SDL_INIT_AUDIO|
+    SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE;
+  
+  if(SDL_Init(flags)) {
+    systemMessage(0, "Failed to init SDL: %d", SDL_GetError());
+    exit(-1);
+  }
+
+  if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
+    systemMessage(0, "Failed to init joystick support: %d", SDL_GetError());
+  }
+  
+  sdlCheckKeys();
+  
+  if(cartridgeType == 0) {
+    srcWidth = 240;
+    srcHeight = 160;
+  } else if (cartridgeType == 1) {
+    if(gbBorderOn) {
+      srcWidth = 256;
+      srcHeight = 224;
+      gbBorderLineSkip = 256;
+      gbBorderColumnSkip = 48;
+      gbBorderRowSkip = 40;
+    } else {      
+      srcWidth = 160;
+      srcHeight = 144;
+      gbBorderLineSkip = 160;
+      gbBorderColumnSkip = 0;
+      gbBorderRowSkip = 0;
+    }      
+  } else {
+    srcWidth = 320;
+    srcHeight = 240;
+  }
+
+  destWidth = (sizeOption+1)*srcWidth;
+  destHeight = (sizeOption+1)*srcHeight;
+  
+  surface = SDL_SetVideoMode(destWidth, destHeight, 16,
+                             SDL_ANYFORMAT|SDL_HWSURFACE|SDL_DOUBLEBUF|
+                             (fullscreen ? SDL_FULLSCREEN : 0));
+  
+  if(surface == NULL) {
+    systemMessage(0, "Failed to set video mode");
+    SDL_Quit();
+    exit(-1);
+  }
+  
+  systemRedShift = sdlCalculateShift(surface->format->Rmask);
+  systemGreenShift = sdlCalculateShift(surface->format->Gmask);
+  systemBlueShift = sdlCalculateShift(surface->format->Bmask);
+  
+  systemColorDepth = surface->format->BitsPerPixel;
+  if(systemColorDepth == 15)
+    systemColorDepth = 16;
+
+  if(yuv) {
+    Init_Overlay(surface, yuvType);
+    systemColorDepth = 32;
+    systemRedShift = 3;
+    systemGreenShift = 11;
+    systemBlueShift =  19;
+  }
+  
+  if(systemColorDepth != 16 && systemColorDepth != 24 &&
+     systemColorDepth != 32) {
+    fprintf(stderr,"Unsupported color depth '%d'.\nOnly 16, 24 and 32 bit color depths are supported\n", systemColorDepth);
+    exit(-1);
+  }
+
+#ifndef C_CORE
+  sdlMakeStretcher(srcWidth);
+#else
+  switch(systemColorDepth) {
+  case 16:
+    sdlStretcher = sdlStretcher16[sizeOption];
+    break;
+  case 24:
+    sdlStretcher = sdlStretcher24[sizeOption];
+    break;
+  case 32:
+    sdlStretcher = sdlStretcher32[sizeOption];
+    break;
+  default:
+    fprintf(stderr, "Unsupported resolution: %d\n", systemColorDepth);
+    exit(-1);
+  }
+#endif
+
+  fprintf(stderr,"Color depth: %d\n", systemColorDepth);
+  
+  if(systemColorDepth == 16) {
+    if(sdlCalculateMaskWidth(surface->format->Gmask) == 6) {
+      Init_2xSaI(565);
+      RGB_LOW_BITS_MASK = 0x821;
+    } else {
+      Init_2xSaI(555);
+      RGB_LOW_BITS_MASK = 0x421;      
+    }
+    if(cartridgeType == 2) {
+      for(int i = 0; i < 0x10000; i++) {
+        systemColorMap16[i] = (((i >> 1) & 0x1f) << systemBlueShift) |
+          (((i & 0x7c0) >> 6) << systemGreenShift) |
+          (((i & 0xf800) >> 11) << systemRedShift);  
+      }      
+    } else {
+      for(int i = 0; i < 0x10000; i++) {
+        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
+          (((i & 0x3e0) >> 5) << systemGreenShift) |
+          (((i & 0x7c00) >> 10) << systemBlueShift);  
+      }
+    }
+    srcPitch = srcWidth * 2+2;
+  } else {
+    filterFunction = NULL;    
+    for(int i = 0; i < 0x10000; i++) {
+      systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
+        (((i & 0x3e0) >> 5) << systemGreenShift) |
+        (((i & 0x7c00) >> 10) << systemBlueShift);  
+    }
+    if(systemColorDepth == 32)
+      srcPitch = srcWidth*4;
+    else
+      srcPitch = srcWidth*3;
+  }
+
+  emulating = 1;
+  soundInit();
+  
+  SDL_WM_SetCaption("VisualBoyAdvance", NULL);
+
+  while(emulating) {
+    if(!paused) {
+      if(debugger && emuHasDebugger)
+        dbgMain();
+      else
+        emuMain(emuCount);
+    } else {
+      SDL_Delay(500);
+    }
+    sdlPollEvents();
+    if(mouseCounter) {
+      mouseCounter--;
+      if(mouseCounter == 0)
+        SDL_ShowCursor(SDL_DISABLE);
+    }
+  }
+  emulating = 0;
+  fprintf(stderr,"Shutting down\n");
+  remoteCleanUp();
+  soundShutdown();
+
+  if(gbRom != NULL || rom != NULL) {
+    sdlWriteBattery();
+    emuCleanUp();
+  }
+
+  if(delta) {
+    free(delta);
+    delta = NULL;
+  }
+  
+  SDL_Quit();
+  return 0;
+}
+
+void systemMessage(int num, char *msg, ...)
+{
+  char buffer[2048];
+  va_list valist;
+  
+  va_start(valist, msg);
+  vsprintf(buffer, msg, valist);
+  
+  fprintf(stderr, "%s\n", buffer);
+  va_end(valist);
+}
+
+void systemDrawScreen()
+{
+  if(yuv) {
+    Draw_Overlay(surface, sizeOption+1);
+    return;
+  }
+  
+  if(delta == NULL) {
+    delta = (u8*)malloc(322*242*2);
+    memset(delta,255,322*242*2);
+  }
+
+  SDL_LockSurface(surface);
+
+  if(screenMessage) {
+    if(cartridgeType == 1 && gbBorderOn) {
+      gbSgbRenderBorder();
+    }
+    if(((systemGetClock() - screenMessageTime) < 3000) &&
+       !disableStatusMessages) {
+      fontDisplayString(pix, srcPitch, 10, srcHeight - 20,
+                        screenMessageBuffer); 
+    } else {
+      screenMessage = false;
+    }
+  }
+  
+  if(filterFunction)
+    filterFunction(pix+destWidth+2,destWidth+2, delta,
+                   (u8*)surface->pixels,surface->pitch,
+                   srcWidth,
+                   srcHeight);
+  else {
+    int destPitch = surface->pitch;
+    u8 *src = pix;
+    u8 *dest = (u8*)surface->pixels;
+    int i;
+    u32 *stretcher = (u32 *)sdlStretcher;
+    if(systemColorDepth == 16)
+      src += srcPitch;
+    int option = sizeOption;
+    if(yuv)
+      option = 0;
+    switch(sizeOption) {
+    case 0:
+      for(i = 0; i < srcHeight; i++) {
+        SDL_CALL_STRETCHER;
+        src += srcPitch;
+        dest += destPitch;
+      }
+      break;
+    case 1:
+      for(i = 0; i < srcHeight; i++) {
+        SDL_CALL_STRETCHER;     
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        src += srcPitch;
+        dest += destPitch;
+      }
+      break;
+    case 2:
+      for(i = 0; i < srcHeight; i++) {
+        SDL_CALL_STRETCHER;
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        src += srcPitch;
+        dest += destPitch;
+      }
+      break;
+    case 3:
+      for(i = 0; i < srcHeight; i++) {
+        SDL_CALL_STRETCHER;
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        dest += destPitch;
+        SDL_CALL_STRETCHER;
+        src += srcPitch;
+        dest += destPitch;
+      }
+      break;
+    }
+  }
+
+  SDL_UnlockSurface(surface);
+  //  SDL_UpdateRect(surface, 0, 0, destWidth, destHeight);
+  SDL_Flip(surface);
+}
+
+u32 systemReadJoypad()
+{
+  u32 res = 0;
+  if(sdlButtons[KEY_BUTTON_A])
+    res |= 1;
+  if(sdlButtons[KEY_BUTTON_B])
+    res |= 2;
+  if(sdlButtons[KEY_BUTTON_SELECT])
+    res |= 4;
+  if(sdlButtons[KEY_BUTTON_START])
+    res |= 8;
+  if(sdlButtons[KEY_RIGHT])
+    res |= 16;
+  if(sdlButtons[KEY_LEFT])
+    res |= 32;
+  if(sdlButtons[KEY_UP])
+    res |= 64;
+  if(sdlButtons[KEY_DOWN])
+    res |= 128;
+  if(sdlButtons[KEY_BUTTON_R])
+    res |= 256;
+  if(sdlButtons[KEY_BUTTON_L])
+    res |= 512;
+
+  if(autoFire) {
+    res &= (~autoFire);
+    if(autoFireToggle)
+      res |= autoFire;
+    autoFireToggle = !autoFireToggle;
+  }
+  
+  return res;
+}
+
+void systemSetTitle(char *title)
+{
+  SDL_WM_SetCaption(title, NULL);
+}
+
+void systemScreenCapture(int a)
+{
+  char buffer[2048];
+
+  if(captureFormat) {
+    if(captureDir[0])
+      sprintf(buffer, "%s/%s%02d.bmp", captureDir, sdlGetFilename(filename), a);
+    else
+      sprintf(buffer, "%s%02d.bmp", filename, a);
+
+    emuWriteBMP(buffer);
+  } else {
+    if(captureDir[0])
+      sprintf(buffer, "%s/%s%02d.png", captureDir, sdlGetFilename(filename), a);
+    else
+      sprintf(buffer, "%s%02d.png", filename, a);
+    emuWritePNG(buffer);
+  }
+
+  systemScreenMessage("Screen capture");
+}
+
+u32 systemReadJoypadExtended()
+{
+  int res = 0;
+
+  if(sdlButtons[KEY_BUTTON_SPEED])
+    res |= 1;
+  if(sdlButtons[KEY_BUTTON_CAPTURE])
+    res |= 2;
+
+  return res;
+}
+
+void soundCallback(void *,u8 *stream,int len)
+{
+  if(!emulating)
+    return;
+  SDL_mutexP(mutex);
+  //  printf("Locked mutex\n");
+  if(!speedup) {
+    while(sdlSoundLen < 2048*2) {
+      if(emulating)
+        SDL_CondWait(cond, mutex);
+      else 
+        break;
+    }
+  }
+  if(emulating) {
+    //  printf("Copying data\n");
+    memcpy(stream, sdlBuffer, len);
+  }
+  sdlSoundLen = 0;
+  if(mutex)
+    SDL_mutexV(mutex);
+}
+
+void systemWriteDataToSoundBuffer()
+{
+  if(SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
+    SDL_PauseAudio(0);
+  bool cont = true;
+  while(cont && !speedup) {
+    SDL_mutexP(mutex);
+    //    printf("Waiting for len < 2048 (speed up %d)\n", speedup);
+    if(sdlSoundLen < 2048*2)
+      cont = false;
+    SDL_mutexV(mutex);
+  }
+
+  int len = soundBufferLen;
+  int copied = 0;
+  if((sdlSoundLen+len) >= 2048*2) {
+    //    printf("Case 1\n");
+    memcpy(&sdlBuffer[sdlSoundLen],soundFinalWave, 2048*2-sdlSoundLen);
+    copied = 2048*2 - sdlSoundLen;
+    sdlSoundLen = 2048*2;
+    SDL_CondSignal(cond);
+    cont = true;
+    if(!speedup) {
+      while(cont) {
+        SDL_mutexP(mutex);
+        if(sdlSoundLen < 2048*2)
+          cont = false;
+        SDL_mutexV(mutex);
+      }
+      memcpy(&sdlBuffer[0],&(((u8 *)soundFinalWave)[copied]),
+             soundBufferLen-copied);
+      sdlSoundLen = soundBufferLen-copied;
+    } else {
+      memcpy(&sdlBuffer[0], &(((u8 *)soundFinalWave)[copied]), 
+soundBufferLen);
+    }
+  } else {
+    //    printf("case 2\n");
+    memcpy(&sdlBuffer[sdlSoundLen], soundFinalWave, soundBufferLen);
+    sdlSoundLen += soundBufferLen;
+  }
+}
+
+bool systemSoundInit()
+{
+  SDL_AudioSpec audio;
+
+  switch(soundQuality) {
+  case 1:
+    audio.freq = 44100;
+    soundBufferLen = 1470*2;
+    break;
+  case 2:
+    audio.freq = 22050;
+    soundBufferLen = 736*2;
+    break;
+  case 4:
+    audio.freq = 11025;
+    soundBufferLen = 368*2;
+    break;
+  }
+  audio.format=AUDIO_S16;
+  audio.channels = 2;
+  audio.samples = 1024;
+  audio.callback = soundCallback;
+  audio.userdata = NULL;
+  if(SDL_OpenAudio(&audio, NULL)) {
+    fprintf(stderr,"Failed to open audio: %s\n", SDL_GetError());
+    return false;
+  }
+  soundBufferTotalLen = soundBufferLen*10;
+  cond = SDL_CreateCond();
+  mutex = SDL_CreateMutex();
+  sdlSoundLen = 0;
+  systemSoundOn = true;
+  return true;
+}
+
+void systemSoundShutdown()
+{
+  SDL_mutexP(mutex);
+  SDL_CondSignal(cond);
+  SDL_mutexV(mutex);
+  SDL_DestroyCond(cond);
+  cond = NULL;
+  SDL_DestroyMutex(mutex);
+  mutex = NULL;
+  SDL_CloseAudio();
+}
+
+void systemSoundPause()
+{
+  SDL_PauseAudio(1);
+}
+
+void systemSoundResume()
+{
+  SDL_PauseAudio(0);
+}
+
+void systemSoundReset()
+{
+}
+
+u32 systemGetClock()
+{
+  return SDL_GetTicks();
+}
+
+void systemUpdateMotionSensor()
+{
+}
+
+int systemGetSensorX()
+{
+        return 0;
+}
+
+int systemGetSensorY()
+{
+        return 0;
+}
+
+void systemGbPrint(u8 *data,int pages,int feed,int palette, int contrast)
+{
+}
+
+void systemScreenMessage(char *msg)
+{
+  screenMessage = true;
+  screenMessageTime = systemGetClock();
+  if(strlen(msg) > 20) {
+    strncpy(screenMessageBuffer, msg, 20);
+    screenMessageBuffer[20] = 0;
+  } else
+    strcpy(screenMessageBuffer, msg);  
+}
+
+bool systemCanChangeSoundQuality()
+{
+  return false;
+}
+
+bool systemPauseOnFrame()
+{
+  if(pauseNextFrame) {
+    paused = true;
+    pauseNextFrame = false;
+    return true;
+  }
+  return false;
+}
+
+// Code donated by Niels Wagenaar (BoycottAdvance)
+
+// GBA screensize.
+#define GBA_WIDTH   240
+#define GBA_HEIGHT  160
+
+void Init_Overlay(SDL_Surface *gbascreen, int overlaytype)
+{
+  
+  overlay = SDL_CreateYUVOverlay( GBA_WIDTH,
+                                  GBA_HEIGHT,
+                                  overlaytype, gbascreen);
+  fprintf(stderr, "Created %dx%dx%d %s %s overlay\n",
+          overlay->w,overlay->h,overlay->planes,
+          overlay->hw_overlay?"hardware":"software",
+          overlay->format==SDL_YV12_OVERLAY?"YV12":
+          overlay->format==SDL_IYUV_OVERLAY?"IYUV":
+          overlay->format==SDL_YUY2_OVERLAY?"YUY2":
+          overlay->format==SDL_UYVY_OVERLAY?"UYVY":
+          overlay->format==SDL_YVYU_OVERLAY?"YVYU":
+          "Unknown");
+}
+
+void Quit_Overlay(void)
+{
+  
+  SDL_FreeYUVOverlay(overlay);
+}
+
+/* NOTE: These RGB conversion functions are not intended for speed,
+   only as examples.
+*/
+inline void RGBtoYUV(Uint8 *rgb, int *yuv)
+{
+  yuv[0] = (int)((0.257 * rgb[0]) + (0.504 * rgb[1]) + (0.098 * rgb[2]) + 16);
+  yuv[1] = (int)(128 - (0.148 * rgb[0]) - (0.291 * rgb[1]) + (0.439 * rgb[2]));
+  yuv[2] = (int)(128 + (0.439 * rgb[0]) - (0.368 * rgb[1]) - (0.071 * rgb[2]));
+}
+
+inline void ConvertRGBtoYV12(SDL_Overlay *o)
+{
+  int x,y;
+  int yuv[3];
+  Uint8 *p,*op[3];
+  
+  SDL_LockYUVOverlay(o);
+  
+  /* Black initialization */
+  /*
+    memset(o->pixels[0],0,o->pitches[0]*o->h);
+    memset(o->pixels[1],128,o->pitches[1]*((o->h+1)/2));
+    memset(o->pixels[2],128,o->pitches[2]*((o->h+1)/2));
+  */
+  
+  /* Convert */
+  for(y=0; y<160 && y<o->h; y++) {
+    p=(Uint8 *)pix+srcPitch*y;
+    op[0]=o->pixels[0]+o->pitches[0]*y;
+    op[1]=o->pixels[1]+o->pitches[1]*(y/2);
+    op[2]=o->pixels[2]+o->pitches[2]*(y/2);
+    for(x=0; x<240 && x<o->w; x++) {
+      RGBtoYUV(p,yuv);
+      *(op[0]++)=yuv[0];
+      if(x%2==0 && y%2==0) {
+        *(op[1]++)=yuv[2];
+        *(op[2]++)=yuv[1];
+      }
+      p+=4;//s->format->BytesPerPixel;
+    }
+  }
+  
+  SDL_UnlockYUVOverlay(o);
+}
+
+inline void ConvertRGBtoIYUV(SDL_Overlay *o)
+{
+  int x,y;
+  int yuv[3];
+  Uint8 *p,*op[3];
+  
+  SDL_LockYUVOverlay(o);
+  
+  /* Black initialization */
+  /*
+    memset(o->pixels[0],0,o->pitches[0]*o->h);
+    memset(o->pixels[1],128,o->pitches[1]*((o->h+1)/2));
+    memset(o->pixels[2],128,o->pitches[2]*((o->h+1)/2));
+  */
+  
+  /* Convert */
+  for(y=0; y<160 && y<o->h; y++) {
+    p=(Uint8 *)pix+srcPitch*y;
+    op[0]=o->pixels[0]+o->pitches[0]*y;
+    op[1]=o->pixels[1]+o->pitches[1]*(y/2);
+    op[2]=o->pixels[2]+o->pitches[2]*(y/2);
+    for(x=0; x<240 && x<o->w; x++) {
+      RGBtoYUV(p,yuv);
+      *(op[0]++)=yuv[0];
+      if(x%2==0 && y%2==0) {
+        *(op[1]++)=yuv[1];
+        *(op[2]++)=yuv[2];
+      }
+      p+=4; //s->format->BytesPerPixel;
+    }
+  }
+  
+  SDL_UnlockYUVOverlay(o);
+}
+
+inline void ConvertRGBtoUYVY(SDL_Overlay *o)
+{
+  int x,y;
+  int yuv[3];
+  Uint8 *p,*op;
+  
+  SDL_LockYUVOverlay(o);
+  
+  for(y=0; y<160 && y<o->h; y++) {
+    p=(Uint8 *)pix+srcPitch*y;
+    op=o->pixels[0]+o->pitches[0]*y;
+    for(x=0; x<240 && x<o->w; x++) {
+      RGBtoYUV(p,yuv);
+      if(x%2==0) {
+        *(op++)=yuv[1];
+        *(op++)=yuv[0];
+        *(op++)=yuv[2];
+      } else
+        *(op++)=yuv[0];
+      
+      p+=4; //s->format->BytesPerPixel;
+    }
+  }
+  
+  SDL_UnlockYUVOverlay(o);
+}
+
+inline void ConvertRGBtoYVYU(SDL_Overlay *o)
+{
+  int x,y;
+  int yuv[3];
+  Uint8 *p,*op;
+  
+  SDL_LockYUVOverlay(o);
+  
+  for(y=0; y<160 && y<o->h; y++) {
+    p=(Uint8 *)pix+srcPitch*y;
+    op=o->pixels[0]+o->pitches[0]*y;
+    for(x=0; x<240 && x<o->w; x++) {
+      RGBtoYUV(p,yuv);
+      if(x%2==0) {
+        *(op++)=yuv[0];
+        *(op++)=yuv[2];
+        op[1]=yuv[1];
+      } else {
+        *op=yuv[0];
+        op+=2;
+      }
+      
+      p+=4; //s->format->BytesPerPixel;
+    }
+  }
+  
+  SDL_UnlockYUVOverlay(o);
+}
+
+inline void ConvertRGBtoYUY2(SDL_Overlay *o)
+{
+  int x,y;
+  int yuv[3];
+  Uint8 *p,*op;
+  
+  SDL_LockYUVOverlay(o);
+  
+  for(y=0; y<160 && y<o->h; y++) {
+    p=(Uint8 *)pix+srcPitch*y;
+    op=o->pixels[0]+o->pitches[0]*y;
+    for(x=0; x<240 && x<o->w; x++) {
+      RGBtoYUV(p,yuv);
+      if(x%2==0) {
+        *(op++)=yuv[0];
+        *(op++)=yuv[1];
+        op[1]=yuv[2];
+      } else {
+        *op=yuv[0];
+        op+=2;
+      }
+      
+      p+=4; //s->format->BytesPerPixel;
+    }
+  }
+  
+  SDL_UnlockYUVOverlay(o);
+}
+
+inline void Convert32bit(SDL_Surface *display)
+{
+  switch(overlay->format) {
+  case SDL_YV12_OVERLAY:
+    ConvertRGBtoYV12(overlay);
+    break;
+  case SDL_UYVY_OVERLAY:
+    ConvertRGBtoUYVY(overlay);
+    break;
+  case SDL_YVYU_OVERLAY:
+    ConvertRGBtoYVYU(overlay);
+    break;
+  case SDL_YUY2_OVERLAY:
+    ConvertRGBtoYUY2(overlay);
+    break;
+  case SDL_IYUV_OVERLAY:
+    ConvertRGBtoIYUV(overlay);
+    break;
+  default:
+    fprintf(stderr, "cannot convert RGB picture to obtained YUV format!\n");
+    exit(1);
+    break;
+  }
+  
+}
+
+
+inline void Draw_Overlay(SDL_Surface *display, int size)
+{
+  SDL_LockYUVOverlay(overlay);
+  
+  Convert32bit(display);
+  
+  overlay_rect.x = 0;
+  overlay_rect.y = 0;
+  overlay_rect.w = GBA_WIDTH  * size;
+  overlay_rect.h = GBA_HEIGHT * size;
+
+  SDL_DisplayYUVOverlay(overlay, &overlay_rect);
+  SDL_UnlockYUVOverlay(overlay);
+}
