@@ -1053,19 +1053,18 @@ void utilGBAFindSave(const u8 *data, const int size)
   while(p  < end) {
     u32 d = READ32LE(p);
     
-    // EEPROM_V
     if(d == 0x52504545) {
-      if(memcmp(p, "EEPROM_V", 8) == 0) {
+      if(memcmp(p, "EEPROM_", 7) == 0) {
         if(saveType == 0)
           saveType = 1;
       }
     } else if (d == 0x4D415253) {
-      if(memcmp(p, "SRAM_V", 6) == 0) {
+      if(memcmp(p, "SRAM_", 5) == 0) {
         if(saveType == 0)
           saveType = 2;
       }
     } else if (d == 0x53414C46) {
-      if(memcmp(p, "FLASH1M_V", 9) == 0) {
+      if(memcmp(p, "FLASH1M_", 8) == 0) {
         if(saveType == 0) {
           saveType = 3;
           flashSize = 0x20000;
