@@ -14,6 +14,7 @@
 #include "stdafx.h"
 #include "skin.h"
 #include <stdio.h>
+#include "xImage.h"
 
 #include "../System.h"
 
@@ -54,6 +55,17 @@ CSkin::CSkin()
 CSkin::~CSkin()
 {
   Destroy();
+}
+
+HBITMAP CSkin::LoadImage(const char *filename)
+{
+  CxImage image;
+  image.Load(filename);
+  if(!image.IsValid()) {
+    return NULL;
+  }
+  
+  return image.MakeBitmap(NULL);
 }
 
 // ----------------------------------------------------------------------------
@@ -382,8 +394,9 @@ bool CSkin::GetSkinData(const char *skinFile)
   bmpName = path + bmpName;
   if(strcmp(rgn, ""))
     rgn = path + rgn;
-  
-  m_hBmp = (HBITMAP)LoadImage(NULL, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+
+  m_hBmp = LoadImage(bmpName);
+
   if (!m_hBmp) {
     m_error = "Error loading skin bitmap " + bmpName;
     return false;
@@ -444,13 +457,8 @@ bool CSkin::ReadButton(const char *skinFile, int num)
   
   CString normalBmp = path + buffer;
 
-  HBITMAP bmp = (HBITMAP)LoadImage(NULL,
-                                   normalBmp,
-                                   IMAGE_BITMAP,
-                                   0,
-                                   0,
-                                   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
-  if (!bmp) {
+  HBITMAP bmp = LoadImage(normalBmp);
+  if(!bmp) {
     m_error = "Error loading button bitmap " + normalBmp;
     return false;
   }
@@ -463,12 +471,8 @@ bool CSkin::ReadButton(const char *skinFile, int num)
   
   CString downBmp = path + buffer;
 
-  bmp = (HBITMAP)LoadImage(NULL,
-                           downBmp,
-                           IMAGE_BITMAP,
-                           0,
-                           0,
-                           LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+  bmp = LoadImage(downBmp);
+
   if (!bmp) {
     m_error = "Error loading button down bitmap " + downBmp;
     return false;
@@ -478,12 +482,8 @@ bool CSkin::ReadButton(const char *skinFile, int num)
   if(GetPrivateProfileString(name, "over", "", buffer, 2048, skinFile)) {
     CString overBmp = path + buffer;
 
-    bmp = (HBITMAP)LoadImage(NULL,
-                             overBmp,
-                             IMAGE_BITMAP,
-                             0,
-                             0,
-                             LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+    bmp = LoadImage(overBmp);
+
     if (!bmp) {
       m_error = "Error loading button over bitmap " + overBmp;
       return false;

@@ -153,6 +153,7 @@ class CSkin
   HDC     HDC();
 
  private:
+  HBITMAP LoadImage(const char *);
   bool ReadButton(const char *, int);
   static bool ParseRect(char *, RECT &);
   static HRGN LoadRegion(const char *);

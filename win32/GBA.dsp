@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "include\zlib" /I "include\png" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "FINAL_VERSION" /D "BKPT_SUPPORT" /D "DEV_VERSION" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "include\zlib" /I "include\png" /I "include\cxImage" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "FINAL_VERSION" /D "BKPT_SUPPORT" /D "DEV_VERSION" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
@@ -71,7 +71,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "include\zlib" /I "include\png" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "DEV_VERSION" /D "BKPT_SUPPORT" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /GX /Zi /Od /I "include\zlib" /I "include\png" /I "include\cxImage" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "DEV_VERSION" /D "BKPT_SUPPORT" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "_DEBUG" /d "_AFXDLL"
@@ -99,7 +99,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MD /W3 /GX /O2 /I "include\zlib" /I "include\png" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "FINAL_VERSION" /D "BKPT_SUPPORT" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "include\zlib" /I "include\png" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "FINAL_VERSION" /D "BKPT_SUPPORT" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /Zi /O2 /I "include\zlib" /I "include\png" /I "include\cxImage" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "OEMRESOURCE" /D "_AFXDLL" /D "MMX" /D "FINAL_VERSION" /D "BKPT_SUPPORT" /YX /FD /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG" /d "_AFXDLL"
@@ -1042,6 +1042,14 @@ SOURCE=.\lib\win32\libpngMD.lib
 # Begin Source File
 
 SOURCE=.\lib\win32\zlibMD.lib
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\CxImage.lib
+# End Source File
+# Begin Source File
+
+SOURCE=.\lib\win32\jpeg.lib
 # End Source File
 # End Target
 # End Project
