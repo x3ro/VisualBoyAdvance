@@ -1188,6 +1188,19 @@ BEGIN
     LTEXT           "Enter 0 to use maximum scale.",IDC_STATIC,7,17,172,8
 END
 
+IDD_BUG_REPORT DIALOG DISCARDABLE  0, 0, 296, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Bug Report"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "&OK",ID_OK,157,165,50,14
+    EDITTEXT        IDC_BUG_REPORT,11,22,278,131,ES_MULTILINE | 
+                    ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY | 
+                    WS_VSCROLL
+    LTEXT           "Bug report data:",IDC_STATIC,7,7,282,8
+    DEFPUSHBUTTON   "&Copy",IDC_COPY,87,164,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1520,6 +1533,14 @@ BEGIN
         RIGHTMARGIN, 179
         TOPMARGIN, 7
         BOTTOMMARGIN, 61
+    END
+
+    IDD_BUG_REPORT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 289
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 179
     END
 END
 #endif    // APSTUDIO_INVOKED

@@ -92,6 +92,7 @@
 #define IDD_REWIND_INTERVAL             150
 #define IDD_IO_VIEWER                   151
 #define IDD_MAX_SCALE                   154
+#define IDD_BUG_REPORT                  155
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -482,7 +483,9 @@
 #define IDC_BIT_1                       1251
 #define IDC_PREDEFINED                  1251
 #define IDC_BIT_2                       1252
+#define IDC_BUG_REPORT                  1252
 #define IDC_BIT_3                       1253
+#define IDC_COPY                        1253
 #define IDC_BIT_4                       1254
 #define IDC_BIT_5                       1255
 #define IDC_BIT_6                       1256
@@ -740,9 +743,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        155
+#define _APS_NEXT_RESOURCE_VALUE        156
 #define _APS_NEXT_COMMAND_VALUE         40276
-#define _APS_NEXT_CONTROL_VALUE         1252
+#define _APS_NEXT_CONTROL_VALUE         1254
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif
