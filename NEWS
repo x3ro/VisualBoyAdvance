@@ -13,6 +13,7 @@ Core changes:
 - fixed priority between OBJ Window and regular windows
 - fixed thumb disassembly bug
 - fixed sound envelope bug when set to 0 to mute sound
+- fixed CpuFastSet/CpuSet bugs
 
 Windows:
 - added movie recording/playback (joypad movement recording)

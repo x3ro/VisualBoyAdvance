@@ -1,3 +1,9 @@
+2003-08-01  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (initApp): changed default rewind interval to 0 (disabled)
+	* src/bios.cpp (BIOS_CpuFastSet): fixed
+	* src/bios.cpp (BIOS_CpuSet): fixed
+
 2003-07-21  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (fileMoviePlay): added message when playing movie

@@ -5191,7 +5191,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   regQueryBinaryValue("gbPalette", (char *)systemGbPalette,
                       24*sizeof(u16));
 
-  rewindTimer = regQueryDwordValue("rewindTimer", 10);
+  rewindTimer = regQueryDwordValue("rewindTimer", 0);
 
   if(rewindTimer < 0 || rewindTimer > 600)
     rewindTimer = 0;

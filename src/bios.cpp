@@ -226,51 +226,47 @@ void BIOS_CpuSet()
   if(((source & 0xe000000) == 0) ||
      ((source + (((cnt << 11)>>9) & 0x1fffff)) & 0xe000000) == 0)
     return;
-  
-  u32 sourceIncrement = 4;
-  u32 destIncrement = 4;
-  switch((cnt >> 23) & 3) {
-  case 0:
-    break;
-  case 1:
-    sourceIncrement = (u32)-4;
-    break;
-  case 2:
-    sourceIncrement = 0;
-    break;
-  }
-  switch((cnt >> 21) & 3) {
-  case 0:
-    break;
-  case 1:
-    destIncrement = (u32)-4;
-    break;
-  case 2:
-    destIncrement = 0;
-    break;
-  }      
 
-  int count = cnt & 0xFFFF;
-  
-  if(cnt & 0x04000000) {
-    source &= 0xFFFFFFFC;
-    dest &= 0xFFFFFFFC;
-    while(count) {
-      CPUWriteMemory(dest, CPUReadMemory(source));
-      dest += destIncrement;
-      source += sourceIncrement;
-      count--;
+  int count = cnt & 0x1FFFFF;
+
+  // 32-bit ?
+  if((cnt >> 26) & 1) {
+    // fill ?
+    if((cnt >> 24) & 1) {
+      u32 value = CPUReadMemory(source);
+      while(count) {
+        CPUWriteMemory(dest, value);
+        dest += 4;
+        count--;
+      }
+    } else {
+      // copy
+      while(count) {
+        CPUWriteMemory(dest, CPUReadMemory(source));
+        source += 4;
+        dest += 4;
+        count--;
+      }
     }
   } else {
-    destIncrement >>= 1;
-    sourceIncrement >>= 1;
-    while(count) {
-      CPUWriteHalfWord(dest, CPUReadHalfWord(source));
-      dest += destIncrement;
-      source += sourceIncrement;
-      count--;
-    }   
-  }  
+    // 16-bit fill?
+    if((cnt >> 24) & 1) {
+      u16 value = CPUReadHalfWord(source);
+      while(count) {
+        CPUWriteHalfWord(dest, value);
+        dest += 2;
+        count--;
+      }
+    } else {
+      // copy
+      while(count) {
+        CPUWriteHalfWord(dest, CPUReadHalfWord(source));
+        source += 2;
+        dest += 2;
+        count--;
+      }
+    }
+  }
 }
 
 void BIOS_CpuFastSet()
@@ -290,42 +286,30 @@ void BIOS_CpuFastSet()
      ((source + (((cnt << 11)>>9) & 0x1fffff)) & 0xe000000) == 0)
     return;
   
-  u32 sourceIncrement = 4;
-  u32 destIncrement = 4;
-  switch((cnt >> 23) & 3) {
-  case 0:
-    break;
-  case 1:
-    sourceIncrement = (u32)-4;
-    break;
-  case 2:
-    sourceIncrement = 0;
-    break;
-  }
-  switch((cnt >> 21) & 3) {
-  case 0:
-    break;
-  case 1:
-    destIncrement = (u32)-4;
-    break;
-  case 2:
-    destIncrement = 0;
-    break;
-  }      
-
-  int count = cnt & 0xFFFF;
-
-  dest &= 0xFFFFFFFC;
-  source &= 0xFFFFFFFC;
-
-  while(count > 0) {
-    // BIOS always transfers 32 bytes at a time
-    for(int i = 0; i < 8; i++) {
-      CPUWriteMemory(dest, CPUReadMemory(source));
-      dest += destIncrement;
-      source += sourceIncrement;
+  int count = cnt & 0x1FFFFF;
+  
+  // fill?
+  if((cnt >> 24) & 1) {
+    while(count > 0) {
+      // BIOS always transfers 32 bytes at a time
+      u32 value = CPUReadMemory(source);
+      for(int i = 0; i < 8; i++) {
+        CPUWriteMemory(dest, value);
+        dest += 4;
+      }
+      count -= 8;
     }
-    count -= 8;
+  } else {
+    // copy
+    while(count > 0) {
+      // BIOS always transfers 32 bytes at a time
+      for(int i = 0; i < 8; i++) {
+        CPUWriteMemory(dest, CPUReadMemory(source));
+        source += 4;
+        dest += 4;
+      }
+      count -= 8;
+    }
   }
 }
 
