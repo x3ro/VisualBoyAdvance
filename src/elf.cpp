@@ -2811,7 +2811,7 @@ bool elfRead(const char *name, int& siz, FILE *f)
   if(READ32LE(&header->magic) != 0x464C457F ||
      READ16LE(&header->e_machine) != 40 ||
      header->clazz != 1) {
-    systemMessage(0, "Not a valid ELF file %s", name);
+    systemMessage(0, N_("Not a valid ELF file %s"), name);
     free(elfFileData);
     elfFileData = NULL;
     return false;

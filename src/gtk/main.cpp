@@ -48,7 +48,7 @@ int main(int argc, char * argv[])
                                false,
 #endif // ! GTKMM20
                                Gtk::MESSAGE_ERROR,
-                               Gtk::BUTTONS_CLOSE);
+                               Gtk::BUTTONS_OK);
     oDialog.run();
     return 1;
   }

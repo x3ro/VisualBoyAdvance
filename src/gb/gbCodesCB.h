@@ -1281,7 +1281,7 @@
    AF.B.B1|=1<<7;
    break;
  default:
-   systemMessage(0, "Unknown opcode %02x at %04x",
+   systemMessage(0, N_("Unknown opcode %02x at %04x"),
                  gbReadOpcode(PC.W-1),PC.W-1);
    emulating = false;
    return;

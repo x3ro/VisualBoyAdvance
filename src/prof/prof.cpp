@@ -55,6 +55,7 @@
 #include "gmon_out.h"
 
 #include "../GBA.h"
+#include "../NLS.h"
 
 /*
  * froms is actually a bunch of unsigned shorts indexing tos
@@ -139,7 +140,7 @@ void profControl(int mode)
 }
 
 
-#define MSG "No space for profiling buffer(s)\n"
+#define MSG N_("No space for profiling buffer(s)\n")
 
 void profStartup(u32 lowpc, u32 highpc)
 {

@@ -16,6 +16,9 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#define N_(String) (String)
+
 #define MSG_UNSUPPORTED_VBA_SGM             1
 #define MSG_CANNOT_LOAD_SGM                 2
 #define MSG_SAVE_GAME_NOT_USING_BIOS        3

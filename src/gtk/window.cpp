@@ -1059,14 +1059,7 @@ void Window::vLoadConfig(const std::string & _rsFile)
   }
   catch (const Glib::Error & e)
   {
-    Gtk::MessageDialog oDialog(*this,
-                               e.what(),
-#ifndef GTKMM20
-                               false,
-#endif // ! GTKMM20
-                               Gtk::MESSAGE_ERROR,
-                               Gtk::BUTTONS_CLOSE);
-    oDialog.run();
+    vPopupError(e.what().c_str());
   }
 }
 
@@ -1078,14 +1071,7 @@ void Window::vSaveConfig(const std::string & _rsFile)
   }
   catch (const Glib::Error & e)
   {
-    Gtk::MessageDialog oDialog(*this,
-                               e.what(),
-#ifndef GTKMM20
-                               false,
-#endif // ! GTKMM20
-                               Gtk::MESSAGE_ERROR,
-                               Gtk::BUTTONS_CLOSE);
-    oDialog.run();
+    vPopupError(e.what().c_str());
   }
 }
 
@@ -1231,6 +1217,39 @@ void Window::vUpdateScreen()
   {
     vDrawDefaultScreen();
   }
+}
+
+void Window::vPopupError(const char * _csFormat, ...)
+{
+  va_list args;
+  va_start(args, _csFormat);
+  char * csMsg = g_strdup_vprintf(_csFormat, args);
+  va_end(args);
+
+  Gtk::MessageDialog oDialog(*this,
+                             csMsg,
+#ifndef GTKMM20
+                             false,
+#endif // ! GTKMM20
+                             Gtk::MESSAGE_ERROR,
+                             Gtk::BUTTONS_OK);
+  oDialog.run();
+  g_free(csMsg);
+}
+
+void Window::vPopupErrorV(const char * _csFormat, va_list _args)
+{
+  char * csMsg = g_strdup_vprintf(_csFormat, _args);
+
+  Gtk::MessageDialog oDialog(*this,
+                             csMsg,
+#ifndef GTKMM20
+                             false,
+#endif // ! GTKMM20
+                             Gtk::MESSAGE_ERROR,
+                             Gtk::BUTTONS_OK);
+  oDialog.run();
+  g_free(csMsg);
 }
 
 void Window::vDrawScreen()
@@ -1393,7 +1412,6 @@ bool Window::bLoadROM(const std::string & _rsFile)
 
   if (! bLoaded)
   {
-    systemMessage(0, _("Failed to load file %s"), csFile);
     return false;
   }
 

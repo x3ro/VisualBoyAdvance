@@ -30,6 +30,7 @@
 #include "../Sound.h"
 
 #include "window.h"
+#include "intl.h"
 
 // Required vars, used by the emulator core
 //
@@ -73,17 +74,10 @@ void systemMessage(int _iId, const char * _csFormat, ...)
 {
   va_list args;
   va_start(args, _csFormat);
-  char * csMsg = g_strdup_vprintf(_csFormat, args);
-  va_end(args);
 
-  Gtk::MessageDialog oDialog(*GUI(), csMsg,
-#ifndef GTKMM20
-                             false,
-#endif // ! GTKMM20
-                             Gtk::MESSAGE_ERROR,
-                             Gtk::BUTTONS_OK);
-  oDialog.run();
-  free(csMsg);
+  GUI()->vPopupErrorV(_(_csFormat), args);
+
+  va_end(args);
 }
 
 void systemDrawScreen()

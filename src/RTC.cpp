@@ -21,6 +21,7 @@
 #include "Globals.h"
 #include "Port.h"
 #include "Util.h"
+#include "NLS.h"
 
 #include <time.h>
 #include <memory.h>
@@ -153,7 +154,7 @@ bool rtcWrite(u32 address, u16 value)
               }
               break;
             default:
-              systemMessage(0, "Unknown RTC command %02x", rtcClockData.command);
+              systemMessage(0, N_("Unknown RTC command %02x"), rtcClockData.command);
               rtcClockData.state = IDLE;
               break;
             }

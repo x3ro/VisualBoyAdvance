@@ -58,7 +58,7 @@ bool utilWritePNGFile(const char *fileName, int w, int h, u8 *pix)
   FILE *fp = fopen(fileName,"wb");
 
   if(!fp) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", fileName);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), fileName);
     return false;
   }
   
@@ -267,7 +267,7 @@ bool utilWriteBMPFile(const char *fileName, int w, int h, u8 *pix)
   FILE *fp = fopen(fileName,"wb");
 
   if(!fp) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", fileName);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), fileName);
     return false;
   }
 
@@ -585,7 +585,7 @@ IMAGE_TYPE utilFindType(const char *file)
     unzFile unz = unzOpen(file);
     
     if(unz == NULL) {
-      systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", file);
+      systemMessage(MSG_CANNOT_OPEN_FILE, N_("Cannot open file %s"), file);
       return IMAGE_UNKNOWN;
     }
     
@@ -593,7 +593,7 @@ IMAGE_TYPE utilFindType(const char *file)
     
     if(r != UNZ_OK) {
       unzClose(unz);
-      systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", file);
+      systemMessage(MSG_BAD_ZIP_FILE, N_("Bad ZIP file %s"), file);
       return IMAGE_UNKNOWN;
     }
     
@@ -613,7 +613,7 @@ IMAGE_TYPE utilFindType(const char *file)
       
       if(r != UNZ_OK) {
         unzClose(unz);
-        systemMessage(MSG_BAD_ZIP_FILE,"Bad ZIP file %s", file);
+        systemMessage(MSG_BAD_ZIP_FILE, N_("Bad ZIP file %s"), file);
         return IMAGE_UNKNOWN;
       }
       
@@ -636,7 +636,7 @@ IMAGE_TYPE utilFindType(const char *file)
     
     if(found == IMAGE_UNKNOWN) {
       systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                    "No image found on ZIP file %s", file);
+                    N_("No image found on ZIP file %s"), file);
       return found;
     }
     return found;
@@ -697,14 +697,14 @@ static u8 *utilLoadFromZip(const char *file,
   unzFile unz = unzOpen(file);
     
   if(unz == NULL) {
-    systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", file);
+    systemMessage(MSG_CANNOT_OPEN_FILE, N_("Cannot open file %s"), file);
     return NULL;
   }
   int r = unzGoToFirstFile(unz);
     
   if(r != UNZ_OK) {
     unzClose(unz);
-    systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", file);
+    systemMessage(MSG_BAD_ZIP_FILE, N_("Bad ZIP file %s"), file);
     return NULL;
   }
     
@@ -724,7 +724,7 @@ static u8 *utilLoadFromZip(const char *file,
       
     if(r != UNZ_OK) {
       unzClose(unz);
-      systemMessage(MSG_BAD_ZIP_FILE,"Bad ZIP file %s", file);
+      systemMessage(MSG_BAD_ZIP_FILE, N_("Bad ZIP file %s"), file);
       return NULL;
     }
 
@@ -742,7 +742,7 @@ static u8 *utilLoadFromZip(const char *file,
   if(!found) {
     unzClose(unz);
     systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                  "No image found on ZIP file %s", file);
+                  N_("No image found on ZIP file %s"), file);
     return NULL;
   }
   
@@ -753,7 +753,7 @@ static u8 *utilLoadFromZip(const char *file,
 
   if(r != UNZ_OK) {
     unzClose(unz);
-    systemMessage(MSG_ERROR_OPENING_IMAGE,"Error opening image %s", buffer);
+    systemMessage(MSG_ERROR_OPENING_IMAGE, N_("Error opening image %s"), buffer);
     return NULL;
   }
 
@@ -764,7 +764,7 @@ static u8 *utilLoadFromZip(const char *file,
     if(image == NULL) {
       unzCloseCurrentFile(unz);
       unzClose(unz);
-      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+      systemMessage(MSG_OUT_OF_MEMORY, N_("Failed to allocate memory for %s"),
                     "data");
       return NULL;
     }
@@ -780,7 +780,7 @@ static u8 *utilLoadFromZip(const char *file,
   
   if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
-                  "Error reading image %s", buffer);
+                  N_("Error reading image %s"), buffer);
     if(data == NULL)
       free(image);
     return NULL;
@@ -799,7 +799,7 @@ static u8 *utilLoadGzipFile(const char *file,
   FILE *f = fopen(file, "rb");
 
   if(f == NULL) {
-    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    systemMessage(MSG_ERROR_OPENING_IMAGE, N_("Error opening image %s"), file);
     return NULL;
   }
 
@@ -813,7 +813,7 @@ static u8 *utilLoadGzipFile(const char *file,
 
   if(gz == NULL) {
     // should not happen, but who knows?
-    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    systemMessage(MSG_ERROR_OPENING_IMAGE, N_("Error opening image %s"), file);
     return NULL;
   }
 
@@ -822,7 +822,7 @@ static u8 *utilLoadGzipFile(const char *file,
   if(image == NULL) {
     image = (u8 *)malloc(utilGetSize(size));
     if(image == NULL) {
-      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+      systemMessage(MSG_OUT_OF_MEMORY, N_("Failed to allocate memory for %s"),
                     "data");
       fclose(f);
       return NULL;
@@ -835,7 +835,7 @@ static u8 *utilLoadGzipFile(const char *file,
 
   if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
-                  "Error reading image %s", file);
+                  N_("Error reading image %s"), file);
     if(data == NULL)
       free(image);
     return NULL;
@@ -874,7 +874,7 @@ static u8 *utilLoadRarFile(const char *file,
       int r = urarlib_get((void *)&memory, &lsize, buffer, (void *)file, "");
       if(!r) {
         systemMessage(MSG_ERROR_READING_IMAGE,
-                      "Error reading image %s", buffer);
+                      N_("Error reading image %s"), buffer);
         urarlib_freelist(rarList);
         return NULL;
       }
@@ -886,7 +886,7 @@ static u8 *utilLoadRarFile(const char *file,
       return image;
     }
     systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                  "No image found on RAR file %s", file);
+                  N_("No image found on RAR file %s"), file);
     urarlib_freelist(rarList);
     return NULL;
   }
@@ -917,7 +917,7 @@ u8 *utilLoad(const char *file,
   FILE *f = fopen(file, "rb");
 
   if(!f) {
-    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    systemMessage(MSG_ERROR_OPENING_IMAGE, N_("Error opening image %s"), file);
     return NULL;
   }
 
@@ -930,7 +930,7 @@ u8 *utilLoad(const char *file,
   if(image == NULL) {
     image = (u8 *)malloc(utilGetSize(size));
     if(image == NULL) {
-      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+      systemMessage(MSG_OUT_OF_MEMORY, N_("Failed to allocate memory for %s"),
                     "data");
       fclose(f);
       return NULL;
@@ -943,7 +943,7 @@ u8 *utilLoad(const char *file,
 
   if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
-                  "Error reading image %s", file);
+                  N_("Error reading image %s"), file);
     if(data == NULL)
       free(image);
     return NULL;

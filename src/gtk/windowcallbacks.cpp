@@ -380,20 +380,20 @@ void Window::vOnRecentFile(std::string _sFile)
 
 void Window::vOnImportBatteryFile()
 {
-  std::string sSaveDir = m_poDirConfig->sGetKey("saves");
+  std::string BatteryDir = m_poDirConfig->sGetKey("batteries");
 
 #ifdef GTKMM20
 
   Gtk::FileSelection oDialog(_("Import battery file"));
   oDialog.set_transient_for(*this);
 
-  if (sSaveDir == "")
+  if (BatteryDir == "")
   {
     oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
   }
   else
   {
-    oDialog.set_filename(sSaveDir + "/");
+    oDialog.set_filename(BatteryDir + "/");
   }
 
 #else // ! GTKMM20
@@ -402,14 +402,14 @@ void Window::vOnImportBatteryFile()
   oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   oDialog.add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
 
-  if (sSaveDir == "")
+  if (BatteryDir == "")
   {
     oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
   }
   else
   {
-    oDialog.set_current_folder(sSaveDir);
-    oDialog.add_shortcut_folder(sSaveDir);
+    oDialog.set_current_folder(BatteryDir);
+    oDialog.add_shortcut_folder(BatteryDir);
   }
 
   Gtk::FileFilter oBatteryFilter;
@@ -446,34 +446,28 @@ void Window::vOnImportBatteryFile()
     }
     else
     {
-      Gtk::MessageDialog oErrorDialog(*this,
-                                      _("Importing the battery file failed."),
-#ifndef GTKMM20
-                                      false,
-#endif // ! GTKMM20
-                                      Gtk::MESSAGE_ERROR,
-                                      Gtk::BUTTONS_CLOSE);
-      oErrorDialog.run();
+      vPopupError(_("Failed to import battery file %s."),
+                  oDialog.get_filename().c_str());
     }
   }
 }
 
 void Window::vOnExportBatteryFile()
 {
-  std::string sSaveDir = m_poDirConfig->sGetKey("saves");
+  std::string sBatteryDir = m_poDirConfig->sGetKey("batteries");
 
 #ifdef GTKMM20
 
   Gtk::FileSelection oDialog(_("Export battery file"));
   oDialog.set_transient_for(*this);
 
-  if (sSaveDir == "")
+  if (sBatteryDir == "")
   {
     oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
   }
   else
   {
-    oDialog.set_filename(sSaveDir + "/");
+    oDialog.set_filename(sBatteryDir + "/");
   }
 
 #else // ! GTKMM20
@@ -483,14 +477,14 @@ void Window::vOnExportBatteryFile()
   oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
   oDialog.add_button(Gtk::Stock::SAVE,   Gtk::RESPONSE_OK);
 
-  if (sSaveDir == "")
+  if (sBatteryDir == "")
   {
     oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
   }
   else
   {
-    oDialog.set_current_folder(sSaveDir);
-    oDialog.add_shortcut_folder(sSaveDir);
+    oDialog.set_current_folder(sBatteryDir);
+    oDialog.add_shortcut_folder(sBatteryDir);
   }
 
   Gtk::FileFilter oBatteryFilter;
@@ -564,14 +558,8 @@ void Window::vOnExportBatteryFile()
     }
     else
     {
-      Gtk::MessageDialog oErrorDialog(*this,
-                                      _("Exporting the battery file failed."),
-#ifndef GTKMM20
-                                      false,
-#endif // ! GTKMM20
-                                      Gtk::MESSAGE_ERROR,
-                                      Gtk::BUTTONS_CLOSE);
-      oErrorDialog.run();
+      vPopupError(_("Failed to export battery file %s."),
+                  sFile.c_str());
     }
   }
 }

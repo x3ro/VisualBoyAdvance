@@ -1659,7 +1659,7 @@ void gbWriteSaveMBC1(const char * name)
   FILE *gzFile = fopen(name,"wb");
 
   if(gzFile == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", name);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), name);
     return;
   }
   
@@ -1676,7 +1676,7 @@ void gbWriteSaveMBC2(const char * name)
   FILE *file = fopen(name, "wb");
 
   if(file == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", name);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), name);
     return;
   }
 
@@ -1693,7 +1693,7 @@ void gbWriteSaveMBC3(const char * name, bool extendedSave)
   FILE *gzFile = fopen(name,"wb");
 
   if(gzFile == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", name);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), name);
     return;
   }
   
@@ -1716,7 +1716,7 @@ void gbWriteSaveMBC5(const char * name)
   FILE *gzFile = fopen(name,"wb");
 
   if(gzFile == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE,"Error creating file %s", name);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), name);
     return;
   }
   
@@ -1733,7 +1733,7 @@ void gbWriteSaveMBC7(const char * name)
   FILE *file = fopen(name, "wb");
 
   if(file == NULL) {
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s", name);
+    systemMessage(MSG_ERROR_CREATING_FILE, N_("Error creating file %s"), name);
     return;
   }
 
@@ -1758,7 +1758,7 @@ bool gbReadSaveMBC1(const char * name)
                     gbRamSize);
   
   if(read != gbRamSize) {
-    systemMessage(MSG_FAILED_TO_READ_SGM, "Failed to read complete save game %s (%d)", name, read);
+    systemMessage(MSG_FAILED_TO_READ_SGM, N_("Failed to read complete save game %s (%d)"), name, read);
     gzclose(gzFile);
     return false;
   }
@@ -1782,7 +1782,7 @@ bool gbReadSaveMBC2(const char * name)
   
   if(read != 256) {
     systemMessage(MSG_FAILED_TO_READ_SGM,
-                  "Failed to read complete save game %s (%d)", name, read);
+                  N_("Failed to read complete save game %s (%d)"), name, read);
     fclose(file);
     return false;
   }
@@ -1807,7 +1807,7 @@ bool gbReadSaveMBC3(const char * name)
   
   if(read != gbRamSize) {
     systemMessage(MSG_FAILED_TO_READ_SGM,
-                  "Failed to read complete save game %s (%d)", name, read);
+                  N_("Failed to read complete save game %s (%d)"), name, read);
   } else {
     read = gzread(gzFile,
                   &gbDataMBC3.mapperSeconds,
@@ -1815,7 +1815,7 @@ bool gbReadSaveMBC3(const char * name)
 
     if(read != (sizeof(int)*10 + sizeof(time_t)) && read != 0) {
       systemMessage(MSG_FAILED_TO_READ_RTC,
-                    "Failed to read RTC from save game %s (continuing)",
+                    N_("Failed to read RTC from save game %s (continuing)"),
                     name);
       res = false;
     }
@@ -1839,7 +1839,7 @@ bool gbReadSaveMBC5(const char * name)
   
   if(read != gbRamSize) {
     systemMessage(MSG_FAILED_TO_READ_SGM,
-                  "Failed to read complete save game %s (%d)", name, read);
+                  N_("Failed to read complete save game %s (%d)"), name, read);
     gzclose(gzFile);
     return false;
   }
@@ -1863,7 +1863,7 @@ bool gbReadSaveMBC7(const char * name)
   
   if(read != 256) {
     systemMessage(MSG_FAILED_TO_READ_SGM,
-                  "Failed to read complete save game %s (%d)", name, read);
+                  N_("Failed to read complete save game %s (%d)"), name, read);
     fclose(file);
     return false;
   }
@@ -1974,7 +1974,7 @@ bool gbReadGSASnapshot(const char *fileName)
   FILE *file = fopen(fileName, "rb");
     
   if(!file) {
-    systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", fileName);
+    systemMessage(MSG_CANNOT_OPEN_FILE, N_("Cannot open file %s"), fileName);
     return false;
   }
   
@@ -1988,7 +1988,7 @@ bool gbReadGSASnapshot(const char *fileName)
   buffer2[15] = 0;
   if(memcmp(buffer, buffer2, 15)) {
     systemMessage(MSG_CANNOT_IMPORT_SNAPSHOT_FOR,
-                  "Cannot import snapshot for %s. Current game is %s",
+                  N_("Cannot import snapshot for %s. Current game is %s"),
                   buffer,
                   buffer2);
     fclose(file);
@@ -2015,7 +2015,7 @@ bool gbReadGSASnapshot(const char *fileName)
     break;
   default:
     systemMessage(MSG_UNSUPPORTED_SNAPSHOT_FILE,
-                  "Unsupported snapshot file %s",
+                  N_("Unsupported snapshot file %s"),
                   fileName);
     fclose(file);
     return false;
@@ -2192,7 +2192,7 @@ static bool gbReadSaveState(gzFile gzFile)
 
   if(version > GBSAVE_GAME_VERSION || version < 0) {
     systemMessage(MSG_UNSUPPORTED_VB_SGM,
-                  "Unsupported VisualBoy save game version %d", version);
+                  N_("Unsupported VisualBoy save game version %d"), version);
     return false;
   }
   
@@ -2202,7 +2202,7 @@ static bool gbReadSaveState(gzFile gzFile)
 
   if(memcmp(&gbRom[0x134], romname, 15) != 0) {
     systemMessage(MSG_CANNOT_LOAD_SGM_FOR,
-                  "Cannot load save game for %s. Playing %s",
+                  N_("Cannot load save game for %s. Playing %s"),
                   romname, &gbRom[0x134]);
     return false;
   }
@@ -2461,7 +2461,7 @@ bool gbUpdateSizes()
 {
   if(gbRom[0x148] > 8) {
     systemMessage(MSG_UNSUPPORTED_ROM_SIZE,
-                  "Unsupported rom size %02x", gbRom[0x148]);
+                  N_("Unsupported rom size %02x"), gbRom[0x148]);
     return false;
   }
 
@@ -2473,7 +2473,7 @@ bool gbUpdateSizes()
 
   if(gbRom[0x149] > 5) {
     systemMessage(MSG_UNSUPPORTED_RAM_SIZE,
-                  "Unsupported ram size %02x", gbRom[0x149]);
+                  N_("Unsupported ram size %02x"), gbRom[0x149]);
     return false;
   }
 
@@ -2549,7 +2549,7 @@ bool gbUpdateSizes()
     break;
   default:
     systemMessage(MSG_UNKNOWN_CARTRIDGE_TYPE,
-                  "Unknown cartridge type %02x", type);
+                  N_("Unknown cartridge type %02x"), type);
     return false;
   }
 

@@ -127,7 +127,7 @@ bool gbCheatsLoadCheatList(const char *file)
      
   if(version != 1) {
     systemMessage(MSG_UNSUPPORTED_CHEAT_LIST_VERSION,
-                  "Unsupported cheat list version %d", version);
+                  N_("Unsupported cheat list version %d"), version);
     fclose(f);
     return false;
   }
@@ -140,7 +140,7 @@ bool gbCheatsLoadCheatList(const char *file)
 
   if(type != 1) {
     systemMessage(MSG_UNSUPPORTED_CHEAT_LIST_TYPE,
-                  "Unsupported cheat list type %d", type);
+                  N_("Unsupported cheat list type %d"), type);
     fclose(f);
     return false;
   }
@@ -191,13 +191,13 @@ void gbAddGsCheat(const char *code, const char *desc)
 {
   if(gbCheatNumber > 99) {
     systemMessage(MSG_MAXIMUM_NUMBER_OF_CHEATS,
-                  "Maximum number of cheats reached.");
+                  N_("Maximum number of cheats reached."));
     return;
   }
 
   if(!gbVerifyGsCode(code)) {
     systemMessage(MSG_INVALID_GAMESHARK_CODE,
-                  "Invalid GameShark code: %s", code);
+                  N_("Invalid GameShark code: %s"), code);
     return;
   }
   
@@ -301,13 +301,13 @@ void gbAddGgCheat(const char *code, const char *desc)
 {
   if(gbCheatNumber > 99) {
     systemMessage(MSG_MAXIMUM_NUMBER_OF_CHEATS,
-                  "Maximum number of cheats reached.");
+                  N_("Maximum number of cheats reached."));
     return;
   }
 
   if(!gbVerifyGgCode(code)) {
     systemMessage(MSG_INVALID_GAMEGENIE_CODE,
-                  "Invalid GameGenie code: %s", code);
+                  N_("Invalid GameGenie code: %s"), code);
     return;
   }
   
@@ -352,7 +352,7 @@ void gbCheatRemove(int i)
 {
   if(i < 0 || i >= gbCheatNumber) {
     systemMessage(MSG_INVALID_CHEAT_TO_REMOVE,
-                  "Invalid cheat to remove %d", i);
+                  N_("Invalid cheat to remove %d"), i);
     return;
   }
   
@@ -397,7 +397,7 @@ bool gbCheatReadGSCodeFile(const char *fileName)
   FILE *file = fopen(fileName, "rb");
     
   if(!file) {
-    systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", fileName);
+    systemMessage(MSG_CANNOT_OPEN_FILE, N_("Cannot open file %s"), fileName);
     return false;
   }
   

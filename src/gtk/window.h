@@ -21,6 +21,7 @@
 #define __VBA_WINDOW_H__
 
 #include <sys/types.h>
+#include <stdarg.h>
 
 #include <libglademm.h>
 #include <gtkmm.h>
@@ -66,6 +67,8 @@ public:
   const int m_iGBAScreenWidth;
   const int m_iGBAScreenHeight;
 
+  void vPopupError(const char * _csFormat, ...);
+  void vPopupErrorV(const char * _csFormat, va_list _args);
   void vDrawScreen();
   void vComputeFrameskip(int _iRate);
   void vShowSpeed(int _iSpeed);
