@@ -11,6 +11,7 @@ Windows:
 - fixed GDI problems with selected bitmap being deleted
 - added JPEG and PNG support for skins
 - changed import/export battery file to default to battery directory
+- fixed the translation bug with viewers
 - fixed the GB map view flickering
 - fixed skin bugs
 
