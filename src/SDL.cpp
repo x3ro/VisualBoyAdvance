@@ -181,6 +181,8 @@ SDL_mutex *mutex = NULL;
 u8 sdlBuffer[4096];
 int sdlSoundLen = 0;
 
+char *arg0;
+
 #ifndef C_CORE
 u8 sdlStretcher[16384];
 int sdlStretcherPos;
@@ -715,20 +717,96 @@ char *sdlGetFilename(char *name)
   return filebuffer;
 }
 
-void sdlReadPreferences()
+FILE *sdlFindPreferences()
 {
-  char buffer[2048];
+  char buffer[4096];
+  char path[2048];
 
+#ifdef __GNUC__
+#define PATH_SEP ":"
+#define FILE_SEP '/'
+#define EXE_NAME "VisualBoyAdvance"
+#else
+#define PATH_SEP ";"
+#define FILE_SEP '\\'
+#define EXE_NAME "VisualBoyAdvance-SDL.exe"
+#endif
+  
   if(GETCWD(buffer, 2048)) {
     fprintf(stderr, "Searching for configuration file at: %s\n", buffer);
   }
+  
   FILE *f = fopen("VisualBoyAdvance.cfg","r");
 
-  if(f == NULL) {
-    fprintf(stderr, "Configuration file NOT FOUND (using defaults)\n");
-    return;
-  } else
-    fprintf(stderr, "Reading configuration file.\n");
+  if(f != NULL) {
+    return f;
+  }
+
+  char *home = getenv("HOME");
+
+  if(home != NULL) {
+    fprintf(stderr, "Seaching home directory: %s\n", home);
+    sprintf(path, "%s%cVisualBoyAdvance.cfg", home, FILE_SEP);
+    f = fopen(path, "r");
+    
+    if(f)
+      return f;
+  }
+
+#ifdef _MSC_VER
+  home = getenv("USERPROFILE");
+  if(home != NULL) {
+    fprintf(stderr, "Searching user profile directory: %s\n", home);
+    sprintf(path, "%s%cVisualBoyAdvance.cfg", home, FILE_SEP);
+    f = fopen(path, "r");
+    if(f)
+      return f;
+  }
+#endif
+  
+  if(!strchr(arg0, '/') &&
+     !strchr(arg0, '\\')) {
+    char *path = getenv("PATH");
+
+    if(path != NULL) {
+      fprintf(stderr, "Searching PATH\n");
+      strncpy(buffer, path, 4096);
+      buffer[4095] = 0;
+      char *tok = strtok(buffer, PATH_SEP);
+      
+      while(tok) {
+        sprintf(path, "%s%c%s", tok, FILE_SEP, EXE_NAME);
+        f = fopen(path, "r");
+        if(f != NULL) {
+          char path2[2048];
+          fclose(f);
+          sprintf(path2, "%s%cVisualBoyAdvance.cfg", tok, FILE_SEP);
+          f = fopen(path2, "r");
+          if(f)
+            return f;
+        }
+        tok = strtok(NULL, PATH_SEP);
+      }
+    }
+  } else {
+    // executable is relative to some directory
+    fprintf(stderr, "Searching executable directory\n");
+    strcpy(buffer, arg0);
+    char *p = strrchr(buffer, FILE_SEP);
+    if(p) {
+      *p = 0;
+      sprintf(path, "%s%cVisualBoyAdvance.cfg", buffer, FILE_SEP);
+      f = fopen(path, "r");
+      if(f)
+        return f;
+    }
+  }
+  return NULL;
+}
+
+void sdlReadPreferences(FILE *f)
+{
+  char buffer[2048];
   
   while(1) {
     char *s = fgets(buffer, 2048, f);
@@ -865,6 +943,20 @@ soundQuality);
       fprintf(stderr, "Unknown configuration key %s\n", key);
     }
   }
+}
+
+void sdlReadPreferences()
+{
+  FILE *f = sdlFindPreferences();
+
+  if(f == NULL) {
+    fprintf(stderr, "Configuration file NOT FOUND (using defaults)\n");
+    return;
+  } else
+    fprintf(stderr, "Reading configuration file.\n");
+
+  sdlReadPreferences(f);
+
   fclose(f);
 }
 
@@ -1399,7 +1491,8 @@ int main(int argc, char **argv)
 #else
   fprintf(stderr,"Windows version\n");
 #endif
-
+  arg0 = argv[0];
+  
   captureDir[0] = 0;
   saveDir[0] = 0;
   batteryDir[0] = 0;
