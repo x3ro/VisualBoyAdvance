@@ -22,7 +22,8 @@
 class ISound 
 {
  public:
-  
+  virtual ~ISound() {};
+
   virtual bool init() = 0;
   virtual void pause() = 0;
   virtual void reset() = 0;

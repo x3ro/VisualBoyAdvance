@@ -43,7 +43,7 @@ private:
 
 public:
   DirectSound();
-  ~DirectSound();
+  virtual ~DirectSound();
 
   bool init();
   void pause();
