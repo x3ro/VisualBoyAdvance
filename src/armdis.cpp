@@ -78,9 +78,10 @@ const Opcodes thumbOpcodes[] = {
   {0xf800, 0x0800, "lsr %r0, %r3, %o"},
   {0xf800, 0x1000, "asr %r0, %r3, %o"},
   // Format 2
-  {0xfe00, 0x1c00, "mov %r0, %r3" },
-  {0xfa00, 0x1800, "add %r0, %r3, %i"},
-  {0xfa00, 0x1a00, "sub %r0, %r3, %i"},
+  {0xfe00, 0x1800, "add %r0, %r3, %r6"},
+  {0xfe00, 0x1a00, "sub %r0, %r3, %r6"},
+  {0xfe00, 0x1c00, "add %r0, %r3, %i"},
+  {0xfe00, 0x1e00, "sub %r0, %r3, %i"},
   // Format 3
   {0xf800, 0x2000, "mov %r8, %O"},
   {0xf800, 0x2800, "cmp %r8, %O"},
@@ -592,12 +593,8 @@ int disThumb(u32 offset, char *dest, int flags){
         dest = addHex(dest, 0, ((opcode>>6)&0x1f)<<1);
         break;
       case 'i':
-        if (opcode&(1<<10)){
-          dest = addStr(dest, "#0x");
-          dest = addHex(dest, 0, (opcode>>6)&7);
-        } else {
-          dest = addStr(dest, regs[(opcode>>6)&7]);
-        }
+        dest = addStr(dest, "#0x");
+        dest = addHex(dest, 0, (opcode>>6)&7);
         break;
       case 'h':
         {
