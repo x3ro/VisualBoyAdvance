@@ -386,9 +386,7 @@ void TileViewer::render()
 
   if(is256Colors) {
     int tile = 0;
-    maxY = 32;
-    if(this->charBase == 3)
-      maxY = 16;
+    maxY = 16;
     for(int y = 0; y < maxY; y++) {
       for(int x = 0; x < 32; x++) {
         if(this->charBase == 4)
@@ -551,7 +549,8 @@ LRESULT TileViewer::OnMapInfo(WPARAM wParam, LPARAM lParam)
 
   u32 address = 0x6000000 + 0x4000 * charBase;
   int tile = 32 * y + x;
-
+  if(is256Colors)
+    tile *= 2;
   address += 32 * tile;
 
   char buffer[16];
