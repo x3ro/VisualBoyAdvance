@@ -1,3 +1,9 @@
+2003-07-21  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (fileMoviePlay): added message when playing movie
+	* src/Sound.cpp (soundTick): produce mute sound while in sleep state
+	* src/GBA.cpp (CPULoop): improve stop state/sleep support
+
 2003-07-19  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (updateFileMenu): allow customize in fullscreen (not at 320x240 though)

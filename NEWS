@@ -6,6 +6,7 @@ Core changes:
 - added simple emulation for BIOS call 0x2a
 - added enhanced save type detection option (default)
 - improved loading speed
+- fixed sleep/stop state support
 - fixed bug caused by rendering optimizations
 - fixed crash while debugging startup routines
 - fixed DMA emulation
