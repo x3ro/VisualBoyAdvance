@@ -126,6 +126,7 @@ LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
   if(region != NULL)
     inside &= PtInRegion(region, pt.x, pt.y);
   if(inside) {
+    HWND hWnd = m_hWnd;
     if(idCommand != 0)
       GetParent()->SendMessage(WM_COMMAND, idCommand, 0);
     else if(buttonMask)
@@ -139,7 +140,7 @@ LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
       TrackPopupMenu(m, 0, pt.x, pt.y, 0, *theApp.m_pMainWnd, NULL);
     }
 
-    return Default();
+    return ::DefWindowProc(hWnd, WM_LBUTTONUP, wParam, lParam);
   }
   return GetParent()->SendMessage(WM_LBUTTONUP, wParam, lParam);
 }

@@ -144,6 +144,7 @@ void MainWnd::OnFileClose()
     if(theApp.autoSaveLoadCheatList)
       winSaveCheatListDefault();
     writeBatteryFile();
+    soundPause();
     theApp.emulator.emuCleanUp();
     remoteCleanUp();
   }
