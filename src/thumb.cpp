@@ -78,7 +78,7 @@
    }
 #define ADC_RD_RS \
    {\
-     u32 lhs = reg[source].I;\
+     u32 lhs = reg[dest].I;\
      u32 rhs = value;\
      u32 res = lhs + rhs + (u32)C_FLAG;\
      reg[dest].I = res;\
@@ -132,7 +132,7 @@
    }
 #define SBC_RD_RS \
    {\
-     u32 lhs = reg[source].I;\
+     u32 lhs = reg[dest].I;\
      u32 rhs = value;\
      u32 res = lhs - rhs - !((u32)C_FLAG);\
      reg[dest].I = res;\

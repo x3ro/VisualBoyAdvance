@@ -113,10 +113,10 @@ u32 inline CPUReadMemory(u32 address)
         value = CPUReadHalfWordQuick(reg[15].I) |
           CPUReadHalfWordQuick(reg[15].I) << 16;
       }
-      //    } else {
+      //  } else {
       //      value = *((u32 *)&bios[address & 0x3ffc]);
       //    }
-    //    return 0xFFFFFFFF;
+      //        return 0xFFFFFFFF;
   }
 
   if(address & 3) {
