@@ -2037,7 +2037,7 @@ void updateToolsMenu(HMENU menu)
                  ENABLEMENU(emulating && moviePlaying));
 
   EnableMenuItem(menu, ID_TOOLS_REWIND,
-                 ENABLEMENU(rewindMemory != NULL));
+                 ENABLEMENU(rewindMemory != NULL && emulating));
 }
 
 void updateSoundChannels(UINT id)
