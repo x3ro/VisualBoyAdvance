@@ -927,11 +927,19 @@ void soundMix()
     cgbRes += ((s8)soundBuffer[3][soundIndex]);
   }
 
-  if((soundControl & 0x0200) && (soundEnableFlag & 0x100))
-    res = ((s8)soundBuffer[4][soundIndex]);
+  if((soundControl & 0x0200) && (soundEnableFlag & 0x100)){
+    if(!dsaRatio)
+      res = ((s8)soundBuffer[4][soundIndex])>>1;
+    else
+      res = ((s8)soundBuffer[4][soundIndex]);
+  }
   
-  if((soundControl & 0x2000) && (soundEnableFlag & 0x200))
-    res += ((s8)soundBuffer[5][soundIndex]);
+  if((soundControl & 0x2000) && (soundEnableFlag & 0x200)){
+    if(!dsbRatio)
+      res += ((s8)soundBuffer[5][soundIndex])>>1;
+    else
+      res += ((s8)soundBuffer[5][soundIndex]);
+  }
   
   res = (res * 170);
   cgbRes = (cgbRes * 52 * soundLevel1);
@@ -948,9 +956,6 @@ void soundMix()
     break;
   }
 
-  if(!dsaRatio)
-    res >>= 1;
-  
   res += cgbRes;
 
   if(soundEcho) {
@@ -998,11 +1003,18 @@ void soundMix()
     cgbRes += ((s8)soundBuffer[3][soundIndex]);
   }
 
-  if((soundControl & 0x0100) && (soundEnableFlag & 0x100))
-    res = ((s8)soundBuffer[4][soundIndex]);
+  if((soundControl & 0x0100) && (soundEnableFlag & 0x100)){
+    if(!dsaRatio)
+      res = ((s8)soundBuffer[4][soundIndex])>>1;
+    else
+      res = ((s8)soundBuffer[4][soundIndex]);
+  }
   
-  if((soundControl & 0x1000) && (soundEnableFlag & 0x200)) {
-    res += ((s8)soundBuffer[5][soundIndex]);      
+  if((soundControl & 0x1000) && (soundEnableFlag & 0x200)){
+    if(!dsbRatio)
+      res += ((s8)soundBuffer[5][soundIndex])>>1;
+    else
+      res += ((s8)soundBuffer[5][soundIndex]);
   }
 
   res = (res * 170);
@@ -1020,9 +1032,6 @@ void soundMix()
     break;
   }
 
-  if(!dsbRatio)
-    res >>= 1;
-  
   res += cgbRes;
   
   if(soundEcho) {
