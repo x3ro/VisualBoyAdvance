@@ -3777,6 +3777,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_FILE_OPEN:
       winCheckFullscreen();
       if(fileOpenSelect()) {
+        soundPause();
         if(fileOpen())
           emulating = TRUE;
         else {
@@ -3788,6 +3789,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_FILE_OPENGAMEBOY:
       winCheckFullscreen();      
       if(fileOpenSelectGB()) {
+        soundPause();
         if(fileOpen())
           emulating = TRUE;
         else {
