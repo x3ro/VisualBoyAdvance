@@ -756,6 +756,24 @@ static bool CPUReadState(gzFile gzFile)
     rtcReadGame(gzFile);
   }
 
+  if(version <= SAVE_GAME_VERSION_7) {
+    u32 temp;
+#define SWAP(a,b,c) \
+    temp = (a);\
+    (a) = (b)<<16|(c);\
+    (b) = (temp) >> 16;\
+    (c) = (temp) & 0xFFFF;
+    
+    SWAP(dma0Source, DM0SAD_H, DM0SAD_L);
+    SWAP(dma0Dest,   DM0DAD_H, DM0DAD_L);
+    SWAP(dma1Source, DM1SAD_H, DM1SAD_L);
+    SWAP(dma1Dest,   DM1DAD_H, DM1DAD_L);
+    SWAP(dma2Source, DM2SAD_H, DM2SAD_L);
+    SWAP(dma2Dest,   DM2DAD_H, DM2DAD_L);
+    SWAP(dma3Source, DM3SAD_H, DM3SAD_L);
+    SWAP(dma3Dest,   DM3DAD_H, DM3DAD_L);
+  }
+
   // set pointers!
   layerEnable = layerSettings & DISPCNT;
   
