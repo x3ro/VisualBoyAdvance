@@ -1,3 +1,41 @@
+Version 1.6:
+Core changes:
+- added rewind support
+- added support for slowdown codes
+- added emulation of sprite priority bug (thanks PokemonHacker)
+- added simple emulation for BIOS call 0x2a
+- added enhanced save type detection option (default)
+- improved loading speed
+- fixed bug caused by rendering optimizations
+- fixed crash while debugging startup routines
+- fixed DMA emulation
+- fixed priority between OBJ Window and regular windows
+- fixed thumb disassembly bug
+- fixed sound envelope bug when set to 0 to mute sound
+
+Windows:
+- added movie recording/playback (joypad movement recording)
+- added support for automatic SGB border display
+- added option to auto hide menu in full screen mode
+- added rewind support
+- added bug report menu to provide needed information for solving problems
+- added FAQ optin to take to the VBA website FAQ
+- menu toggle can now have a customizable accelerator instead of ESC
+- fixed bug on GBA cheats showing the wrong enable state (checkbox was ok)
+- fixed bug enabling/disabling BG layers (introduced in version 1.5.1)
+- fixed export settings to also export viewers settings
+- fixed bug saving keyboard settings in INI file
+- fixed map viewer click address in some cases
+- fixed map viewer rendering for 512x512 screens
+- allow customize to run in fullscreen mode (exception of 320x240 mode)
+
+SDL versions:
+- added support to turn sound off and change channel enable
+- added support for automatic SGB border display
+- added rewind support (CTRL+B)
+- fixed bug enabling/disabling BG layers (introduced in version 1.5.1)
+- fixed typo on pause-when-inactive option which made it not recognized
+
 Version 1.5.1:
 
 Core changes:

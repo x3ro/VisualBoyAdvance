@@ -19,12 +19,12 @@
 #ifndef __AUTOBUILD_H__
 #define __AUTOBUILD_H__
 #ifndef VERSION
-#define VERSION       "1.6-beta 2"
+#define VERSION       "1.6"
 #endif
 //change the FALSE to TRUE for autoincrement of build number
 #define INCREMENT_VERSION FALSE
-#define FILEVER        1,6,0,452
-#define PRODUCTVER     1,6,0,452
-#define STRFILEVER     "1, 6, 0, 452\0"
-#define STRPRODUCTVER  "1, 6, 0, 452\0"
+#define FILEVER        1,6,0,460
+#define PRODUCTVER     1,6,0,460
+#define STRFILEVER     "1, 6, 0, 460\0"
+#define STRPRODUCTVER  "1, 6, 0, 460\0"
 #endif //__AUTOBUILD_H__
