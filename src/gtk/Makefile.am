@@ -16,6 +16,7 @@ gvba_SOURCES = \
 	system.cpp		\
 	tools.cpp		\
 	tools.h			\
+	windowcallbacks.cpp	\
 	window.cpp		\
 	window.h
 

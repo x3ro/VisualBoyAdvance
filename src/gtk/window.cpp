@@ -18,8 +18,10 @@
 
 #include "window.h"
 
-#include <sys/types.h>
 #include <sys/stat.h>
+
+#include <stdio.h>
+#include <time.h>
 
 #include <SDL.h>
 
@@ -125,20 +127,57 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   //
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileOpen"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileReset"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileReset));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileClose"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileClose));
-  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileExit"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileExit));
+
+  for (int i = 0; i < 10; i++)
+  {
+    char csName[20];
+    snprintf(csName, 20, "LoadGameSlot%d", i + 1);
+    m_apoLoadGameItem[i] = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(csName));
+    snprintf(csName, 20, "SaveGameSlot%d", i + 1);
+    m_apoSaveGameItem[i] = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(csName));
+
+    m_apoLoadGameItem[i]->signal_activate().connect(SigC::bind<int>(
+                                                      SigC::slot(*this, &Window::vOnLoadGame),
+                                                      i + 1));
+    m_apoSaveGameItem[i]->signal_activate().connect(SigC::bind<int>(
+                                                      SigC::slot(*this, &Window::vOnSaveGame),
+                                                      i + 1));
+  }
+  vUpdateGameSlots();
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("LoadGameMostRecent"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnLoadGameMostRecent));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("LoadGameAuto"));
+  poCMI->set_active(m_poCoreConfig->oGetKey<bool>("load_game_auto"));
+  vOnLoadGameAutoToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnLoadGameAutoToggled),
+                                    poCMI));
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("SaveGameOldest"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnSaveGameOldest));
+  m_listSensitiveWhenPlaying.push_back(poMI);
 
   m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
   m_poFilePauseItem->set_active(false);
-  m_poFilePauseItem->set_sensitive(false);
   vOnFilePauseToggled(m_poFilePauseItem);
   m_poFilePauseItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
                                                 SigC::slot(*this, &Window::vOnFilePauseToggled),
                                                 m_poFilePauseItem));
+  m_listSensitiveWhenPlaying.push_back(m_poFilePauseItem);
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileReset"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileReset));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileClose"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileClose));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileExit"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileExit));
 
   // Frameskip menu
   //
@@ -648,6 +687,14 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("HelpAbout"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnHelpAbout));
 
+  // Init widgets sensitivity
+  for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
+       it != m_listSensitiveWhenPlaying.end();
+       it++)
+  {
+    (*it)->set_sensitive(false);
+  }
+
   if (m_poInstance == NULL)
   {
     m_poInstance = this;
@@ -761,23 +808,24 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey("frameskip",     "auto"       );
-  m_poCoreConfig->vSetKey("throttle",      0            );
-  m_poCoreConfig->vSetKey("layer_bg0",     true         );
-  m_poCoreConfig->vSetKey("layer_bg1",     true         );
-  m_poCoreConfig->vSetKey("layer_bg2",     true         );
-  m_poCoreConfig->vSetKey("layer_bg3",     true         );
-  m_poCoreConfig->vSetKey("layer_obj",     true         );
-  m_poCoreConfig->vSetKey("layer_win0",    true         );
-  m_poCoreConfig->vSetKey("layer_win1",    true         );
-  m_poCoreConfig->vSetKey("layer_objwin",  true         );
-  m_poCoreConfig->vSetKey("use_bios_file", false        );
-  m_poCoreConfig->vSetKey("bios_file",     ""           );
-  m_poCoreConfig->vSetKey("save_type",     SaveAuto     );
-  m_poCoreConfig->vSetKey("flash_size",    64           );
-  m_poCoreConfig->vSetKey("gb_border",     true         );
-  m_poCoreConfig->vSetKey("gb_printer",    false        );
-  m_poCoreConfig->vSetKey("emulator_type", EmulatorAuto );
+  m_poCoreConfig->vSetKey("load_game_auto", false        );
+  m_poCoreConfig->vSetKey("frameskip",      "auto"       );
+  m_poCoreConfig->vSetKey("throttle",       0            );
+  m_poCoreConfig->vSetKey("layer_bg0",      true         );
+  m_poCoreConfig->vSetKey("layer_bg1",      true         );
+  m_poCoreConfig->vSetKey("layer_bg2",      true         );
+  m_poCoreConfig->vSetKey("layer_bg3",      true         );
+  m_poCoreConfig->vSetKey("layer_obj",      true         );
+  m_poCoreConfig->vSetKey("layer_win0",     true         );
+  m_poCoreConfig->vSetKey("layer_win1",     true         );
+  m_poCoreConfig->vSetKey("layer_objwin",   true         );
+  m_poCoreConfig->vSetKey("use_bios_file",  false        );
+  m_poCoreConfig->vSetKey("bios_file",      ""           );
+  m_poCoreConfig->vSetKey("save_type",      SaveAuto     );
+  m_poCoreConfig->vSetKey("flash_size",     64           );
+  m_poCoreConfig->vSetKey("gb_border",      true         );
+  m_poCoreConfig->vSetKey("gb_printer",     false        );
+  m_poCoreConfig->vSetKey("emulator_type",  EmulatorAuto );
 
   // Display section
   //
@@ -1181,16 +1229,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     {
       m_eCartridge = CartridgeGB;
       m_stEmulator = GBSystem;
-
-      //if(sdlAutoIPS) {
-      //  int size = gbRomSize;
-      //  utilApplyIPS(ipsname, &gbRom, &size);
-      //  if(size != gbRomSize) {
-      //    extern bool gbUpdateSizes();
-      //    gbUpdateSizes();
-      //    gbReset();
-      //  }
-      //}
     }
   }
   else if (eType == IMAGE_GBA)
@@ -1199,8 +1237,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     bLoaded = (iSize > 0);
     if (bLoaded)
     {
-      //sdlApplyPerImagePreferences();
-
       m_eCartridge = CartridgeGBA;
       m_stEmulator = GBASystem;
 
@@ -1215,14 +1251,6 @@ bool Window::bLoadROM(const std::string & _rsFilename)
         m_poUseBiosItem->set_sensitive(false);
         m_poCoreConfig->vSetKey("bios_file", "");
       }
-
-      //if(sdlAutoIPS) {
-      //  int size = 0x2000000;
-      //  utilApplyIPS(ipsname, &rom, &size);
-      //  if(size != 0x2000000) {
-      //    CPUReset();
-      //  }
-      //}
     }
   }
 
@@ -1248,7 +1276,19 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     gbSoundSetQuality(m_eSoundQuality);
   }
 
-  m_poFilePauseItem->set_sensitive();
+  vUpdateGameSlots();
+
+  for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
+       it != m_listSensitiveWhenPlaying.end();
+       it++)
+  {
+    (*it)->set_sensitive();
+  }
+
+  if (m_poCoreConfig->oGetKey<bool>("load_game_auto"))
+  {
+    vOnLoadGameMostRecent();
+  }
 
   vStartEmu();
 
@@ -1291,16 +1331,6 @@ void Window::vSaveBattery()
   {
     systemScreenMessage(_("Saved battery"));
   }
-}
-
-void Window::vLoadState(int _iNum)
-{
-  // TODO
-}
-
-void Window::vSaveState(int _iNum)
-{
-  // TODO
 }
 
 void Window::vStartEmu()
@@ -1353,705 +1383,80 @@ void Window::vSelectBestThrottleItem()
   }
 }
 
-void Window::vOnFileOpen()
+void Window::vUpdateGameSlots()
 {
-  if (m_poFileOpenDialog == NULL)
+  if (m_eCartridge == CartridgeNone)
   {
-    m_poFileOpenDialog = new Gtk::FileSelection(_("Open"));
-    m_poFileOpenDialog->set_transient_for(*this);
+    std::string sDateTime = _("----/--/-- --:--:--");
 
-    std::string sDir = m_poDirConfig->sGetKey("gba_roms");
-    if (sDir != "")
+    for (int i = 0; i < 10; i++)
     {
-      m_poFileOpenDialog->set_filename(sDir + "/");
+      char csPrefix[10];
+      snprintf(csPrefix, sizeof(csPrefix), "%2d ", i + 1);
+
+      Gtk::Label * poLabel;
+      poLabel = dynamic_cast<Gtk::Label *>(m_apoLoadGameItem[i]->get_child());
+      poLabel->set_text(csPrefix + sDateTime);
+      m_apoLoadGameItem[i]->set_sensitive(false);
+
+      poLabel = dynamic_cast<Gtk::Label *>(m_apoSaveGameItem[i]->get_child());
+      poLabel->set_text(csPrefix + sDateTime);
+      m_apoSaveGameItem[i]->set_sensitive(false);
+
+      m_astGameSlot[i].m_bEmpty = true;
     }
   }
-
-  while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
+  else
   {
-    if (bLoadROM(m_poFileOpenDialog->get_filename()))
+    std::string sFileBase;
+    std::string sDir = m_poDirConfig->sGetKey("saves");
+    if (sDir == "")
     {
-      break;
-    }
-  }
-  m_poFileOpenDialog->hide();
-}
-
-void Window::vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  m_bPaused = _poCMI->get_active();
-  if (emulating)
-  {
-    if (m_bPaused)
-    {
-      vStopEmu();
-      soundPause();
+      sFileBase = sCutSuffix(m_sRomFile);
     }
     else
     {
-      vStartEmu();
-      soundResume();
+      sFileBase = sDir + "/" + sCutSuffix(Glib::path_get_basename(m_sRomFile));
     }
-  }
-}
 
-void Window::vOnFileReset()
-{
-  if (emulating)
-  {
-    m_stEmulator.emuReset();
-  }
-}
+    const char * csDateFormat = _("%Y/%m/%d %H:%M:%S");
 
-void Window::vOnFileClose()
-{
-  if (emulating)
-  {
-    soundPause();
-    vStopEmu();
-    vSetDefaultTitle();
-    vDrawDefaultScreen();
-    vSaveBattery();
-    m_stEmulator.emuCleanUp();
-    m_eCartridge = CartridgeNone;
-    emulating = 0;
-
-    m_poFilePauseItem->set_sensitive(false);
-  }
-}
-
-void Window::vOnFileExit()
-{
-  hide();
-}
-
-void Window::vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  if (_iValue >= 0 && _iValue <= 9)
-  {
-    m_poCoreConfig->vSetKey("frameskip", _iValue);
-    gbFrameSkip      = _iValue;
-    systemFrameSkip  = _iValue;
-    m_bAutoFrameskip = false;
-  }
-  else
-  {
-    m_poCoreConfig->vSetKey("frameskip", "auto");
-    gbFrameSkip      = 0;
-    systemFrameSkip  = 0;
-    m_bAutoFrameskip = true;
-  }
-}
-
-void Window::vOnThrottleToggled(Gtk::CheckMenuItem * _poCMI, int _iPercent)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  vSetThrottle(_iPercent);
-
-  // Initialize the frameskip adjustment each time throttle is changed
-  if (m_bAutoFrameskip)
-  {
-    systemFrameSkip = 0;
-  }
-}
-
-void Window::vOnThrottleOther(Gtk::CheckMenuItem * _poCMI)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  Glib::RefPtr<Xml> poXml;
-  poXml = Xml::create(PKGDATADIR "/vba.glade", "ThrottleDialog");
-
-  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("ThrottleDialog"));
-  Gtk::SpinButton * poSpin = dynamic_cast<Gtk::SpinButton *>(poXml->get_widget("ThrottleSpin"));
-
-  poDialog->set_transient_for(*this);
-
-  if (m_iThrottle != 0)
-  {
-    poSpin->set_value(m_iThrottle);
-  }
-  else
-  {
-    poSpin->set_value(100);
-  }
-
-  if (poDialog->run() == Gtk::RESPONSE_OK)
-  {
-    vSetThrottle(poSpin->get_value_as_int());
-  }
-
-  delete poDialog;
-  vSelectBestThrottleItem();
-}
-
-void Window::vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  m_poDisplayConfig->vSetKey("scale", _iScale);
-  vUpdateScreen();
-}
-
-void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
-{
-  int iMask = (0x0100 << _iLayer);
-  if (_poCMI->get_active())
-  {
-    layerSettings |= iMask;
-  }
-  else
-  {
-    layerSettings &= ~iMask;
-  }
-  layerEnable = DISPCNT & layerSettings;
-
-  const char * acsLayers[] =
-  {
-    "layer_bg0",
-    "layer_bg1",
-    "layer_bg2",
-    "layer_bg3",
-    "layer_obj",
-    "layer_win0",
-    "layer_win1",
-    "layer_objwin"
-  };
-  m_poCoreConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
-}
-
-void Window::vOnDirectories()
-{
-  Glib::RefPtr<Xml> poXml;
-  poXml = Xml::create(PKGDATADIR "/vba.glade", "DirectoriesDialog");
-
-  struct
-  {
-    const char * m_csKey;
-    const char * m_csEntry;
-    const char * m_csResetButton;
-    const char * m_csSelectButton;
-  }
-  astRow[] =
-  {
-    { "gba_roms",  "GBARomsDirEntry",   "GBARomsDirResetButton",   "GBARomsDirSelectButton"   },
-    { "gb_roms",   "GBRomsDirEntry",    "GBRomsDirResetButton",    "GBRomsDirSelectButton"    },
-    { "batteries", "BatteriesDirEntry", "BatteriesDirResetButton", "BatteriesDirSelectButton" },
-    { "saves",     "SavesDirEntry",     "SavesDirResetButton",     "SavesDirSelectButton"     },
-    { "captures",  "CapturesDirEntry",  "CapturesDirResetButton",  "CapturesDirSelectButton"  }
-  };
-
-  for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
-  {
-    Gtk::Entry *  poEntry  = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
-    Gtk::Button * poReset  = dynamic_cast<Gtk::Button *>(poXml->get_widget(astRow[i].m_csResetButton));
-    Gtk::Button * poSelect = dynamic_cast<Gtk::Button *>(poXml->get_widget(astRow[i].m_csSelectButton));
-
-    poEntry->set_text(m_poDirConfig->sGetKey(astRow[i].m_csKey));
-
-    poReset->signal_clicked().connect(SigC::bind<Gtk::Entry *>(
-                                        SigC::slot(*this, &Window::vOnDirectoryReset),
-                                        poEntry));
-    poSelect->signal_clicked().connect(SigC::bind<Gtk::Entry *>(
-                                         SigC::slot(*this, &Window::vOnDirectorySelect),
-                                         poEntry));
-  }
-
-  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("DirectoriesDialog"));
-  poDialog->set_transient_for(*this);
-
-  if (poDialog->run() == Gtk::RESPONSE_OK)
-  {
-    for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
+    for (int i = 0; i < 10; i++)
     {
-      Gtk::Entry * poEntry = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
-      Glib::ustring sDir = poEntry->get_text();
-      if (! Glib::file_test(sDir, Glib::FILE_TEST_IS_DIR))
+      char csPrefix[10];
+      snprintf(csPrefix, sizeof(csPrefix), "%2d ", i + 1);
+
+      char csSlot[10];
+      snprintf(csSlot, sizeof(csSlot), "%d", i + 1);
+      m_astGameSlot[i].m_sFile = sFileBase + csSlot + ".sgm";
+
+      std::string sDateTime;
+      struct stat stStat;
+      if (stat(m_astGameSlot[i].m_sFile.c_str(), &stStat) == -1)
       {
-        sDir = "";
+        sDateTime = _("----/--/-- --:--:--");
+        m_astGameSlot[i].m_bEmpty = true;
       }
-      m_poDirConfig->vSetKey(astRow[i].m_csKey, sDir);
-    }
-  }
-
-  delete poDialog;
-}
-
-void Window::vOnDirectoryReset(Gtk::Entry * _poEntry)
-{
-  _poEntry->set_text("");
-}
-
-void Window::vOnDirectorySelect(Gtk::Entry * _poEntry)
-{
-  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select directory"));
-  poDialog->set_transient_for(*this);
-
-  if (_poEntry->get_text() != "")
-  {
-    poDialog->set_filename(_poEntry->get_text() + "/");
-  }
-
-  if (poDialog->run() == Gtk::RESPONSE_OK)
-  {
-    std::string sFile = poDialog->get_filename();
-    if (! Glib::file_test(sFile, Glib::FILE_TEST_IS_DIR))
-    {
-      sFile = Glib::path_get_dirname(sFile);
-    }
-    _poEntry->set_text(sFile);
-  }
-
-  delete poDialog;
-}
-
-void Window::vOnPauseWhenInactiveToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  m_poDisplayConfig->vSetKey("pause_when_inactive", _poCMI->get_active());
-}
-
-void Window::vOnSelectBios()
-{
-  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select BIOS file"));
-  poDialog->set_transient_for(*this);
-
-  if (m_poCoreConfig->sGetKey("bios_file") != "")
-  {
-    poDialog->set_filename(m_poCoreConfig->sGetKey("bios_file"));
-  }
-
-  while (poDialog->run() == Gtk::RESPONSE_OK)
-  {
-    if (Glib::file_test(poDialog->get_filename(), Glib::FILE_TEST_IS_REGULAR))
-    {
-      m_poCoreConfig->vSetKey("bios_file", poDialog->get_filename());
-      m_poUseBiosItem->set_sensitive();
-      break;
-    }
-  }
-
-  delete poDialog;
-}
-
-void Window::vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  m_poCoreConfig->vSetKey("use_bios_file", _poCMI->get_active());
-}
-
-void Window::vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  m_eShowSpeed = (EShowSpeed)_iShowSpeed;
-  if (m_eShowSpeed == ShowNone)
-  {
-    vSetDefaultTitle();
-  }
-  m_poDisplayConfig->vSetKey("show_speed", _iShowSpeed);
-}
-
-void Window::vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  cpuSaveType = _iSaveType;
-  m_poCoreConfig->vSetKey("save_type", _iSaveType);
-}
-
-void Window::vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  if (_iFlashSize == 64)
-  {
-    flashSetSize(0x10000);
-  }
-  else
-  {
-    flashSetSize(0x20000);
-  }
-  m_poCoreConfig->vSetKey("flash_size", _iFlashSize);
-}
-
-void Window::vOnSoundStatusToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundStatus)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  std::string sSoundStatus;
-  switch (_iSoundStatus)
-  {
-  case SoundOff:
-    soundOffFlag = true;
-    if (systemSoundOn)
-    {
-      soundShutdown();
-    }
-    sSoundStatus = "off";
-    break;
-  case SoundMute:
-    soundDisable(0x30f);
-    sSoundStatus = "mute";
-    break;
-  case SoundOn:
-    if (soundOffFlag)
-    {
-      soundOffFlag = false;
-      if (! soundInit())
+      else
       {
-        m_poSoundOffItem->set_active();
-        return;
+        char csDateTime[30];
+        strftime(csDateTime, sizeof(csDateTime), csDateFormat,
+                 localtime(&stStat.st_mtime));
+        sDateTime = csDateTime;
+        m_astGameSlot[i].m_bEmpty = false;
+        m_astGameSlot[i].m_uiTime = stStat.st_mtime;
       }
-    }
-    soundEnable(0x30f);
-    sSoundStatus = "on";
-    break;
-  }
-  m_poSoundConfig->vSetKey("status", sSoundStatus);
-}
 
-void Window::vOnSoundEchoToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  soundEcho = _poCMI->get_active();
-  m_poSoundConfig->vSetKey("echo", soundEcho);
-}
+      Gtk::Label * poLabel;
+      poLabel = dynamic_cast<Gtk::Label *>(m_apoLoadGameItem[i]->get_child());
+      poLabel->set_text(csPrefix + sDateTime);
+      m_apoLoadGameItem[i]->set_sensitive(! m_astGameSlot[i].m_bEmpty);
 
-void Window::vOnSoundLowPassToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  soundLowPass = _poCMI->get_active();
-  m_poSoundConfig->vSetKey("low_pass", soundLowPass);
-}
-
-void Window::vOnSoundReverseToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  soundReverse = _poCMI->get_active();
-  m_poSoundConfig->vSetKey("reverse_stereo", soundReverse);
-}
-
-void Window::vOnSoundChannelToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundChannel)
-{
-  int iShift = _iSoundChannel;
-  if (_iSoundChannel > 3)
-  {
-    iShift += 4;
-  }
-  int iFlag = 1 << iShift;
-  int iActive = soundGetEnable() & 0x30f;
-  if (_poCMI->get_active())
-  {
-    iActive |= iFlag;
-  }
-  else
-  {
-    iActive &= ~iFlag;
-  }
-  soundEnable(iActive);
-  soundDisable(~iActive & 0x30f);
-
-  const char * acsChannels[] =
-  {
-    "channel_1",
-    "channel_2",
-    "channel_3",
-    "channel_4",
-    "channel_A",
-    "channel_B"
-  };
-  m_poSoundConfig->vSetKey(acsChannels[_iSoundChannel], _poCMI->get_active());
-}
-
-void Window::vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQuality)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  m_eSoundQuality = (ESoundQuality)_iSoundQuality;
-  if (m_eCartridge == CartridgeGBA)
-  {
-    soundSetQuality(_iSoundQuality);
-  }
-  else if (m_eCartridge == CartridgeGB)
-  {
-    gbSoundSetQuality(_iSoundQuality);
-  }
-  m_poSoundConfig->vSetKey("quality", _iSoundQuality);
-}
-
-void Window::vOnSoundVolumeToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundVolume)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  soundVolume = _iSoundVolume;
-  m_poSoundConfig->vSetKey("volume", _iSoundVolume);
-}
-
-void Window::vOnGBBorderToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  gbBorderOn = _poCMI->get_active();
-  if (emulating && m_eCartridge == CartridgeGB && _poCMI->get_active())
-  {
-    gbSgbRenderBorder();
-  }
-  vUpdateScreen();
-  m_poCoreConfig->vSetKey("gb_border", _poCMI->get_active());
-}
-
-void Window::vOnGBPrinterToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  if (_poCMI->get_active())
-  {
-    gbSerialFunction = gbPrinterSend;
-  }
-  else
-  {
-    gbSerialFunction = NULL;
-  }
-  m_poCoreConfig->vSetKey("gb_printer", _poCMI->get_active());
-}
-
-void Window::vOnEmulatorTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iEmulatorType)
-{
-  gbEmulatorType = _iEmulatorType;
-  m_poCoreConfig->vSetKey("emulator_type", _iEmulatorType);
-}
-
-void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  m_poScreenArea->vSetFilter2x((EFilter2x)_iFilter2x);
-  if (emulating)
-  {
-    vDrawScreen();
-  }
-  m_poDisplayConfig->vSetKey("filter2x", _iFilter2x);
-}
-
-void Window::vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB)
-{
-  if (! _poCMI->get_active())
-  {
-    return;
-  }
-
-  m_poScreenArea->vSetFilterIB((EFilterIB)_iFilterIB);
-  if (emulating)
-  {
-    vDrawScreen();
-  }
-  m_poDisplayConfig->vSetKey("filterIB", _iFilterIB);
-}
-
-#ifdef MMX
-void Window::vOnDisableMMXToggled(Gtk::CheckMenuItem * _poCMI)
-{
-  cpu_mmx = ! _poCMI->get_active();
-  m_poDisplayConfig->vSetKey("filter_disable_mmx", _poCMI->get_active());
-}
-#endif // MMX
-
-void Window::vOnHelpAbout()
-{
-  Glib::RefPtr<Xml> poXml;
-  poXml = Xml::create(PKGDATADIR "/vba.glade", "AboutDialog");
-
-  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("AboutDialog"));
-  Gtk::Label *  poLabel  = dynamic_cast<Gtk::Label *>(poXml->get_widget("VersionLabel"));
-
-  poDialog->set_transient_for(*this);
-  poLabel->set_markup("<b><big>" PACKAGE " " VERSION "</big></b>");
-  poDialog->run();
-  delete poDialog;
-}
-
-bool Window::bOnEmuIdle()
-{
-  if (m_uiThrottleDelay != 0)
-  {
-    u32 uiTime = SDL_GetTicks();
-    if (uiTime - m_uiThrottleLastTime >= m_uiThrottleDelay)
-    {
-      m_uiThrottleDelay = 0;
-      m_uiThrottleLastTime = uiTime;
-    }
-    else
-    {
-      return true;
+      poLabel = dynamic_cast<Gtk::Label *>(m_apoSaveGameItem[i]->get_child());
+      poLabel->set_text(csPrefix + sDateTime);
+      m_apoSaveGameItem[i]->set_sensitive();
     }
   }
-
-  m_stEmulator.emuMain(m_stEmulator.emuCount);
-  return true;
-}
-
-bool Window::on_focus_in_event(GdkEventFocus * _pstEvent)
-{
-  if (emulating
-      && ! m_bPaused
-      && m_poDisplayConfig->oGetKey<bool>("pause_when_inactive"))
-  {
-    vStartEmu();
-    soundResume();
-  }
-  return false;
-}
-
-bool Window::on_focus_out_event(GdkEventFocus * _pstEvent)
-{
-  if (emulating
-      && ! m_bPaused
-      && m_poDisplayConfig->oGetKey<bool>("pause_when_inactive"))
-  {
-    vStopEmu();
-    soundPause();
-  }
-  return false;
-}
-
-bool Window::on_key_press_event(GdkEventKey * _pstEvent)
-{
-  EKey eKey;
-
-  if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
-  {
-    return Gtk::Window::on_key_press_event(_pstEvent);
-  }
-
-  switch (eKey)
-  {
-  case KeyA:
-    m_uiJoypadState |= KeyFlagA;
-    break;
-  case KeyB:
-    m_uiJoypadState |= KeyFlagB;
-    break;
-  case KeySelect:
-    m_uiJoypadState |= KeyFlagSelect;
-    break;
-  case KeyStart:
-    m_uiJoypadState |= KeyFlagStart;
-    break;
-  case KeyRight:
-    m_uiJoypadState |= KeyFlagRight;
-    m_uiJoypadState &= ~KeyFlagLeft;
-    break;
-  case KeyLeft:
-    m_uiJoypadState |= KeyFlagLeft;
-    m_uiJoypadState &= ~KeyFlagRight;
-    break;
-  case KeyUp:
-    m_uiJoypadState |= KeyFlagUp;
-    m_uiJoypadState &= ~KeyFlagDown;
-    break;
-  case KeyDown:
-    m_uiJoypadState |= KeyFlagDown;
-    m_uiJoypadState &= ~KeyFlagUp;
-    break;
-  case KeyR:
-    m_uiJoypadState |= KeyFlagR;
-    break;
-  case KeyL:
-    m_uiJoypadState |= KeyFlagL;
-    break;
-  case KeySpeed:
-    m_uiJoypadState |= KeyFlagSpeed;
-    break;
-  case KeyCapture:
-    m_uiJoypadState |= KeyFlagCapture;
-    break;
-  case KeyNone:
-    break;
-  }
-  return true;
-}
-
-bool Window::on_key_release_event(GdkEventKey * _pstEvent)
-{
-  EKey eKey;
-
-  if ((_pstEvent->state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_MOD1_MASK))
-      || (eKey = m_oKeymap.eGetKey(_pstEvent->keyval)) == KeyNone)
-  {
-    return Gtk::Window::on_key_release_event(_pstEvent);
-  }
-
-  switch (eKey)
-  {
-  case KeyA:
-    m_uiJoypadState &= ~KeyFlagA;
-    break;
-  case KeyB:
-    m_uiJoypadState &= ~KeyFlagB;
-    break;
-  case KeySelect:
-    m_uiJoypadState &= ~KeyFlagSelect;
-    break;
-  case KeyStart:
-    m_uiJoypadState &= ~KeyFlagStart;
-    break;
-  case KeyRight:
-    m_uiJoypadState &= ~KeyFlagRight;
-    break;
-  case KeyLeft:
-    m_uiJoypadState &= ~KeyFlagLeft;
-    break;
-  case KeyUp:
-    m_uiJoypadState &= ~KeyFlagUp;
-    break;
-  case KeyDown:
-    m_uiJoypadState &= ~KeyFlagDown;
-    break;
-  case KeyR:
-    m_uiJoypadState &= ~KeyFlagR;
-    break;
-  case KeyL:
-    m_uiJoypadState &= ~KeyFlagL;
-    break;
-  case KeySpeed:
-    m_uiJoypadState &= ~KeyFlagSpeed;
-    break;
-  case KeyCapture:
-    m_uiJoypadState &= ~KeyFlagCapture;
-    break;
-  case KeyNone:
-    break;
-  }
-  return true;
 }
 
 } // VBA namespace

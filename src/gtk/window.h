@@ -20,10 +20,13 @@
 #ifndef __VBA_WINDOW_H__
 #define __VBA_WINDOW_H__
 
+#include <sys/types.h>
+
 #include <libglademm.h>
 #include <gtkmm.h>
 
 #include <string>
+#include <list>
 
 #include "../System.h"
 
@@ -120,6 +123,11 @@ protected:
   };
 
   virtual void vOnFileOpen();
+  virtual void vOnLoadGameMostRecent();
+  virtual void vOnLoadGameAutoToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnLoadGame(int _iSlot);
+  virtual void vOnSaveGameOldest();
+  virtual void vOnSaveGame(int _iSlot);
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
   virtual void vOnFileClose();
@@ -205,6 +213,19 @@ private:
   Gtk::CheckMenuItem * m_poUseBiosItem;
   Gtk::CheckMenuItem * m_poSoundOffItem;
 
+  struct SGameSlot
+  {
+    bool        m_bEmpty;
+    std::string m_sFile;
+    time_t      m_uiTime;
+  };
+
+  Gtk::MenuItem * m_apoLoadGameItem[10];
+  Gtk::MenuItem * m_apoSaveGameItem[10];
+  SGameSlot       m_astGameSlot[10];
+
+  std::list<Gtk::Widget *> m_listSensitiveWhenPlaying;
+
   SigC::Connection m_oEmuSig;
 
   int m_iScreenWidth;
@@ -237,12 +258,11 @@ private:
   bool bLoadROM(const std::string & _rsFilename);
   void vLoadBattery();
   void vSaveBattery();
-  void vLoadState(int _iNum);
-  void vSaveState(int _iNum);
   void vStartEmu();
   void vStopEmu();
   void vSetThrottle(int _iPercent);
   void vSelectBestThrottleItem();
+  void vUpdateGameSlots();
 };
 
 } // namespace VBA
