@@ -2228,9 +2228,11 @@ int main(int argc, char **argv)
         cartridgeType = 0;
         emulator = GBASystem;
 
+        /* disabled due to problems
         if(removeIntros && rom != NULL) {
           WRITE32LE(&rom[0], 0xea00002e);
         }
+        */
         
         CPUInit(biosFileName, useBios);
         CPUReset();

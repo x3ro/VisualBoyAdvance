@@ -3,6 +3,7 @@ Core changes:
 - added SWI call (0xf9 in thumb mode) to exit emulator in SDL version
 - avoid crash when loading an invalid ELF file
 - avoid turning sound on if soundOffFlag is true
+- disabled remove intros option
 - fixed memory leak in ELF support code
 - fixed memory corruption if loading a bigger file than the memory to hold it
 - fixed some compile warnings in the profiling code

@@ -1,5 +1,8 @@
 2004-02-07  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/SDL.cpp (main): disable remove intros option
+	* src/win32/MainWndOptions.cpp (OnUpdateOptionsEmulatorRemoveintrosgba): disable remove intros option
+	* src/win32/MainWnd.cpp: disable remove intros option
 	* src/win32/VBA.cpp: fix power management code
 	* src/win32/MainWnd.cpp (OnMySysCommand): fix power management code
 	* src/win32/MainWndFile.cpp: fix power management code

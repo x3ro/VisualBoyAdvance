@@ -534,9 +534,11 @@ bool MainWnd::FileRun()
       cpuSaveType = (int)i;
     
     theApp.emulator = GBASystem;
+    /* disabled due to problems
     if(theApp.removeIntros && rom != NULL) {
       *((u32 *)rom)= 0xea00002e;
     }
+    */
     
     if(theApp.autoIPS) {
       int size = 0x2000000;

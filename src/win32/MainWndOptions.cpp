@@ -639,12 +639,13 @@ void MainWnd::OnUpdateOptionsEmulatorSpeeduptoggle(CCmdUI* pCmdUI)
 
 void MainWnd::OnOptionsEmulatorRemoveintrosgba() 
 {
-  theApp.removeIntros = !theApp.removeIntros;
+  //  theApp.removeIntros = !theApp.removeIntros;
 }
 
 void MainWnd::OnUpdateOptionsEmulatorRemoveintrosgba(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(theApp.removeIntros);
+  pCmdUI->Enable(false);
+  //  pCmdUI->SetCheck(theApp.removeIntros);
 }
 
 void MainWnd::OnOptionsEmulatorAutomaticallyipspatch() 
