@@ -23,6 +23,7 @@
 #include "../GBA.h"
 #include "../Globals.h"
 #include "../Text.h"
+#include "../Util.h"
 
 #include "VBA.h"
 #include "MainWnd.h"
@@ -36,7 +37,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 extern void winlog(const char *,...);
-extern int RGB_LOW_BITS_MASK;
 extern int Init_2xSaI(u32);
 extern int systemSpeed;
 
@@ -216,10 +216,8 @@ bool GDIDisplay::initialize()
     if(systemColorDepth == 16) {
       if(systemGreenShift == 6) {
         Init_2xSaI(565);
-        RGB_LOW_BITS_MASK=0x821;
       } else {
         Init_2xSaI(555);
-        RGB_LOW_BITS_MASK=0x421;        
       }
     } else if(systemColorDepth == 32)
       Init_2xSaI(32);
@@ -241,27 +239,7 @@ bool GDIDisplay::initialize()
     cpu_mmx = 0;
 #endif
   
-  switch(systemColorDepth) {
-  case 16:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }
-    }
-    break;
-  case 24:
-  case 32:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }      
-    }
-    break;
-  }
+  utilUpdateSystemColorMaps();
   theApp.updateFilter();
   theApp.updateIFB();
   

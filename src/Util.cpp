@@ -47,9 +47,17 @@ extern "C" {
 #define _stricmp strcasecmp
 #endif // ! _MSC_VER
 
-static int (*utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
-static int (*utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;
-static int (*utilGzCloseFunc)(gzFile) = NULL;
+extern int systemColorDepth;
+extern int systemRedShift;
+extern int systemGreenShift;
+extern int systemBlueShift;
+
+extern u16 systemColorMap16[0x10000];
+extern u32 systemColorMap32[0x10000];
+
+static int (ZEXPORT *utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
+static int (ZEXPORT *utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;
+static int (ZEXPORT *utilGzCloseFunc)(gzFile) = NULL;
 
 bool utilWritePNGFile(const char *fileName, int w, int h, u8 *pix)
 {
@@ -984,7 +992,7 @@ void utilWriteData(gzFile gzFile, variable_desc *data)
 
 gzFile utilGzOpen(const char *file, const char *mode)
 {
-  utilGzWriteFunc = (int (*)(void *,void * const, unsigned int))gzwrite;
+  utilGzWriteFunc = (int (ZEXPORT *)(void *,void * const, unsigned int))gzwrite;
   utilGzReadFunc = gzread;
   utilGzCloseFunc = gzclose;
 
@@ -1066,4 +1074,29 @@ void utilGBAFindSave(const u8 *data, const int size)
   rtcEnable(rtcFound);
   cpuSaveType = saveType;
   flashSetSize(flashSize);
+}
+
+void utilUpdateSystemColorMaps()
+{
+  switch(systemColorDepth) {
+  case 16: 
+    {
+      for(int i = 0; i < 0x10000; i++) {
+        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
+          (((i & 0x3e0) >> 5) << systemGreenShift) |
+          (((i & 0x7c00) >> 10) << systemBlueShift);
+      }
+    }
+    break;
+  case 24:
+  case 32:
+    {
+      for(int i = 0; i < 0x10000; i++) {
+        systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
+          (((i & 0x3e0) >> 5) << systemGreenShift) |
+          (((i & 0x7c00) >> 10) << systemBlueShift);
+      }
+    }
+    break;
+  }
 }

@@ -728,14 +728,14 @@ void MainWnd::OnFileSavegameOldestslot()
   CString name;
   CFileStatus status;
   CString str;
-  time_t time = -1;
+  unsigned long time = -1;
   int found = 0;
     
   for(int i = 0; i < 10; i++) {
     name.Format("%s%s%d.sgm", saveDir, filename, i+1);
 
     if(emulating && CFile::GetStatus(name, status)) {
-      if(status.m_mtime.GetTime() < time) {
+      if((unsigned long)status.m_mtime.GetTime() < time) {
         time = status.m_mtime.GetTime();
         found = i;
       }
@@ -814,14 +814,14 @@ void MainWnd::OnFileLoadgameMostrecent()
   CString name;
   CFileStatus status;
   CString str;
-  time_t time = 0;
+  unsigned long time = 0;
   int found = -1;
     
   for(int i = 0; i < 10; i++) {
     name.Format("%s%s%d.sgm", saveDir, filename, i+1);
 
     if(emulating && CFile::GetStatus(name, status)) {
-      if(status.m_mtime.GetTime() > time) {
+      if((unsigned long)status.m_mtime.GetTime() > time) {
         time = status.m_mtime.GetTime();
         found = i;
       }
