@@ -1,8 +1,7 @@
 After extracting the code from CVS, be sure to do the following if you
 are using the configure script:
 
-touch `find . -name Makefile.in`
-touch configure
+./fix-timestamps
 
 Failure to do so will result in problems during compilation on systems
 that have newer versions of GNU automake/autoconf. This is caused by 
