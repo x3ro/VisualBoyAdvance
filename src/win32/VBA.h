@@ -179,6 +179,7 @@ class VBA : public CWinApp
   int frameskipadjust;
   bool autoLoadMostRecent;
   int fsMaxScale;
+  int romSize;
  
   CList<IUpdateListener *, IUpdateListener*&> updateList;
   int updateCount;

@@ -491,6 +491,7 @@ bool MainWnd::FileRun()
     theApp.emuCount = 1000;
 #endif
     gbBorderOn = theApp.winGbBorderOn;
+    theApp.romSize = gbRomSize;
     if(theApp.autoIPS) {
       int size = gbRomSize;
       utilApplyIPS(ipsname, &gbRom, &size);
@@ -498,12 +499,15 @@ bool MainWnd::FileRun()
         extern bool gbUpdateSizes();
         gbUpdateSizes();
         gbReset();
+        theApp.romSize = size;
       }
     }
   } else {
     int size = CPULoadRom(theApp.szFile);
     if(!size)
       return false;
+
+    theApp.romSize = size;
     
     flashSetSize(theApp.winFlashSize);
     rtcEnable(theApp.winRtcEnable);

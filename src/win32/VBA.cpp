@@ -264,6 +264,7 @@ VBA::VBA()
   frameskipadjust = 0;
   autoLoadMostRecent = false;
   fsMaxScale = 0;
+  romSize = 0;
   
   updateCount = 0;
   

@@ -27,6 +27,7 @@
 #include "../AutoBuild.h"
 #include "../GBA.h"
 #include "../Globals.h"
+#include "../Port.h"
 #include "../RTC.h"
 #include "../Sound.h"
 #include "../gb/gbCheats.h"
@@ -170,6 +171,41 @@ CString BugReport::createReport()
       strncpy(buffer, (const char *)&rom[0xac], 4);
       buffer[4] = 0;
       AppendFormat(report, "Game code    : %s\r\n", buffer);
+
+      CString res = "";
+      u32 *p = (u32 *)rom;
+      u32 *end = (u32 *)((char *)rom+theApp.romSize);
+      while(p  < end) {
+        u32 d = READ32LE(p);
+    
+        if(d == 0x52504545) {
+          if(memcmp(p, "EEPROM_", 7) == 0) {
+            res += (const char *)p;
+            res += ' ';
+          }
+        } else if (d == 0x4D415253) {
+          if(memcmp(p, "SRAM_", 5) == 0) {
+            res += (const char *)p;
+            res += ' ';
+          }
+        } else if (d == 0x53414C46) {
+          if(memcmp(p, "FLASH1M_", 8) == 0) {
+            res += (const char *)p;
+            res += ' ';
+          }
+        } else if(memcmp(p, "FLASH", 5) == 0) {
+          res += (const char *)p;
+          res += ' ';
+        } else if (d == 0x52494953) {
+          if(memcmp(p, "SIIRTC_V", 8) == 0) {
+            res += (const char *)p;
+            res += ' ';
+          }
+        }
+        p++;
+      }
+      if(res.GetLength() > 0)
+        AppendFormat(report, "Cart Save    : %s\r\n", res);
     } else if(theApp.cartridgeType == 1) {
       strncpy(buffer, (const char *)&gbRom[0x134], 15);
       buffer[15] = 0;
