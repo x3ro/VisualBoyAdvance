@@ -1,3 +1,22 @@
+Version 1.7.2:
+Core changes:
+- fixed bugs on ELF clean up
+- improved CodeBreaker 0xDxxxxxxx code support
+- updated Scale2x filter to version 2.0
+- improved memory timing
+- added support for z2 (delete break on write) so that gdb can use break on write
+
+Windows:
+- added search for base language dll
+- fixed GDI problems with selected bitmap being deleted
+- added JPEG and PNG support for skins
+- changed import/export battery file to default to battery directory
+- fixed the GB map view flickering
+- fixed skin bugs
+
+Other:
+- added a new interface using GTK+, which implements a first part of the Windows version
+
 Version 1.7.1:
 Core changes:
 - added SWI call (0xf9 in thumb mode) to exit emulator in SDL version

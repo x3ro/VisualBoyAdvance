@@ -1,3 +1,35 @@
+2004-15-03  kxu  <kxu@users.sourceforge.net>
+
+	* finalized the first release of the GTK+ interface
+
+2004-05-03  kxu  <kxu@users.sourceforge.net>
+
+	* src/elf.cpp (elfCleanUp): fix a missing nullify, causing crashes
+
+2004-05-01  kxu  <kxu@users.sourceforge.net>
+
+	* added gtkmm 2.4 support
+
+2004-04-25  kxu  <kxu@users.sourceforge.net>
+
+	* src/win32/skinButton.cpp: fix skin bugs (patch from Forgotten)
+
+2004-04-19  kxu  <kxu@users.sourceforge.net>
+
+	* src/remote.cpp: added support for z2 (delete break on write) so that gdb can use break on write (patch from Ryan Brown)
+
+2004-04-18  kxu  <kxu@users.sourceforge.net>
+
+	* fix custom controls to use CS_GLOBALCLASS style and fix the GB map view flickering (patch from Forgotten)
+
+2004-03-30  kxu  <kxu@users.sourceforge.net>
+
+	* added the GTK+ interface draft
+
+2004-03-20  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp: improved memory timing
+
 2004-03-11  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/MainWndFile.cpp: changed import/export battery file to default to battery directory 
