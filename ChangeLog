@@ -1,5 +1,7 @@
 2003-01-05  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/win32/TileViewer.cpp: now shows all tiles in 256 mode
+	* src/elf.cpp (elfCleanUp): fixed crash when reloading an ELF file
 	* src/win32/Commands.cpp: added interframe blending commands
 	* src/win32/Win32.cpp: added interframe blending support
 	* src/SDL.cpp: added interframe blending support

@@ -386,16 +386,16 @@ void TileViewer::render()
 
   if(is256Colors) {
     int tile = 0;
-    maxY = 16;
+    maxY = 32;
     if(this->charBase == 3)
-      maxY = 8;
+      maxY = 16;
     for(int y = 0; y < maxY; y++) {
       for(int x = 0; x < 32; x++) {
         if(this->charBase == 4)
           renderTile256(tile, x, y, charBase, &palette[256]);
         else
           renderTile256(tile, x, y, charBase, palette);
-        tile += 2;
+        tile++;
       }
     }
     tileView.setSize(32*8, maxY*8);
@@ -550,12 +550,7 @@ LRESULT TileViewer::OnMapInfo(WPARAM wParam, LPARAM lParam)
   int y = ((wParam >> 16) & 0xFFFF)/8;
 
   u32 address = 0x6000000 + 0x4000 * charBase;
-  int tile = 0;
-  if(is256Colors) {
-    tile = (32 * y + x)*2;
-  } else {
-    tile = 32 * y + x;
-  }
+  int tile = 32 * y + x;
 
   address += 32 * tile;
 

@@ -2944,6 +2944,9 @@ void elfCleanUp()
         free(elfFdes[i]);
     }
     free(elfFdes);
+    
+    elfFdes = NULL;
+    elfFdeCount = 0;
   }
   ELFcie *cie = elfCies;
 
