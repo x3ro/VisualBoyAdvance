@@ -59,6 +59,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 
 extern "C" {
 #include <png.h>

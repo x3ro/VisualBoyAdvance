@@ -165,7 +165,7 @@ int cartridgeType = 3;
 int sizeOption = 0;
 int captureFormat = 0;
 
-int pauseWhenInactive = 1;
+int pauseWhenInactive = 0;
 int active = 1;
 int emulating = 0;
 int RGB_LOW_BITS_MASK=0x821;
