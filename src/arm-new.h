@@ -3231,6 +3231,10 @@ if(cond_res) {
       CPUSwitchMode(newValue & 0x1f, false);
       reg[16].I = newValue;
       CPUUpdateFlags();
+      if(!armState) { // this should not be allowed, but it seems to work
+        THUMB_PREFETCH;
+        reg[15].I = armNextPC + 2;
+      }
     }
     break;
   case 0x121:
@@ -3343,6 +3347,10 @@ if(cond_res) {
       CPUSwitchMode(newValue & 0x1f, false);
       reg[16].I = newValue;
       CPUUpdateFlags();
+      if(!armState) { // this should not be allowed, but it seems to work
+        THUMB_PREFETCH;
+        reg[15].I = armNextPC + 2;
+      }
     }
     break;
   case 0x360:

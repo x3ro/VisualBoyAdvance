@@ -548,7 +548,7 @@ void BIOS_HuffUnComp()
 
   u32 treeStart = source;
 
-  source += (treeSize+1)<<1;
+  source += ((treeSize+1)<<1)-1; // minus because we already skipped one byte
   
   int len = header >> 8;
 
