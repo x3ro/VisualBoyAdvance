@@ -352,6 +352,38 @@ void systemSetTitle(const char *title)
 {
 }
 
+void sdlWriteState(int num)
+{
+  char stateName[2048];
+
+  if(saveDir[0])
+    sprintf(stateName, "%s/%s%d.sgm", saveDir, sdlGetFilename(filename),
+            num+1);
+  else
+    sprintf(stateName,"%s%d.sgm", filename, num+1);
+  if(emulator.emuWriteState)
+    emulator.emuWriteState(stateName);
+  sprintf(stateName, "Wrote state %d", num+1);
+  systemScreenMessage(stateName);
+}
+
+void sdlReadState(int num)
+{
+  char stateName[2048];
+
+  if(saveDir[0])
+    sprintf(stateName, "%s/%s%d.sgm", saveDir, sdlGetFilename(filename),
+            num+1);
+  else
+    sprintf(stateName,"%s%d.sgm", filename, num+1);
+
+  if(emulator.emuReadState)
+    emulator.emuReadState(stateName);
+
+  sprintf(stateName, "Loaded state %d", num+1);
+  systemScreenMessage(stateName);
+}
+
 void systemScreenCapture(int a)
 {
   char buffer[2048];

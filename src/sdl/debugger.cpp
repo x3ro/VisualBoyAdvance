@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "GBA.h"
 #include "Port.h"
@@ -73,54 +74,54 @@ struct DebuggerCommand {
   char *syntax;
 };
 
-void debuggerContinueAfterBreakpoint();
+static void debuggerContinueAfterBreakpoint();
 
-void debuggerHelp(int,char **);
-void debuggerNext(int,char **);
-void debuggerContinue(int, char **);
-void debuggerRegisters(int, char **);
-void debuggerBreak(int, char **);
-void debuggerBreakDelete(int, char **);
-void debuggerBreakList(int, char **);
-void debuggerBreakArm(int, char **);
-void debuggerBreakThumb(int, char **);
-void debuggerBreakChange(int, char **);
-void debuggerBreakChangeClear(int, char **);
-void debuggerBreakWriteClear(int, char **);
-void debuggerBreakWrite(int, char **);
-void debuggerDebug(int, char **);
-void debuggerDisassemble(int, char **);
-void debuggerDisassembleArm(int, char **);
-void debuggerDisassembleThumb(int, char **);
-void debuggerEditByte(int, char **);
-void debuggerEditHalfWord(int, char **);
-void debuggerEditRegister(int, char **);
-void debuggerEdit(int, char **);
-void debuggerFileDisassemble(int, char **);
-void debuggerFileDisassembleArm(int, char **);
-void debuggerFileDisassembleThumb(int, char **);
-void debuggerIo(int, char **);
-void debuggerLocals(int, char **);
-void debuggerMemoryByte(int, char **);
-void debuggerMemoryHalfWord(int, char **);
-void debuggerMemory(int, char **);
-void debuggerPrint(int, char **);
-void debuggerQuit(int, char **);
-void debuggerSetRadix(int, char **);
-void debuggerSymbols(int, char **);
-void debuggerVerbose(int, char **);
-void debuggerWhere(int, char **);
+static void debuggerHelp(int,char **);
+static void debuggerNext(int,char **);
+static void debuggerContinue(int, char **);
+static void debuggerRegisters(int, char **);
+static void debuggerBreak(int, char **);
+static void debuggerBreakDelete(int, char **);
+static void debuggerBreakList(int, char **);
+static void debuggerBreakArm(int, char **);
+static void debuggerBreakThumb(int, char **);
+static void debuggerBreakChange(int, char **);
+static void debuggerBreakChangeClear(int, char **);
+static void debuggerBreakWriteClear(int, char **);
+static void debuggerBreakWrite(int, char **);
+static void debuggerDebug(int, char **);
+static void debuggerDisassemble(int, char **);
+static void debuggerDisassembleArm(int, char **);
+static void debuggerDisassembleThumb(int, char **);
+static void debuggerEditByte(int, char **);
+static void debuggerEditHalfWord(int, char **);
+static void debuggerEditRegister(int, char **);
+static void debuggerEdit(int, char **);
+static void debuggerFileDisassemble(int, char **);
+static void debuggerFileDisassembleArm(int, char **);
+static void debuggerFileDisassembleThumb(int, char **);
+static void debuggerIo(int, char **);
+static void debuggerLocals(int, char **);
+static void debuggerMemoryByte(int, char **);
+static void debuggerMemoryHalfWord(int, char **);
+static void debuggerMemory(int, char **);
+static void debuggerPrint(int, char **);
+static void debuggerQuit(int, char **);
+static void debuggerSetRadix(int, char **);
+static void debuggerSymbols(int, char **);
+static void debuggerVerbose(int, char **);
+static void debuggerWhere(int, char **);
 
-void debuggerReadState(int, char **);
-void debuggerWriteState(int, char **);
-void debuggerDumpLoad(int, char**);
-void debuggerDumpSave(int, char**);
-void debuggerCondValidate(int n, char **args, int start);
-bool debuggerCondEvaluate(int num);
-void debuggerCondBreakThumb(int, char **);
-void debuggerCondBreakArm(int, char **);
+static void debuggerReadState(int, char **);
+static void debuggerWriteState(int, char **);
+static void debuggerDumpLoad(int, char**);
+static void debuggerDumpSave(int, char**);
+static void debuggerCondValidate(int n, char **args, int start);
+static bool debuggerCondEvaluate(int num);
+static void debuggerCondBreakThumb(int, char **);
+static void debuggerCondBreakArm(int, char **);
 
-DebuggerCommand debuggerCommands[] = {
+static DebuggerCommand debuggerCommands[] = {
   { "?", debuggerHelp,        "Show this help information. Type ? <command> for command help", "[<command>]" },
   { "ba", debuggerBreakArm,   "Add an ARM breakpoint", "<address>" },
   { "bd", debuggerBreakDelete,"Delete a breakpoint", "<number>" },
@@ -368,10 +369,10 @@ static char *debuggerPrintType(Type *t)
   return t->name;
 }
 
-void debuggerPrintValueInternal(Function *, Type *, ELFBlock *, int, int, u32);
-void debuggerPrintValueInternal(Function *f, Type *t,
-                                int bitSize, int bitOffset,
-                                u32 objLocation, LocationType type);
+static void debuggerPrintValueInternal(Function *, Type *, ELFBlock *, int, int, u32);
+static void debuggerPrintValueInternal(Function *f, Type *t,
+				       int bitSize, int bitOffset,
+				       u32 objLocation, LocationType type);
 
 static u32 debuggerGetValue(u32 location, LocationType type)
 {
@@ -1860,7 +1861,7 @@ static void debuggerCondValidate(int n,char **args,int start)
   u32 value1=0;
   u32 value2=0;
   
-  char size=NULL;
+  char size=0;
   int j=1;
   
   if(n==6) {
@@ -1911,7 +1912,7 @@ static void debuggerCondValidate(int n,char **args,int start)
       break;
     default:
       printf("Erroneous Condition\n");
-      debuggerUsage((toupper(args[0][2])=='T') ? "cbt" : "cba");
+      debuggerUsage((char *)((toupper(args[0][2])=='T') ? "cbt" : "cba"));
       return;
     }
     debuggerBreakpointList[i].ia1=true;
@@ -2010,7 +2011,7 @@ static void debuggerCondValidate(int n,char **args,int start)
       break;
     default:
       printf("Erroneous Condition\n");
-      debuggerUsage((toupper(args[0][2])=='T') ? "cbt" : "cba");
+      debuggerUsage((char *)((toupper(args[0][2])=='T') ? "cbt" : "cba"));
       return;
     }
     break;

@@ -1,3 +1,52 @@
+Version 1.8.0:
+Core changes:
+- added almost all AR V3 cheat codes (PokemonHacker)
+- added prefetch emulation
+- added full CBA support (verified for every CBA code type)
+- added emulation for DMA interaction with reading from invalid address 
+- fixed CPU init for 256Mbit roms
+- fixed HuffUnComp bug regarding tree size (SF #984608)
+- fixed RTC support for day of the week (fixed at Sunday before)
+- fixed loading of ELF multiboot files (thanks J.W.)
+- fixed bug on CBA code type 5
+- fixed OBJWIN rendering bug when sprite wraps around (SF #1065447)
+- fixed battery saving bug when save type equals to Flash or Sram 
+- fixed a compilation warning 
+- fixed BIOS ArcTan and ArcTan2 emulation (several bugs)
+- fixed some instruction having incorrect cycles (caused SDL debugger to skip several instructions)
+- fixed lq2x filter (was using hq2x code) 
+- fixed some bugs with IntrWait emulation 
+- fixed some timer bugs 
+- fixed memory timing when loading a save state (was using the timings before loading the state) 
+- fixed bug writing to IO register past 0x4000400 (no mirroring) 
+- initialize sram and flash memory to 0xff instead of 0x00 
+- clean flash/sram on load/reload 
+- ignore 8-bit writes to OBJ and OAM memory 
+- major AR V1/2/3 support by PokemonHacker 
+- simplified GBA emulation loop (easier to understand and maintain) 
+
+Windows:
+- added dialog to edit game overrides
+- added GPL link to Help menu 
+- fixed GB Disassemble crash when going to another address
+- fixed a minor repaint bug when focus changed
+- fixed problem displaying rom names that use & character 
+- fixed palette save name bug
+- moved vsync code to where it should be
+- moved common palette initialization and cleaned up rendering code to use it
+
+SDL versions:
+- SDL debugger improvements adapted from VBA-H: 
+  - break on change
+  - conditional breakpoints (ARM and THUMB)
+  - dump load and save (memory)
+  - edit register (exception of R15)
+  - disassemble to file
+  - save and load state from debugger
+
+Other:
+- fixed some compilation issues (libpng, gtkmm)
+
 Version 1.7.2:
 Core changes:
 - fixed bugs on ELF clean up

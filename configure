@@ -1705,7 +1705,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=VisualBoyAdvance
- VERSION=1.7.2
+ VERSION=1.8.0
 
 
 cat >>confdefs.h <<_ACEOF
@@ -7848,7 +7848,7 @@ fi
 
 done
 
-  GETTEXT_PACKAGE=vba-1.7.2
+  GETTEXT_PACKAGE=vba-1.8.0
 
 
 
