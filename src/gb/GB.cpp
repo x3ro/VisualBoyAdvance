@@ -2706,6 +2706,8 @@ void gbEmulate(int ticksToStop)
               gbLcdLYIncrementTicks = 6;
           } else {
             register_LY = 0x00;
+            // reset the window line
+            gbWindowLine = -1;
             gbLcdLYIncrementTicks = GBLY_INCREMENT_CLOCK_TICKS * 2;
             gbCompareLYToLYC();
           }
@@ -2737,7 +2739,6 @@ void gbEmulate(int ticksToStop)
               if(register_STAT & 0x10)
                 gbInterrupt |= 2;
             }
-            gbWindowLine = -1;
 
             gbFrameCount++;
 
