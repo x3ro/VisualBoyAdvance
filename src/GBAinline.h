@@ -50,8 +50,6 @@ inline u32 CPUReadMemory(u32 address)
 #endif
   
   u32 value;
-  u32 value2;
-  u32 address2;
   switch(address >> 24) {
   case 0:
     if(reg[15].I >> 24) {
@@ -71,21 +69,9 @@ inline u32 CPUReadMemory(u32 address)
     break;
   case 2:
     value = READ32LE(((u32 *)&workRAM[address & 0x3FFFC]));
-#ifdef SDL
-    if(*((u32 *)&freezeRWorkRAM[address & 0x3FFFc]))
-      cheatsWriteMemory((u32 *)&workRAM[address & 0x3FFFc],
-                        value,
-                        *((u32 *)&freezeRWorkRAM[address & 0x3FFFc]),3);
-#endif
     break;
   case 3:
     value = READ32LE(((u32 *)&internalRAM[address & 0x7ffC]));
-#ifdef SDL
-    if(*((u32 *)&freezeRInternalRAM[address & 0x7ffc]))
-      cheatsWriteMemory((u32 *)&internalRAM[address & 0x7FFc],
-                        value,
-                        *((u32 *)&freezeRInternalRAM[address & 0x7ffc]),3);
-#endif
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fc]) {
@@ -108,14 +94,6 @@ inline u32 CPUReadMemory(u32 address)
   case 9:
   case 10:
   case 11:
-	  value = READ32LE(((u32 *)&rom[address&0x1FFFFFC]));
-#ifdef SDL
-    if(*((u32 *)&freezeRROM[address & 0x1FFFFFc]))
-      cheatsWriteMemory((u32 *)&rom[address & 0x1FFFFFc],
-                        value,
-                        *((u32 *)&freezeRROM[address & 0x1FFFFFc]),3);
-#endif
-	break;
   case 12:
     value = READ32LE(((u32 *)&rom[address&0x1FFFFFC]));
     break;    
@@ -141,24 +119,6 @@ inline u32 CPUReadMemory(u32 address)
     //    if(ioMem[0x205] & 0x40) {
       if(armState) {
         value = CPUReadMemoryQuick(reg[15].I);
-	 value2 = value;
-	 address2 = ((reg[15].I & 0xFFFFFFFC));
-#ifdef SDL
-	if ((((address2 >> 24) == 8) || ((address2 >> 24) == 9)) && (*((u32 *)&freezeRROM[address2 & 0x1FFFFFc])) )
-      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
-                        value2,
-                        *((u32 *)&freezeRROM[address2 & 0x1FFFFFc]),3);
-    else
-	if ((((address2 >> 24) == 2)) && (*((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC])) )
-      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
-                        value2,
-                        *((u32 *)&freezeRWorkRAM[address2 & 0x3FFFC]),3);
-    else
-	if ((((address2 >> 24) == 3)) && (*((u32 *)&freezeRInternalRAM[address2 & 0x7ffC])) )
-      cheatsWriteMemory((u32 *)&rom[address2 & 0x1FFFFFc],
-                        value2,
-                        *((u32 *)&freezeRInternalRAM[address2 & 0x7ffC]),3);
-#endif
       } else {
         value = CPUReadHalfWordQuick(reg[15].I) |
           CPUReadHalfWordQuick(reg[15].I) << 16;
@@ -224,22 +184,10 @@ inline u32 CPUReadHalfWord(u32 address)
       value = READ16LE(((u16 *)&bios[address & 0x3FFE]));
     break;
   case 2:
-   	value = READ16LE(((u16 *)&workRAM[address & 0x3FFFE]));
-#ifdef SDL
-    if(*((u16 *)&freezeRWorkRAM[address & 0x3FFFe]))
-      cheatsWriteHalfWord((u16 *)&workRAM[address & 0x3FFFE],
-                        value,
-                        *((u16 *)&freezeRWorkRAM[address & 0x3FFFe]),2);
-#endif
+    value = READ16LE(((u16 *)&workRAM[address & 0x3FFFE]));
     break;
   case 3:
-	  value = READ16LE(((u16 *)&internalRAM[address & 0x7ffe]));
-#ifdef SDL
-    if(*((u16 *)&freezeRInternalRAM[address & 0x7ffe]))
-      cheatsWriteHalfWord((u16 *)&internalRAM[address & 0x7FFe],
-                        value,
-                        *((u16 *)&freezeRInternalRAM[address & 0x7ffe]),2);
-#endif
+    value = READ16LE(((u16 *)&internalRAM[address & 0x7ffe]));
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fe])
@@ -259,14 +207,6 @@ inline u32 CPUReadHalfWord(u32 address)
   case 9:
   case 10:
   case 11:
-    value = READ16LE(((u16 *)&rom[address & 0x1FFFFFE]));
-#ifdef SDL
-    if(*((u16 *)&freezeRROM[address & 0x1FFFFFe]))
-      cheatsWriteHalfWord((u16 *)&rom[address & 0x1FFFFFe],
-                        value,
-                        *((u16 *)&freezeRROM[address & 0x1FFFFFe]),2);
-#endif
-	break;
   case 12:
     if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8)
       value = rtcRead(address);
@@ -321,7 +261,6 @@ inline u16 CPUReadHalfWordSigned(u32 address)
 
 inline u8 CPUReadByte(u32 address)
 {
-  u8 value;
   switch(address >> 24) {
   case 0:
     if (reg[15].I >> 24) {
@@ -337,19 +276,9 @@ inline u8 CPUReadByte(u32 address)
     }
     return bios[address & 0x3FFF];
   case 2:
-    value = workRAM[address & 0x3FFFF];
-#ifdef SDL
-    if(*((u8 *)&freezeRWorkRAM[address & 0x3FFFf]))
-    cheatsWriteByte(&workRAM[address & 0x3FFFF], value, 1);
-#endif
-    return value;
+    return workRAM[address & 0x3FFFF];
   case 3:
-    value = internalRAM[address & 0x7fff];
-#ifdef SDL
-    if(*((u8 *)&freezeRInternalRAM[address & 0x7fff]))
-      cheatsWriteByte(&internalRAM[address & 0x7fff], value, 1);
-#endif
-	return value;
+    return internalRAM[address & 0x7fff];
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3ff])
       return ioMem[address & 0x3ff];
@@ -364,12 +293,6 @@ inline u8 CPUReadByte(u32 address)
   case 9:
   case 10:
   case 11:
-    value = rom[address & 0x1FFFFFF];
-#ifdef SDL
-    if(*((u8 *)&freezeRROM[address & 0x1FFFFFf]))
-        cheatsWriteByte(&rom[address & 0x1FFFFFF], value, 1);
-#endif
-	return value;
   case 12:
     return rom[address & 0x1FFFFFF];        
   case 13:
@@ -430,7 +353,7 @@ inline void CPUWriteMemory(u32 address, u32 value)
     if(*((u32 *)&freezeWorkRAM[address & 0x3FFFC]))
       cheatsWriteMemory((u32 *)&workRAM[address & 0x3FFFC],
                         value,
-                        *((u32 *)&freezeWorkRAM[address & 0x3FFFC]), 0);
+                        *((u32 *)&freezeWorkRAM[address & 0x3FFFC]));
     else
 #endif
       WRITE32LE(((u32 *)&workRAM[address & 0x3FFFC]), value);
@@ -440,7 +363,7 @@ inline void CPUWriteMemory(u32 address, u32 value)
     if(*((u32 *)&freezeInternalRAM[address & 0x7ffc]))
       cheatsWriteMemory((u32 *)&internalRAM[address & 0x7FFC],
                         value,
-                        *((u32 *)&freezeInternalRAM[address & 0x7ffc]), 0);
+                        *((u32 *)&freezeInternalRAM[address & 0x7ffc]));
     else
 #endif
       WRITE32LE(((u32 *)&internalRAM[address & 0x7ffC]), value);
@@ -460,22 +383,6 @@ inline void CPUWriteMemory(u32 address, u32 value)
     break;
   case 0x07:
     WRITE32LE(((u32 *)&oam[address & 0x3fc]), value);
-    break;
-  case 0x08:
-  case 0x09:
-  case 0x0A:
-  case 0X0B: 
-	  if ((address < 0x09000000) || (address > 0x09000004))
-	  {
-#ifdef SDL
-    if(*((u32 *)&freezeROM[address & 0x1FFFFFC]))
-      cheatsWriteMemory((u32 *)&rom[address & 0x1FFFFFC],
-                        value,
-                        *((u32 *)&freezeROM[address & 0x1FFFFFC]),0);
-    else
-#endif
-      WRITE32LE(((u32 *)&rom[address & 0x1ffFFFC]), value);
-	  }
     break;
   case 0x0D:
     if(cpuEEPROMEnabled) {

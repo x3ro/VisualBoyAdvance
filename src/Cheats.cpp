@@ -1114,7 +1114,7 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
   }
 }
 
-bool cheatsImportGSACodeFile(char *name, int game)
+bool cheatsImportGSACodeFile(char *name, int game, bool v3)
 {
   FILE *f = fopen(name, "rb");
   if(!f)
@@ -1168,7 +1168,7 @@ bool cheatsImportGSACodeFile(char *name, int game)
         fseek(f, 4, SEEK_CUR);
         fread(&code[8], 1, 8, f);
         code[16] = 0;
-        cheatsAddGSACode(code, desc, false);
+        cheatsAddGSACode(code, desc, v3);
         len -= 2;
       }
       codes--;
@@ -1786,82 +1786,52 @@ extern int *extClockTicks;
 extern int *extTicks;
 extern int cpuSavedTicks;
 
-extern void debuggerBreakOnWrite(u32 *, u32, u32, int, u8); 
+extern void debuggerBreakOnWrite(u32 *, u32, u32, int); 
 
 #define CPU_BREAK_LOOP \
   cpuSavedTicks = cpuSavedTicks - *extCpuLoopTicks;\
   *extCpuLoopTicks = *extClockTicks;\
   *extTicks = *extClockTicks;
 
-void cheatsWriteMemory(u32 *address, u32 value, u32 mask, u8 readorwrite)
+void cheatsWriteMemory(u32 *address, u32 value, u32 mask)
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite(address, *address, value, 2, readorwrite);
+    debuggerBreakOnWrite(address, *address, value, 2);
     CPU_BREAK_LOOP;
-	if (readorwrite == 0)
     *address = value;
     return;
   }
 #endif
 #endif
-  u32 finalMask = 0;
-  
-  if(mask & 0x00000001) {
-    finalMask |= 0x000000ff;
-  }
-  if(mask & 0x00000100) {
-    finalMask |= 0x0000ff00;
-  }
-  if(mask & 0x00010000) {
-    finalMask |= 0x00ff0000;
-  }
-  if(mask & 0x01000000) {
-    finalMask |= 0xff000000;
-  }
-
-  *address = (*address & finalMask) | (value & (~finalMask));
 }
 
-void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask, u8 readorwrite)
+void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask)
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite((u32 *)address, *address, value, 1, readorwrite);
+    debuggerBreakOnWrite((u32 *)address, *address, value, 1);
     CPU_BREAK_LOOP;
-    if (readorwrite == 0)
     *address = value;
     return;
   }
 #endif
 #endif
-
-  u16 finalMask = 0;
-  
-  if(mask & 0x00000001) {
-    finalMask |= 0x000000ff;
-  }
-  if(mask & 0x00000100) {
-    finalMask |= 0x0000ff00;
-  }
-
-  *address = (*address & finalMask) | (value & (~finalMask));
 }
 
 #if defined BKPT_SUPPORT && defined SDL
-void cheatsWriteByte(u8 *address, u8 value, u8 readorwrite)
+void cheatsWriteByte(u8 *address, u8 value)
 #else
-void cheatsWriteByte(u8 *, u8, u8 readorwrite)
+void cheatsWriteByte(u8 *, u8)
 #endif
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
   if(cheatsNumber == 0) {
-    debuggerBreakOnWrite((u32 *)address, *address, value, 0, readorwrite);
+    debuggerBreakOnWrite((u32 *)address, *address, value, 0);
     CPU_BREAK_LOOP;
-	if (readorwrite == 0)
     *address = value;
     return;
   }

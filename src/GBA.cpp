@@ -87,11 +87,6 @@ static int profilScale = 0;
 #endif
 bool freezeWorkRAM[0x40000];
 bool freezeInternalRAM[0x8000];
-bool freezeROM[0x2000000];
-bool freezeRWorkRAM[0x40000];
-bool freezeRInternalRAM[0x8000];
-bool freezeRROM[0x2000000];
-bool dlast = false;
 int lcdTicks = 960;
 bool timer0On = false;
 int timer0Ticks = 0;
@@ -2670,7 +2665,7 @@ void CPUWriteHalfWord(u32 address, u16 value)
     if(*((u16 *)&freezeWorkRAM[address & 0x3FFFE]))
       cheatsWriteHalfWord((u16 *)&workRAM[address & 0x3FFFE],
                           value,
-                          *((u16 *)&freezeWorkRAM[address & 0x3FFFE]), cow<<2);
+                          *((u16 *)&freezeWorkRAM[address & 0x3FFFE]));
     else
 #endif
       WRITE16LE(((u16 *)&workRAM[address & 0x3FFFE]),value);
@@ -2680,11 +2675,11 @@ void CPUWriteHalfWord(u32 address, u16 value)
     if(*((u16 *)&freezeInternalRAM[address & 0x7ffe]))
       cheatsWriteHalfWord((u16 *)&internalRAM[address & 0x7ffe],
                           value,
-                          *((u16 *)&freezeInternalRAM[address & 0x7ffe]), cow<<2);
+                          *((u16 *)&freezeInternalRAM[address & 0x7ffe]));
     else
 #endif
       WRITE16LE(((u16 *)&internalRAM[address & 0x7ffe]), value);
-    break;   
+    break;    
   case 4:
     CPUUpdateRegister(address & 0x3fe, value);
     break;
@@ -2705,16 +2700,7 @@ void CPUWriteHalfWord(u32 address, u16 value)
     if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8) {
       if(!rtcWrite(address, value))
         goto unwritable;
-    } else if(!agbPrintWrite(address, value)) {
-#ifdef SDL
-    if(*((u16 *)&freezeROM[address & 0x1FFFFFE]))
-      cheatsWriteHalfWord((u16 *)&rom[address & 0x1FFFFFE],
-                          value,
-                          *((u16 *)&freezeROM[address & 0x1FFFFFE]), cow<<2);
-    else
-#endif
-	  WRITE16LE(((u16 *)&rom[address & 0x1FFFFFE]), value);
-	}
+    } else if(!agbPrintWrite(address, value)) goto unwritable;
     break;
   case 13:
     if(cpuEEPROMEnabled) {
@@ -2748,7 +2734,7 @@ void CPUWriteByte(u32 address, u8 b)
   case 2:
 #ifdef SDL
       if(freezeWorkRAM[address & 0x3FFFF])
-        cheatsWriteByte(&workRAM[address & 0x3FFFF], b, cow<<2);
+        cheatsWriteByte(&workRAM[address & 0x3FFFF], b);
       else
 #endif  
         workRAM[address & 0x3FFFF] = b;
@@ -2756,7 +2742,7 @@ void CPUWriteByte(u32 address, u8 b)
   case 3:
 #ifdef SDL
     if(freezeInternalRAM[address & 0x7fff])
-      cheatsWriteByte(&internalRAM[address & 0x7fff], b, cow<<2);
+      cheatsWriteByte(&internalRAM[address & 0x7fff], b);
     else
 #endif
       internalRAM[address & 0x7fff] = b;
@@ -2839,16 +2825,7 @@ void CPUWriteByte(u32 address, u8 b)
   case 7:
     // no need to switch
     *((u16 *)&oam[address & 0x3FE]) = (b << 8) | b;
-    break;
-  case 8:
-  case 9:
-#ifdef SDL
-      if(freezeROM[address & 0x1FFFFFF])
-        cheatsWriteByte(&rom[address & 0x1FFFFFF], b, cow<<2);
-      else
-#endif  
-			rom[address & 0x1FFFFFF] = b;
-    break;
+    break;    
   case 13:
     if(cpuEEPROMEnabled) {
       eepromWrite(address, b);
@@ -3317,14 +3294,6 @@ void CPULoop(int ticks)
     if(systemDebug) {
       if(systemDebug >= 10 && !holdState) {
         CPUUpdateCPSR();
-        if (dlast)
-		{
-		sprintf(buffer, "R00=%08x R01=%08x R02=%08x R03=%08x R04=%08x R05=%08x R06=%08x R07=%08x R08=%08x R09=%08x R10=%08x R11=%08x R12=%08x R13=%08x R14=%08x R15=%08x R16=%08x R17=%08x\n",
-                 oldreg[0], oldreg[1], oldreg[2], oldreg[3], oldreg[4], oldreg[5],
-                 oldreg[6], oldreg[7], oldreg[8], oldreg[9], oldreg[10], oldreg[11],
-                 oldreg[12], oldreg[13], oldreg[14], oldreg[15], oldreg[16],
-                 oldreg[17]);
-		}
         sprintf(buffer, "R00=%08x R01=%08x R02=%08x R03=%08x R04=%08x R05=%08x R06=%08x R07=%08x R08=%08x R09=%08x R10=%08x R11=%08x R12=%08x R13=%08x R14=%08x R15=%08x R16=%08x R17=%08x\n",
                  reg[0].I, reg[1].I, reg[2].I, reg[3].I, reg[4].I, reg[5].I,
                  reg[6].I, reg[7].I, reg[8].I, reg[9].I, reg[10].I, reg[11].I,
