@@ -1147,7 +1147,11 @@ bool CPULoadRom(char *szFile)
                   "ROM");
     return false;
   }
-  memset(rom, 0xFF, 0x2000000);
+  u16 *temp = (u16 *)rom;
+  int i;
+  for(i = 0; i < 0x2000000; i+=2) {
+    *temp++ = TO16LE((i >> 1) & 0xFFFF);
+  }
   workRAM = (u8 *)calloc(1, 0x40000);
   if(workRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",

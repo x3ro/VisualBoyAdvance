@@ -5,6 +5,8 @@ Core changes:
 - added checks for out of memory condition
 - fixed message when failed to write battery file (previously always saying
   failure to open file NULL)
+- simulating memory behaviour when no cartridge present (32-bits still
+  incorrect)
 Windows version:
 - automatically apply IPS patch if it exists (configurable)
 - added save/load support in the memory viewer
