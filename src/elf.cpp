@@ -84,6 +84,8 @@
 #define DW_AT_type                 0x49
 #define DW_AT_virtuality           0x4c
 #define DW_AT_vtable_elem_location 0x4d
+// DWARF 2.1/3.0 extensions
+#define DW_AT_ranges               0x55
 // ARM Compiler extensions
 #define DW_AT_proc_body            0x2000
 #define DW_AT_save_offset          0x2001
@@ -100,6 +102,7 @@
 #define DW_FORM_data1     0x0b
 #define DW_FORM_flag      0x0c
 #define DW_FORM_sdata     0x0d
+#define DW_FORM_strp      0x0e
 #define DW_FORM_udata     0x0f
 #define DW_FORM_ref_addr  0x10
 #define DW_FORM_ref4      0x13
@@ -242,6 +245,7 @@ int elfSectionHeadersCount = 0;
 
 CompileUnit *elfCompileUnits = NULL;
 DebugInfo *elfDebugInfo = NULL;
+char *elfDebugStrings = NULL;
 
 ELFcie *elfCies = NULL;
 ELFfde **elfFdes = NULL;
@@ -913,6 +917,10 @@ u8 *elfReadAttribute(u8 *data, ELFAttr *attr)
   case DW_FORM_string:
     attr->string = (char *)data;
     data += strlen(attr->string)+1;
+    break;
+  case DW_FORM_strp:
+    attr->string = elfDebugStrings + elfRead4Bytes(data);
+    data += 4;
     break;
   case DW_FORM_block:
     attr->block = (ELFBlock *)malloc(sizeof(ELFBlock));
@@ -2012,6 +2020,8 @@ u8 *elfParseBlock(u8 *data, ELFAbbrev *abbrev, CompileUnit *unit,
     case DW_AT_high_pc:
       end = attr->value;
       break;
+    case DW_AT_ranges: // ignore for now
+      break;
     default:
       fprintf(stderr, "Unknown block attribute %02x\n", attr->name);
       break;
@@ -2714,6 +2724,13 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
     
     elfDebugInfo = (DebugInfo *)calloc(sizeof(DebugInfo), 1);
     u8 *abbrevdata = elfReadSection(data, h);
+
+    h = elfGetSectionByName(".debug_str");
+
+    if(h == NULL)
+      elfDebugStrings = NULL;
+    else
+      elfDebugStrings = (char *)elfReadSection(data, h);
     
     u8 *debugdata = elfReadSection(data, dbgHeader);
     
@@ -2927,6 +2944,8 @@ void elfCleanUp()
   elfSymbols = NULL;
   //  free(elfSymbolsStrTab);
   elfSymbolsStrTab = NULL;
+
+  elfDebugStrings = NULL;
   if(elfDebugInfo) {
     free(elfDebugInfo->debugdata);
     int num = elfDebugInfo->numRanges;
