@@ -37,8 +37,21 @@
 
 extern void toolsLogging(QWidget *);
 extern void toolsLog(char *);
+extern int Init_2xSaI(u32);
+extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
+extern void MotionBlur32(u8*,u32,u8*,u8*,u32,int,int);
+extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
+extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
+extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);
+extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
 
 QImage image(240, 160, 32);
+QImage filterImage(480, 320, 32);
+
+u8 *delta[257*244*4];
+
 qtGUI *gui = NULL;
 QSettings *settings = NULL;
 bool screenMessage = false;
@@ -80,6 +93,8 @@ int systemDebug = 0;
 int systemVerbose = 0;
 bool systemSoundOn = false;
 
+int RGB_LOW_BITS_MASK = 0;
+
 int emulating = 0;
 
 u32 systemColorMap32[0x10000];
@@ -94,11 +109,16 @@ qtGUI::qtGUI()
   videoOption = 0;
   captureFormat = 0;
   recentFreeze = false;
+  filterType = 0;
+  filterFunction = NULL;
 
   readSettings();
 
+  Init_2xSaI(32);
+
   // File menu
   fileMenu = new QPopupMenu(this);
+  connectMenu(fileMenu);
   fileMenu->setCheckable(true);
   connect(fileMenu, SIGNAL(aboutToShow()), this, SLOT(updateFileMenu()));  
   menuBar()->insertItem(tr("&File"), fileMenu);
@@ -161,6 +181,7 @@ qtGUI::qtGUI()
 
   // Options menu
   QPopupMenu *optionsMenu = new QPopupMenu(this);
+  connectMenu(optionsMenu);
   menuBar()->insertItem(tr("&Options"), optionsMenu);
 
   // Frameskip menu
@@ -251,8 +272,61 @@ qtGUI::qtGUI()
                            this,
                            SLOT(optionsEmulatorDirectories()));
 
+  // Filter menu
+  filterMenu = new QPopupMenu(this);
+  optionsMenu->insertItem(tr("&Filter"), filterMenu);
+  connect(filterMenu, SIGNAL(aboutToShow()), this, SLOT(updateFilterMenu()));
+  filterMenu->setCheckable(true);  
+
+  filterMenu->insertItem(tr("&Normal"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         0);
+  filterMenu->insertItem(tr("&TV Mode"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         1);
+  filterMenu->insertItem(tr("&2xSaI"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         2);
+  filterMenu->insertItem(tr("&Super 2xSaI"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         3);
+  filterMenu->insertItem(tr("Super &Eagle"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         4);
+  filterMenu->insertItem(tr("&Pixelate"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         5);
+  filterMenu->insertItem(tr("&Motion Blur"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         6);
+  filterMenu->insertItem(tr("&AdvanceMAME Scale2x"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         7);
+  filterMenu->insertItem(tr("S&imple 2x"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         8);
+
   // Cheats menu
   cheatsMenu = new QPopupMenu(this);
+  connectMenu(cheatsMenu);
   menuBar()->insertItem(tr("&Cheats"), cheatsMenu);
   connect(cheatsMenu, SIGNAL(aboutToShow()), this, SLOT(updateCheatsMenu()));
   
@@ -269,6 +343,7 @@ qtGUI::qtGUI()
 
   // Tools menu
   QPopupMenu *toolsMenu = new QPopupMenu(this);
+  connectMenu(toolsMenu);
   menuBar()->insertItem(tr("&Tools"), toolsMenu);
 
   toolsMenu->insertItem(tr("&Logging..."),
@@ -300,6 +375,24 @@ qtGUI::~qtGUI()
   }
 }
 
+void qtGUI::connectMenu(QPopupMenu *menu)
+{
+  connect(menu, SIGNAL(aboutToShow()), this, SLOT(menuAboutToShow()));
+  connect(menu, SIGNAL(aboutToHide()), this, SLOT(menuAboutToHide()));
+}
+
+void qtGUI::menuAboutToShow()
+{
+  if(emulating && !paused)
+    timer->stop();
+}
+
+void qtGUI::menuAboutToHide()
+{
+  if(emulating && !paused)
+    timer->start(0);
+}
+
 void qtGUI::readSettings()
 {
   settings = new QSettings();
@@ -313,6 +406,10 @@ void qtGUI::readSettings()
   if(videoOption < 0 || videoOption > 3)
     videoOption = 0;
 
+  filterType = settings->readNumEntry("/VisualBoyAdvance/filter", 0);
+  if(filterType < 0 || filterType > 8)
+    filterType = 0;
+
   recentFreeze = settings->readBoolEntry("/VisualBoyAdvance/recentFreeze",
                                          false);
 
@@ -322,6 +419,8 @@ void qtGUI::readSettings()
     buffer.sprintf("/VisualBoyAdvance/recent%d", i);
     recentFiles[i] = settings->readEntry(buffer);
   }
+
+  updateFilter();
 }
 
 void qtGUI::windowActivationChange(bool /* oldActive */)
@@ -714,6 +813,16 @@ void qtGUI::optionsEmulatorDirectories()
   dlg.exec();
 }
 
+void qtGUI::optionsFilter(int id)
+{
+  filterMenu->setItemChecked(filterType, false);
+  filterType = id;
+  if(filterType < 0 || filterType > 8)
+    filterType = 0;
+  settings->writeEntry("/VisualBoyAdvance/filter", filterType);
+  updateFilter();
+}
+
 void qtGUI::cheatsSearch()
 {
   GBACheatSearch dlg(this);
@@ -731,6 +840,40 @@ void qtGUI::cheatsCheatList()
 void qtGUI::toolsLogging()
 {
   ::toolsLogging(this);
+}
+
+void qtGUI::updateFilter()
+{
+  switch(filterType) {
+  default:
+  case 0:
+    filterFunction = NULL;
+    break;
+  case 1:
+    filterFunction = TVMode32;
+    break;
+  case 2:
+    filterFunction = _2xSaI32;
+    break;
+  case 3:
+    filterFunction = Super2xSaI32;
+    break;
+  case 4:
+    filterFunction = SuperEagle32;
+    break;        
+  case 5:
+    filterFunction = Pixelate32;
+    break;
+  case 6:
+    filterFunction = MotionBlur32;
+    break;
+  case 7:
+    filterFunction = AdMame2x32;
+    break;
+  case 8:
+    filterFunction = Simple2x32;
+    break;
+  }
 }
 
 void qtGUI::updateFileMenu()
@@ -796,6 +939,11 @@ void qtGUI::updateLayersMenu()
                                true : false);
 }
 
+void qtGUI::updateFilterMenu()
+{
+  filterMenu->setItemChecked(filterType, true);
+}
+
 void qtGUI::updateCheatsMenu()
 {
   cheatsMenu->setItemEnabled(0, emulating);
@@ -812,17 +960,28 @@ void qtGUI::doIdle()
 void qtGUI::drawScreen()
 {
   u32 *p = (u32 *)pix;
-  
-  for(int y = 0; y < 160; y++) {
-    u32 *line = (u32 *)image.scanLine(y);
+  QPainter painter(this);  
 
-    for(int x = 0; x < 240; x++) {
-      *line++ = *p++;
+  if(filterFunction) {
+    (*filterFunction)(pix,
+                      240*4,
+                      (u8 *)delta,
+                      filterImage.bits(),
+                      filterImage.bytesPerLine(),
+                      240,
+                      160);
+    painter.drawImage(destRect, filterImage);
+  } else {
+    for(int y = 0; y < 160; y++) {
+      u32 *line = (u32 *)image.scanLine(y);
+      
+      for(int x = 0; x < 240; x++) {
+        *line++ = *p++;
+      }
     }
-  }
-  QPainter painter(this);
 
-  painter.drawImage(destRect, image);
+    painter.drawImage(destRect, image);
+  }
 }
 
 void qtGUI::keyPressEvent(QKeyEvent *e)

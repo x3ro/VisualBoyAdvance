@@ -140,7 +140,7 @@ void TVMode (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
 
 #define RGB32_LOW_BITS_MASK 0x010101
 
-void TVMode32(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
+void TVMode32(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
               u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;

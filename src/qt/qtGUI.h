@@ -26,6 +26,8 @@
 #include <qsettings.h>
 #include <qfileinfo.h>
 
+#include "../System.h"
+
 class qtGUI : public QMainWindow {
   Q_OBJECT
 public:
@@ -59,6 +61,7 @@ private slots:
   void optionsVideo4x();
   void optionsVideoLayers(int);
   void optionsEmulatorDirectories();
+  void optionsFilter(int);
   void cheatsSearch();
   void cheatsCheatList();
   void toolsLogging();
@@ -70,7 +73,11 @@ private slots:
   void updateFrameskipMenu();
   void updateVideoMenu();
   void updateLayersMenu();
+  void updateFilterMenu();
   void updateCheatsMenu();
+
+  void menuAboutToShow();
+  void menuAboutToHide();
 
 private:
   virtual void keyPressEvent(QKeyEvent *);
@@ -81,6 +88,8 @@ private:
   void readSettings();
 
   bool fileRun(QString);
+  void updateFilter();
+  void connectMenu(QPopupMenu *);
 
   void addRecentFile(const char *);
   
@@ -90,6 +99,8 @@ private:
   bool recentFreeze;
   int videoOption;
   int captureFormat;
+  int filterType;
+  void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int);
   QString filename;
   QFileInfo fileinfo;
   QString recentFiles[10];
@@ -103,6 +114,7 @@ private:
   QPopupMenu *frameskipMenu;
   QPopupMenu *videoMenu;
   QPopupMenu *layersMenu;
+  QPopupMenu *filterMenu;
   QPopupMenu *emulatorMenu;
   QPopupMenu *cheatsMenu;
 };

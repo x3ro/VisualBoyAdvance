@@ -403,7 +403,7 @@ void Super2xSaI (u8 *srcPtr, u32 srcPitch,
 }
 
 void Super2xSaI32 (u8 *srcPtr, u32 srcPitch,
-                   u8 *deltaPtr, u8 *dstPtr, u32 dstPitch,
+                   u8 */* deltaPtr */, u8 *dstPtr, u32 dstPitch,
                    int width, int height)
 {
   u32 *bP;
@@ -965,7 +965,7 @@ void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   }
 }
 
-void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
+void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
                u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u32  *dP;
