@@ -130,6 +130,7 @@ SDL_Surface *surface = NULL;
 SDL_Overlay *overlay = NULL;
 SDL_Rect overlay_rect;
 
+int systemSpeed = 0;
 int systemRedShift = 0;
 int systemBlueShift = 0;
 int systemGreenShift = 0;
@@ -180,6 +181,7 @@ bool sdlMotionButtons[4] = { false, false, false, false };
 int sdlNumDevices = 0;
 SDL_Joystick **sdlDevices = NULL;
 
+int showSpeed = 1;
 bool disableStatusMessages = false;
 bool paused = false;
 bool pauseNextFrame = false;
@@ -286,6 +288,7 @@ struct option sdlOptions[] = {
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "no-mmx", no_argument, &disableMMX, 1 },
+  { "no-show-speed", no_argument, &showSpeed, 0 },
   { "profile", optional_argument, 0, 'p' },
   { "save-type", required_argument, 0, 't' },
   { "save-auto", no_argument, &cpuSaveType, 0 },
@@ -293,6 +296,7 @@ struct option sdlOptions[] = {
   { "save-sram", no_argument, &cpuSaveType, 2 },
   { "save-flash", no_argument, &cpuSaveType, 3 },
   { "save-sensor", no_argument, &cpuSaveType, 4 },
+  { "show-speed", no_argument, &showSpeed, 1 },
   { "verbose", required_argument, 0, 'v' },  
   { "video-1x", no_argument, &sizeOption, 0 },
   { "video-2x", no_argument, &sizeOption, 1 },
@@ -1026,6 +1030,8 @@ soundQuality);
       ifbType = sdlFromHex(value);
       if(ifbType < 0 || ifbType > 2)
         ifbType = 0;
+    } else if(!strcmp(key, "showSpeed")) {
+      showSpeed = sdlFromHex(value);
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1583,6 +1589,9 @@ void usage(char *cmd)
         printf("       --ifb-motion-blur      Interframe motion blur\n");
         printf("       --ifb-smart            Smart interframe blending\n");
         printf("       --no-ips               Do not apply IPS patch\n");
+        printf("       --no-mmx               Disable MMX support\n");
+        printf("       --no-show-speed        Don't show emulation speed\n");
+        printf("       --show-speed           Show emulation speed\n");
 }
 
 int main(int argc, char **argv)
@@ -2398,6 +2407,16 @@ void systemDrawScreen()
     }
   }
 
+  if(showSpeed && fullscreen) {
+    char buffer[50];
+    sprintf(buffer, "%d%%", systemSpeed);
+    fontDisplayStringTransp((u8*)surface->pixels,
+                            surface->pitch,
+                            10,
+                            surface->h - 20,
+                            buffer); 
+  }  
+
   SDL_UnlockSurface(surface);
   //  SDL_UpdateRect(surface, 0, 0, destWidth, destHeight);
   SDL_Flip(surface);
@@ -2440,6 +2459,18 @@ u32 systemReadJoypad()
 void systemSetTitle(char *title)
 {
   SDL_WM_SetCaption(title, NULL);
+}
+
+void systemShowSpeed(int speed)
+{
+  systemSpeed = speed;
+
+  if(!fullscreen && showSpeed) {
+    char buffer[80];
+
+    sprintf(buffer, "VisualBoyAdvance - %d%%", speed);
+    systemSetTitle(buffer);
+  }
 }
 
 void systemScreenCapture(int a)

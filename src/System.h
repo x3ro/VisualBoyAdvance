@@ -74,6 +74,7 @@ extern void systemUpdateMotionSensor();
 extern int  systemGetSensorX();
 extern int  systemGetSensorY();
 extern bool systemCanChangeSoundQuality();
+extern void systemShowSpeed(int);
 
 extern bool systemSoundOn;
 extern u16 systemColorMap16[0x10000];

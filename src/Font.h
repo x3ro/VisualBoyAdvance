@@ -17,3 +17,4 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 extern void fontDisplayString(u8 *, int, int, int, char *);
+extern void fontDisplayStringTransp(u8 *, int, int, int, char *);

@@ -119,23 +119,34 @@ static char *font[] = {
 static int font_width = 8;
 static int font_height = 9;
 
-void fontDisplayChar(u8 *screen, int pitch, u8 c)
+extern int RGB_LOW_BITS_MASK;
+
+void fontDisplayChar(u8 *screen, int pitch, u8 c, bool trans)
 {
   int line = (((c & 0x7f) - 32) >> 4) * font_height;
   int offset = (((c & 0x7f) - 32) & 15) * font_width;
   switch(systemColorDepth) {
   case 16:
     {
+      u16 mask = ~RGB_LOW_BITS_MASK;
       int h, w;
       u16 *s = (u16 *)screen;
       for (h = 0; h < font_height; h++, line++) {
         for (w = 0; w < font_width; w++, s++) {
           u8 p = font [line][offset + w];
-          
-          if (p == '#')
-            *s = (0x1f) << systemRedShift;
-          else if (p == '.')
-            *s = 0x0000;
+
+          if(trans) {
+            if (p == '#')
+              *s = ((0xf) << systemRedShift) +
+                ((*s & mask) >>1);
+            else if (p == '.')
+              *s = ((*s & mask)>>1);
+          } else {
+            if (p == '#')
+              *s = (0x1f) << systemRedShift;
+            else if (p == '.')
+              *s = 0x0000;
+          }
         }
         screen += pitch;
         s = (u16 *)screen;
@@ -149,16 +160,29 @@ void fontDisplayChar(u8 *screen, int pitch, u8 c)
       for (h = 0; h < font_height; h++, line++) {
         for (w = 0; w < font_width; w++, s+=3) {
           u8 p = font [line][offset + w];
-          
-          if (p == '#') {
-            u32 color = (0x1f) << systemRedShift;
-            *s = color & 255;
-            *(s+1) = (color >> 8) & 255;
-            *(s+2) = (color >> 16) & 255;
-          } else if (p == '.') {
-            *s = 0;
-            *(s+1) = 0;
-            *(s+2) = 0;
+
+          if(trans) {
+            if (p == '#') {
+              u32 color = (0x1f) << systemRedShift;
+              *s = ((color & 255)>>1)+(*s>>1);
+              *(s+1) = (((color >> 8) & 255)>>1)+(*(s+1)>>1);
+              *(s+2) = (((color >> 16) & 255)>>1)+(*(s+2)>>1);
+            } else if (p == '.') {
+              *s = *s>>1;
+              *(s+1) = *(s+1)>>1;
+              *(s+2) = *(s+2)>>1;
+            }
+          } else {
+            if (p == '#') {
+              u32 color = (0x1f) << systemRedShift;
+              *s = (color & 255);
+              *(s+1) = (color >> 8) & 255;
+              *(s+2) = (color >> 16) & 255;
+            } else if (p == '.') {
+              *s = 0;
+              *(s+1) = 0;
+              *(s+2) = 0;
+            }
           }
         }
         screen += pitch;
@@ -169,15 +193,23 @@ void fontDisplayChar(u8 *screen, int pitch, u8 c)
   case 32:
     {
       int h, w;
+      u32 mask = 0xfefefe;
       u32 *s = (u32 *)screen;
       for (h = 0; h < font_height; h++, line++) {
         for (w = 0; w < font_width; w++, s++) {
           u8 p = font [line][offset + w];
-          
-          if (p == '#')
-            *s = (0x1f) << systemRedShift;
-          else if (p == '.')
-            *s = 0x00000000;
+
+          if(trans) {
+            if (p == '#')
+              *s = ((0xf) << systemRedShift) + ((*s & mask)>>1);
+            else if (p == '.')
+              *s = (*s & mask) >> 1;
+          } else {
+            if (p == '#')
+              *s = (0x1f) << systemRedShift;
+            else if (p == '.')
+              *s = 0x00000000;
+          }
         }
         screen += pitch;
         s = (u32 *)screen;
@@ -202,7 +234,27 @@ void fontDisplayString(u8 *screen, int pitch, int x, int y, char *string)
   screen += x*inc;
 
   while(*string) {
-    fontDisplayChar(screen, pitch, *string++);
+    fontDisplayChar(screen, pitch, *string++, false);
+    screen += inc*font_width;
+  }
+}
+
+void fontDisplayStringTransp(u8 *screen, int pitch, int x, int y, char *string)
+{
+  screen += y*pitch;
+  int inc = 2;
+  switch(systemColorDepth) {
+  case 24:
+    inc = 3;
+    break;
+  case 32:
+    inc = 4;
+    break;
+  }
+  screen += x*inc;
+
+  while(*string) {
+    fontDisplayChar(screen, pitch, *string++, true);
     screen += inc*font_width;
   }
 }

@@ -3545,11 +3545,10 @@ void CPULoop(int ticks)
               if(count == 60) {
                 u32 time = systemGetClock();
                 if(time != lastTime) {
-                  u32 t = 100000/(time - lastTime);               
-                  sprintf(buffer,"VisualBoyAdvance - %d%%", t);
+                  u32 t = 100000/(time - lastTime);
+                  systemShowSpeed(t);
                 } else
-                  sprintf(buffer,"VisualBoyAdvance - 0%%");
-                systemSetTitle(buffer);
+                  systemShowSpeed(0);
                 lastTime = time;
                 count = 0;
               }

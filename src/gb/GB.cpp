@@ -2769,11 +2769,9 @@ void gbEmulate(int ticksToStop)
             if(gbFrameCount >= 60) {
               u32 currentTime = systemGetClock();
               if(currentTime != gbLastTime)
-                sprintf(gbBuffer,"VisualBoyAdvance - %d%%", 
-                        100000/(currentTime - gbLastTime));
+                systemShowSpeed(100000/(currentTime - gbLastTime));
               else
-                sprintf(gbBuffer,"VisualBoyAdvance - 0%%");
-              systemSetTitle(gbBuffer);
+                systemShowSpeed(0);
               gbLastTime = currentTime;
               gbFrameCount = 0;       
             }
