@@ -325,16 +325,19 @@ void GBMemoryViewerDlg::OnSave()
   dlg.setAddress(m_viewer.getCurrentAddress());
 
   LPCTSTR exts[] = { ".dmp" };
+
+  CString filter = theApp.winLoadFilter(IDS_FILTER_DUMP);
+  CString title = winResLoadString(IDS_SELECT_DUMP_FILE);
   
-  if(dlg.DoModal()) {
+  if(dlg.DoModal() == IDOK) {
     FileDlg file(this,
                  buffer,
-                 theApp.winLoadFilter(IDS_FILTER_DUMP),
+                 filter, 
                  0,
                  "DMP",
                  exts,
                  "",
-                 winResLoadString(IDS_SELECT_DUMP_FILE),
+                 title,
                  true);
     if(file.DoModal() == IDOK) {
       FILE *f = fopen(buffer, "wb");
@@ -361,18 +364,20 @@ void GBMemoryViewerDlg::OnLoad()
 {
   CString buffer;
   LPCTSTR exts[] = { ".dmp" };
+  CString filter = theApp.winLoadFilter(IDS_FILTER_DUMP);
+  CString title = winResLoadString(IDS_SELECT_DUMP_FILE);
   
   FileDlg file(this,
                buffer,
-               theApp.winLoadFilter(IDS_FILTER_DUMP),
+               filter, 
                0,
                "DMP",
                exts,
                "",
-               winResLoadString(IDS_SELECT_DUMP_FILE),
+               title, 
                false);
   
-  if(file.DoModal()) {
+  if(file.DoModal() == IDOK) {
     FILE *f = fopen(buffer, "rb");
     if(f == NULL) {
       systemMessage(IDS_CANNOT_OPEN_FILE,

@@ -327,15 +327,18 @@ void MemoryViewerDlg::OnSave()
 
   LPCTSTR exts[] = { ".dmp" };
   
-  if(dlg.DoModal()) {
+  if(dlg.DoModal() == IDOK) {
+    CString filter = theApp.winLoadFilter(IDS_FILTER_DUMP);
+    CString title = winResLoadString(IDS_SELECT_DUMP_FILE);
+
     FileDlg file(this,
                  buffer,
-                 theApp.winLoadFilter(IDS_FILTER_DUMP),
+                 filter,
                  0,
                  "DMP",
                  exts,
                  "",
-                 winResLoadString(IDS_SELECT_DUMP_FILE),
+                 title, 
                  true);
     if(file.DoModal() == IDOK) {
       buffer = file.GetPathName();
@@ -364,18 +367,21 @@ void MemoryViewerDlg::OnLoad()
 {
   CString buffer;
   LPCTSTR exts[] = { ".dmp" };
-  
+
+  CString filter = theApp.winLoadFilter(IDS_FILTER_DUMP);
+  CString title = winResLoadString(IDS_SELECT_DUMP_FILE);
+
   FileDlg file(this,
                buffer,
-               theApp.winLoadFilter(IDS_FILTER_DUMP),
+               filter,
                0,
                "DMP",
                exts,
                "",
-               winResLoadString(IDS_SELECT_DUMP_FILE),
+               title,
                false);
   
-  if(file.DoModal()) {
+  if(file.DoModal() == IDOK) {
     FILE *f = fopen(buffer, "rb");
     if(f == NULL) {
       systemMessage(IDS_CANNOT_OPEN_FILE,

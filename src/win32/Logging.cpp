@@ -170,10 +170,11 @@ void Logging::OnSave()
   if(mem) {
     LPCTSTR exts[] = { ".txt" };
     m_log.GetWindowText(mem, len);
-    FileDlg dlg(this, "", "All Files\0*.*\0\0",0,
+    CString filter = "All Files|*.*||";
+    FileDlg dlg(this, "", filter, 0,
                 NULL, exts, NULL, "Save output", true);
 
-    if(dlg.DoModal()) {
+    if(dlg.DoModal() == IDOK) {
       FILE *f = fopen(dlg.GetPathName(), "w");
       if(f) {
         fwrite(mem, 1, len, f);

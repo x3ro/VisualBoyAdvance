@@ -42,9 +42,14 @@ UINT_PTR CALLBACK HookFunc(HWND hwnd,
                            LPARAM lParam)
 {
   if(instance) {
-    if(msg == CDN_TYPECHANGE) {
-      instance->OnTypeChange(hwnd);
-      return 1;
+    if(msg == WM_NOTIFY) {
+      OFNOTIFY *notify = (OFNOTIFY *)lParam;
+      if(notify) {
+        if(notify->hdr.code == CDN_TYPECHANGE) {
+          instance->OnTypeChange(hwnd);
+          return 1;
+        }
+      }
     }
   }
   return 0;
@@ -65,9 +70,9 @@ FileDlg::FileDlg(CWnd *parent, LPCTSTR file, LPCTSTR filter,
   OSVERSIONINFO info;
   info.dwOSVersionInfoSize = sizeof(info);
   GetVersionEx(&info);
-  
+  m_file = file;
   int size = sizeof(OPENFILENAME);
-  
+
   if(info.dwPlatformId == VER_PLATFORM_WIN32_NT) {
     if(info.dwMajorVersion >= 5)
       size = sizeof(OPENFILENAMEEX);
@@ -98,28 +103,34 @@ FileDlg::FileDlg(CWnd *parent, LPCTSTR file, LPCTSTR filter,
     m_ofn.Flags |= OFN_ENABLETEMPLATE;
   }
 
-  isSave = !save;
+  isSave = save;
   extensions = exts;
+
+  instance = this;
 }
 
 FileDlg::~FileDlg()
 {
-
+  instance = NULL;
 }
 
 void FileDlg::OnTypeChange(HWND hwnd)
 {
   HWND parent = GetParent(hwnd);
 
-  HWND fileNameControl = GetDlgItem(parent, edt1);
+  HWND fileNameControl = ::GetDlgItem(parent, cmb13);
 
-  ASSERT(fileNameControl != NULL);
+  if(fileNameControl == NULL)
+    fileNameControl = ::GetDlgItem(parent, edt1);
+
+  if(fileNameControl == NULL)
+    return;
   
   CString filename;
   GetWindowText(fileNameControl, filename.GetBuffer(MAX_PATH), MAX_PATH);
   filename.ReleaseBuffer();
 
-  HWND typeControl = GetDlgItem(parent, cmb1);
+  HWND typeControl = ::GetDlgItem(parent, cmb1);
 
   ASSERT(typeControl != NULL);
 

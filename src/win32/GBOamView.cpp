@@ -400,17 +400,20 @@ void GBOamView::save()
 
   LPCTSTR exts[] = {".png", ".bmp" };
 
+  CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
+  CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
+
   FileDlg dlg(this,
               captureBuffer,
-              theApp.winLoadFilter(IDS_FILTER_PNG),
+              filter,
               theApp.captureFormat ? 2 : 1,
               theApp.captureFormat ? "BMP" : "PNG",
               exts,
               "",
-              winResLoadString(IDS_SELECT_CAPTURE_NAME),
+              title, 
               true);
 
-  if(!dlg.DoModal()) {
+  if(dlg.DoModal() == IDCANCEL) {
     return;
   }
   captureBuffer = dlg.GetPathName();
