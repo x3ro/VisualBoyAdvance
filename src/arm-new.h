@@ -267,6 +267,273 @@
    }
 #else
 #ifdef __GNUC__
+        #ifdef __POWERPC__
+            #define OP_SUB \
+                {\
+                reg[dest].I = reg[base].I - value;\
+                }
+            #define OP_SUBS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("subco. %0, %2, %3\n"	\
+                            "mcrxr cr1\n"			\
+                            "mfcr %1\n"				\
+                            : "=r" (Result), 		\
+                              "=r" (Flags)			\
+                            : "r" (reg[base].I), 	\
+                              "r" (value)			\
+                            );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_RSB \
+                {\
+                reg[dest].I = value - reg[base].I;\
+                }
+            #define OP_RSBS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("subfco. %0, %2, %3\n"	\
+                            "mcrxr cr1\n"			\
+                            "mfcr %1\n"				\
+                            : "=r" (Result), 		\
+                              "=r" (Flags)			\
+                            : "r" (reg[base].I), 	\
+                              "r" (value)			\
+                            );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_ADD \
+                {\
+                reg[dest].I = reg[base].I + value;\
+                }
+
+            #define OP_ADDS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("addco. %0, %2, %3\n"	\
+                            "mcrxr cr1\n"			\
+                            "mfcr %1\n"				\
+                            : "=r" (Result), 		\
+                              "=r" (Flags)			\
+                            : "r" (reg[base].I), 	\
+                              "r" (value)			\
+                            );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_ADC \
+            {\
+                reg[dest].I = reg[base].I + value + (u32)C_FLAG;\
+            }
+            #define OP_ADCS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("mtspr xer, %4\n"		\
+                             "addeo. %0, %2, %3\n"	\
+                             "mcrxr cr1\n"			\
+                             "mfcr	%1\n"			\
+                             : "=r" (Result),		\
+                               "=r" (Flags)			\
+                             : "r" (reg[base].I),	\
+                               "r" (value),			\
+                               "r" (C_FLAG << 29)	\
+                             );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_SBC \
+                {\
+                reg[dest].I = reg[base].I - value - (C_FLAG^1);\
+                }
+            #define OP_SBCS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("mtspr xer, %4\n"		\
+                             "subfeo. %0, %3, %2\n"	\
+                             "mcrxr cr1\n"			\
+                             "mfcr	%1\n"			\
+                             : "=r" (Result),		\
+                               "=r" (Flags)			\
+                             : "r" (reg[base].I),	\
+                               "r" (value),			\
+                               "r" (C_FLAG << 29)	\
+                             );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_RSC \
+                {\
+                reg[dest].I = value - reg[base].I - (C_FLAG^1);\
+                }
+            #define OP_RSCS \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("mtspr xer, %4\n"		\
+                             "subfeo. %0, %2, %3\n"	\
+                             "mcrxr cr1\n"			\
+                             "mfcr	%1\n"			\
+                             : "=r" (Result),		\
+                               "=r" (Flags)			\
+                             : "r" (reg[base].I),	\
+                               "r" (value),			\
+                               "r" (C_FLAG << 29)	\
+                             );						\
+                reg[dest].I = Result;				\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_CMP \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("subco. %0, %2, %3\n"	\
+                            "mcrxr cr1\n"			\
+                            "mfcr %1\n"				\
+                            : "=r" (Result), 		\
+                              "=r" (Flags)			\
+                            : "r" (reg[base].I), 	\
+                              "r" (value)			\
+                            );						\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            #define OP_CMN \
+            {\
+                register int Flags;					\
+                register int Result;				\
+                asm volatile("addco. %0, %2, %3\n"	\
+                            "mcrxr cr1\n"			\
+                            "mfcr %1\n"				\
+                            : "=r" (Result), 		\
+                              "=r" (Flags)			\
+                            : "r" (reg[base].I), 	\
+                              "r" (value)			\
+                            );						\
+                Z_FLAG = (Flags >> 29) & 1;			\
+                N_FLAG = (Flags >> 31) & 1;			\
+                C_FLAG = (Flags >> 25) & 1;			\
+                V_FLAG = (Flags >> 26) & 1;			\
+            }
+            
+            #define LOGICAL_LSL_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                C_OUT = (v >> (32 - shift)) & 1 ? true : false;\
+                value = v << shift;\
+            }
+            #define LOGICAL_LSR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
+                value = v >> shift;\
+            }
+            #define LOGICAL_ASR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                C_OUT = ((s32)v >> (int)(shift - 1)) & 1 ? true : false;\
+                value = (s32)v >> (int)shift;\
+            }
+            #define LOGICAL_ROR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
+                value = ((v << (32 - shift)) |\
+                        (v >> shift));\
+            }
+            #define LOGICAL_RRX_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                shift = (int)C_FLAG;\
+                C_OUT = (v  & 1) ? true : false;\
+                value = ((v >> 1) |\
+                        (shift << 31));\
+            }
+            #define LOGICAL_ROR_IMM \
+            {\
+                u32 v = opcode & 0xff;\
+                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
+                value = ((v << (32 - shift)) |\
+                        (v >> shift));\
+            }
+            #define ARITHMETIC_LSL_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                value = v << shift;\
+            }
+            #define ARITHMETIC_LSR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                value = v >> shift;\
+            }
+            #define ARITHMETIC_ASR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                value = (s32)v >> (int)shift;\
+            }
+            #define ARITHMETIC_ROR_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                value = ((v << (32 - shift)) |\
+                        (v >> shift));\
+            }
+            #define ARITHMETIC_RRX_REG \
+            {\
+                u32 v = reg[opcode & 0x0f].I;\
+                shift = (int)C_FLAG;\
+                value = ((v >> 1) |\
+                        (shift << 31));\
+            }
+            #define ARITHMETIC_ROR_IMM \
+            {\
+                u32 v = opcode & 0xff;\
+                value = ((v << (32 - shift)) |\
+                        (v >> shift));\
+            }
+            #define ROR_IMM_MSR \
+            {\
+                u32 v = opcode & 0xff;\
+                value = ((v << (32 - shift)) |\
+                        (v >> shift));\
+            }
+            #define ROR_VALUE \
+            {\
+                value = ((value << (32 - shift)) |\
+                        (value >> shift));\
+            }
+            #define RCR_VALUE \
+            {\
+                shift = (int)C_FLAG;\
+                value = ((value >> 1) |\
+                        (shift << 31));\
+            }
+#else
 #define OP_SUB \
      asm ("sub %1, %%ebx;"\
                   : "=b" (reg[dest].I)\
@@ -461,6 +728,7 @@
           "rcr $1, %0"\
           : "=r" (value)\
           : "r" (value));
+#endif
 #else
 #define OP_SUB \
       {\
