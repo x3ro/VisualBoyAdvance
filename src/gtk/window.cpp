@@ -134,6 +134,8 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   m_poFilePauseItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("FilePause"));
   m_poFilePauseItem->set_active(false);
+  m_poFilePauseItem->set_sensitive(false);
+  vOnFilePauseToggled(m_poFilePauseItem);
   m_poFilePauseItem->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
                                                 SigC::slot(*this, &Window::vOnFilePauseToggled),
                                                 m_poFilePauseItem));
@@ -278,6 +280,16 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   // Emulator menu
   //
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("EmulatorDirectories"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnDirectories));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("EmulatorPauseWhenInactive"));
+  poCMI->set_active(m_poDisplayConfig->oGetKey<bool>("pause_when_inactive"));
+  vOnPauseWhenInactiveToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnPauseWhenInactiveToggled),
+                                    poCMI));
+
   m_poUseBiosItem = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("EmulatorUseBios"));
   m_poUseBiosItem->set_active(m_poCoreConfig->oGetKey<bool>("use_bios_file"));
   if (m_poCoreConfig->sGetKey("bios_file") == "")
@@ -737,6 +749,15 @@ void Window::vInitConfig()
 {
   m_oConfig.vClear();
 
+  // Directories section
+  //
+  m_poDirConfig = m_oConfig.poAddSection("Directories");
+  m_poDirConfig->vSetKey("gb_roms",   "" );
+  m_poDirConfig->vSetKey("gba_roms",  "" );
+  m_poDirConfig->vSetKey("batteries", "" );
+  m_poDirConfig->vSetKey("saves",     "" );
+  m_poDirConfig->vSetKey("captures",  "" );
+
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
@@ -761,12 +782,13 @@ void Window::vInitConfig()
   // Display section
   //
   m_poDisplayConfig = m_oConfig.poAddSection("Display");
-  m_poDisplayConfig->vSetKey("scale",              1              );
-  m_poDisplayConfig->vSetKey("show_speed",         ShowPercentage );
-  m_poDisplayConfig->vSetKey("filter2x",           FilterNone     );
-  m_poDisplayConfig->vSetKey("filterIB",           FilterIBNone   );
+  m_poDisplayConfig->vSetKey("scale",               1              );
+  m_poDisplayConfig->vSetKey("show_speed",          ShowPercentage );
+  m_poDisplayConfig->vSetKey("pause_when_inactive", true           );
+  m_poDisplayConfig->vSetKey("filter2x",            FilterNone     );
+  m_poDisplayConfig->vSetKey("filterIB",            FilterIBNone   );
 #ifdef MMX
-  m_poDisplayConfig->vSetKey("filter_disable_mmx", false          );
+  m_poDisplayConfig->vSetKey("filter_disable_mmx",  false          );
 #endif // MMX
 
   // Sound section
@@ -791,6 +813,34 @@ void Window::vCheckConfig()
   int iValue;
   int iAdjusted;
   std::string sValue;
+
+  // Directories section
+  //
+  sValue = m_poDirConfig->sGetKey("gb_roms");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_DIR))
+  {
+    m_poDirConfig->vSetKey("gb_roms", "");
+  }
+  sValue = m_poDirConfig->sGetKey("gba_roms");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_DIR))
+  {
+    m_poDirConfig->vSetKey("gba_roms", "");
+  }
+  sValue = m_poDirConfig->sGetKey("batteries");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_DIR))
+  {
+    m_poDirConfig->vSetKey("batteries", "");
+  }
+  sValue = m_poDirConfig->sGetKey("saves");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_DIR))
+  {
+    m_poDirConfig->vSetKey("saves", "");
+  }
+  sValue = m_poDirConfig->sGetKey("captures");
+  if (sValue != "" && ! Glib::file_test(sValue, Glib::FILE_TEST_IS_DIR))
+  {
+    m_poDirConfig->vSetKey("captures", "");
+  }
 
   // Core section
   //
@@ -1198,23 +1248,26 @@ bool Window::bLoadROM(const std::string & _rsFilename)
     gbSoundSetQuality(m_eSoundQuality);
   }
 
-  if (m_poFilePauseItem->get_active())
-  {
-    m_poFilePauseItem->set_active(false);
-  }
-  else
-  {
-    vStartEmu();
-  }
+  m_poFilePauseItem->set_sensitive();
+
+  vStartEmu();
 
   return true;
 }
 
 void Window::vLoadBattery()
 {
-  // TODO : from battery dir
+  std::string sBattery;
+  std::string sDir = m_poDirConfig->sGetKey("batteries");
+  if (sDir == "")
+  {
+    sBattery = sCutSuffix(m_sRomFile) + ".sav";
+  }
+  else
+  {
+    sBattery = sDir + "/" + sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sav";
+  }
 
-  std::string sBattery = sCutSuffix(m_sRomFile) + ".sav";
   if (m_stEmulator.emuReadBattery(sBattery.c_str()))
   {
     systemScreenMessage(_("Loaded battery"));
@@ -1223,9 +1276,17 @@ void Window::vLoadBattery()
 
 void Window::vSaveBattery()
 {
-  // TODO : from battery dir
+  std::string sBattery;
+  std::string sDir = m_poDirConfig->sGetKey("batteries");
+  if (sDir == "")
+  {
+    sBattery = sCutSuffix(m_sRomFile) + ".sav";
+  }
+  else
+  {
+    sBattery = sDir + "/" + sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sav";
+  }
 
-  std::string sBattery = sCutSuffix(m_sRomFile) + ".sav";
   if (m_stEmulator.emuWriteBattery(sBattery.c_str()))
   {
     systemScreenMessage(_("Saved battery"));
@@ -1298,6 +1359,12 @@ void Window::vOnFileOpen()
   {
     m_poFileOpenDialog = new Gtk::FileSelection(_("Open"));
     m_poFileOpenDialog->set_transient_for(*this);
+
+    std::string sDir = m_poDirConfig->sGetKey("gba_roms");
+    if (sDir != "")
+    {
+      m_poFileOpenDialog->set_filename(sDir + "/");
+    }
   }
 
   while (m_poFileOpenDialog->run() == Gtk::RESPONSE_OK)
@@ -1312,15 +1379,18 @@ void Window::vOnFileOpen()
 
 void Window::vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI)
 {
+  m_bPaused = _poCMI->get_active();
   if (emulating)
   {
-    if (_poCMI->get_active())
+    if (m_bPaused)
     {
       vStopEmu();
+      soundPause();
     }
     else
     {
       vStartEmu();
+      soundResume();
     }
   }
 }
@@ -1337,6 +1407,7 @@ void Window::vOnFileClose()
 {
   if (emulating)
   {
+    soundPause();
     vStopEmu();
     vSetDefaultTitle();
     vDrawDefaultScreen();
@@ -1344,6 +1415,8 @@ void Window::vOnFileClose()
     m_stEmulator.emuCleanUp();
     m_eCartridge = CartridgeNone;
     emulating = 0;
+
+    m_poFilePauseItem->set_sensitive(false);
   }
 }
 
@@ -1462,9 +1535,94 @@ void Window::vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer)
   m_poCoreConfig->vSetKey(acsLayers[_iLayer], _poCMI->get_active());
 }
 
-void Window::vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI)
+void Window::vOnDirectories()
 {
-  m_poCoreConfig->vSetKey("use_bios_file", _poCMI->get_active());
+  Glib::RefPtr<Xml> poXml;
+  poXml = Xml::create(PKGDATADIR "/vba.glade", "DirectoriesDialog");
+
+  struct
+  {
+    const char * m_csKey;
+    const char * m_csEntry;
+    const char * m_csResetButton;
+    const char * m_csSelectButton;
+  }
+  astRow[] =
+  {
+    { "gba_roms",  "GBARomsDirEntry",   "GBARomsDirResetButton",   "GBARomsDirSelectButton"   },
+    { "gb_roms",   "GBRomsDirEntry",    "GBRomsDirResetButton",    "GBRomsDirSelectButton"    },
+    { "batteries", "BatteriesDirEntry", "BatteriesDirResetButton", "BatteriesDirSelectButton" },
+    { "saves",     "SavesDirEntry",     "SavesDirResetButton",     "SavesDirSelectButton"     },
+    { "captures",  "CapturesDirEntry",  "CapturesDirResetButton",  "CapturesDirSelectButton"  }
+  };
+
+  for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
+  {
+    Gtk::Entry *  poEntry  = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
+    Gtk::Button * poReset  = dynamic_cast<Gtk::Button *>(poXml->get_widget(astRow[i].m_csResetButton));
+    Gtk::Button * poSelect = dynamic_cast<Gtk::Button *>(poXml->get_widget(astRow[i].m_csSelectButton));
+
+    poEntry->set_text(m_poDirConfig->sGetKey(astRow[i].m_csKey));
+
+    poReset->signal_clicked().connect(SigC::bind<Gtk::Entry *>(
+                                        SigC::slot(*this, &Window::vOnDirectoryReset),
+                                        poEntry));
+    poSelect->signal_clicked().connect(SigC::bind<Gtk::Entry *>(
+                                         SigC::slot(*this, &Window::vOnDirectorySelect),
+                                         poEntry));
+  }
+
+  Gtk::Dialog * poDialog = dynamic_cast<Gtk::Dialog *>(poXml->get_widget("DirectoriesDialog"));
+  poDialog->set_transient_for(*this);
+
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    for (guint i = 0; i < sizeof(astRow) / sizeof(astRow[0]); i++)
+    {
+      Gtk::Entry * poEntry = dynamic_cast<Gtk::Entry *>(poXml->get_widget(astRow[i].m_csEntry));
+      Glib::ustring sDir = poEntry->get_text();
+      if (! Glib::file_test(sDir, Glib::FILE_TEST_IS_DIR))
+      {
+        sDir = "";
+      }
+      m_poDirConfig->vSetKey(astRow[i].m_csKey, sDir);
+    }
+  }
+
+  delete poDialog;
+}
+
+void Window::vOnDirectoryReset(Gtk::Entry * _poEntry)
+{
+  _poEntry->set_text("");
+}
+
+void Window::vOnDirectorySelect(Gtk::Entry * _poEntry)
+{
+  Gtk::FileSelection * poDialog = new Gtk::FileSelection(_("Select directory"));
+  poDialog->set_transient_for(*this);
+
+  if (_poEntry->get_text() != "")
+  {
+    poDialog->set_filename(_poEntry->get_text() + "/");
+  }
+
+  if (poDialog->run() == Gtk::RESPONSE_OK)
+  {
+    std::string sFile = poDialog->get_filename();
+    if (! Glib::file_test(sFile, Glib::FILE_TEST_IS_DIR))
+    {
+      sFile = Glib::path_get_dirname(sFile);
+    }
+    _poEntry->set_text(sFile);
+  }
+
+  delete poDialog;
+}
+
+void Window::vOnPauseWhenInactiveToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  m_poDisplayConfig->vSetKey("pause_when_inactive", _poCMI->get_active());
 }
 
 void Window::vOnSelectBios()
@@ -1488,6 +1646,11 @@ void Window::vOnSelectBios()
   }
 
   delete poDialog;
+}
+
+void Window::vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  m_poCoreConfig->vSetKey("use_bios_file", _poCMI->get_active());
 }
 
 void Window::vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed)
@@ -1753,6 +1916,30 @@ bool Window::bOnEmuIdle()
 
   m_stEmulator.emuMain(m_stEmulator.emuCount);
   return true;
+}
+
+bool Window::on_focus_in_event(GdkEventFocus * _pstEvent)
+{
+  if (emulating
+      && ! m_bPaused
+      && m_poDisplayConfig->oGetKey<bool>("pause_when_inactive"))
+  {
+    vStartEmu();
+    soundResume();
+  }
+  return false;
+}
+
+bool Window::on_focus_out_event(GdkEventFocus * _pstEvent)
+{
+  if (emulating
+      && ! m_bPaused
+      && m_poDisplayConfig->oGetKey<bool>("pause_when_inactive"))
+  {
+    vStopEmu();
+    soundPause();
+  }
+  return false;
 }
 
 bool Window::on_key_press_event(GdkEventKey * _pstEvent)

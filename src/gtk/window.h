@@ -129,8 +129,12 @@ protected:
   virtual void vOnThrottleOther(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnVideoScaleToggled(Gtk::CheckMenuItem * _poCMI, int _iScale);
   virtual void vOnLayerToggled(Gtk::CheckMenuItem * _poCMI, int _iLayer);
-  virtual void vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnDirectories();
+  virtual void vOnDirectoryReset(Gtk::Entry * _poEntry);
+  virtual void vOnDirectorySelect(Gtk::Entry * _poEntry);
+  virtual void vOnPauseWhenInactiveToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnSelectBios();
+  virtual void vOnUseBiosToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed);
   virtual void vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType);
   virtual void vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize);
@@ -152,6 +156,8 @@ protected:
   virtual void vOnHelpAbout();
   virtual bool bOnEmuIdle();
 
+  virtual bool on_focus_in_event(GdkEventFocus * _pstEvent);
+  virtual bool on_focus_out_event(GdkEventFocus * _pstEvent);
   virtual bool on_key_press_event(GdkEventKey * _pstEvent);
   virtual bool on_key_release_event(GdkEventKey * _pstEvent);
 
@@ -188,6 +194,7 @@ private:
   std::string       m_sUserDataDir;
   std::string       m_sConfigFile;
   Config::File      m_oConfig;
+  Config::Section * m_poDirConfig;
   Config::Section * m_poCoreConfig;
   Config::Section * m_poDisplayConfig;
   Config::Section * m_poSoundConfig;
@@ -208,6 +215,7 @@ private:
   EmulatedSystem m_stEmulator;
   Keymap         m_oKeymap;
   u32            m_uiJoypadState;
+  bool           m_bPaused;
   bool           m_bWasEmulating;
   bool           m_bAutoFrameskip;
   int            m_iThrottle;
