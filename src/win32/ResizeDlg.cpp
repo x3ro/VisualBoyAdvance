@@ -1,52 +1,36 @@
-/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 /*----------------------------------------------------------------------
-Copyright (c)  Gipsysoft. All Rights Reserved.
-File:   DialogSizer_Set.cpp
-Web site: http://gipsysoft.com
+  Copyright (c)  Gipsysoft. All Rights Reserved.
+  File:   DialogSizer_Set.cpp
+  Web site: http://gipsysoft.com
 
-This software is provided 'as-is', without any express or implied warranty.
+  This software is provided 'as-is', without any express or implied warranty.
 
-In no event will the author be held liable for any damages arising from the
-use of this software.
+  In no event will the author be held liable for any damages arising from the
+  use of this software.
 
-Permission is granted to anyone to use this software for any purpose, including
-commercial applications, and to alter it and redistribute it freely, subject
-to the following restrictions: 
+  Permission is granted to anyone to use this software for any purpose, including
+  commercial applications, and to alter it and redistribute it freely, subject
+  to the following restrictions: 
 
-1) The origin of this software must not be misrepresented; you must not claim
-   that you wrote the original software. If you use this software in a product,
-         an acknowledgment in the product documentation is requested but not required. 
-2) Altered source versions must be plainly marked as such, and must not be
-   misrepresented as being the original software. Altered source is encouraged
-         to be submitted back to the original author so it can be shared with the
-         community. Please share your changes.
-3) This notice may not be removed or altered from any source distribution.
+  1) The origin of this software must not be misrepresented; you must not claim
+  that you wrote the original software. If you use this software in a product,
+  an acknowledgment in the product documentation is requested but not required. 
+  2) Altered source versions must be plainly marked as such, and must not be
+  misrepresented as being the original software. Altered source is encouraged
+  to be submitted back to the original author so it can be shared with the
+  community. Please share your changes.
+  3) This notice may not be removed or altered from any source distribution.
 
-Owner:  russf@gipsysoft.com
-Purpose:        Main functionality for sizeable dialogs
+  Owner:  russf@gipsysoft.com
+  Purpose:        Main functionality for sizeable dialogs
 
-        Store a local copy of the user settings
-        Subclass the window
-        Respond to various messages withinn the subclassed window.
+  Store a local copy of the user settings
+  Subclass the window
+  Respond to various messages withinn the subclassed window.
 
-----------------------------------------------------------------------*/
+  ----------------------------------------------------------------------*/
+#include "stdafx.h"
+#include "VBA.h"
 #include "ResizeDlg.h"
 #undef ASSERT
 #include "WinHelper.h"
@@ -94,10 +78,78 @@ struct DialogData       //      dd
 extern bool regEnabled;
 extern const char *regGetINIPath();
 
+void AssertFailed(char *file, int line, char *exp)
+{
+  char buffer[1024];
+
+  sprintf(buffer, "File %s\nLine %d\nExpression %s\nPress Retry to debug",
+          file, line, exp);
+  int res = MessageBox(*theApp.m_pMainWnd, buffer, "Assertion failed!",
+                       MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL |
+                       MB_ABORTRETRYIGNORE);
+
+  if(res == IDRETRY) {
+    __asm int 3;
+  } else if(res == IDABORT)
+    SendMessage(*theApp.m_pMainWnd, WM_QUIT, 0, 0);
+}
+
+void ApiFailure(char *pcszFilename, int nLine, char *pcszExpression )
+{
+  const DWORD dwLastError = ::GetLastError();
+  LPCTSTR lpMsgBuf;
+  (void)::FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                         FORMAT_MESSAGE_FROM_SYSTEM |
+                         FORMAT_MESSAGE_IGNORE_INSERTS,
+                         NULL, dwLastError,
+                         MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                         (LPTSTR) &lpMsgBuf, 0, NULL );
+  
+  char szExeName[ MAX_PATH ];
+  
+  if( !GetModuleFileName( NULL, szExeName, countof( szExeName ) ) )
+    strcpy( szExeName, "<No Program Name>" );
+  
+  
+  char szMessage[ 1024 ];
+  _snprintf( szMessage, countof( szMessage )
+             , "API VERIFY Failure!"
+             "\nProgram: %s"
+             "\n"
+             "\nFile %s"
+             "\nLine %d"
+             "\n"
+             "\nExpression %s"
+             "\n"
+             "\nLast Error %d"
+             "\n           %s"
+             "\n\nPress Retry to debug the application"
+             , szExeName
+             , pcszFilename
+             , nLine
+             , pcszExpression
+             , dwLastError
+             , lpMsgBuf
+             );
+  
+  (void)LocalFree( (LPVOID)lpMsgBuf );
+  HWND hwndParent = ::GetActiveWindow();
+  hwndParent = ::GetLastActivePopup( hwndParent );
+  int nCode = ::MessageBoxA( hwndParent,
+                             szMessage,
+                             "Debug Helper",
+                             MB_TASKMODAL | MB_ICONHAND | MB_ABORTRETRYIGNORE |
+                             MB_SETFOREGROUND );
+  if(nCode == IDABORT) {
+    ::SendMessage(*theApp.m_pMainWnd, WM_QUIT, 0, 0);
+  } else if(nCode == IDRETRY)
+    __asm int 3;
+}
+
 long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData )
 {
   TCHAR szBuffer[ 256 ];
-  ASSERT( lstrlen( lpValueName ) < countof( szBuffer ) );
+  R_ASSERT( lstrlen( lpValueName ) < countof( szBuffer ) );
   (void)lstrcpy( szBuffer, lpValueName );
   
   LPTSTR pszBuffer = szBuffer;
@@ -141,7 +193,7 @@ long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD 
   long lRet = RegQueryValueEx( hKey, lpValueName, lpReserved, lpType, lpData, lpcbData );
   if( m_bNeedToCloseKey )
     {
-      VERIFY( RegCloseKey( hKey ) == ERROR_SUCCESS );
+      R_VERIFY( RegCloseKey( hKey ) == ERROR_SUCCESS );
     }
   return lRet;
 }
@@ -149,7 +201,7 @@ long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD 
 long FASTCALL RegSetValueExRecursive( HKEY hKey, LPCTSTR lpValueName, DWORD Reserved, DWORD dwType, CONST BYTE* lpData, DWORD cbData )
 {
   TCHAR szBuffer[ 256 ];
-  ASSERT( lstrlen( lpValueName ) < countof( szBuffer ) );
+  R_ASSERT( lstrlen( lpValueName ) < countof( szBuffer ) );
   (void)lstrcpy( szBuffer, lpValueName );
   
   LPTSTR pszBuffer = szBuffer;
@@ -194,7 +246,7 @@ long FASTCALL RegSetValueExRecursive( HKEY hKey, LPCTSTR lpValueName, DWORD Rese
   long lRet = RegSetValueEx( hKey, lpValueName, Reserved, dwType, lpData, cbData );
   if( m_bNeedToCloseKey )
     {
-      VERIFY( RegCloseKey( hKey ) == ERROR_SUCCESS );
+      R_VERIFY( RegCloseKey( hKey ) == ERROR_SUCCESS );
     }
   return lRet;
 }
@@ -202,7 +254,7 @@ long FASTCALL RegSetValueExRecursive( HKEY hKey, LPCTSTR lpValueName, DWORD Rese
 
 int ResizeDlgGetItemCount(const DialogSizerSizingItem *psd)
 {
-  ASSERT( psd );
+  R_ASSERT( psd );
   int nCount = 0;
   while( psd->uSizeInfo != 0xFFFFFFFF )
     {
@@ -256,8 +308,8 @@ void ResizeDlgCopyItems( DialogSizerSizingItem *psdDest, const DialogSizerSizing
 }
 
 
-ResizeDlg::ResizeDlg()
-  : Dlg()
+ResizeDlg::ResizeDlg(UINT id, CWnd *parent)
+  : CDialog(id, parent)
 {
   dd = NULL;
 }
@@ -275,13 +327,13 @@ void *ResizeDlg::AddDialogData()
   if( pdd ) {
     //
     //  Store some sizes etc. for later.
-    WinHelper::CRect rc;
-    VAPI( GetWindowRect( getHandle(), rc ) );
+    CRect rc;
+    GetWindowRect( rc );
     pdd->m_ptSmallest.x = rc.Width();
     pdd->m_ptSmallest.y = rc.Height();
     
     
-    VAPI( GetClientRect( getHandle(), rc ) );
+    GetClientRect( rc );
     pdd->m_sizeClient = rc.Size();
     dd = pdd;
     ResizeDlgUpdateGripperRect( pdd->m_sizeClient.cx, pdd->m_sizeClient.cy, pdd->m_rcGrip );
@@ -302,12 +354,12 @@ BOOL ResizeDlg::SetData(const DialogSizerSizingItem *psd,
   //
   //    It will return non-zero for success and zero if it fails
 {
-  ASSERT( psd );
-  ASSERT( ( hkRootSave != NULL && pcszName != NULL )
-          || ( hkRootSave == NULL && pcszName == NULL ) );
+  R_ASSERT( psd );
+  R_ASSERT( ( hkRootSave != NULL && pcszName != NULL )
+            || ( hkRootSave == NULL && pcszName == NULL ) );
   //
   //    Make sure all of the parameters are valid.
-  if( ::IsWindow( getHandle() )
+  if( ::IsWindow( *this )
       && psd
       && ( ( hkRootSave != NULL && pcszName != NULL &&
              !IsBadStringPtr( pcszName, 0xFFFF ) ) ||
@@ -342,10 +394,10 @@ BOOL ResizeDlg::SetData(const DialogSizerSizingItem *psd,
           DWORD dwSize = sizeof( RegistryData );
           DWORD dwType = REG_BINARY;
           if( RegQueryValueExRecursive( hkRootSave, pcszName, NULL, &dwType, reinterpret_cast<LPBYTE>( &rd ), &dwSize ) == ERROR_SUCCESS && dwSize == sizeof( rd ) ) {
-            if( !(GetWindowLong( GWL_STYLE ) & WS_VISIBLE) )
+            if( !(GetWindowLong( *this, GWL_STYLE ) & WS_VISIBLE) )
               rd.m_wpl.showCmd = SW_HIDE;
             
-            VAPI( SetWindowPlacement( getHandle(), &rd.m_wpl ) );
+            VAPI( SetWindowPlacement( &rd.m_wpl ) );
           }
         }
         return TRUE;
@@ -367,11 +419,11 @@ void ResizeDlg::UpdateWindowSize(const int cx, const int cy, HWND hwnd)
     WinHelper::CRect rc;
     const DialogSizerSizingItem *psd = pdd->psd;
     while( psd->uSizeInfo != 0xFFFFFFFF ) {
-      HWND hwndChild = GetDlgItem( psd->uControlID );
+      HWND hwndChild = ::GetDlgItem( *this, psd->uControlID );
       if( ::IsWindow( hwndChild ) ) {
         VAPI( ::GetWindowRect( hwndChild, rc ) );
-        (void)MapWindowPoints( GetDesktopWindow(),  hwnd,
-                               (LPPOINT)&rc, 2 );
+        (void)::MapWindowPoints( ::GetDesktopWindow(),  hwnd,
+                                 (LPPOINT)&rc, 2 );
         
         //
         //      Adjust the window horizontally
@@ -414,17 +466,17 @@ void ResizeDlg::UpdateWindowSize(const int cx, const int cy, HWND hwnd)
   }
 }
 
-BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
+BOOL ResizeDlg::OnWndMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *res )
   //    Actual window procedure that will handle saving window size/position and moving
   //    the controls whilst the window sizes.
 {
   if(dd == NULL) {
-    return Dlg::OnMsg(msg, wParam, lParam, res);
+    return CDialog::OnWndMsg(msg, wParam, lParam, res);
   }
   switch( msg ) {
   case WM_ERASEBKGND:
     {
-      BOOL r = Dlg::OnMsg(msg, wParam, lParam, res);
+      BOOL r = CDialog::OnWndMsg(msg, wParam, lParam, res);
       DialogData *pdd = (DialogData*)dd;
       if( pdd && pdd->m_bShowSizingGrip && !pdd->m_bMaximised ) {
         VAPI( ::DrawFrameControl( reinterpret_cast<HDC>( wParam ),
@@ -438,7 +490,7 @@ BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
       DialogData *pdd = (DialogData*)dd;
       if( pdd && wParam != SIZE_MINIMIZED ) {
         pdd->m_bMaximised = ( wParam == SIZE_MAXIMIZED ? true : false );
-        UpdateWindowSize( LOWORD( lParam ), HIWORD( lParam ), getHandle());
+        UpdateWindowSize( LOWORD( lParam ), HIWORD( lParam ), *this);
       }
     }
     break;
@@ -449,7 +501,7 @@ BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
       DialogData *pdd = (DialogData*)dd;
       if( pdd && pdd->m_bShowSizingGrip ) {
         POINT pt = { LOWORD(lParam), HIWORD(lParam) };
-        (void)ScreenToClient( getHandle(), &pt );
+        (void)ScreenToClient( &pt );
         if( PtInRect( pdd->m_rcGrip, pt ) )
           return (BOOL)HTBOTTOMRIGHT;
       }
@@ -470,9 +522,9 @@ BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
   case WM_NOTIFY:
     {
       if( reinterpret_cast<LPNMHDR>(lParam)->code == PSN_SETACTIVE ) {
-        WinHelper::CRect rc;
-        VAPI( GetClientRect( GetParent( getHandle() ), &rc ) );
-        UpdateWindowSize( rc.Width(), rc.Height(), GetParent( getHandle() ) );
+        CRect rc;
+        VAPI( ::GetClientRect( *GetParent( ), &rc ) );
+        UpdateWindowSize( rc.Width(), rc.Height(), *GetParent( ) );
       }
     }
     break;
@@ -487,7 +539,7 @@ BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
       if( pdd ) {
         RegistryData rd;
         rd.m_wpl.length = sizeof( rd.m_wpl );
-        VAPI( GetWindowPlacement( getHandle(), &rd.m_wpl ) );
+        VAPI( GetWindowPlacement( &rd.m_wpl ) );
         
         if( pdd->hkRootSave && pdd->pcszName ) {
           (void)RegSetValueExRecursive( pdd->hkRootSave, pdd->pcszName,
@@ -505,5 +557,5 @@ BOOL ResizeDlg::OnMsg(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT &res )
     }
     break;
   }
-  return Dlg::OnMsg(msg, wParam, lParam, res);
+  return CDialog::OnWndMsg(msg, wParam, lParam, res);
 }

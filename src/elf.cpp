@@ -2796,7 +2796,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
 
 extern bool parseDebug;
 
-bool elfRead(char *name, int& siz, FILE *f)
+bool elfRead(const char *name, int& siz, FILE *f)
 {
   fseek(f, 0, SEEK_END);
   long size = ftell(f);

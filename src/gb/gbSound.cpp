@@ -612,7 +612,20 @@ void gbSoundMix()
            soundLeft[0])/14;
   }
 
-  res *= (soundVolume+1);
+  switch(soundVolume) {
+  case 0:
+  case 1:
+  case 2:
+  case 3:
+    res *= (soundVolume+1);
+    break;
+  case 4:
+    res >>= 2;
+    break;
+  case 5:
+    res >>= 1;
+    break;
+  }
   
   if(res > 32767)
     res = 32767;
@@ -664,7 +677,20 @@ void gbSoundMix()
            soundRight[0])/14;
   }
 
-  res *= (soundVolume+1);  
+  switch(soundVolume) {
+  case 0:
+  case 1:
+  case 2:
+  case 3:
+    res *= (soundVolume+1);
+    break;
+  case 4:
+    res >>= 2;
+    break;
+  case 5:
+    res >>= 1;
+    break;
+  }
   
   if(res > 32767)
     res = 32767;

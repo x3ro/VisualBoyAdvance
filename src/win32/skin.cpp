@@ -11,14 +11,17 @@
 //
 // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
+#include "stdafx.h"
 #include "skin.h"
 #include <stdio.h>
-#include <ostream.h>
-
-#include "StdString.h"
 
 #include "../System.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 // ----------------------------------------------------------------------------
 // constructor 1 - use it when you have not already created the app window.
@@ -61,7 +64,7 @@ bool CSkin::Initialize(const char *skinFile)
   // try to retrieve the skin data from resource.
   bool res = GetSkinData(skinFile);
   if(!res) 
-    systemMessage(0, (char *)((const char *)m_error));
+    systemMessage(0, m_error);
   return res;
 }  
 
@@ -121,13 +124,13 @@ bool CSkin::Enabled()
 // ----------------------------------------------------------------------------
 // hook a window
 // ----------------------------------------------------------------------------
-bool CSkin::Hook(HWND hWnd)
+bool CSkin::Hook(CWnd *pWnd)
 {
   // unsubclass any other window
   if (Hooked()) UnHook();
 
   // this will be our new subclassed window
-  m_hWnd = hWnd;
+  m_hWnd = (HWND)*pWnd;
 
   // --------------------------------------------------
   // change window style (get rid of the caption bar)
@@ -138,31 +141,30 @@ bool CSkin::Hook(HWND hWnd)
   SetWindowLong(m_hWnd, GWL_STYLE, dwStyle);
 
   RECT r;
-  GetWindowRect(hWnd, &r);
+  pWnd->GetWindowRect(&r);
   m_oldRect = r;
-  MoveWindow(hWnd,
-             r.left,
-             r.top,
-             m_iWidth,
-             m_iHeight,
-             FALSE);
+  pWnd->MoveWindow(r.left,
+                   r.top,
+                   m_iWidth,
+                   m_iHeight,
+                   FALSE);
   
-  SetMenu(m_hWnd, NULL);
+  pWnd->SetMenu(NULL);
   
   if(m_rgnSkin != NULL)
     // set the skin region to the window
-    SetWindowRgn(m_hWnd, m_rgnSkin, true);    
+    pWnd->SetWindowRgn(m_rgnSkin, true);    
 
   // subclass the window procedure
   m_OldWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)SkinWndProc);
 
   // store a pointer to our class instance inside the window procedure.
   if (!SetProp(m_hWnd, "skin", (void*)this))
-  {
-    // if we fail to do so, we just can't activate the skin.
-    UnHook();
-    return false;
-  }
+    {
+      // if we fail to do so, we just can't activate the skin.
+      UnHook();
+      return false;
+    }
 
   
   // update flag
@@ -171,7 +173,7 @@ bool CSkin::Hook(HWND hWnd)
   for(int i = 0; i < m_nButtons; i++) {
     RECT r;
     m_buttons[i].GetRect(r);
-    m_buttons[i].Create("", WS_VISIBLE, r, hWnd, 0);
+    m_buttons[i].CreateButton("", WS_VISIBLE, r, pWnd, 0);
   }
   
   // force window repainting
@@ -345,8 +347,8 @@ bool CSkin::GetSkinData(const char *skinFile)
     m_error = "Missing skin bitmap";
     return false;
   }
-  CStdString bmpName = buffer;
-  CStdString rgn = "";
+  CString bmpName = buffer;
+  CString rgn = "";
   if(GetPrivateProfileString("skin", "region", "", buffer, 2048, skinFile)) {
     rgn = buffer;
   }
@@ -367,11 +369,11 @@ bool CSkin::GetSkinData(const char *skinFile)
     m_buttons = new SkinButton[m_nButtons];
     for(int i = 0; i < m_nButtons; i++) {
       if(!ReadButton(skinFile, i))
-	return false;
+        return false;
     }
   }
   
-  CStdString path = skinFile;
+  CString path = skinFile;
   int index = path.ReverseFind('\\');
   if(index != -1) {
     path = path.Left(index+1);
@@ -427,27 +429,27 @@ bool CSkin::ReadButton(const char *skinFile, int num)
 {
   char buffer[2048];
 
-  CStdString path = skinFile;
+  CString path = skinFile;
   int index = path.ReverseFind('\\');
   if(index != -1) {
     path = path.Left(index+1);
   }
   sprintf(buffer, "button-%d", num);
-  CStdString name = buffer;
+  CString name = buffer;
   
   if(!GetPrivateProfileString(name, "normal", "", buffer, 2048, skinFile)) {
     m_error = "Missing button bitmap for " + name;
     return false;
   }
   
-  CStdString normalBmp = path + buffer;
+  CString normalBmp = path + buffer;
 
   HBITMAP bmp = (HBITMAP)LoadImage(NULL,
-				   normalBmp,
-				   IMAGE_BITMAP,
-				   0,
-				   0,
-				   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+                                   normalBmp,
+                                   IMAGE_BITMAP,
+                                   0,
+                                   0,
+                                   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
   if (!bmp) {
     m_error = "Error loading button bitmap " + normalBmp;
     return false;
@@ -459,14 +461,14 @@ bool CSkin::ReadButton(const char *skinFile, int num)
     return false;
   }
   
-  CStdString downBmp = path + buffer;
+  CString downBmp = path + buffer;
 
   bmp = (HBITMAP)LoadImage(NULL,
-			   downBmp,
-			   IMAGE_BITMAP,
-			   0,
-			   0,
-			   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+                           downBmp,
+                           IMAGE_BITMAP,
+                           0,
+                           0,
+                           LR_LOADFROMFILE|LR_CREATEDIBSECTION);
   if (!bmp) {
     m_error = "Error loading button down bitmap " + downBmp;
     return false;
@@ -474,14 +476,14 @@ bool CSkin::ReadButton(const char *skinFile, int num)
   m_buttons[num].SetDownBitmap(bmp);
 
   if(GetPrivateProfileString(name, "over", "", buffer, 2048, skinFile)) {
-    CStdString overBmp = path + buffer;
+    CString overBmp = path + buffer;
 
     bmp = (HBITMAP)LoadImage(NULL,
-			     overBmp,
-			     IMAGE_BITMAP,
-			     0,
-			     0,
-			     LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+                             overBmp,
+                             IMAGE_BITMAP,
+                             0,
+                             0,
+                             LR_LOADFROMFILE|LR_CREATEDIBSECTION);
     if (!bmp) {
       m_error = "Error loading button over bitmap " + overBmp;
       return false;
@@ -490,7 +492,7 @@ bool CSkin::ReadButton(const char *skinFile, int num)
   }
 
   if(GetPrivateProfileString(name, "region", "", buffer, 2048, skinFile)) {
-    CStdString region = path + buffer;
+    CString region = path + buffer;
     
     HRGN rgn = LoadRegion(region);
     if(!rgn) {
@@ -534,50 +536,50 @@ LRESULT CALLBACK SkinWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
   CSkin *pSkin = (CSkin*)GetProp(hWnd, "skin");
 
   // to handle WM_PAINT
-	PAINTSTRUCT ps;
+  PAINTSTRUCT ps;
 
   // if we fail to get our class instance, we can't handle anything.
   if (!pSkin) return DefWindowProc(hWnd,uMessage,wParam,lParam);
 
   switch(uMessage)
-  {
-  case WM_WINDOWPOSCHANGING:
     {
-      LPWINDOWPOS pos = (LPWINDOWPOS)lParam;
-      pos->cx = pSkin->Width();
-      pos->cy = pSkin->Height();
-      return 0L;
-    }
-    break;
+    case WM_WINDOWPOSCHANGING:
+      {
+        LPWINDOWPOS pos = (LPWINDOWPOS)lParam;
+        pos->cx = pSkin->Width();
+        pos->cy = pSkin->Height();
+        return 0L;
+      }
+      break;
 
     case WM_PAINT:
-    {
-      // ---------------------------------------------------------
-      // here we just need to blit our skin
-      // directly to the device context
-      // passed by the painting message.
-      // ---------------------------------------------------------
-      BeginPaint(hWnd,&ps);
+      {
+        // ---------------------------------------------------------
+        // here we just need to blit our skin
+        // directly to the device context
+        // passed by the painting message.
+        // ---------------------------------------------------------
+        BeginPaint(hWnd,&ps);
 
-      // blit the skin
-      BitBlt(ps.hdc,0,0,pSkin->Width(),pSkin->Height(),pSkin->HDC(),0,0,SRCCOPY);
+        // blit the skin
+        BitBlt(ps.hdc,0,0,pSkin->Width(),pSkin->Height(),pSkin->HDC(),0,0,SRCCOPY);
 
-      EndPaint(hWnd,&ps);
-      break;
-    }
+        EndPaint(hWnd,&ps);
+        break;
+      }
 
     case WM_LBUTTONDOWN:
-    {
-      // ---------------------------------------------------------
-      // this is a common trick for easy dragging of the window.
-      // this message fools windows telling that the user is
-      // actually dragging the application caption bar.
-      // ---------------------------------------------------------
-      SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION,NULL);
-      break;
-    }
+      {
+        // ---------------------------------------------------------
+        // this is a common trick for easy dragging of the window.
+        // this message fools windows telling that the user is
+        // actually dragging the application caption bar.
+        // ---------------------------------------------------------
+        SendMessage(hWnd, WM_NCLBUTTONDOWN, HTCAPTION,NULL);
+        break;
+      }
 
-  }
+    }
 
   // ---------------------------------------------------------
   // call the default window procedure to keep things going.

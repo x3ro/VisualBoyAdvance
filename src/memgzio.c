@@ -9,7 +9,7 @@
  * Adapted from original gzio.c from zlib library by Forgotten
  */
 
-/* @(#) $Id: memgzio.c,v 1.1 2003/06/17 15:34:20 forgotten Exp $ */
+/* @(#) $Id: memgzio.c,v 1.2 2003/11/04 14:11:52 forgotten Exp $ */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -121,7 +121,7 @@ local size_t memWrite(const void *buffer, size_t size, size_t count,
     return 0;
   }
 
-  if(total > file->available) {
+  if(total > (size_t)file->available) {
     total = file->available;
   }
   memcpy(file->next, buffer, total);
@@ -143,7 +143,7 @@ local size_t memRead(void *buffer, size_t size, size_t count,
   if(file->available == 0)
     return -1;
 
-  if(total > file->available) {
+  if(total > (size_t)file->available) {
     total = file->available;
   }
   memcpy(buffer, file->next, total);

@@ -47,7 +47,7 @@ void mode3RenderLine()
 
   gfxDrawSprites(lineOBJ);
 
-  u32 background = palette[0] | 0x30000000;
+  u32 background = (READ16LE(&palette[0]) | 0x30000000);
   
   for(int x = 0; x < 240; x++) {
     u32 color = background;
@@ -124,7 +124,7 @@ void mode3RenderLineNoWindow()
 
   gfxDrawSprites(lineOBJ);
 
-  u32 background = palette[0] | 0x30000000;
+  u32 background = (READ16LE(&palette[0]) | 0x30000000);
   
   for(int x = 0; x < 240; x++) {
     u32 color = background;
@@ -269,7 +269,7 @@ void mode3RenderLineAll()
   u8 inWin1Mask = WININ >> 8;
   u8 outMask = WINOUT & 0xFF;
 
-  u32 background = palette[0] | 0x30000000;
+  u32 background = (READ16LE(&palette[0]) | 0x30000000);
   
   for(int x = 0; x < 240; x++) {
     u32 color = background;

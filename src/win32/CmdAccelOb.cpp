@@ -1,21 +1,3 @@
-/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 1998 by Thierry Maurel
 // All rights reserved
@@ -45,134 +27,132 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "Wnd.h"
-
 #include "CmdAccelOb.h"
 
 ////////////////////////////////////////////////////////////////////////
 //
 //
 MAPVIRTKEYS mapVirtKeys[] = {
-        {VK_LBUTTON, "VK_LBUTTON"},
-        {VK_RBUTTON, "VK_RBUTTON"},
-        {VK_CANCEL, "VK_CANCEL"},
-        {VK_MBUTTON, "VK_MBUTTON"},
-        {VK_BACK, "BACK"},
-        {VK_TAB, "TAB"},
-        {VK_CLEAR, "VK_CLEAR"},
-        {VK_RETURN, "RETURN"},
-        {VK_SHIFT, "SHIFT"},
-        {VK_CONTROL, "CONTROL"},
-        {VK_MENU, "MENU"},
-        {VK_PAUSE, "PAUSE"},
-        {VK_CAPITAL, "CAPITAL"},
-        {VK_ESCAPE, "ESCAPE"},
-        {VK_SPACE, "SPACE"},
-        {VK_PRIOR, "PRIOR"},
-        {VK_NEXT, "NEXT"},
-        {VK_END, "END"},
-        {VK_HOME, "HOME"},
-        {VK_LEFT, "LEFT"},
-        {VK_UP, "UP"},
-        {VK_RIGHT, "RIGHT"},
-        {VK_DOWN, "DOWN"},
-        {VK_SELECT, "VK_SELECT"},
-        {VK_PRINT, "PRINT"},
-        {VK_EXECUTE, "EXECUTE"},
-        {VK_SNAPSHOT, "SNAPSHOT"},
-        {VK_INSERT, "INSERT"},
-        {VK_DELETE, "DELETE"},
-        {VK_HELP, "VK_HELP"},
-        {WORD('0'), "0"},
-        {WORD('1'), "1"},
-        {WORD('2'), "2"},
-        {WORD('3'), "3"},
-        {WORD('4'), "4"},
-        {WORD('5'), "5"},
-        {WORD('6'), "6"},
-        {WORD('7'), "7"},
-        {WORD('8'), "8"},
-        {WORD('9'), "9"},
-        {WORD('A'), "A"},
-        {WORD('B'), "B"},
-        {WORD('C'), "C"},
-        {WORD('D'), "D"},
-        {WORD('E'), "E"},
-        {WORD('F'), "F"},
-        {WORD('G'), "G"},
-        {WORD('H'), "H"},
-        {WORD('I'), "I"},
-        {WORD('J'), "J"},
-        {WORD('K'), "K"},
-        {WORD('L'), "L"},
-        {WORD('M'), "M"},
-        {WORD('N'), "N"},
-        {WORD('O'), "O"},
-        {WORD('P'), "P"},
-        {WORD('Q'), "Q"},
-        {WORD('R'), "R"},
-        {WORD('S'), "S"},
-        {WORD('T'), "T"},
-        {WORD('U'), "U"},
-        {WORD('V'), "V"},
-        {WORD('W'), "W"},
-        {WORD('X'), "X"},
-        {WORD('Y'), "Y"},
-        {WORD('Z'), "Z"},
-        {VK_LWIN, "VK_LWIN"},
-        {VK_RWIN, "VK_RWIN"},
-        {VK_APPS, "VK_APPS"},
-        {VK_NUMPAD0, "NUMPAD0"},
-        {VK_NUMPAD1, "NUMPAD1"},
-        {VK_NUMPAD2, "NUMPAD2"},
-        {VK_NUMPAD3, "NUMPAD3"},
-        {VK_NUMPAD4, "NUMPAD4"},
-        {VK_NUMPAD5, "NUMPAD5"},
-        {VK_NUMPAD6, "NUMPAD6"},
-        {VK_NUMPAD7, "NUMPAD7"},
-        {VK_NUMPAD8, "NUMPAD8"},
-        {VK_NUMPAD9, "NUMPAD9"},
-        {VK_MULTIPLY, "MULTIPLY"},
-        {VK_ADD, "ADD"},
-        {VK_SEPARATOR, "SEPARATOR"},
-        {VK_SUBTRACT, "SUBTRACT"},
-        {VK_DECIMAL, "DECIMAL"},
-        {VK_DIVIDE, "DIVIDE"},
-        {VK_F1, "F1"},
-        {VK_F2, "F2"},
-        {VK_F3, "F3"},
-        {VK_F4, "F4"},
-        {VK_F5, "F5"},
-        {VK_F6, "F6"},
-        {VK_F7, "F7"},
-        {VK_F8, "F8"},
-        {VK_F9, "F9"},
-        {VK_F10, "F10"},
-        {VK_F11, "F11"},
-        {VK_F12, "F12"},
-        {VK_F13, "F13"},
-        {VK_F14, "F14"},
-        {VK_F15, "F15"},
-        {VK_F16, "F16"},
-        {VK_F17, "F17"},
-        {VK_F18, "F18"},
-        {VK_F19, "F19"},
-        {VK_F20, "F20"},
-        {VK_F21, "F21"},
-        {VK_F22, "F22"},
-        {VK_F23, "F23"},
-        {VK_F24, "F24"},
-        {VK_NUMLOCK, "NUMLOCK"},
-        {VK_SCROLL, "VK_SCROLL"},
-        {VK_ATTN, "VK_ATTN"},
-        {VK_CRSEL, "VK_CRSEL"},
-        {VK_EXSEL, "VK_EXSEL"},
-        {VK_EREOF, "VK_EREOF"},
-        {VK_PLAY, "VK_PLAY"},
-        {VK_ZOOM, "VK_ZOOM"},
-        {VK_NONAME, "VK_NONAME"},
-        {VK_PA1, "VK_PA1"},
-        {VK_OEM_CLEAR, "VK_OEM_CLEAR"},
+  {VK_LBUTTON, "VK_LBUTTON"},
+  {VK_RBUTTON, "VK_RBUTTON"},
+  {VK_CANCEL, "VK_CANCEL"},
+  {VK_MBUTTON, "VK_MBUTTON"},
+  {VK_BACK, "BACK"},
+  {VK_TAB, "TAB"},
+  {VK_CLEAR, "VK_CLEAR"},
+  {VK_RETURN, "RETURN"},
+  {VK_SHIFT, "SHIFT"},
+  {VK_CONTROL, "CONTROL"},
+  {VK_MENU, "MENU"},
+  {VK_PAUSE, "PAUSE"},
+  {VK_CAPITAL, "CAPITAL"},
+  {VK_ESCAPE, "ESCAPE"},
+  {VK_SPACE, "SPACE"},
+  {VK_PRIOR, "PRIOR"},
+  {VK_NEXT, "NEXT"},
+  {VK_END, "END"},
+  {VK_HOME, "HOME"},
+  {VK_LEFT, "LEFT"},
+  {VK_UP, "UP"},
+  {VK_RIGHT, "RIGHT"},
+  {VK_DOWN, "DOWN"},
+  {VK_SELECT, "VK_SELECT"},
+  {VK_PRINT, "PRINT"},
+  {VK_EXECUTE, "EXECUTE"},
+  {VK_SNAPSHOT, "SNAPSHOT"},
+  {VK_INSERT, "INSERT"},
+  {VK_DELETE, "DELETE"},
+  {VK_HELP, "VK_HELP"},
+  {WORD('0'), "0"},
+  {WORD('1'), "1"},
+  {WORD('2'), "2"},
+  {WORD('3'), "3"},
+  {WORD('4'), "4"},
+  {WORD('5'), "5"},
+  {WORD('6'), "6"},
+  {WORD('7'), "7"},
+  {WORD('8'), "8"},
+  {WORD('9'), "9"},
+  {WORD('A'), "A"},
+  {WORD('B'), "B"},
+  {WORD('C'), "C"},
+  {WORD('D'), "D"},
+  {WORD('E'), "E"},
+  {WORD('F'), "F"},
+  {WORD('G'), "G"},
+  {WORD('H'), "H"},
+  {WORD('I'), "I"},
+  {WORD('J'), "J"},
+  {WORD('K'), "K"},
+  {WORD('L'), "L"},
+  {WORD('M'), "M"},
+  {WORD('N'), "N"},
+  {WORD('O'), "O"},
+  {WORD('P'), "P"},
+  {WORD('Q'), "Q"},
+  {WORD('R'), "R"},
+  {WORD('S'), "S"},
+  {WORD('T'), "T"},
+  {WORD('U'), "U"},
+  {WORD('V'), "V"},
+  {WORD('W'), "W"},
+  {WORD('X'), "X"},
+  {WORD('Y'), "Y"},
+  {WORD('Z'), "Z"},
+  {VK_LWIN, "VK_LWIN"},
+  {VK_RWIN, "VK_RWIN"},
+  {VK_APPS, "VK_APPS"},
+  {VK_NUMPAD0, "NUMPAD0"},
+  {VK_NUMPAD1, "NUMPAD1"},
+  {VK_NUMPAD2, "NUMPAD2"},
+  {VK_NUMPAD3, "NUMPAD3"},
+  {VK_NUMPAD4, "NUMPAD4"},
+  {VK_NUMPAD5, "NUMPAD5"},
+  {VK_NUMPAD6, "NUMPAD6"},
+  {VK_NUMPAD7, "NUMPAD7"},
+  {VK_NUMPAD8, "NUMPAD8"},
+  {VK_NUMPAD9, "NUMPAD9"},
+  {VK_MULTIPLY, "MULTIPLY"},
+  {VK_ADD, "ADD"},
+  {VK_SEPARATOR, "SEPARATOR"},
+  {VK_SUBTRACT, "SUBTRACT"},
+  {VK_DECIMAL, "DECIMAL"},
+  {VK_DIVIDE, "DIVIDE"},
+  {VK_F1, "F1"},
+  {VK_F2, "F2"},
+  {VK_F3, "F3"},
+  {VK_F4, "F4"},
+  {VK_F5, "F5"},
+  {VK_F6, "F6"},
+  {VK_F7, "F7"},
+  {VK_F8, "F8"},
+  {VK_F9, "F9"},
+  {VK_F10, "F10"},
+  {VK_F11, "F11"},
+  {VK_F12, "F12"},
+  {VK_F13, "F13"},
+  {VK_F14, "F14"},
+  {VK_F15, "F15"},
+  {VK_F16, "F16"},
+  {VK_F17, "F17"},
+  {VK_F18, "F18"},
+  {VK_F19, "F19"},
+  {VK_F20, "F20"},
+  {VK_F21, "F21"},
+  {VK_F22, "F22"},
+  {VK_F23, "F23"},
+  {VK_F24, "F24"},
+  {VK_NUMLOCK, "NUMLOCK"},
+  {VK_SCROLL, "VK_SCROLL"},
+  {VK_ATTN, "VK_ATTN"},
+  {VK_CRSEL, "VK_CRSEL"},
+  {VK_EXSEL, "VK_EXSEL"},
+  {VK_EREOF, "VK_EREOF"},
+  {VK_PLAY, "VK_PLAY"},
+  {VK_ZOOM, "VK_ZOOM"},
+  {VK_NONAME, "VK_NONAME"},
+  {VK_PA1, "VK_PA1"},
+  {VK_OEM_CLEAR, "VK_OEM_CLEAR"},
 };
 
 
@@ -180,9 +160,9 @@ MAPVIRTKEYS mapVirtKeys[] = {
 //
 //
 MAPVIRTKEYS mapVirtSysKeys[] = {
-        {FCONTROL, "Ctrl"},
-        {FALT, "Alt"},
-        {FSHIFT, "Shift"},
+  {FCONTROL, "Ctrl"},
+  {FALT, "Alt"},
+  {FSHIFT, "Shift"},
 };
 
 
@@ -193,11 +173,11 @@ MAPVIRTKEYS mapVirtSysKeys[] = {
 //
 TCHAR* mapVirtKeysStringFromWORD(WORD wKey)
 {
-        for (int index = 0; index < sizeof(mapVirtKeys)/sizeof(mapVirtKeys[0]); index++) {
-                if (mapVirtKeys[index].wKey == wKey)
-                        return mapVirtKeys[index].szKey;
-        }
-        return NULL;
+  for (int index = 0; index < sizeof(mapVirtKeys)/sizeof(mapVirtKeys[0]); index++) {
+    if (mapVirtKeys[index].wKey == wKey)
+      return mapVirtKeys[index].szKey;
+  }
+  return NULL;
 }
 
 
@@ -215,9 +195,9 @@ TCHAR* mapVirtKeysStringFromWORD(WORD wKey)
 //
 CAccelsOb::CAccelsOb()
 {
-        m_cVirt = 0;
-        m_wKey = 0;
-        m_bLocked = false;
+  m_cVirt = 0;
+  m_wKey = 0;
+  m_bLocked = false;
 }
 
 
@@ -226,11 +206,11 @@ CAccelsOb::CAccelsOb()
 //
 CAccelsOb::CAccelsOb(CAccelsOb* pFrom)
 {
-        ASSERT(pFrom != NULL);
-
-        m_cVirt = pFrom->m_cVirt;
-        m_wKey = pFrom->m_wKey;
-        m_bLocked = pFrom->m_bLocked;
+  ASSERT(pFrom != NULL);
+  
+  m_cVirt = pFrom->m_cVirt;
+  m_wKey = pFrom->m_wKey;
+  m_bLocked = pFrom->m_bLocked;
 }
 
 
@@ -239,9 +219,9 @@ CAccelsOb::CAccelsOb(CAccelsOb* pFrom)
 //
 CAccelsOb::CAccelsOb(BYTE cVirt, WORD wKey, bool bLocked)
 {
-        m_cVirt = cVirt;
-        m_wKey = wKey;
-        m_bLocked = bLocked;
+  m_cVirt = cVirt;
+  m_wKey = wKey;
+  m_bLocked = bLocked;
 }
 
 
@@ -250,11 +230,11 @@ CAccelsOb::CAccelsOb(BYTE cVirt, WORD wKey, bool bLocked)
 //
 CAccelsOb::CAccelsOb(LPACCEL pACCEL)
 {
-        ASSERT(pACCEL != NULL);
-        
-        m_cVirt = pACCEL->fVirt;
-        m_wKey = pACCEL->key;
-        m_bLocked = false;
+  ASSERT(pACCEL != NULL);
+  
+  m_cVirt = pACCEL->fVirt;
+  m_wKey = pACCEL->key;
+  m_bLocked = false;
 }
 
 
@@ -263,11 +243,11 @@ CAccelsOb::CAccelsOb(LPACCEL pACCEL)
 //
 CAccelsOb& CAccelsOb::operator=(const CAccelsOb& from)
 {
-        m_cVirt = from.m_cVirt;
-        m_wKey = from.m_wKey;
-        m_bLocked = from.m_bLocked;
-        
-        return *this;
+  m_cVirt = from.m_cVirt;
+  m_wKey = from.m_wKey;
+  m_bLocked = from.m_bLocked;
+  
+  return *this;
 }
 
 
@@ -276,28 +256,28 @@ CAccelsOb& CAccelsOb::operator=(const CAccelsOb& from)
 ////////////////////////////////////////////////////////////////////////
 //
 //
-void CAccelsOb::GetString(CStdString& szBuffer)
+void CAccelsOb::GetString(CString& szBuffer)
 {
-        szBuffer = "";
-        // in case of the object is not assigned, we avoid error messages
-        if (m_wKey == 0)
-                return;
+  szBuffer = "";
+  // in case of the object is not assigned, we avoid error messages
+  if (m_wKey == 0)
+    return;
 
-        // modifiers part
-        for (int i = 0; i < sizetable(mapVirtSysKeys); i++) {
-                if (m_cVirt & mapVirtSysKeys[i].wKey) {
-                        szBuffer += mapVirtSysKeys[i].szKey;
-                        szBuffer += "+";
-                }
-        }
-        // and virtual key part
-        for (i = 0; i < sizetable(mapVirtKeys); i++) {
-                if (m_wKey == mapVirtKeys[i].wKey) {
-                        szBuffer += mapVirtKeys[i].szKey;
-                        return;
-                }
-        }
-        ASSERT(FALSE);
+  // modifiers part
+  for (int i = 0; i < sizetable(mapVirtSysKeys); i++) {
+    if (m_cVirt & mapVirtSysKeys[i].wKey) {
+      szBuffer += mapVirtSysKeys[i].szKey;
+      szBuffer += "+";
+    }
+  }
+  // and virtual key part
+  for (i = 0; i < sizetable(mapVirtKeys); i++) {
+    if (m_wKey == mapVirtKeys[i].wKey) {
+      szBuffer += mapVirtKeys[i].szKey;
+      return;
+    }
+  }
+  AfxMessageBox("Internal error : (CAccelsOb::GetString) m_wKey invalid");
 }
 
 
@@ -306,22 +286,22 @@ void CAccelsOb::GetString(CStdString& szBuffer)
 //
 bool CAccelsOb::IsEqual(WORD wKey, bool bCtrl, bool bAlt, bool bShift)
 {
-        CStdString szTemp;
-        GetString(szTemp);
+  //        CString szTemp;
+  //        GetString(szTemp);
 
-        
-        bool m_bCtrl = (m_cVirt & FCONTROL) ? true : false;
-        bool bRet = (bCtrl == m_bCtrl);
-
-        bool m_bAlt = (m_cVirt & FALT) ? true : false;
-        bRet &= (bAlt == m_bAlt);
-        
-        bool m_bShift = (m_cVirt & FSHIFT) ? true : false;
-        bRet &= (bShift == m_bShift);
-
-        bRet &= (bool)(m_wKey == wKey);
-
-        return bRet;
+  
+  bool m_bCtrl = (m_cVirt & FCONTROL) ? true : false;
+  bool bRet = (bCtrl == m_bCtrl);
+  
+  bool m_bAlt = (m_cVirt & FALT) ? true : false;
+  bRet &= (bAlt == m_bAlt);
+  
+  bool m_bShift = (m_cVirt & FSHIFT) ? true : false;
+  bRet &= (bShift == m_bShift);
+  
+  bRet &= static_cast<bool>(m_wKey == wKey);
+  
+  return bRet;
 }
 
 
@@ -330,14 +310,14 @@ bool CAccelsOb::IsEqual(WORD wKey, bool bCtrl, bool bAlt, bool bShift)
 //
 DWORD CAccelsOb::GetData()
 {
-        BYTE cLocalCodes = 0;
-        if (m_bLocked)
-                cLocalCodes = DEFAULT_ACCEL;
-        else
-                cLocalCodes = USER_ACCEL;
-
-        WORD bCodes = MAKEWORD(m_cVirt, cLocalCodes);
-        return MAKELONG(m_wKey, bCodes);
+  BYTE cLocalCodes = 0;
+  if (m_bLocked)
+    cLocalCodes = DEFAULT_ACCEL;
+  else
+    cLocalCodes = USER_ACCEL;
+  
+  WORD bCodes = MAKEWORD(m_cVirt, cLocalCodes);
+  return MAKELONG(m_wKey, bCodes);
 }
 
 
@@ -346,16 +326,38 @@ DWORD CAccelsOb::GetData()
 //
 bool CAccelsOb::SetData(DWORD dwDatas)
 {
-        m_wKey = LOWORD(dwDatas);
-
-        WORD bCodes = HIWORD(dwDatas);
-        m_cVirt = LOBYTE(bCodes);
-
-        BYTE cLocalCodes = HIBYTE(bCodes);
-        m_bLocked = static_cast<bool>(cLocalCodes == DEFAULT_ACCEL);
-        return true;
+  m_wKey = LOWORD(dwDatas);
+  
+  WORD bCodes = HIWORD(dwDatas);
+  m_cVirt = LOBYTE(bCodes);
+  
+  BYTE cLocalCodes = HIBYTE(bCodes);
+  m_bLocked = static_cast<bool>(cLocalCodes == DEFAULT_ACCEL);
+  return true;
 }
 
+////////////////////////////////////////////////////////////////////////
+//
+#ifdef _DEBUG
+////////////////////////////////////////////////////////////////////////
+//
+//
+void CAccelsOb::AssertValid() const
+{
+  CObject::AssertValid();
+}
+
+////////////////////////////////////////////////////////////////////////
+//
+//
+void CAccelsOb::Dump(CDumpContext& dc) const
+{
+  dc << "\t\t";
+  CObject::Dump(dc);
+  dc << "\t\tlocked=" << m_bLocked << ", cVirt=" << m_cVirt << ", wKey=" << m_wKey << "\n\n";
+
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -372,10 +374,10 @@ CCmdAccelOb::CCmdAccelOb()
 //
 CCmdAccelOb::CCmdAccelOb(WORD wIDCommand, LPCTSTR szCommand)
 {
-        ASSERT(szCommand != NULL);
+  ASSERT(szCommand != NULL);
 
-        m_wIDCommand = wIDCommand;
-        m_szCommand = szCommand;
+  m_wIDCommand = wIDCommand;
+  m_szCommand = szCommand;
 }
 
 
@@ -384,14 +386,14 @@ CCmdAccelOb::CCmdAccelOb(WORD wIDCommand, LPCTSTR szCommand)
 //
 CCmdAccelOb::CCmdAccelOb(BYTE cVirt, WORD wIDCommand, WORD wKey, LPCTSTR szCommand, bool bLocked)
 {
-        ASSERT(szCommand != NULL);
-        
-        m_wIDCommand = wIDCommand;
-        m_szCommand = szCommand;
-
-        CAccelsOb* pAccel = new CAccelsOb(cVirt, wKey, bLocked);
-        ASSERT(pAccel != NULL);
-        m_Accels.push_back(pAccel);
+  ASSERT(szCommand != NULL);
+  
+  m_wIDCommand = wIDCommand;
+  m_szCommand = szCommand;
+  
+  CAccelsOb* pAccel = DEBUG_NEW CAccelsOb(cVirt, wKey, bLocked);
+  ASSERT(pAccel != NULL);
+  m_Accels.AddTail(pAccel);
 }
 
 
@@ -400,13 +402,10 @@ CCmdAccelOb::CCmdAccelOb(BYTE cVirt, WORD wIDCommand, WORD wKey, LPCTSTR szComma
 //
 CCmdAccelOb::~CCmdAccelOb()
 {
-        std::list<CAccelsOb *>::iterator it = m_Accels.begin();
-
-        while (it != m_Accels.end() ) {
-                delete *it;
-                it++;
-        }
-        m_Accels.clear();
+  POSITION pos = m_Accels.GetHeadPosition();
+  while (pos != NULL)
+    delete m_Accels.GetNext(pos);
+  m_Accels.RemoveAll();
 }
 
 
@@ -417,9 +416,9 @@ CCmdAccelOb::~CCmdAccelOb()
 //
 void CCmdAccelOb::Add(BYTE cVirt, WORD wKey, bool bLocked)
 {
-        CAccelsOb* pAccel = new CAccelsOb(cVirt, wKey, bLocked);
-        ASSERT(pAccel != NULL);
-        m_Accels.push_back(pAccel);
+  CAccelsOb* pAccel = DEBUG_NEW CAccelsOb(cVirt, wKey, bLocked);
+  ASSERT(pAccel != NULL);
+  m_Accels.AddTail(pAccel);
 }
 
 
@@ -428,8 +427,8 @@ void CCmdAccelOb::Add(BYTE cVirt, WORD wKey, bool bLocked)
 //
 void CCmdAccelOb::Add(CAccelsOb* pAccel)
 {
-        ASSERT(pAccel != NULL);
-        m_Accels.push_back(pAccel);
+  ASSERT(pAccel != NULL);
+  m_Accels.AddTail(pAccel);
 }
 
 
@@ -438,21 +437,19 @@ void CCmdAccelOb::Add(CAccelsOb* pAccel)
 //
 CCmdAccelOb& CCmdAccelOb::operator=(const CCmdAccelOb& from)
 {
-        Reset();
-
-        m_wIDCommand = from.m_wIDCommand;
-        m_szCommand = from.m_szCommand;
-
-        CAccelsOb* pAccel;
-        std::list<CAccelsOb*>::const_iterator it = from.m_Accels.begin();
-
-        while(it != from.m_Accels.end()) {
-                pAccel = new CAccelsOb(*it);
-                ASSERT(pAccel != NULL);
-                m_Accels.push_back(pAccel);
-                it++;
-        }
-        return *this;
+  Reset();
+  
+  m_wIDCommand = from.m_wIDCommand;
+  m_szCommand = from.m_szCommand;
+  
+  CAccelsOb* pAccel;
+  POSITION pos = from.m_Accels.GetHeadPosition();
+  while (pos != NULL) {
+    pAccel = DEBUG_NEW CAccelsOb(from.m_Accels.GetNext(pos));
+    ASSERT(pAccel != NULL);
+    m_Accels.AddTail(pAccel);
+  }
+  return *this;
 }
 
 
@@ -461,18 +458,17 @@ CCmdAccelOb& CCmdAccelOb::operator=(const CCmdAccelOb& from)
 //
 void CCmdAccelOb::DeleteUserAccels()
 {
-        CAccelsOb* pAccel;
-        std::list<CAccelsOb*>::iterator it = m_Accels.begin();
-
-        while (it != m_Accels.end()) {
-                pAccel = *it;
-                if (!pAccel->m_bLocked) {
-                        delete pAccel;
-                        it = m_Accels.erase(it);
-                } else {
-                        it++;
-                }
-        }
+  CAccelsOb* pAccel;
+  POSITION prevPos;
+  POSITION pos = m_Accels.GetHeadPosition();
+  while (pos != NULL) {
+    prevPos = pos;
+    pAccel = m_Accels.GetNext(pos);
+    if (!pAccel->m_bLocked) {
+      delete pAccel;
+      m_Accels.RemoveAt(prevPos);
+    }
+  }
 }
 
 
@@ -481,15 +477,50 @@ void CCmdAccelOb::DeleteUserAccels()
 //
 void CCmdAccelOb::Reset()
 {
-        m_wIDCommand = 0;
-        m_szCommand = "Empty command";
-
-        CAccelsOb* pAccel;
-        std::list<CAccelsOb *>::iterator it = m_Accels.begin();
-
-        while (it != m_Accels.end()) {
-                pAccel = *it;
-                delete pAccel;
-                it++;
-        }
+  m_wIDCommand = 0;
+  m_szCommand = "Empty command";
+  
+  CAccelsOb* pAccel;
+  POSITION pos = m_Accels.GetHeadPosition();
+  while (pos != NULL) {
+    pAccel = m_Accels.GetNext(pos);
+    delete pAccel;
+  }
 }
+
+////////////////////////////////////////////////////////////////////////
+//
+#ifdef _DEBUG
+////////////////////////////////////////////////////////////////////////
+//
+//
+void CCmdAccelOb::AssertValid() const
+{
+  // call base class function first
+  CObject::AssertValid();
+}
+
+
+////////////////////////////////////////////////////////////////////////
+//
+//
+void CCmdAccelOb::Dump( CDumpContext& dc ) const
+{
+  // call base class function first
+  dc << "\t";
+  CObject::Dump( dc );
+
+  // now do the stuff for our specific class
+  dc << "\tIDCommand = " << m_wIDCommand;
+  dc << "\n\tszCommand = " << m_szCommand;
+  dc << "\n\tAccelerators = {\n";
+
+  CAccelsOb* pAccel;
+  POSITION pos = m_Accels.GetHeadPosition();
+  while (pos != NULL) {
+    pAccel = m_Accels.GetNext(pos);
+    dc << pAccel;
+  }
+  dc << "\t}\n";
+}
+#endif

@@ -14,148 +14,148 @@
 
 #ifndef _SKIN_H_
 
-  #define _SKIN_H_
+#define _SKIN_H_
 
-  #include "skinButton.h"
+#include "skinButton.h"
 
 
+
+// --------------------------------------------------------------------------
+// The CSkin class will load the skin from a resource
+// and subclass the associated window, so that the
+// WM_PAINT message will be redirected to the provided
+// window procedure. All the skin handling will be automatized.
+// --------------------------------------------------------------------------
+
+class CSkin
+{
 
   // --------------------------------------------------------------------------
-  // The CSkin class will load the skin from a resource
-  // and subclass the associated window, so that the
-  // WM_PAINT message will be redirected to the provided
-  // window procedure. All the skin handling will be automatized.
+  // the skin window procedure, where the class
+  // will handle WM_PAINT and WM_LBUTTONDOWN automatically.
   // --------------------------------------------------------------------------
+  friend LRESULT CALLBACK SkinWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 
-  class CSkin
-  {
+ private:
 
-    // --------------------------------------------------------------------------
-    // the skin window procedure, where the class
-    // will handle WM_PAINT and WM_LBUTTONDOWN automatically.
-    // --------------------------------------------------------------------------
-    friend LRESULT CALLBACK SkinWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
+  // the associated window handle
+  HWND      m_hWnd;
 
-    private:
+  // the old window procedure
+  WNDPROC   m_OldWndProc;
 
-      // the associated window handle
-      HWND      m_hWnd;
+  // skin region
+  HRGN      m_rgnSkin;
 
-      // the old window procedure
-      WNDPROC   m_OldWndProc;
+  // the internal skin device context handle
+  HDC       m_dcSkin;
 
-      // skin region
-      HRGN      m_rgnSkin;
+  // bitmap and old bitmap from the device context
+  HBITMAP   m_hBmp, m_hOldBmp;
 
-      // the internal skin device context handle
-      HDC       m_dcSkin;
+  // skin dimensions
+  int       m_iWidth, m_iHeight;
 
-      // bitmap and old bitmap from the device context
-      HBITMAP   m_hBmp, m_hOldBmp;
+  // on|off toggle
+  bool      m_bEnabled;
 
-      // skin dimensions
-      int       m_iWidth, m_iHeight;
-
-      // on|off toggle
-      bool      m_bEnabled;
-
-      // tell the class if it has a window subclassed.
-      bool      m_bHooked;
+  // tell the class if it has a window subclassed.
+  bool      m_bHooked;
       
-      // skin retrieval helper
-      bool      GetSkinData(const char *skin);
+  // skin retrieval helper
+  bool      GetSkinData(const char *skin);
 
-      RECT      m_rect;
+  RECT      m_rect;
 
-      DWORD     m_dOldStyle;
-      RECT      m_oldRect;
-      int       m_nButtons;
-      SkinButton *m_buttons;
-      CStdString m_error;
+  DWORD     m_dOldStyle;
+  RECT      m_oldRect;
+  int       m_nButtons;
+  SkinButton *m_buttons;
+  CString m_error;
 
-    public:
+ public:
 
-      // ----------------------------------------------------------------------------
-      // constructor 1 - use it when you have not already created the app window.
-      // this one will not subclass automatically, you must call Hook() to subclass.
-      // will throw an exception if unable to initialize skin from resource.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // constructor 1 - use it when you have not already created the app window.
+  // this one will not subclass automatically, you must call Hook() to subclass.
+  // will throw an exception if unable to initialize skin from resource.
+  // ----------------------------------------------------------------------------
 
-      CSkin();
+  CSkin();
 
-      // ----------------------------------------------------------------------------
-      // destructor - just call the destroyer
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // destructor - just call the destroyer
+  // ----------------------------------------------------------------------------
 
-      virtual ~CSkin();
+  virtual ~CSkin();
 
-      // ----------------------------------------------------------------------------
-      // Initialize the skin
-      // ----------------------------------------------------------------------------
-      bool Initialize(const char *);
+  // ----------------------------------------------------------------------------
+  // Initialize the skin
+  // ----------------------------------------------------------------------------
+  bool Initialize(const char *);
 
       
-      // ----------------------------------------------------------------------------
-      // destroy skin resources and free allocated resources
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // destroy skin resources and free allocated resources
+  // ----------------------------------------------------------------------------
 
-      void Destroy();
+  void Destroy();
 
-      // ----------------------------------------------------------------------------
-      // subclass a window.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // subclass a window.
+  // ----------------------------------------------------------------------------
 
-      bool    Hook(HWND hWnd);
+  bool    Hook(CWnd *pWnd);
 
-      // ----------------------------------------------------------------------------
-      // unsubclass the subclassed window.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // unsubclass the subclassed window.
+  // ----------------------------------------------------------------------------
 
-      bool    UnHook();
+  bool    UnHook();
 
-      // ----------------------------------------------------------------------------
-      // tell us if we have a window subclassed.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // tell us if we have a window subclassed.
+  // ----------------------------------------------------------------------------
 
-      bool    Hooked();
+  bool    Hooked();
 
-      // ----------------------------------------------------------------------------
-      // toggle skin on/off.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // toggle skin on/off.
+  // ----------------------------------------------------------------------------
 
-      bool    Enable(bool bEnable);
+  bool    Enable(bool bEnable);
 
-      // ----------------------------------------------------------------------------
-      // tell if the skinning is enabled
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // tell if the skinning is enabled
+  // ----------------------------------------------------------------------------
 
-      bool    Enabled();
+  bool    Enabled();
 
-      // ----------------------------------------------------------------------------
-      // return the skin bitmap width.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // return the skin bitmap width.
+  // ----------------------------------------------------------------------------
 
-      int     Width();
+  int     Width();
 
-      // ----------------------------------------------------------------------------
-      // return the skin bitmap height.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // return the skin bitmap height.
+  // ----------------------------------------------------------------------------
 
-      int     Height();
+  int     Height();
 
-      // Return blit rect
-      RECT    &GetBlitRect() { return m_rect; }
+  // Return blit rect
+  RECT    &GetBlitRect() { return m_rect; }
 
-      // ----------------------------------------------------------------------------
-      // return the skin device context.
-      // ----------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // return the skin device context.
+  // ----------------------------------------------------------------------------
 
-      HDC     HDC();
+  HDC     HDC();
 
-  private:
-      bool ReadButton(const char *, int);
-      static bool ParseRect(char *, RECT &);
-      static HRGN LoadRegion(const char *);
-  };
+ private:
+  bool ReadButton(const char *, int);
+  static bool ParseRect(char *, RECT &);
+  static HRGN LoadRegion(const char *);
+};
 
 #endif

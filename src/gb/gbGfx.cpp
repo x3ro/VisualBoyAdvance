@@ -388,13 +388,12 @@ void gbDrawSpriteTile(int tile, int x,int y,int t, int flags,
     u16 color = gbLineBuffer[xxx];
     
     if(prio) {
-      if(color < 0x100 && color != 0)
+      if(color < 0x200 && ((color & 0xFF) != 0))
         continue;
     }
-
     if(color >= 0x300 && color != 0x300)
       continue;
-    if(color >= 0x200 && color < 0x300) {
+    else if(color >= 0x200 && color < 0x300) {
       int sprite = color & 0xff;
 
       int spriteX = gbMemory[0xfe00 + 4 * sprite + 1] - 8;
@@ -412,6 +411,7 @@ void gbDrawSpriteTile(int tile, int x,int y,int t, int flags,
         }
       }
     } 
+    
 
     gbLineBuffer[xxx] = 0x200 + spriteNumber;
 

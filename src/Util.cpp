@@ -16,47 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-/*
- * Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
- *
- * (c) Copyright 1996 - 2001 Gary Henderson (gary.henderson@ntlworld.com) and
- *                           Jerremy Koot (jkoot@snes9x.com)
- *
- * Super FX C emulator code 
- * (c) Copyright 1997 - 1999 Ivar (ivar@snes9x.com) and
- *                           Gary Henderson.
- * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
- *
- * DSP1 emulator code (c) Copyright 1998 Ivar, _Demo_ and Gary Henderson.
- * C4 asm and some C emulation code (c) Copyright 2000 zsKnight and _Demo_.
- * C4 C code (c) Copyright 2001 Gary Henderson (gary.henderson@ntlworld.com).
- *
- * DOS port code contains the works of other authors. See headers in
- * individual files.
- *
- * Snes9x homepage: http://www.snes9x.com
- *
- * Permission to use, copy, modify and distribute Snes9x in both binary and
- * source form, for non-commercial purposes, is hereby granted without fee,
- * providing that this license information and copyright notice appear with
- * all copies and any derived work.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event shall the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Snes9x is freeware for PERSONAL USE only. Commercial users should
- * seek permission of the copyright holders first. Commercial use includes
- * charging money for Snes9x or software derived from Snes9x.
- *
- * The copyright holders request that bug fixes and improvements to the code
- * should be forwarded to them so everyone can benefit from the modifications
- * in future versions.
- *
- * Super NES and Super Nintendo Entertainment System are trademarks of
- * Nintendo Co., Limited and its subsidiary companies.
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,7 +51,7 @@ static int (*utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
 static int (*utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;
 static int (*utilGzCloseFunc)(gzFile) = NULL;
 
-bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
+bool utilWritePNGFile(const char *fileName, int w, int h, u8 *pix)
 {
   u8 writeBuffer[512 * 3];
   
@@ -301,7 +260,7 @@ void utilWriteBMP(char *buf, int w, int h, u8 *pix)
   }  
 }
 
-bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
+bool utilWriteBMPFile(const char *fileName, int w, int h, u8 *pix)
 {
   u8 writeBuffer[512 * 3];
   
@@ -426,94 +385,91 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
   return true;
 }
 
-// IPS patching adapted from Snes9x memmap.cpp file
-
-// Read variable size MSB int from a file
-static int utilReadInt(FILE *f, int nbytes)
+static int utilReadInt2(FILE *f)
 {
-  long v = 0;
-  while (nbytes--) {
-    int c = fgetc(f);
-    if (c == EOF) 
-      return -1;
-    v = (v << 8) | (c & 0xFF);
-  }
-  return (v);
+  int res = 0;
+  int c = fgetc(f);
+  if(c == EOF)
+    return -1;
+  res = c;
+  c = fgetc(f);
+  if(c == EOF)
+    return -1;
+  return c + (res<<8);
 }
 
-void utilApplyIPS(char *ips, u8 **r, int *s)
+static int utilReadInt3(FILE *f)
 {
-  char buffer[10];
-  
-  FILE *patch = NULL;
-  int offset = 0;
+  int res = 0;
+  int c = fgetc(f);
+  if(c == EOF)
+    return -1;
+  res = c;
+  c = fgetc(f);
+  if(c == EOF)
+    return -1;
+  res = c + (res<<8);
+  c = fgetc(f);
+  if(c == EOF)
+    return -1;
+  return c + (res<<8);
+}
 
+void utilApplyIPS(const char *ips, u8 **r, int *s)
+{
+  // from the IPS spec at http://zerosoft.zophar.net/ips.htm
+  FILE *f = fopen(ips, "rb");
+  if(!f)
+    return;
   u8 *rom = *r;
   int size = *s;
-
-  if(!(patch = fopen (ips, "rb"))) {
-    return;
-  }
-
-  if(fread (buffer, 1, 5, patch) != 5 ||
-     strncmp (buffer, "PATCH", 5) != 0) {
-    fclose (patch);
-    return;
-  }
-  
-  for(;;) {
+  if(fgetc(f) == 'P' &&
+     fgetc(f) == 'A' &&
+     fgetc(f) == 'T' &&
+     fgetc(f) == 'C' &&
+     fgetc(f) == 'H') {
+    int b;
+    int offset;
     int len;
-    int c;
-
-    offset = utilReadInt(patch, 3);
-    if(offset == -1)
-      goto err;
-
-    // IPS end
-    if (offset == 0x454f46)
-      break;
-
-    len = utilReadInt(patch, 2);
-    if(len == -1)
-      goto err;
-
-    // if not zero, then it is a patch block
-    if (len) {
-      while(len--) {
-        if(offset >= size) {
-          rom = (u8 *)realloc(rom, (size<<1));
-          *r = rom;
-          *s = size = (size << 1);
-        }
-        c = fgetc(patch);
-        if(c == EOF) 
-          goto err;
-        rom[offset++] = (u8)c;
-      }
-    } else {
-      // RLE block
-      len = utilReadInt(patch, 2);
-      if(len == -1)
-        goto err;
-      c = fgetc(patch);
-      
-      if(c == EOF) 
-        goto err;
-
+    for(;;) {
+      // read offset
+      offset = utilReadInt3(f);
+      // if offset == EOF, end of patch
+      if(offset == 0x454f46)
+        break;
+      // read length
+      len = utilReadInt2(f);
+      if(!len) {
+        // len == 0, RLE block
+        len = utilReadInt2(f);
+        // byte to fill
+        int c = fgetc(f);
+        if(c == -1)
+          break;
+        b = (u8)c;
+      } else
+        b= -1;
+      // check if we need to reallocate our ROM
       if((offset + len) >= size) {
-        rom = (u8 *)realloc(rom, (size<<1));
+        size *= 2;
+        rom = (u8 *)realloc(rom, size);
         *r = rom;
-        *s = size = (size << 1);        
+        *s = size;
+      }      
+      if(b == -1) {
+        // normal block, just read the data
+        if(fread(&rom[offset], 1, len, f) != (size_t)len)
+          break;
+      } else {
+        // fill the region with the given byte
+        while(len--) {
+          rom[offset++] = b;
+        }
       }
-      
-      while(len--) 
-        rom[offset++] = (u8)c;
     }
   }
-
- err:
-  if(patch)
-    fclose(patch);
+  // close the file
+  fclose(f);
 }
 
 extern bool cpuIsMultiBoot;
@@ -723,6 +679,14 @@ IMAGE_TYPE utilFindType(const char *file)
   return IMAGE_UNKNOWN;  
 }
 
+static int utilGetSize(int size)
+{
+  int res = 1;
+  while(res < size)
+    res <<= 1;
+  return res;
+}
+
 static u8 *utilLoadFromZip(const char *file,
                            bool (*accept)(const char *),
                            u8 *data,
@@ -795,7 +759,7 @@ static u8 *utilLoadFromZip(const char *file,
   u8 *image = data;
   
   if(image == NULL) {
-    image = (u8 *)malloc(size);
+    image = (u8 *)malloc(utilGetSize(size));
     if(image == NULL) {
       unzCloseCurrentFile(unz);
       unzClose(unz);
@@ -850,7 +814,7 @@ static u8 *utilLoadGzipFile(const char *file,
   u8 *image = data;
 
   if(image == NULL) {
-    image = (u8 *)malloc(size);
+    image = (u8 *)malloc(utilGetSize(size));
     if(image == NULL) {
       systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                     "data");
@@ -953,7 +917,7 @@ u8 *utilLoad(const char *file,
   fseek(f,0,SEEK_SET);
 
   if(image == NULL) {
-    image = (u8 *)malloc(size);
+    image = (u8 *)malloc(utilGetSize(size));
     if(image == NULL) {
       systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                     "data");

@@ -1630,7 +1630,7 @@ void gbReset()
   gbFrameCount = 0;
 }
 
-void gbWriteSaveMBC1(char * name)
+void gbWriteSaveMBC1(const char * name)
 {
   FILE *gzFile = fopen(name,"wb");
 
@@ -1647,7 +1647,7 @@ void gbWriteSaveMBC1(char * name)
   fclose(gzFile);
 }
 
-void gbWriteSaveMBC2(char * name)
+void gbWriteSaveMBC2(const char * name)
 {
   FILE *file = fopen(name, "wb");
 
@@ -1664,7 +1664,7 @@ void gbWriteSaveMBC2(char * name)
   fclose(file);
 }
 
-void gbWriteSaveMBC3(char * name, bool extendedSave)
+void gbWriteSaveMBC3(const char * name, bool extendedSave)
 {
   FILE *gzFile = fopen(name,"wb");
 
@@ -1687,7 +1687,7 @@ void gbWriteSaveMBC3(char * name, bool extendedSave)
   fclose(gzFile);
 }
 
-void gbWriteSaveMBC5(char * name)
+void gbWriteSaveMBC5(const char * name)
 {
   FILE *gzFile = fopen(name,"wb");
 
@@ -1704,7 +1704,7 @@ void gbWriteSaveMBC5(char * name)
   fclose(gzFile);
 }
 
-void gbWriteSaveMBC7(char * name)
+void gbWriteSaveMBC7(const char * name)
 {
   FILE *file = fopen(name, "wb");
 
@@ -1721,7 +1721,7 @@ void gbWriteSaveMBC7(char * name)
   fclose(file);
 }
 
-bool gbReadSaveMBC1(char * name)
+bool gbReadSaveMBC1(const char * name)
 {
   gzFile gzFile = gzopen(name, "rb");
 
@@ -1743,7 +1743,7 @@ bool gbReadSaveMBC1(char * name)
   return true;
 }
 
-bool gbReadSaveMBC2(char * name)
+bool gbReadSaveMBC2(const char * name)
 {
   FILE *file = fopen(name, "rb");
 
@@ -1767,7 +1767,7 @@ bool gbReadSaveMBC2(char * name)
   return true;
 }
 
-bool gbReadSaveMBC3(char * name)
+bool gbReadSaveMBC3(const char * name)
 {
   gzFile gzFile = gzopen(name, "rb");
 
@@ -1801,7 +1801,7 @@ bool gbReadSaveMBC3(char * name)
   return res;
 }
 
-bool gbReadSaveMBC5(char * name)
+bool gbReadSaveMBC5(const char * name)
 {
   gzFile gzFile = gzopen(name, "rb");
 
@@ -1824,7 +1824,7 @@ bool gbReadSaveMBC5(char * name)
   return true;
 }
 
-bool gbReadSaveMBC7(char * name)
+bool gbReadSaveMBC7(const char * name)
 {
   FILE *file = fopen(name, "rb");
 
@@ -1861,7 +1861,7 @@ void gbInit()
   gbLineBuffer = (u16 *)malloc(160 * sizeof(u16));
 }
 
-bool gbWriteBatteryFile(char *file, bool extendedSave)
+bool gbWriteBatteryFile(const char *file, bool extendedSave)
 {
   if(gbBattery) {
     int type = gbRom[0x147];
@@ -1893,13 +1893,13 @@ bool gbWriteBatteryFile(char *file, bool extendedSave)
   return true;
 }
 
-bool gbWriteBatteryFile(char *file)
+bool gbWriteBatteryFile(const char *file)
 {
   gbWriteBatteryFile(file, true);
   return true;
 }
 
-bool gbReadBatteryFile(char *file)
+bool gbReadBatteryFile(const char *file)
 {
   if(gbBattery) {
     int type = gbRom[0x147];
@@ -1942,7 +1942,7 @@ bool gbReadBatteryFile(char *file)
   return false;
 }
 
-bool gbReadGSASnapshot(char *fileName)
+bool gbReadGSASnapshot(const char *fileName)
 {
   FILE *file = fopen(fileName, "rb");
     
@@ -2146,7 +2146,7 @@ bool gbWriteMemSaveState(char *memory, int available)
   return res;
 }
 
-bool gbWriteSaveState(char *name)
+bool gbWriteSaveState(const char *name)
 {
   gzFile gzFile = utilGzOpen(name,"wb");
 
@@ -2335,7 +2335,7 @@ bool gbReadMemSaveState(char *memory, int available)
   return res;
 }
 
-bool gbReadSaveState(char *name)
+bool gbReadSaveState(const char *name)
 {
   gzFile gzFile = utilGzOpen(name,"rb");
 
@@ -2350,14 +2350,14 @@ bool gbReadSaveState(char *name)
   return res;
 }
 
-bool gbWritePNGFile(char *fileName)
+bool gbWritePNGFile(const char *fileName)
 {
   if(gbBorderOn)
     return utilWritePNGFile(fileName, 256, 224, pix);
   return utilWritePNGFile(fileName, 160, 144, pix);
 }
 
-bool gbWriteBMPFile(char *fileName)
+bool gbWriteBMPFile(const char *fileName)
 {
   if(gbBorderOn)
     return utilWriteBMPFile(fileName, 256, 224, pix);
@@ -2366,10 +2366,6 @@ bool gbWriteBMPFile(char *fileName)
 
 void gbCleanUp()
 {
-  if(gbCheatsSearchCount) {
-    gbCheatsCleanup();
-  }
-  
   if(gbRam != NULL) {
     free(gbRam);
     gbRam = NULL;
@@ -2408,7 +2404,7 @@ void gbCleanUp()
   }
 }
 
-bool gbLoadRom(char *szFile)
+bool gbLoadRom(const char *szFile)
 {
   int size = 0;
   

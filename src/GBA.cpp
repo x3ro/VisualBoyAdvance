@@ -655,7 +655,7 @@ static bool CPUWriteState(gzFile gzFile)
   return true;
 }
 
-bool CPUWriteState(char *file)
+bool CPUWriteState(const char *file)
 {
   gzFile gzFile = utilGzOpen(file, "wb");
 
@@ -823,7 +823,7 @@ bool CPUReadMemState(char *memory, int available)
   return res;
 }
 
-bool CPUReadState(char * file)
+bool CPUReadState(const char * file)
 {
   gzFile gzFile = utilGzOpen(file, "rb");
 
@@ -837,7 +837,7 @@ bool CPUReadState(char * file)
   return res;
 }
 
-bool CPUExportEepromFile(char *fileName)
+bool CPUExportEepromFile(const char *fileName)
 {
   if(eepromInUse) {
     FILE *file = fopen(fileName, "wb");
@@ -862,7 +862,7 @@ bool CPUExportEepromFile(char *fileName)
   return true;
 }
 
-bool CPUWriteBatteryFile(char *fileName)
+bool CPUWriteBatteryFile(const char *fileName)
 {
   if(gbaSaveType == 0) {
     if(eepromInUse)
@@ -910,7 +910,7 @@ bool CPUWriteBatteryFile(char *fileName)
   return true;
 }
 
-bool CPUReadGSASnapshot(char *fileName)
+bool CPUReadGSASnapshot(const char *fileName)
 {
   int i;
   FILE *file = fopen(fileName, "rb");
@@ -975,7 +975,10 @@ bool CPUReadGSASnapshot(char *fileName)
   return true;
 }
 
-bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
+bool CPUWriteGSASnapshot(const char *fileName, 
+                         const char *title, 
+                         const char *desc, 
+                         const char *notes)
 {
   FILE *file = fopen(fileName, "wb");
     
@@ -1031,7 +1034,7 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   return true;
 }
 
-bool CPUImportEepromFile(char *fileName)
+bool CPUImportEepromFile(const char *fileName)
 {
   FILE *file = fopen(fileName, "rb");
     
@@ -1073,7 +1076,7 @@ bool CPUImportEepromFile(char *fileName)
   return true;
 }
 
-bool CPUReadBatteryFile(char *fileName)
+bool CPUReadBatteryFile(const char *fileName)
 {
   FILE *file = fopen(fileName, "rb");
     
@@ -1109,17 +1112,17 @@ bool CPUReadBatteryFile(char *fileName)
   return true;
 }
 
-bool CPUWritePNGFile(char *fileName)
+bool CPUWritePNGFile(const char *fileName)
 {
   return utilWritePNGFile(fileName, 240, 160, pix);
 }
 
-bool CPUWriteBMPFile(char *fileName)
+bool CPUWriteBMPFile(const char *fileName)
 {
   return utilWriteBMPFile(fileName, 240, 160, pix);
 }
 
-bool CPUIsZipFile(char * file)
+bool CPUIsZipFile(const char * file)
 {
   if(strlen(file) > 4) {
     char * p = strrchr(file,'.');
@@ -1133,7 +1136,7 @@ bool CPUIsZipFile(char * file)
   return false;
 }
 
-bool CPUIsGBAImage(char * file)
+bool CPUIsGBAImage(const char * file)
 {
   cpuIsMultiBoot = false;
   if(strlen(file) > 4) {
@@ -1178,7 +1181,7 @@ bool CPUIsGBABios(const char * file)
   return false;
 }
 
-bool CPUIsELF(char *file)
+bool CPUIsELF(const char *file)
 {
   if(strlen(file) > 4) {
     char * p = strrchr(file,'.');
@@ -1249,7 +1252,7 @@ void CPUCleanUp()
   emulating = 0;
 }
 
-int CPULoadRom(char *szFile)
+int CPULoadRom(const char *szFile)
 {
   int size = 0;  
   
@@ -1727,6 +1730,9 @@ void CPUSoftwareInterrupt(int comment)
     break;
   case 0x08:
     BIOS_Sqrt();
+    break;
+  case 0x09:
+    BIOS_ArcTan();
     break;
   case 0x0A:
     BIOS_ArcTan2();
@@ -2882,7 +2888,7 @@ void CPUWriteByte(u32 address, u8 b)
 u8 cpuBitsSet[256];
 u8 cpuLowestBitSet[256];
 
-void CPUInit(char *biosFileName, bool useBiosFile)
+void CPUInit(const char *biosFileName, bool useBiosFile)
 {
 #ifdef WORDS_BIGENDIAN
   if(!cpuBiosSwapped) {
@@ -3282,7 +3288,7 @@ void CPUInterrupt()
 }
 
 #ifdef SDL
-void log(char *defaultMsg, ...)
+void log(const char *defaultMsg, ...)
 {
   char buffer[2048];
   va_list valist;

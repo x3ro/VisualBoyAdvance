@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,28 +16,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+// skinButton.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "vba.h"
 #include "skinButton.h"
 
-extern bool winAccelGetID(const char *command, WORD& id);
-extern int skinButtons;
-extern HMENU menu;
-extern HWND hWindow;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-BEGIN_MESSAGE_MAP(SkinButton, Wnd)
-  ON_WM_ERASEBKGND()
-  ON_WM_CREATE()
-  ON_WM_PAINT()
-  ON_MESSAGE(WM_KILLFOCUS, OnKillFocusMsg)
-  ON_MESSAGE(WM_LBUTTONUP, OnLButtonUpMsg)
-  ON_MESSAGE(WM_LBUTTONDOWN, OnLButtonDownMsg)
-  ON_MESSAGE(WM_MOUSEMOVE, OnMouseMoveMsg)
-  ON_MESSAGE(WM_CAPTURECHANGED, OnCaptureChangedMsg)
-  ON_MESSAGE(WM_CONTEXTMENU, OnRButtonDownMsg)
-  ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeaveMsg)
-END_MESSAGE_MAP()
+extern bool winAccelGetID(const char *command, WORD& id);
+
+/////////////////////////////////////////////////////////////////////////////
+// SkinButton
 
 SkinButton::SkinButton()
-  : Wnd()
 {
   normalBmp = NULL;
   downBmp = NULL;
@@ -69,6 +66,171 @@ SkinButton::~SkinButton()
     DeleteObject(region);
     region = NULL;
   }
+}
+
+
+BEGIN_MESSAGE_MAP(SkinButton, CWnd)
+  //{{AFX_MSG_MAP(SkinButton)
+  ON_WM_ERASEBKGND()
+  ON_WM_PAINT()
+  ON_WM_KILLFOCUS()
+  ON_WM_CAPTURECHANGED()
+  ON_WM_CONTEXTMENU()
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(WM_LBUTTONUP, OnLButtonUpMsg)
+  ON_MESSAGE(WM_LBUTTONDOWN, OnLButtonDownMsg)
+  ON_MESSAGE(WM_MOUSEMOVE, OnMouseMoveMsg)
+  ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeaveMsg)
+  END_MESSAGE_MAP()
+
+
+  /////////////////////////////////////////////////////////////////////////////
+// SkinButton message handlers
+
+BOOL SkinButton::OnEraseBkgnd(CDC* pDC) 
+{
+  return TRUE;
+}
+
+void SkinButton::OnPaint() 
+{
+  PAINTSTRUCT ps;
+  HDC hDC = ::BeginPaint(m_hWnd, &ps);
+  HDC memDC = ::CreateCompatibleDC(hDC);
+  UINT state = ::SendMessage(m_hWnd, BM_GETSTATE, 0, 0);
+  
+  if(state & BST_PUSHED)
+    SelectObject(memDC, downBmp);
+  else if(mouseOver && overBmp != NULL)
+    SelectObject(memDC, overBmp);
+  else
+    SelectObject(memDC, normalBmp);
+  SelectClipRgn(hDC, region);
+  BitBlt(hDC, 0, 0, theApp.rect.right - theApp.rect.left,
+         theApp.rect.bottom - theApp.rect.top, memDC, 0, 0, SRCCOPY);
+  SelectClipRgn(hDC, NULL);
+  DeleteDC(memDC);
+
+  ::EndPaint(m_hWnd, &ps);
+}
+
+LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
+{
+  POINT pt;
+  pt.x = LOWORD(lParam);
+  pt.y = HIWORD(lParam);
+  RECT r;
+  GetClientRect(&r);
+  BOOL inside = PtInRect(&r, pt);
+  if(region != NULL)
+    inside &= PtInRegion(region, pt.x, pt.y);
+  if(inside) {
+    if(idCommand != 0)
+      GetParent()->SendMessage(WM_COMMAND, idCommand, 0);
+    else if(buttonMask)
+      theApp.skinButtons = 0;
+    else if(menu != -1) {
+      HMENU m = GetSubMenu(theApp.menu, menu);
+      pt.x = r.left;
+      pt.y = r.bottom;
+      ClientToScreen(&pt);
+      theApp.m_pMainWnd->SendMessage(WM_INITMENUPOPUP, (WPARAM)m, menu);
+      TrackPopupMenu(m, 0, pt.x, pt.y, 0, *theApp.m_pMainWnd, NULL);
+    }
+
+    return Default();
+  }
+  return GetParent()->SendMessage(WM_LBUTTONUP, wParam, lParam);
+}
+
+LRESULT SkinButton::OnLButtonDownMsg(WPARAM wParam, LPARAM lParam)
+{
+  if(idCommand != 0)
+    return Default();
+
+  POINT pt;
+  pt.x = LOWORD(lParam);
+  pt.y = HIWORD(lParam);
+  RECT r;
+  GetClientRect(&r);
+  BOOL inside = PtInRect(&r, pt);
+  if(region != NULL)
+    inside &= PtInRegion(region, pt.x, pt.y);
+  if(inside) {
+    if(buttonMask)
+      theApp.skinButtons = buttonMask;
+    return Default();
+  }
+  return GetParent()->SendMessage(WM_LBUTTONDOWN, wParam, lParam);
+}
+
+LRESULT SkinButton::OnMouseMoveMsg(WPARAM wParam, LPARAM lParam)
+{
+  if(wParam & MK_LBUTTON && !mouseOver)
+    return Default();
+
+  if(GetCapture() != this) {
+    SetCapture();
+  }
+  POINT pt;
+  pt.x = LOWORD(lParam);
+  pt.y = HIWORD(lParam);
+  //  ClientToScreen(getHandle(), &p);
+  RECT r;
+  GetClientRect(&r);
+  BOOL inside = PtInRect(&r, pt);
+  if(region != NULL)
+    inside &= PtInRegion(region, pt.x, pt.y);
+
+  if(!inside) {
+    //  HWND h = WindowFromPoint(p);
+    //  if(h != getHandle()) {
+    if(mouseOver) {
+      mouseOver = false;
+      Invalidate();
+    }
+    if(!(wParam & MK_LBUTTON))
+      ReleaseCapture();
+  } else {
+    if(!mouseOver) {
+      mouseOver = true;
+      Invalidate();
+    }
+  }
+  return Default();
+}
+
+void SkinButton::OnKillFocus(CWnd* pNewWnd) 
+{
+  mouseOver = false;
+  Invalidate();
+
+  CWnd::OnKillFocus(pNewWnd);
+}
+
+void SkinButton::OnCaptureChanged(CWnd *pWnd) 
+{
+  if(mouseOver) {
+    ReleaseCapture();
+    Invalidate();
+  }
+  
+  CWnd::OnCaptureChanged(pWnd);
+}
+
+LRESULT SkinButton::OnMouseLeaveMsg(WPARAM wParam, LPARAM lParam)
+{
+  if(mouseOver) {
+    ReleaseCapture();
+    mouseOver = false;
+    Invalidate();
+  }
+
+  return Default();
+}
+
+void SkinButton::OnContextMenu(CWnd* pWnd, CPoint point) 
+{
 }
 
 void SkinButton::SetNormalBitmap(HBITMAP bmp)
@@ -152,158 +314,13 @@ void SkinButton::GetRect(RECT& r)
   r = rect;
 }
 
-BOOL SkinButton::Create(const char *name, DWORD style, const RECT& r, 
-			HWND parent, UINT id)
+BOOL SkinButton::CreateButton(const char *name, DWORD style, const RECT& r, 
+                              CWnd *parent, UINT id)
 {
-  return Wnd::Create("BUTTON",
-		     name,
-		     style|WS_CHILDWINDOW,
-		     r,
-		     parent,
-		     id);
-}
-
-BOOL SkinButton::OnEraseBkgnd(HDC)
-{
-  return TRUE;
-}
-
-void SkinButton::OnPaint()
-{
-  PAINTSTRUCT ps;
-  HDC hDC = BeginPaint(hWnd, &ps);
-  HDC memDC = ::CreateCompatibleDC(hDC);
-  UINT state = ::SendMessage(hWnd, BM_GETSTATE, 0, 0);
-  
-  if(state & BST_PUSHED)
-    SelectObject(memDC, downBmp);
-  else if(mouseOver && overBmp != NULL)
-    SelectObject(memDC, overBmp);
-  else
-    SelectObject(memDC, normalBmp);
-  SelectClipRgn(hDC, region);
-  BitBlt(hDC, 0, 0, rect.right - rect.left,
-	 rect.bottom - rect.top, memDC, 0, 0, SRCCOPY);
-  SelectClipRgn(hDC, NULL);
-  DeleteDC(memDC);
-
-  EndPaint(hWnd, &ps);
-}
-
-LRESULT SkinButton::OnLButtonDownMsg(WPARAM wParam, LPARAM lParam)
-{
-  if(idCommand != 0)
-    return Wnd::Default(WM_LBUTTONDOWN, wParam, lParam);
-
-  POINT pt;
-  pt.x = GET_X_LPARAM(lParam);
-  pt.y = GET_Y_LPARAM(lParam);
-  RECT r;
-  ::GetClientRect(getHandle(), &r);
-  BOOL inside = PtInRect(&r, pt);
-  if(region != NULL)
-    inside &= PtInRegion(region, pt.x, pt.y);
-  if(inside) {
-    if(buttonMask)
-      skinButtons = buttonMask;
-    return Wnd::Default(WM_LBUTTONDOWN, wParam, lParam);
-  }
-  return SendMessage(GetParent(getHandle()), WM_LBUTTONDOWN, wParam, lParam);
-}
-
-LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
-{
-  POINT pt;
-  pt.x = GET_X_LPARAM(lParam);
-  pt.y = GET_Y_LPARAM(lParam);
-  RECT r;
-  ::GetClientRect(getHandle(), &r);
-  BOOL inside = PtInRect(&r, pt);
-  if(region != NULL)
-    inside &= PtInRegion(region, pt.x, pt.y);
-  if(inside) {
-    if(idCommand != 0)
-      ::SendMessage(::GetParent(getHandle()), WM_COMMAND, idCommand, 0);
-    else if(buttonMask)
-      skinButtons = 0;
-    else if(menu != -1) {
-      HMENU m = GetSubMenu(::menu, menu);
-      pt.x = r.left;
-      pt.y = r.bottom;
-      ClientToScreen(getHandle(), &pt);
-      SendMessage(hWindow, WM_INITMENUPOPUP, (WPARAM)m, menu);
-      TrackPopupMenu(m, 0, pt.x, pt.y, 0, hWindow, NULL);
-    }
-
-    return Wnd::Default(WM_LBUTTONUP, wParam, lParam);
-  }
-  return SendMessage(::GetParent(getHandle()), WM_LBUTTONUP, wParam, lParam);
-}
-
-LRESULT SkinButton::OnMouseMoveMsg(WPARAM wParam, LPARAM lParam)
-{
-  if(wParam * MK_LBUTTON && !mouseOver)
-    return Wnd::Default(WM_MOUSEMOVE, wParam, lParam);
-
-  if(GetCapture() != getHandle()) {
-    SetCapture(getHandle());
-  }
-  POINT pt;
-  pt.x = GET_X_LPARAM(lParam);
-  pt.y = GET_Y_LPARAM(lParam);
-  //  ClientToScreen(getHandle(), &p);
-  RECT r;
-  ::GetClientRect(getHandle(), &r);
-  BOOL inside = PtInRect(&r, pt);
-  if(region != NULL)
-    inside &= PtInRegion(region, pt.x, pt.y);
-
-  if(!inside) {
-    //  HWND h = WindowFromPoint(p);
-    //  if(h != getHandle()) {
-    if(mouseOver) {
-      mouseOver = false;
-      Invalidate();
-    }
-    if(!(wParam & MK_LBUTTON))
-      ReleaseCapture();
-  } else {
-    if(!mouseOver) {
-      mouseOver = true;
-      Invalidate();
-    }
-  }
-  return Wnd::Default(WM_MOUSEMOVE, wParam, lParam);
-}
-
-LRESULT SkinButton::OnKillFocusMsg(WPARAM wParam, LPARAM lParam)
-{
-  mouseOver = false;
-  Invalidate();
-  return Wnd::Default(WM_KILLFOCUS, wParam, lParam);
-}
-
-LRESULT SkinButton::OnCaptureChangedMsg(WPARAM wParam, LPARAM lParam)
-{
-  if(mouseOver) {
-    ReleaseCapture();
-    Invalidate();
-  }
-  return Wnd::Default(WM_CAPTURECHANGED, wParam, lParam);
-}
-
-LRESULT SkinButton::OnRButtonDownMsg(WPARAM wParam, LPARAM lParam)
-{
-  return 0;
-}
-
-LRESULT SkinButton::OnMouseLeaveMsg(WPARAM wParam, LPARAM lParam)
-{
-  if(mouseOver) {
-    ReleaseCapture();
-    mouseOver = false;
-    Invalidate();
-  }
-
-  return Wnd::Default(WM_MOUSELEAVE, wParam, lParam);
+  return CWnd::Create("BUTTON",
+                      name,
+                      style|WS_CHILDWINDOW,
+                      r,
+                      parent,
+                      id);
 }

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by vba.rc
+// Used by VBA.rc
 //
 #define IDS_UNSUPPORTED_VBA_SGM         1
 #define IDS_CANNOT_LOAD_SGM             2
@@ -90,6 +90,7 @@
 #define IDD_GB_PALETTE_VIEW             148
 #define IDD_MODE_CONFIRM                149
 #define IDD_REWIND_INTERVAL             150
+#define IDD_IO_VIEWER                   151
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -354,6 +355,7 @@
 #define IDC_SAVE                        1127
 #define IDC_GOPC                        1127
 #define IDS_SELECT_AVI_NAME             1127
+#define IDC_APPLY                       1127
 #define IDS_INVALID_THROTTLE_VALUE      1128
 #define IDC_REFRESH2                    1129
 #define IDS_FILTER_INI                  1129
@@ -475,6 +477,23 @@
 #define IDC_BANK_1                      1246
 #define IDC_TIMER                       1247
 #define IDC_INTERVAL                    1248
+#define IDC_BIT_0                       1250
+#define IDC_BIT_1                       1251
+#define IDC_PREDEFINED                  1251
+#define IDC_BIT_2                       1252
+#define IDC_BIT_3                       1253
+#define IDC_BIT_4                       1254
+#define IDC_BIT_5                       1255
+#define IDC_BIT_6                       1256
+#define IDC_BIT_7                       1257
+#define IDC_BIT_8                       1258
+#define IDC_BIT_9                       1259
+#define IDC_BIT_10                      1260
+#define IDC_BIT_11                      1261
+#define IDC_BIT_12                      1262
+#define IDC_BIT_13                      1263
+#define IDC_BIT_14                      1264
+#define IDC_BIT_15                      1265
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -705,14 +724,20 @@
 #define ID_FILE_TOGGLEMENU              40263
 #define ID_OPTIONS_EMULATOR_SAVETYPE_NONE 40264
 #define ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION 40265
+#define ID_TOOLS_IOVIEWER               40266
+#define ID_FILE_LOADGAME_MOSTRECENT     40267
+#define ID_FILE_SAVEGAME_OLDESTSLOT     40268
+#define ID_FILE_LOADGAME_AUTOLOADMOSTRECENT 40269
+#define ID_OPTIONS_SOUND_VOLUME_5X      40270
+#define ID_OPTIONS_SOUND_VOLUME_25X     40271
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        151
-#define _APS_NEXT_COMMAND_VALUE         40266
-#define _APS_NEXT_CONTROL_VALUE         1249
+#define _APS_NEXT_RESOURCE_VALUE        154
+#define _APS_NEXT_COMMAND_VALUE         40272
+#define _APS_NEXT_CONTROL_VALUE         1252
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif

@@ -16,13 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <windows.h>
-#include <stdio.h>
-#include "StdString.h"
+#include "stdafx.h"
 
 static char buffer[2048];
 static HKEY vbKey = NULL;
-static char regVbaPath[2048];
+static CString regVbaPath;
 
 #define VBA_PREF "preferences"
 
@@ -40,7 +38,7 @@ void regInit(const char *path)
                             NULL,
                             &vbKey,
                             &disp);
-  sprintf(regVbaPath, "%s\\vba.ini", path);
+  regVbaPath.Format("%s\\vba.ini", path);
 }
 
 void regShutdown()
@@ -53,7 +51,7 @@ const char *regGetINIPath()
   return regVbaPath;
 }
 
-char *regQueryStringValue(char * key, char *def)
+char *regQueryStringValue(const char * key, char *def)
 {
   if(regEnabled) {
     DWORD type = 0;
@@ -85,7 +83,7 @@ char *regQueryStringValue(char * key, char *def)
   return def;
 }
 
-DWORD regQueryDwordValue(char * key, DWORD def, bool force)
+DWORD regQueryDwordValue(const char * key, DWORD def, bool force)
 {
   if(regEnabled || force) {
     DWORD type = 0;
@@ -111,7 +109,7 @@ DWORD regQueryDwordValue(char * key, DWORD def, bool force)
                               regVbaPath);
 }
 
-BOOL regQueryBinaryValue(char * key, char *value, int count)
+BOOL regQueryBinaryValue(const char * key, char *value, int count)
 {
   if(regEnabled) {
     DWORD type = 0;
@@ -131,7 +129,7 @@ BOOL regQueryBinaryValue(char * key, char *value, int count)
 
     return FALSE;
   }
-  CStdString k = key;
+  CString k = key;
   k += "Count";
   int size = GetPrivateProfileInt(VBA_PREF,
                                   k,
@@ -146,7 +144,7 @@ BOOL regQueryBinaryValue(char * key, char *value, int count)
                                  regVbaPath);
 }
 
-void regSetStringValue(char * key, char * value)
+void regSetStringValue(const char * key, const char * value)
 {
   if(regEnabled) {
     LONG res = RegSetValueEx(vbKey,
@@ -163,7 +161,7 @@ void regSetStringValue(char * key, char * value)
   }
 }
 
-void regSetDwordValue(char * key, DWORD value, bool force)
+void regSetDwordValue(const char * key, DWORD value, bool force)
 {
   if(regEnabled || force) {
     LONG res = RegSetValueEx(vbKey,
@@ -181,7 +179,7 @@ void regSetDwordValue(char * key, DWORD value, bool force)
   }
 }
 
-void regSetBinaryValue(char *key, char *value, int count)
+void regSetBinaryValue(const char *key, char *value, int count)
 {
   if(regEnabled) {
     LONG res = RegSetValueEx(vbKey,
@@ -191,7 +189,7 @@ void regSetBinaryValue(char *key, char *value, int count)
                              (const UCHAR *)value,
                              count);
   } else {
-    CStdString k = key;
+    CString k = key;
     k += "Count";
     wsprintf(buffer, "%u", count);
     
@@ -221,7 +219,7 @@ void regDeleteValue(char *key)
   }
 }
 
-bool regCreateFileType(char *ext, char *type)
+bool regCreateFileType(const char *ext, const char *type)
 {
   DWORD disp = 0;
   HKEY key;
@@ -247,7 +245,7 @@ bool regCreateFileType(char *ext, char *type)
   return false;
 }
 
-bool regAssociateType(char *type, char *desc, char *application)
+bool regAssociateType(const char *type, const char *desc, const char *application)
 {
   DWORD disp = 0;
   HKEY key;
@@ -334,7 +332,7 @@ static void regExportSettingsToINI(HKEY key, const char *section)
           char temp[256];
           
           wsprintf(temp, "%u", size);
-          CStdString k = valueName;
+          CString k = valueName;
           k += "Count";
           WritePrivateProfileString(section,
                                     k,

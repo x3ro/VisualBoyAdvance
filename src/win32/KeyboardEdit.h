@@ -1,21 +1,3 @@
-/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 1998 by Thierry Maurel
 // All rights reserved
@@ -55,38 +37,49 @@
 /////////////////////////////////////////////////////////////////////////////
 // CKeyboardEdit window
 
-class CKeyboardEdit : public Wnd
+class CKeyboardEdit : public CEdit
 {
-// Construction
-public:
-        CKeyboardEdit();
+  // Construction
+ public:
+  CKeyboardEdit();
 
-// Attributes
-public:
-        bool m_bKeyDefined;
+  // Attributes
+ public:
+  bool m_bKeyDefined;
 
-        WORD m_wVirtKey;
-        bool m_bCtrlPressed;
-        bool m_bAltPressed;
-        bool m_bShiftPressed;
+  WORD m_wVirtKey;
+  bool m_bCtrlPressed;
+  bool m_bAltPressed;
+  bool m_bShiftPressed;
 
-// Operations
-public:
-        bool GetAccelKey(WORD& wVirtKey, bool& bCtrl, bool& bAlt, bool& bShift);
-        void ResetKey ();
+  // Operations
+ public:
+  bool GetAccelKey(WORD& wVirtKey, bool& bCtrl, bool& bAlt, bool& bShift);
+  void ResetKey ();
 
-protected:
-        void DisplayKeyboardString ();
+ protected:
+  void DisplayKeyboardString ();
 
-        public:
-        virtual BOOL PreTranslateMessage(MSG* pMsg);
+  // Overrides
+  // ClassWizard generated virtual function overrides
+  //{{AFX_VIRTUAL(CKeyboardEdit)
+ public:
+  virtual BOOL PreTranslateMessage(MSG* pMsg);
+  //}}AFX_VIRTUAL
 
-// Implementation
-public:
-        virtual ~CKeyboardEdit();
-};
+  // Implementation
+ public:
+  virtual ~CKeyboardEdit();
 
-/////////////////////////////////////////////////////////////////////////////
+  // Generated message map functions
+ protected:
+  //{{AFX_MSG(CKeyboardEdit)
+  //}}AFX_MSG
+
+  DECLARE_MESSAGE_MAP()
+    };
+
+    /////////////////////////////////////////////////////////////////////////////
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Developer Studio will insert additional declarations immediately before the previous line.

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,103 +16,41 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "ResizeDlg.h"
+// GBOamView.cpp : implementation file
+//
 
-#include <memory.h>
+#include "stdafx.h"
+#include "vba.h"
+#include "FileDlg.h"
+#include "GBOamView.h"
+#include "Reg.h"
+#include "WinResUtil.h"
 
 #include "../System.h"
-#include "../gb/GB.h"
-#include "../gb/gbGlobals.h"
-#include "WinResUtil.h"
-#include "Reg.h"
-#include "resource.h"
 #include "../NLS.h"
-
-#include "Controls.h"
-#include "CommDlg.h"
-#include "IUpdate.h"
+#include "../Util.h"
+#include "../gb/gbGlobals.h"
 
 extern "C" {
 #include <png.h>
 }
 
-class GBOamView : public ResizeDlg, IUpdateListener {
-private:
-  BITMAPINFO bmpInfo;
-  u8 *data;
-  int w;
-  int h;
-  int number;
-  bool autoUpdate;
-  BitmapControl oamView;
-  ZoomControl oamZoom;
-  ColorControl color;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-protected:
-  DECLARE_MESSAGE_MAP()
-  
-public:
-  GBOamView();
-  ~GBOamView();
+/////////////////////////////////////////////////////////////////////////////
+// GBOamView dialog
 
-  void paint();
-  void render();
-  void setAttributes(int, int, int, int);
-  void save();
-  void saveBMP(char *);
-  void savePNG(char *);
-  void updateScrollInfo();
 
-  void OnStretch();
-  void OnSprite();
-  void OnAutoUpdate();
-
-  virtual void update();
-  
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
-  virtual LRESULT OnMapInfo(WPARAM, LPARAM);
-  virtual LRESULT OnColInfo(WPARAM, LPARAM);
-  virtual void OnHScroll(UINT, UINT, HWND);
-};
-
-extern char *winLoadFilter(int id);
-extern void utilPutDword(u8 *, u32);
-extern void utilPutWord(u8 *, u16);
-
-extern HWND hWindow;
-extern HINSTANCE hInstance;
-extern int videoOption;
-extern int captureFormat;
-
-extern void winAddUpdateListener(IUpdateListener *);
-extern void winRemoveUpdateListener(IUpdateListener *);
-
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
-};
-
-BEGIN_MESSAGE_MAP(GBOamView,ResizeDlg)
-  ON_WM_HSCROLL()
-  ON_WM_CLOSE()
-  ON_MESSAGE(WM_MAPINFO, OnMapInfo)
-  ON_MESSAGE(WM_COLINFO, OnColInfo)
-  ON_BN_CLICKED(IDC_REFRESH, paint)
-  ON_BN_CLICKED(IDC_CLOSE, OnClose)
-  ON_BN_CLICKED(IDC_SAVE, save)
-  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
-  ON_CONTROL(EN_CHANGE, IDC_SPRITE, OnSprite)
-  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
-END_MESSAGE_MAP()
-
-GBOamView::GBOamView()
-  : ResizeDlg()
+GBOamView::GBOamView(CWnd* pParent /*=NULL*/)
+  : ResizeDlg(GBOamView::IDD, pParent)
 {
-  BitmapControl::registerClass();
-  ZoomControl::registerClass();
-  ColorControl::registerClass();
-
+  //{{AFX_DATA_INIT(GBOamView)
+  m_stretch = FALSE;
+  //}}AFX_DATA_INIT
   autoUpdate = false;
   
   memset(&bmpInfo.bmiHeader, 0, sizeof(bmpInfo.bmiHeader));
@@ -131,11 +69,41 @@ GBOamView::GBOamView()
   number = 0;
 }
 
+
+void GBOamView::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GBOamView)
+  DDX_Control(pDX, IDC_SPRITE, m_sprite);
+  DDX_Check(pDX, IDC_STRETCH, m_stretch);
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_COLOR, color);
+  DDX_Control(pDX, IDC_OAM_VIEW, oamView);
+  DDX_Control(pDX, IDC_OAM_VIEW_ZOOM, oamZoom);
+}
+
+
+BEGIN_MESSAGE_MAP(GBOamView, CDialog)
+  //{{AFX_MSG_MAP(GBOamView)
+  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
+  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
+  ON_EN_CHANGE(IDC_SPRITE, OnChangeSprite)
+  ON_BN_CLICKED(IDC_CLOSE, OnClose)
+  ON_WM_HSCROLL()
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(WM_MAPINFO, OnMapInfo)
+  ON_MESSAGE(WM_COLINFO, OnColInfo)
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// GBOamView message handlers
+
 GBOamView::~GBOamView()
 {
   free(data);
   data = NULL;
 }
+
 
 void GBOamView::paint()
 {
@@ -152,9 +120,10 @@ void GBOamView::update()
   paint();
 }
 
+
 void GBOamView::setAttributes(int y, int x, int tile, int flags)
 {
-  char buffer[256];
+  CString buffer;
   
   int flipH = flags & 0x20;
   int flipV = flags & 0x40;
@@ -163,34 +132,34 @@ void GBOamView::setAttributes(int y, int x, int tile, int flags)
   int oap = (flags & 0x08) >> 3;
   int bank = (flags & 0x10) >> 4;
 
-  wsprintf(buffer, "%d,%d", x,y);
-  ::SetWindowText(GetDlgItem(IDC_POS), buffer);
+  buffer.Format("%d,%d", x,y);
+  GetDlgItem(IDC_POS)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", pal);
-  ::SetWindowText(GetDlgItem(IDC_PALETTE), buffer);
+  buffer.Format("%d", pal);
+  GetDlgItem(IDC_PALETTE)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", tile);
-  ::SetWindowText(GetDlgItem(IDC_TILE), buffer);
+  buffer.Format("%d", tile);
+  GetDlgItem(IDC_TILE)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", prio);
-  ::SetWindowText(GetDlgItem(IDC_PRIO), buffer);
+  buffer.Format("%d", prio);
+  GetDlgItem(IDC_PRIO)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", bank);
-  ::SetWindowText(GetDlgItem(IDC_BANK), buffer);
-
+  buffer.Format("%d", bank);
+  GetDlgItem(IDC_BANK)->SetWindowText(buffer);
+  
+  buffer.Empty();
   if(flipH)
-    buffer[0] = 'H';
+    buffer += 'H';
   else
-    buffer[0] = ' ';
+    buffer += ' ';
   if(flipV)
-    buffer[1] = 'V';
+    buffer += 'V';
   else
-    buffer[1] = ' ';
-  buffer[2] = 0;
-  ::SetWindowText(GetDlgItem(IDC_FLAGS), buffer);
+    buffer += ' ';
+  GetDlgItem(IDC_FLAGS)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", oap);
-  ::SetWindowText(GetDlgItem(IDC_OAP), buffer);
+  buffer.Format("%d", oap);
+  GetDlgItem(IDC_OAP)->SetWindowText(buffer);
 }
 
 void GBOamView::render()
@@ -275,7 +244,7 @@ void GBOamView::render()
   }
 }
 
-void GBOamView::saveBMP(char *name)
+void GBOamView::saveBMP(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -342,7 +311,8 @@ void GBOamView::saveBMP(char *name)
   fclose(fp);
 }
 
-void GBOamView::savePNG(char *name)
+
+void GBOamView::savePNG(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -418,43 +388,43 @@ void GBOamView::savePNG(char *name)
   fclose(fp);
 }
 
+
 void GBOamView::save()
 {
-  char captureBuffer[2048];
+  CString captureBuffer;
 
-  if(captureFormat == 0)
-    strcpy(captureBuffer, "oam.png");
+  if(theApp.captureFormat == 0)
+    captureBuffer = "oam.png";
   else
-    strcpy(captureBuffer, "oam.bmp");
+    captureBuffer = "oam.bmp";
 
-  char *exts[] = {".png", ".bmp" };
+  LPCTSTR exts[] = {".png", ".bmp" };
 
-  FileDlg dlg(getHandle(),
-              (char *)captureBuffer,
-              (int)sizeof(captureBuffer),
-              (char *)winLoadFilter(IDS_FILTER_PNG),
-              captureFormat ? 2 : 1,
-              captureFormat ? "BMP" : "PNG",
+  FileDlg dlg(this,
+              captureBuffer,
+              theApp.winLoadFilter(IDS_FILTER_PNG),
+              theApp.captureFormat ? 2 : 1,
+              theApp.captureFormat ? "BMP" : "PNG",
               exts,
-              (char *)NULL, 
-              (char *)winResLoadString(IDS_SELECT_CAPTURE_NAME),
-              TRUE);
+              "",
+              winResLoadString(IDS_SELECT_CAPTURE_NAME),
+              true);
 
-  BOOL res = dlg.DoModal();  
-  if(res == FALSE) {
-    DWORD res = CommDlgExtendedError();
+  if(!dlg.DoModal()) {
     return;
   }
+  captureBuffer = dlg.GetPathName();
 
-  if(captureFormat)
+  if(dlg.getFilterIndex() == 2)
     saveBMP(captureBuffer);
   else
     savePNG(captureBuffer);  
 }
 
-BOOL GBOamView::OnInitDialog(LPARAM)
+BOOL GBOamView::OnInitDialog() 
 {
-  // winCenterWindow(getHandle());
+  CDialog::OnInitDialog();
+  
   DIALOG_SIZER_START( sz )
     DIALOG_SIZER_ENTRY( IDC_OAM_VIEW, DS_SizeX | DS_SizeY )
     DIALOG_SIZER_ENTRY( IDC_OAM_VIEW_ZOOM, DS_MoveX)
@@ -471,48 +441,47 @@ BOOL GBOamView::OnInitDialog(LPARAM)
             HKEY_CURRENT_USER,
             "Software\\Emulators\\VisualBoyAdvance\\Viewer\\GBOamView",
             NULL);
-  oamView.Attach(GetDlgItem(IDC_OAM_VIEW));
-  oamZoom.Attach(GetDlgItem(IDC_OAM_VIEW_ZOOM));
-  color.Attach(GetDlgItem(IDC_COLOR));
-  ::SetWindowText(GetDlgItem(IDC_SPRITE), "0");
+  m_sprite.SetWindowText("0");
 
   updateScrollInfo();
 
-  int s = regQueryDwordValue("GBOamViewStretch", 0);
-  if(s)
+  m_stretch = regQueryDwordValue("GBOamViewStretch", 0);
+  if(m_stretch)
     oamView.setStretch(true);
-  DoCheckbox(false, IDC_STRETCH, s);
+  UpdateData(FALSE);
   
   paint();
-  return TRUE;
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void GBOamView::OnStretch()
+void GBOamView::OnStretch() 
 {
   oamView.setStretch(!oamView.getStretch());
   paint();
   regSetDwordValue("GBOamViewStretch", oamView.getStretch());  
 }
 
-void GBOamView::OnAutoUpdate()
+void GBOamView::OnAutoUpdate() 
 {
   autoUpdate = !autoUpdate;
   if(autoUpdate) {
-    winAddUpdateListener(this);
+    theApp.winAddUpdateListener(this);
   } else {
-    winRemoveUpdateListener(this);    
+    theApp.winRemoveUpdateListener(this);    
   }  
 }
 
-void GBOamView::OnSprite()
+
+void GBOamView::OnChangeSprite() 
 {
-  HWND h = GetDlgItem(IDC_SPRITE);
-  char buffer[10];
-  GetWindowText(h,  buffer, 10);
+  CString buffer;
+  m_sprite.GetWindowText(buffer);
   int n = atoi(buffer);
   if(n < 0 || n > 39) {
-    sprintf(buffer, "%d", number);
-    ::SetWindowText(h, buffer);
+    buffer.Format("%d", number);
+    m_sprite.SetWindowText(buffer);
     return;
   }
   number = n;
@@ -520,9 +489,9 @@ void GBOamView::OnSprite()
   updateScrollInfo();
 }
 
-void GBOamView::OnClose()
+void GBOamView::OnClose() 
 {
-  winRemoveUpdateListener(this);
+  theApp.winRemoveUpdateListener(this);
   
   DestroyWindow();
 }
@@ -535,10 +504,9 @@ LRESULT GBOamView::OnMapInfo(WPARAM, LPARAM lParam)
   return TRUE;
 }
 
-LRESULT GBOamView::OnColInfo(WPARAM wParam, LPARAM)
+LRESULT GBOamView::OnColInfo(WPARAM wParam, LPARAM lParam)
 {
   u16 c = (u16)wParam;
-  char buffer[16];
 
   color.setColor(c);  
 
@@ -546,17 +514,19 @@ LRESULT GBOamView::OnColInfo(WPARAM wParam, LPARAM)
   int g = (c & 0x3e0) >> 5;
   int b = (c & 0x7c00) >> 10;
 
-  sprintf(buffer, "R: %d", r);
-  ::SetWindowText(GetDlgItem(IDC_R), buffer);
+  CString buffer;
+  buffer.Format("R: %d", r);
+  GetDlgItem(IDC_R)->SetWindowText(buffer);
 
-  sprintf(buffer, "G: %d", g);
-  ::SetWindowText(GetDlgItem(IDC_G), buffer);
+  buffer.Format("G: %d", g);
+  GetDlgItem(IDC_G)->SetWindowText(buffer);
 
-  sprintf(buffer, "B: %d", b);
-  ::SetWindowText(GetDlgItem(IDC_B), buffer);
+  buffer.Format("B: %d", b);
+  GetDlgItem(IDC_B)->SetWindowText(buffer);
 
   return TRUE;
 }
+
 
 void GBOamView::updateScrollInfo()
 {
@@ -568,15 +538,15 @@ void GBOamView::updateScrollInfo()
   si.nMax = 39;
   si.nPage = 1;
   si.nPos = number;
-  SetScrollInfo(GetDlgItem(IDC_SCROLLBAR),
-                SB_CTL,
-                &si,
-                TRUE);    
+  GetDlgItem(IDC_SCROLLBAR)->SetScrollInfo(SB_CTL,
+                                           &si,
+                                           TRUE);    
 }
 
-void GBOamView::OnHScroll(UINT type, UINT pos, HWND)
+
+void GBOamView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-  switch(type) {
+  switch(nSBCode) {
   case SB_BOTTOM:
     number = 39;
     break;
@@ -604,7 +574,7 @@ void GBOamView::OnHScroll(UINT type, UINT pos, HWND)
     number = 0;
     break;
   case SB_THUMBTRACK:
-    number = pos;
+    number = nPos;
     if(number < 0)
       number = 0;
     if(number > 39)
@@ -614,17 +584,13 @@ void GBOamView::OnHScroll(UINT type, UINT pos, HWND)
 
   updateScrollInfo();
   
-  char buffer[10];
-  sprintf(buffer, "%d", number);
-  ::SetWindowText(GetDlgItem(IDC_SPRITE), buffer);
+  CString buffer;
+  buffer.Format("%d", number);
+  m_sprite.SetWindowText(buffer);
   paint();
-}                       
+}
 
-void toolsGBOamViewer()
+void GBOamView::PostNcDestroy() 
 {
-  GBOamView *dlg = new GBOamView();
-  dlg->setAutoDelete(true);
-  dlg->MakeDialog(hInstance,
-                  IDD_GB_OAM_VIEW,
-                  hWindow);  
+  delete this;
 }

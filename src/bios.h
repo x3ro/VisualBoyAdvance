@@ -19,6 +19,7 @@
 #ifndef VBA_BIOS_H
 #define VBA_BIOS_H
 
+extern void BIOS_ArcTan();
 extern void BIOS_ArcTan2();
 extern void BIOS_BitUnPack();
 extern void BIOS_BgAffineSet();

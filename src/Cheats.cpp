@@ -16,46 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/*
- * Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
- *
- * (c) Copyright 1996 - 2001 Gary Henderson (gary@daniver.demon.co.uk) and
- *                           Jerremy Koot (jkoot@snes9x.com)
- *
- * Super FX C emulator code 
- * (c) Copyright 1997 - 1999 Ivar (Ivar@snes9x.com) and
- *                           Gary Henderson.
- * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
- *
- * DSP1 emulator code (c) Copyright 1998 Ivar, _Demo_ and Gary Henderson.
- * C4 asm and some C emulation code (c) Copyright 2000 zsKnight and _Demo_.
- * C4 C code (c) Copyright 2001 Gary Henderson (gary@daniver.demon.co.uk).
- *
- * DOS port code contains the works of other authors. See headers in
- * individual files.
- *
- * Snes9x homepage: www.snes9x.com
- *
- * Permission to use, copy, modify and distribute Snes9x in both binary and
- * source form, for non-commercial purposes, is hereby granted without fee,
- * providing that this license information and copyright notice appear with
- * all copies and any derived work.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event shall the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Snes9x is freeware for PERSONAL USE only. Commercial users should
- * seek permission of the copyright holders first. Commercial use includes
- * charging money for Snes9x or software derived from Snes9x.
- *
- * The copyright holders request that bug fixes and improvements to the code
- * should be forwarded to them so everyone can benefit from the modifications
- * in future versions.
- *
- * Super NES and Super Nintendo Entertainment System are trademarks of
- * Nintendo Co., Limited and its subsidiary companies.
- */
 #include <memory.h>
 #include <string.h>
 #include <stdio.h>
@@ -92,15 +52,21 @@
  * 0000AAAA 000Y - Game CRC (Y are flags: 8 - CRC, 2 - DI)
  * 1AAAAAAA YYYY - Master Code function (store address at ((YYYY << 0x16)
  *                 + 0x08000100))
+ * 2AAAAAAA YYYY - 16-bit or
  * 3AAAAAAA YYYY - 8-bit constant write
  * 4AAAAAAA YYYY - Slide code
- * CCCCCCCC IIII   (C is count and I is address increment)
+ * XXXXCCCC IIII   (C is count and I is address increment, X is value incr.)
+ * 5AAAAAAA CCCC - Super code (Write bytes to address, CCCC is count)
+ * BBBBBBBB BBBB 
  * 6AAAAAAA YYYY - 16-bit and
  * 7AAAAAAA YYYY - if address contains 16-bit value enable next code
  * 8AAAAAAA YYYY - 16-bit constant write
  * 9AAAAAAA YYYY - change decryption (when first code only?)
  * AAAAAAAA YYYY - if address does not contain 16-bit value enable next code
+ * BAAAAAAA YYYY - if 16-bit < YYYY
+ * CAAAAAAA YYYY - if 16-bit > YYYY
  * D0000020 YYYY - if button keys equal value enable next code
+ * EAAAAAAA YYYY - increase value stored in address
  */
 #define UNKNOWN_CODE           -1
 #define INT_8_BIT_WRITE        0
@@ -135,8 +101,12 @@
 #define GSA_16_BIT_IF_FALSE2   29
 #define GSA_32_BIT_IF_FALSE2   30
 #define GSA_SLOWDOWN           31
+#define CBA_ADD                32
+#define CBA_OR                 33
+#define CBA_LT                 34
+#define CBA_GT                 35 
+#define CBA_SUPER              36
 
-CheatSearch cheatSearch;
 CheatsData cheatsList[100];
 int cheatsNumber = 0;
 
@@ -187,6 +157,8 @@ static bool isMultilineWithData(int i)
     case GSA_16_BIT_IF_FALSE2:
     case GSA_32_BIT_IF_FALSE2:
     case GSA_SLOWDOWN:
+    case CBA_ADD:
+    case CBA_OR:
       return false;
       // the codes below have two lines of data
     case CBA_SLIDE_CODE:
@@ -197,6 +169,9 @@ static bool isMultilineWithData(int i)
     case GSA_8_BIT_SLIDE:
     case GSA_16_BIT_SLIDE:
     case GSA_32_BIT_SLIDE:
+    case CBA_LT:
+    case CBA_GT:
+    case CBA_SUPER:
       return true;
     }
   return false;
@@ -220,6 +195,8 @@ static int getCodeLength(int num)
   case GSA_8_BIT_FILL:
   case GSA_16_BIT_FILL:
   case GSA_SLOWDOWN:
+  case CBA_ADD:
+  case CBA_OR:
     return 1;
   case CBA_IF_KEYS_PRESSED:
   case CBA_IF_TRUE:
@@ -236,6 +213,8 @@ static int getCodeLength(int num)
   case GSA_32_BIT_IF_TRUE:
   case GSA_8_BIT_IF_FALSE:
   case GSA_32_BIT_IF_FALSE:
+  case CBA_LT:
+  case CBA_GT:
     return 2;
   case GSA_8_BIT_IF_TRUE2:
   case GSA_16_BIT_IF_TRUE2:
@@ -244,6 +223,8 @@ static int getCodeLength(int num)
   case GSA_16_BIT_IF_FALSE2:
   case GSA_32_BIT_IF_FALSE2:
     return 3;
+  case CBA_SUPER:
+    return (cheatsList[num].value+5)/6;
   }
   return 1;
 }
@@ -311,12 +292,14 @@ int cheatsCheckKeys(u32 keys, u32 extended)
         u16 value = cheatsList[i].value;
         i++;
         if(i < cheatsNumber) {
-          int count = cheatsList[i].address;
+          int count = (cheatsList[i].address & 0xFFFF);
+          u16 vinc = (cheatsList[i].address >> 16) & 0xFFFF;
           int inc = cheatsList[i].value;
 
           for(int x = 0; x < count; x++) {
             CPUWriteHalfWord(address, value);
             address += inc;
+            value += vinc;
           }
         }
       }
@@ -500,13 +483,51 @@ int cheatsCheckKeys(u32 keys, u32 extended)
       if(cheatsList[i].status & 1)
         ticks += 2*256*((cheatsList[i].value >> 8) & 255);
       break;
+    case CBA_ADD:
+      CPUWriteHalfWord(cheatsList[i].address, 
+                       CPUReadHalfWord(cheatsList[i].address) +
+                       (u16)cheatsList[i].value);
+      break;
+    case CBA_OR:
+      CPUWriteHalfWord(cheatsList[i].address,
+                       CPUReadHalfWord(cheatsList[i].address) |
+                       cheatsList[i].value);
+      break;
+    case CBA_LT:
+      if(CPUReadHalfWord(cheatsList[i].address) >= cheatsList[i].value)
+        i++;
+      break;
+    case CBA_GT:
+      if(CPUReadHalfWord(cheatsList[i].address) <= cheatsList[i].value)
+        i++;
+      break;
+    case CBA_SUPER:
+      {
+        int count = 2*cheatsList[i].value;
+        u32 address = cheatsList[i].address;
+        for(int x = 0; x < count; x++) {
+          u8 b;
+          int res = x % 6;
+          if(res < 4)
+            b = (cheatsList[i].address >> (24-8*res)) & 0xFF;
+          else
+            b = (cheatsList[i].value >> (8 - 8*(res-4))) & 0x0FF;
+          CPUWriteByte(address, b);
+          address++;
+          if(x && !res)
+            i++;
+        }
+        if(count % 6)
+          i++;
+      }
+      break;
     }
   }
   return ticks;
 }
 
-void cheatsAdd(char *codeStr,
-               char *desc,
+void cheatsAdd(const char *codeStr,
+               const char *desc,
                u32 address,
                u32 value,
                int code,
@@ -619,215 +640,7 @@ void cheatsDisable(int i)
   }
 }
 
-void cheatsReset()
-{
-  memcpy(cheatSearch.wRAM, workRAM, 0x40000);
-  memcpy(cheatSearch.iRAM, internalRAM, 0x8000);
-  memset(cheatSearch.wBITS, 0xFF, 0x40000 >> 3);
-  memset(cheatSearch.iBITS, 0xFF, 0x8000 >> 3);
-}
-
-void cheatsSearchChange(int compare, int size, bool isSigned)
-{
-  int inc = 1;
-
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  if(isSigned) {
-    int i;
-    for(i = 0; i < 0x40000; i += inc) {
-      if(TEST_BIT(cheatSearch.wBITS, i) &&
-         COMPARE(compare,
-                 SIGNED_DATA(size, workRAM, i),
-                 SIGNED_DATA(size, cheatSearch.wRAM, i))) {
-      } else {
-        BIT_CLEAR(cheatSearch.wBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.wBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.wBITS, i+2);
-          BIT_CLEAR(cheatSearch.wBITS, i+3);
-        }
-      }
-    }
-
-    for(i = 0; i < 0x8000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.iBITS, i) &&
-         COMPARE(compare,
-                 SIGNED_DATA(size, internalRAM, i),
-                 SIGNED_DATA(size, cheatSearch.iRAM, i))) {
-      } else {
-        BIT_CLEAR(cheatSearch.iBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.iBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.iBITS, i+2);
-          BIT_CLEAR(cheatSearch.iBITS, i+3);
-        }       
-      }
-    }    
-  } else {
-    int i;
-    for(i = 0; i < 0x40000; i += inc) {
-      if(TEST_BIT(cheatSearch.wBITS, i) &&
-         COMPARE(compare,
-                 UNSIGNED_DATA(size, workRAM, i),
-                 UNSIGNED_DATA(size, cheatSearch.wRAM, i))) {
-      } else {
-        BIT_CLEAR(cheatSearch.wBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.wBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.wBITS, i+2);
-          BIT_CLEAR(cheatSearch.wBITS, i+3);
-        }
-      }
-    }
-
-    for(i = 0; i <= 0x8000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.iBITS, i) &&
-         COMPARE(compare,
-                 UNSIGNED_DATA(size, internalRAM, i),
-                 UNSIGNED_DATA(size, cheatSearch.iRAM, i))) {
-      } else {
-        BIT_CLEAR(cheatSearch.iBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.iBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.iBITS, i+2);
-          BIT_CLEAR(cheatSearch.iBITS, i+3);
-        }       
-      }
-    }    
-  }
-}
-
-
-void cheatsSearchValue(int compare, int size, bool isSigned, u32 value)
-{
-  int inc = 1;
-
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  if(isSigned) {
-    int i;
-    for(i = 0; i < 0x40000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.wBITS, i) &&
-         COMPARE(compare,
-                 SIGNED_DATA(size, workRAM, i),
-                 (s32)value)) {
-      } else {
-        BIT_CLEAR(cheatSearch.wBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.wBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.wBITS, i+2);
-          BIT_CLEAR(cheatSearch.wBITS, i+3);
-        }
-      }
-    }
-
-    for(i = 0; i <= 0x8000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.iBITS, i) &&
-         COMPARE(compare,
-                 SIGNED_DATA(size, internalRAM, i),
-                 (s32)value)) {
-      } else {
-        BIT_CLEAR(cheatSearch.iBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.iBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.iBITS, i+2);
-          BIT_CLEAR(cheatSearch.iBITS, i+3);
-        }
-      }
-    }    
-  } else {
-    int i;
-    for(i = 0; i <= 0x40000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.wBITS, i) &&
-         COMPARE(compare,
-                 UNSIGNED_DATA(size, workRAM, i),
-                 value)) {
-      } else {
-        BIT_CLEAR(cheatSearch.wBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.wBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.wBITS, i+2);
-          BIT_CLEAR(cheatSearch.wBITS, i+3);
-        }
-      } 
-    }
-
-    for(i = 0; i <= 0x8000 ; i += inc) {
-      if(TEST_BIT(cheatSearch.iBITS, i) &&
-         COMPARE(compare,
-                 UNSIGNED_DATA(size, internalRAM, i),
-                 value)) {
-      } else {
-        BIT_CLEAR(cheatSearch.iBITS, i);
-        if(size != SIZE_8)
-          BIT_CLEAR(cheatSearch.iBITS, i+1);
-        if(size == SIZE_32) {
-          BIT_CLEAR(cheatSearch.iBITS, i+2);
-          BIT_CLEAR(cheatSearch.iBITS, i+3);
-        }       
-      }
-    }    
-  }
-}
-
-int cheatsGetCount(int size)
-{
-  int count = 0;
-  int i;
-  int inc = 1;
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  for(i = 0; i < 0x40000; i += inc) {
-    if(TEST_BIT(cheatSearch.wBITS, i))
-      count++;
-  }
-
-  for(i = 0; i < 0x8000; i += inc) {
-    if(TEST_BIT(cheatSearch.iBITS, i))
-      count++;
-  }
-  return count;
-}
-
-void cheatsUpdateValues()
-{
-  int i;
-  for(i = 0; i < 0x40000; i++) {
-    if(TEST_BIT(cheatSearch.wBITS, i))
-      cheatSearch.wRAM[i] = workRAM[i];
-  }
-
-  for(i = 0; i < 0x8000; i++) {
-    if(TEST_BIT(cheatSearch.iBITS, i))
-      cheatSearch.iRAM[i] = internalRAM[i];
-  }    
-}
-
-void cheatsToUpper(char *s)
-{
-  while(*s) {
-    *s++ = toupper(*s);
-  }
-}
-
-bool cheatsVerifyCheatCode(char *code, char *desc)
+bool cheatsVerifyCheatCode(const char *code, const char *desc)
 {
   int len = strlen(code);
   if(len != 11 && len != 13 && len != 17) {
@@ -839,8 +652,6 @@ bool cheatsVerifyCheatCode(char *code, char *desc)
     systemMessage(MSG_INVALID_CHEAT_CODE, "Invalid cheat code '%s'", code);
     return false;    
   }
-
-  cheatsToUpper(code);
 
   int i;
   for(i = 0; i < 8; i++) {
@@ -890,7 +701,7 @@ bool cheatsVerifyCheatCode(char *code, char *desc)
   return true;
 }
 
-void cheatsAddCheatCode(char *code, char *desc)
+void cheatsAddCheatCode(const char *code, const char *desc)
 {
   cheatsVerifyCheatCode(code, desc);
 }
@@ -913,7 +724,7 @@ void cheatsDecryptGSACode(u32& address, u32& value, bool v3)
   }
 }
 
-void cheatsAddGSACode(char *code, char *desc, bool v3)
+void cheatsAddGSACode(const char *code, const char *desc, bool v3)
 {
   if(strlen(code) != 16) {
     // wrong cheat
@@ -921,7 +732,6 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
                   "Invalid GSA code. Format is XXXXXXXXYYYYYYYY");
     return;
   }
-  cheatsToUpper(code);
   
   int i;
   for(i = 0; i < 16; i++) {
@@ -1114,7 +924,7 @@ void cheatsAddGSACode(char *code, char *desc, bool v3)
   }
 }
 
-bool cheatsImportGSACodeFile(char *name, int game, bool v3)
+bool cheatsImportGSACodeFile(const char *name, int game, bool v3)
 {
   FILE *f = fopen(name, "rb");
   if(!f)
@@ -1483,7 +1293,7 @@ bool cheatsCBAShouldDecrypt()
   return false;
 }
 
-void cheatsAddCBACode(char *code, char *desc)
+void cheatsAddCBACode(const char *code, const char *desc)
 {
   if(strlen(code) != 13) {
     // wrong cheat
@@ -1491,8 +1301,6 @@ void cheatsAddCBACode(char *code, char *desc)
                   "Invalid CBA code. Format is XXXXXXXX YYYY.");
     return;
   }
-  
-  cheatsToUpper(code);
   
   int i;
   for(i = 0; i < 8; i++) {
@@ -1574,6 +1382,10 @@ void cheatsAddCBACode(char *code, char *desc)
                   UNKNOWN_CODE);
       }
       break;
+    case 0x02:
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
+                CBA_OR);
+      break;
     case 0x03:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
                 INT_8_BIT_WRITE);
@@ -1581,6 +1393,10 @@ void cheatsAddCBACode(char *code, char *desc)
     case 0x04:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
                 CBA_SLIDE_CODE);
+      break;
+    case 0x05:
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512,
+                CBA_SUPER);
       break;
     case 0x06:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
@@ -1598,9 +1414,21 @@ void cheatsAddCBACode(char *code, char *desc)
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
                 CBA_IF_FALSE);
       break;
+    case 0x0b:
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
+                CBA_LT);
+      break;
+    case 0x0c:
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
+                CBA_GT);
+      break;
     case 0x0d:
       cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512, 
                 CBA_IF_KEYS_PRESSED);
+      break;
+    case 0x0e:
+      cheatsAdd(code, desc, address & 0x0FFFFFFF, value, 512,
+                CBA_ADD);
       break;
     default:
       // unsupported code
@@ -1672,7 +1500,7 @@ void cheatsReadGame(gzFile file)
   }
 }
 
-void cheatsSaveCheatList(char *file)
+void cheatsSaveCheatList(const char *file)
 {
   if(cheatsNumber == 0)
     return;
@@ -1688,7 +1516,7 @@ void cheatsSaveCheatList(char *file)
   fclose(f);
 }
 
-bool cheatsLoadCheatList(char *file)
+bool cheatsLoadCheatList(const char *file)
 {
   cheatsNumber = 0;
 

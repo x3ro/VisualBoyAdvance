@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,34 +16,39 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+// ExportGSASnapshot.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "vba.h"
 #include "ExportGSASnapshot.h"
 
 #include "../GBA.h"
 #include "../NLS.h"
 
-extern void winCenterWindow(HWND h);
-extern int emulating;
-extern int cartridgeType;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-BEGIN_MESSAGE_MAP(ExportGSASnapshot, Dlg)
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()  
+/////////////////////////////////////////////////////////////////////////////
+// ExportGSASnapshot dialog
 
-ExportGSASnapshot::ExportGSASnapshot(char *f, char *t)
-  : Dlg()
+
+ExportGSASnapshot::ExportGSASnapshot(CString filename, CString title, CWnd* pParent /*=NULL*/)
+  : CDialog(ExportGSASnapshot::IDD, pParent)
 {
-  filename = f;
-  title = t;
-}
-
-BOOL ExportGSASnapshot::OnInitDialog(LPARAM)
-{
-  ::SetWindowText(GetDlgItem(IDC_TITLE), title);
+  //{{AFX_DATA_INIT(ExportGSASnapshot)
+  m_desc = _T("");
+  m_notes = _T("");
+  m_title = _T("");
+  //}}AFX_DATA_INIT
+  m_title = title;
+  m_filename = filename;
   char date[100];
   char time[100];
-  char desc[100];
-
+  
   GetDateFormat(LOCALE_USER_DEFAULT,
                 DATE_SHORTDATE,
                 NULL,
@@ -56,50 +61,57 @@ BOOL ExportGSASnapshot::OnInitDialog(LPARAM)
                 NULL,
                 time,
                 100);
-  sprintf(desc, "%s %s", date, time);
-  ::SetWindowText(GetDlgItem(IDC_DESC), desc);
-
-  SendMessage(GetDlgItem(IDC_TITLE), EM_LIMITTEXT, 100, 0);
-  SendMessage(GetDlgItem(IDC_DESC), EM_LIMITTEXT, 100, 0);
-  SendMessage(GetDlgItem(IDC_NOTES), EM_LIMITTEXT, 512, 0);
-  
-  winCenterWindow(hWnd);
-  
-  return TRUE;
+  m_desc.Format("%s %s", date, time);
 }
 
-void ExportGSASnapshot::OnOk()
+
+void ExportGSASnapshot::DoDataExchange(CDataExchange* pDX)
 {
-  char title[100];
-  char desc[100];
-  char notes[512];
-
-  GetWindowText(GetDlgItem(IDC_TITLE), title, 100);
-  GetWindowText(GetDlgItem(IDC_DESC), desc, 100);
-  GetWindowText(GetDlgItem(IDC_NOTES), notes, 512);
-  
-  bool result = CPUWriteGSASnapshot(filename, title, desc, notes);
-  
-  if(!result)
-    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s",
-                  filename);
-  
-  EndDialog(TRUE);
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(ExportGSASnapshot)
+  DDX_Text(pDX, IDC_DESC, m_desc);
+  DDV_MaxChars(pDX, m_desc, 100);
+  DDX_Text(pDX, IDC_NOTES, m_notes);
+  DDV_MaxChars(pDX, m_notes, 512);
+  DDX_Text(pDX, IDC_TITLE, m_title);
+  DDV_MaxChars(pDX, m_title, 100);
+  //}}AFX_DATA_MAP
 }
 
-void ExportGSASnapshot::OnCancel()
+
+BEGIN_MESSAGE_MAP(ExportGSASnapshot, CDialog)
+  //{{AFX_MSG_MAP(ExportGSASnapshot)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// ExportGSASnapshot message handlers
+
+BOOL ExportGSASnapshot::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void ExportGSASnapshot::OnCancel() 
 {
   EndDialog(FALSE);
 }
 
-extern HWND hWindow;
-
-void fileExportSPSSnapshot(char *filename, char *title)
+void ExportGSASnapshot::OnOk() 
 {
+  UpdateData(TRUE);
 
-  bool result = false;
+  bool result = CPUWriteGSASnapshot(m_filename, m_title, m_desc, m_notes);
 
-  ExportGSASnapshot dlg(filename, title);
-
-  dlg.DoModal(IDD_EXPORT_SPS, hWindow);
+  if(!result)
+    systemMessage(MSG_ERROR_CREATING_FILE, "Error creating file %s",
+                  m_filename);
+  
+  EndDialog(TRUE);
 }

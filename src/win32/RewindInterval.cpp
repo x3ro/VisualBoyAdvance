@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,59 +16,63 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+// RewindInterval.cpp : implementation file
+//
+
 #include "stdafx.h"
+#include "vba.h"
+#include "RewindInterval.h"
 
-#include "Wnd.h"
-#include "../System.h"
-#include "resource.h"
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-extern void winCenterWindow(HWND h);
+/////////////////////////////////////////////////////////////////////////////
+// RewindInterval dialog
 
-class RewindDlg : public Dlg {
-  int interval;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  RewindDlg();
 
-  virtual BOOL OnInitDialog(LPARAM);
+RewindInterval::RewindInterval(int interval, CWnd* pParent /*=NULL*/)
+  : CDialog(RewindInterval::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(RewindInterval)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+  this->interval = interval;
+}
 
-  void OnOk();
-  void OnCancel();
-};
 
-BEGIN_MESSAGE_MAP(RewindDlg, Dlg)
-  ON_BN_CLICKED(ID_OK, OnOk)
+void RewindInterval::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(RewindInterval)
+  DDX_Control(pDX, IDC_INTERVAL, m_interval);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(RewindInterval, CDialog)
+  //{{AFX_MSG_MAP(RewindInterval)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()  
+  ON_BN_CLICKED(ID_OK, OnOk)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-RewindDlg::RewindDlg()
-  : Dlg()
+  /////////////////////////////////////////////////////////////////////////////
+// RewindInterval message handlers
+
+void RewindInterval::OnCancel() 
 {
-  interval = 0;
+  EndDialog(-1);
 }
 
-BOOL RewindDlg::OnInitDialog(LPARAM value)
+void RewindInterval::OnOk() 
 {
-  HWND h = GetDlgItem(IDC_INTERVAL);
+  CString buffer;
 
-  ::SendMessage(h, EM_LIMITTEXT, 3, 0);
+  m_interval.GetWindowText(buffer);
 
-  char buffer[16];
-  sprintf(buffer, "%d", value);
-  ::SetWindowText(h, buffer);
-  interval = value;
-
-  winCenterWindow(hWnd);
-  
-  return TRUE;
-}
-
-void RewindDlg::OnOk()
-{
-  char buffer[16];
-
-  ::GetWindowText(GetDlgItem(IDC_INTERVAL), buffer, 16);
   int v = atoi(buffer);
 
   if(v >= 0 && v <= 600) {
@@ -79,15 +83,18 @@ void RewindDlg::OnOk()
                   "between 0 and 600 seconds");
 }
 
-void RewindDlg::OnCancel()
+BOOL RewindInterval::OnInitDialog() 
 {
-  EndDialog(-1);
-}
+  CDialog::OnInitDialog();
+  
+  m_interval.LimitText(3);
 
-extern HWND hWindow;
+  CString buffer;
+  buffer.Format("%d", interval);
+  m_interval.SetWindowText(buffer);
 
-int optionsRewindInterval(int interval)
-{
-  RewindDlg dlg;
-  return dlg.DoModal(IDD_REWIND_INTERVAL, hWindow, interval);
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }

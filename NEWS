@@ -1,3 +1,31 @@
+Version 1.7:
+Core changes:
+- added fixes to video filters done by Flea for Mac OS X
+- added/fixed ArcTan/ArcTan2 emulation
+- added sound volume .25 and.50
+- some code clean up
+- fixed some CBA cheat support
+- fixed ARM/Thumb instruction timing, including memory access
+- fixed minor bugs in STMDx ARM instructions
+
+Gameboy:
+- implemented DI/HALT bug
+- fixed priority between OBJ and Window
+
+Windows:
+- added predefined Gameboy palettes (thanks Kojote)
+- added GBA IO Viewer to view/modify GBA hardware registers
+- added menu entry to load most recent save state
+- added menu entry to save state into oldest slot
+- added option to auto load the most recent save state upon loading
+- enhanced save state submenus to show date/time of when save was made
+- enhanced logging window to capture data even if not being displayed
+- fixed Direct3D/OpenGL "green" bug with Motion Blur Interframe Blending
+- fixed Direct3D full screen with Gameboy roms
+- fixed minor bugs when saving images in the different viewers
+- improved cheat input to be more flexible and easy to enter
+- migrated whole GUI code to MFC
+
 Version 1.6a:
 Core changes:
 - fixed bug introduced in previous fix to CpuFastSet/CpuSet

@@ -113,16 +113,16 @@ extern void CPUUpdateCPSR();
 extern void GPUpdateCPSR();
 #endif
 
-bool (*emuWriteState)(char *) = NULL;
+bool (*emuWriteState)(const char *) = NULL;
 bool (*emuWriteMemState)(char *, int) = NULL;
-bool (*emuReadState)(char *) = NULL;
+bool (*emuReadState)(const char *) = NULL;
 bool (*emuReadMemState)(char *, int) = NULL;
-bool (*emuWriteBattery)(char *) = NULL;
-bool (*emuReadBattery)(char *) = NULL;
+bool (*emuWriteBattery)(const char *) = NULL;
+bool (*emuReadBattery)(const char *) = NULL;
 void (*emuReset)() = NULL;
 void (*emuCleanUp)() = NULL;
-bool (*emuWritePNG)(char *) = NULL;
-bool (*emuWriteBMP)(char *) = NULL;
+bool (*emuWritePNG)(const char *) = NULL;
+bool (*emuWriteBMP)(const char *) = NULL;
 void (*emuMain)(int) = NULL;
 void (*emuUpdateCPSR)() = NULL;
 int emuCount = 0;
@@ -2639,7 +2639,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void systemMessage(int num, char *msg, ...)
+void systemMessage(int num, const char *msg, ...)
 {
   char buffer[2048];
   va_list valist;
@@ -2833,7 +2833,7 @@ u32 systemReadJoypad(int which)
   return res;
 }
 
-void systemSetTitle(char *title)
+void systemSetTitle(const char *title)
 {
   SDL_WM_SetCaption(title, NULL);
 }
@@ -3131,7 +3131,7 @@ void systemGbPrint(u8 *data,int pages,int feed,int palette, int contrast)
 {
 }
 
-void systemScreenMessage(char *msg)
+void systemScreenMessage(const char *msg)
 {
   screenMessage = true;
   screenMessageTime = systemGetClock();

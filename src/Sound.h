@@ -74,4 +74,8 @@ extern u32 soundNextPosition;
 extern u16 soundFinalWave[1470];
 extern int soundVolume;
 
+extern bool soundEcho;
+extern bool soundLowPass;
+extern bool soundReverse;
+
 #endif // VBA_SOUND_H

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,20 +16,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "ResizeDlg.h"
+// GBMapView.cpp : implementation file
+//
 
-#include <memory.h>
+#include "stdafx.h"
+#include "vba.h"
+#include "FileDlg.h"
+#include "GBMapView.h"
+#include "Reg.h"
+#include "WinResUtil.h"
 
 #include "../System.h"
-#include "../gb/gbGlobals.h"
-#include "WinResUtil.h"
-#include "Reg.h"
-#include "resource.h"
 #include "../NLS.h"
-
-#include "Controls.h"
-#include "CommDlg.h"
-#include "IUpdate.h"
+#include "../Util.h"
+#include "../gb/gbGlobals.h"
 
 extern "C" {
 #include <png.h>
@@ -37,88 +37,22 @@ extern "C" {
 
 extern u8 gbInvertTab[256];
 
-class GBMapView : public ResizeDlg, IUpdateListener {
-private:
-  BITMAPINFO bmpInfo;
-  u8 *data;
-  int bank;
-  int bg;
-  int w;
-  int h;
-  BitmapControl mapView;
-  ZoomControl mapViewZoom;
-  ColorControl color;
-  bool autoUpdate;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-protected:
-  DECLARE_MESSAGE_MAP()
-  
-public:
-  GBMapView();
-  ~GBMapView();
+/////////////////////////////////////////////////////////////////////////////
+// GBMapView dialog
 
-  void save();
-  void saveBMP(char *);
-  void savePNG(char *);
-  void enableButtons(int);
-  void render();
-  void paint();
-  u32 GetClickAddress(int x, int y);
 
-  void OnBg0();
-  void OnBg1();
-  void OnBank0();
-  void OnBank1();
-  void OnStretch();
-  void OnAutoUpdate();
-
-  virtual void update();
-  
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
-  virtual LRESULT OnMapInfo(WPARAM, LPARAM);
-  virtual LRESULT OnColInfo(WPARAM, LPARAM);
-};
-
-extern char *winLoadFilter(int id);
-extern void utilPutDword(u8 *, u32);
-extern void utilPutWord(u8 *, u16);
-
-extern void winAddUpdateListener(IUpdateListener *);
-extern void winRemoveUpdateListener(IUpdateListener *);
-
-extern HWND hWindow;
-extern HINSTANCE hInstance;
-extern int videoOption;
-extern int captureFormat;
-
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
-};
-
-BEGIN_MESSAGE_MAP(GBMapView, ResizeDlg)
-  ON_WM_CLOSE()
-  ON_MESSAGE( WM_MAPINFO, OnMapInfo)
-  ON_MESSAGE( WM_COLINFO, OnColInfo)
-  ON_BN_CLICKED(IDC_BG0, OnBg0)
-  ON_BN_CLICKED(IDC_BG1, OnBg1)
-  ON_BN_CLICKED(IDC_BANK_0, OnBank0)
-  ON_BN_CLICKED(IDC_BANK_1, OnBank1)
-  ON_BN_CLICKED(IDC_REFRESH, paint)
-  ON_BN_CLICKED(IDC_CLOSE, OnClose)
-  ON_BN_CLICKED(IDC_SAVE, save)
-  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
-  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
-END_MESSAGE_MAP()
-
-GBMapView::GBMapView()
-  : ResizeDlg()
+GBMapView::GBMapView(CWnd* pParent /*=NULL*/)
+  : ResizeDlg(GBMapView::IDD, pParent)
 {
-  BitmapControl::registerClass();
-  ZoomControl::registerClass();
-  ColorControl::registerClass();
-
+  //{{AFX_DATA_INIT(GBMapView)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
   autoUpdate = false;
   
   memset(&bmpInfo.bmiHeader, 0, sizeof(bmpInfo.bmiHeader));
@@ -138,13 +72,45 @@ GBMapView::GBMapView()
   bank = 0;
 }
 
+
+void GBMapView::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GBMapView)
+  // NOTE: the ClassWizard will add DDX and DDV calls here
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_MAP_VIEW, mapView);
+  DDX_Control(pDX, IDC_MAP_VIEW_ZOOM, mapViewZoom);
+  DDX_Control(pDX, IDC_COLOR, color);
+}
+
+
+BEGIN_MESSAGE_MAP(GBMapView, CDialog)
+  //{{AFX_MSG_MAP(GBMapView)
+  ON_BN_CLICKED(IDC_SAVE, OnSave)
+  ON_BN_CLICKED(IDC_REFRESH, OnRefresh)
+  ON_BN_CLICKED(IDC_BG0, OnBg0)
+  ON_BN_CLICKED(IDC_BG1, OnBg1)
+  ON_BN_CLICKED(IDC_BANK_0, OnBank0)
+  ON_BN_CLICKED(IDC_BANK_1, OnBank1)
+  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
+  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
+  ON_BN_CLICKED(IDC_CLOSE, OnClose)
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(WM_MAPINFO, OnMapInfo)
+  ON_MESSAGE(WM_COLINFO, OnColInfo)
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// GBMapView message handlers
+
 GBMapView::~GBMapView()
 {
   free(data);
   data = NULL;
 }
 
-void GBMapView::saveBMP(char *name)
+void GBMapView::saveBMP(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -211,7 +177,7 @@ void GBMapView::saveBMP(char *name)
   fclose(fp);
 }
 
-void GBMapView::savePNG(char *name)
+void GBMapView::savePNG(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -287,38 +253,35 @@ void GBMapView::savePNG(char *name)
   fclose(fp);
 }
 
-void GBMapView::save()
+void GBMapView::OnSave() 
 {
-    char captureBuffer[2048];
+  CString filename;
 
-  if(captureFormat == 0)
-    strcpy(captureBuffer, "map.png");
+  if(theApp.captureFormat == 0)
+    filename = "map.png";
   else
-    strcpy(captureBuffer, "map.bmp");
+    filename = "map.bmp";
 
-  char *exts[] = {".png", ".bmp" };
+  LPCTSTR exts[] = {".png", ".bmp" };
 
-  FileDlg dlg(getHandle(),
-              (char *)captureBuffer,
-              (int)sizeof(captureBuffer),
-              (char *)winLoadFilter(IDS_FILTER_PNG),
-              captureFormat ? 2 : 1,
-              captureFormat ? "BMP" : "PNG",
-        exts,
-              (char *)NULL, 
-              (char *)winResLoadString(IDS_SELECT_CAPTURE_NAME),
-              TRUE);
+  FileDlg dlg(this,
+              filename,
+              theApp.winLoadFilter(IDS_FILTER_PNG),
+              theApp.captureFormat ? 2 : 1,
+              theApp.captureFormat ? "BMP" : "PNG",
+              exts,
+              "",
+              winResLoadString(IDS_SELECT_CAPTURE_NAME),
+              true);
 
-  BOOL res = dlg.DoModal();  
-  if(res == FALSE) {
-    DWORD res = CommDlgExtendedError();
+  if(dlg.DoModal() == IDCANCEL) {
     return;
   }
 
-  if(captureFormat)
-    saveBMP(captureBuffer);
+  if(dlg.getFilterIndex() == 2)
+    saveBMP(dlg.GetPathName());
   else
-    savePNG(captureBuffer);  
+    savePNG(dlg.GetPathName());
 }
 
 void GBMapView::render()
@@ -409,12 +372,24 @@ void GBMapView::paint()
   render();
   
   SIZE s;
-  mapView.GetScrollSize(s);
-  if(s.cx != w || s.cy != h)
+  s.cx = mapView.GetScrollLimit(SB_HORZ);
+  s.cy = mapView.GetScrollLimit(SB_VERT);
+  if(s.cx != w || s.cy != h) {
     mapView.setSize(w, h);
-  if(mapView.getStretch())
-    mapView.SetScrollSize(1,1);
+    s.cx = w;
+    s.cy = h;
+    mapView.SetScrollSizes(MM_TEXT, s);
+  }
+  if(mapView.getStretch()) {
+    s.cx = s.cy = 1;
+    mapView.SetScrollSizes(MM_TEXT, s);
+  }
   mapView.refresh();
+}
+
+void GBMapView::OnRefresh() 
+{
+  paint();
 }
 
 void GBMapView::update()
@@ -422,8 +397,10 @@ void GBMapView::update()
   paint();
 }
 
-BOOL GBMapView::OnInitDialog(LPARAM)
+BOOL GBMapView::OnInitDialog() 
 {
+  CDialog::OnInitDialog();
+  
   DIALOG_SIZER_START( sz )
     DIALOG_SIZER_ENTRY( IDC_MAP_VIEW, DS_SizeX | DS_SizeY )
     DIALOG_SIZER_ENTRY( IDC_REFRESH, DS_MoveY)
@@ -439,69 +416,70 @@ BOOL GBMapView::OnInitDialog(LPARAM)
             HKEY_CURRENT_USER,
             "Software\\Emulators\\VisualBoyAdvance\\Viewer\\GBMapView",
             NULL);
-  mapView.Attach(GetDlgItem(IDC_MAP_VIEW));
-  mapViewZoom.Attach(GetDlgItem(IDC_MAP_VIEW_ZOOM));
-  color.Attach(GetDlgItem(IDC_COLOR));
+
   int s = regQueryDwordValue("mapViewStretch", 0);
   if(s)
     mapView.setStretch(true);
-  DoCheckbox(false, IDC_STRETCH, s);
+  ((CButton *)GetDlgItem(IDC_STRETCH))->SetCheck(s);
+
   UINT id = IDC_BANK_0;
   if(bank == 1)
     id = IDC_BANK_1;
-  SendMessage(GetDlgItem(id), BM_SETCHECK, BST_CHECKED, 0);
+  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
   id = IDC_BG0;
   if(bg == 1)
     id = IDC_BG1;
-  SendMessage(GetDlgItem(id), BM_SETCHECK, BST_CHECKED, 0);
+  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
   paint();
-  return TRUE;
+
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void GBMapView::OnBg0()
+void GBMapView::OnBg0() 
 {
   bg = 0;
   paint();
 }
 
-void GBMapView::OnBg1()
+void GBMapView::OnBg1() 
 {
   bg = 1;
   paint();
 }
 
-void GBMapView::OnBank0()
+void GBMapView::OnBank0() 
 {
   bank = 0;
   paint();
 }
 
-void GBMapView::OnBank1()
+void GBMapView::OnBank1() 
 {
   bank = 1;
   paint();
 }
 
-void GBMapView::OnStretch()
+void GBMapView::OnStretch() 
 {
   mapView.setStretch(!mapView.getStretch());
   paint();
   regSetDwordValue("mapViewStretch", mapView.getStretch());  
 }
 
-void GBMapView::OnAutoUpdate()
+void GBMapView::OnAutoUpdate() 
 {
   autoUpdate = !autoUpdate;
   if(autoUpdate) {
-    winAddUpdateListener(this);
+    theApp.winAddUpdateListener(this);
   } else {
-    winRemoveUpdateListener(this);    
+    theApp.winRemoveUpdateListener(this);    
   }
 }
 
-void GBMapView::OnClose()
+void GBMapView::OnClose() 
 {
-  winRemoveUpdateListener(this);
+  theApp.winRemoveUpdateListener(this);
   
   DestroyWindow();
 }
@@ -523,13 +501,13 @@ LRESULT GBMapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
   int x = wParam & 0xffff;
   int y = (wParam >> 16);
   
-  char buffer[16];
-  sprintf(buffer, "(%d,%d)", x, y);
-  ::SetWindowText(GetDlgItem(IDC_XY), buffer);
+  CString buffer;
+  buffer.Format("(%d,%d)", x, y);
+  GetDlgItem(IDC_XY)->SetWindowText(buffer);
 
   u32 address = GetClickAddress(x,y);
-  sprintf(buffer, "0x%08X", address);
-  ::SetWindowText(GetDlgItem(IDC_ADDRESS), buffer);
+  buffer.Format("0x%08X", address);
+  GetDlgItem(IDC_ADDRESS)->SetWindowText(buffer);
 
   u8 attrs = 0;
 
@@ -544,26 +522,26 @@ LRESULT GBMapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
     else tile += 128;
   }
   
-  sprintf(buffer, "%d", tile);
-  ::SetWindowText(GetDlgItem(IDC_TILE_NUM), buffer);
-
-  buffer[0] = attrs & 0x20 ? 'H' : '-';
-  buffer[1] = attrs & 0x40 ? 'V' : '-';
-  buffer[2] = 0;
-  ::SetWindowText(GetDlgItem(IDC_FLIP), buffer);
+  buffer.Format("%d", tile);
+  GetDlgItem(IDC_TILE_NUM)->SetWindowText(buffer);
+  
+  buffer.Empty();
+  buffer += attrs & 0x20 ? 'H' : '-';
+  buffer += attrs & 0x40 ? 'V' : '-';
+  GetDlgItem(IDC_FLIP)->SetWindowText(buffer);
   
   if(gbCgbMode) {
-    sprintf(buffer, "%d", (attrs & 7));
+    buffer.Format("%d", (attrs & 7));
   } else
-    strcpy(buffer, "---");
-  ::SetWindowText(GetDlgItem(IDC_PALETTE_NUM), buffer);
-
+    buffer = "---";
+  GetDlgItem(IDC_PALETTE_NUM)->SetWindowText(buffer);
+  
+  buffer.Empty();
   if(gbCgbMode)
-    buffer[0] = attrs & 0x80 ? 'P' : '-';
+    buffer += attrs & 0x80 ? 'P' : '-';
   else
-    buffer[0] = '-';
-  buffer[1] = 0;
-  ::SetWindowText(GetDlgItem(IDC_PRIORITY), buffer);
+    buffer += '-';
+  GetDlgItem(IDC_PRIORITY)->SetWindowText(buffer);
 
   return TRUE;
 }
@@ -571,7 +549,6 @@ LRESULT GBMapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
 LRESULT GBMapView::OnColInfo(WPARAM wParam, LPARAM)
 {
   u16 c = (u16)wParam;
-  char buffer[16];
 
   color.setColor(c);  
 
@@ -579,23 +556,21 @@ LRESULT GBMapView::OnColInfo(WPARAM wParam, LPARAM)
   int g = (c & 0x3e0) >> 5;
   int b = (c & 0x7c00) >> 10;
 
-  sprintf(buffer, "R: %d", r);
-  ::SetWindowText(GetDlgItem(IDC_R), buffer);
+  CString buffer;
+  buffer.Format("R: %d", r);
+  GetDlgItem(IDC_R)->SetWindowText(buffer);
 
-  sprintf(buffer, "G: %d", g);
-  ::SetWindowText(GetDlgItem(IDC_G), buffer);
+  buffer.Format("G: %d", g);
+  GetDlgItem(IDC_G)->SetWindowText(buffer);
 
-  sprintf(buffer, "B: %d", b);
-  ::SetWindowText(GetDlgItem(IDC_B), buffer);
+  buffer.Format("B: %d", b);
+  GetDlgItem(IDC_B)->SetWindowText(buffer);
 
   return TRUE;
 }
 
-void toolsGBMapView()
+void GBMapView::PostNcDestroy() 
 {
-  GBMapView *map = new GBMapView();
-  map->setAutoDelete(true);
-  map->MakeDialog(hInstance,
-                  IDD_GB_MAP_VIEW,
-                  hWindow);
+  delete this;
+  CDialog::PostNcDestroy();
 }

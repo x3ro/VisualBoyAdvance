@@ -763,7 +763,7 @@
 #endif
 
 u32 opcode = CPUReadHalfWordQuick(armNextPC);
-clockTicks = thumbCycles[opcode >> 8] + 1 + cpuMemoryWait[(armNextPC >> 24) & 15];
+clockTicks = thumbCycles[opcode >> 8] + cpuMemoryWait[(armNextPC >> 24) & 15];
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
   armNextPC = armNextPC++;
@@ -1239,7 +1239,18 @@ switch(opcode >> 8) {
      {
        // MUL Rd, Rs
        int dest = opcode & 7;
-       reg[dest].I = reg[(opcode >> 3) & 7].I * reg[dest].I;
+       u32 rm = reg[(opcode >> 3) & 7].I;
+       reg[dest].I = reg[dest].I * rm;
+       if (((s32)rm) < 0)
+         rm = ~rm;
+       if ((rm & 0xFFFFFF00) == 0)
+         clockTicks += 1;
+       else if ((rm & 0xFFFF0000) == 0)
+         clockTicks += 2;
+       else if ((rm & 0xFF000000) == 0)
+         clockTicks += 3;
+       else
+         clockTicks += 4;
        Z_FLAG = reg[dest].I ? false : true;
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
      }
@@ -1405,83 +1416,143 @@ switch(opcode >> 8) {
    break;
  case 0x48:
    // LDR R0,[PC, #Imm]
-   reg[0].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);
+     reg[0].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x49:
    // LDR R1,[PC, #Imm]
-   reg[1].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);   
+     reg[1].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x4a:
    // LDR R2,[PC, #Imm]
-   reg[2].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[2].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x4b:
    // LDR R3,[PC, #Imm]
-   reg[3].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[3].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x4c:
    // LDR R4,[PC, #Imm]
-   reg[4].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[4].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x4d:
    // LDR R5,[PC, #Imm]
-   reg[5].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[5].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x4e:
    // LDR R6,[PC, #Imm]
-   reg[6].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[6].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x4f:
    // LDR R7,[PC, #Imm]
-   reg[7].I = CPUReadMemoryQuick((reg[15].I & 0xFFFFFFFC) +
-                                 ((opcode & 0xFF) << 2));
+   {
+     u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
+     reg[7].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x50:
  case 0x51:
-   CPUWriteMemory(reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I,
-                  reg[opcode & 7].I);
+   // STR Rd, [Rs, Rn]
+   {
+     u32 
+       address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     CPUWriteMemory(address,
+                    reg[opcode & 7].I);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x52:
  case 0x53:
-   CPUWriteHalfWord(reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I,
-                    reg[opcode&7].W.W0);
+   // STRH Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     CPUWriteHalfWord(address,
+                      reg[opcode&7].W.W0);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x54:
  case 0x55:
-   CPUWriteByte(reg[(opcode>>3)&7].I + reg[(opcode >>6)&7].I,
-                reg[opcode & 7].B.B0);
+   // STRB Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode >>6)&7].I;
+     CPUWriteByte(address,
+                  reg[opcode & 7].B.B0);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x56:
  case 0x57:
-   reg[opcode&7].I = (s8)CPUReadByte(reg[(opcode>>3)&7].I +
-                                     reg[(opcode>>6)&7].I);     
+   // LDSB Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     reg[opcode&7].I = (s8)CPUReadByte(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x58:
  case 0x59:
-   reg[opcode&7].I = CPUReadMemory(reg[(opcode>>3)&7].I +
-                                   reg[(opcode>>6)&7].I);
+   // LDR Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     reg[opcode&7].I = CPUReadMemory(address);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x5a:
  case 0x5b:
-   reg[opcode&7].I = CPUReadHalfWord(reg[(opcode>>3)&7].I +
-                                     reg[(opcode>>6)&7].I);
+   // LDRH Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     reg[opcode&7].I = CPUReadHalfWord(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x5c:
  case 0x5d:
-   reg[opcode&7].I = CPUReadByte(reg[(opcode>>3)&7].I +
-                                 reg[(opcode>>6)&7].I);
+   // LDRB Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     reg[opcode&7].I = CPUReadByte(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x5e:
  case 0x5f:
-   reg[opcode&7].I = (s16)CPUReadHalfWordSigned(reg[(opcode>>3)&7].I +
-                                                reg[(opcode>>6)&7].I);
+   // LDSH Rd, [Rs, Rn]
+   {
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     reg[opcode&7].I = (s16)CPUReadHalfWordSigned(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x60:
  case 0x61:
@@ -1491,8 +1562,13 @@ switch(opcode >> 8) {
  case 0x65:
  case 0x66:
  case 0x67:
-   CPUWriteMemory(reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2),
-                  reg[opcode&7].I);
+   // STR Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
+     CPUWriteMemory(address,
+                    reg[opcode&7].I);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x68:
  case 0x69:
@@ -1502,8 +1578,12 @@ switch(opcode >> 8) {
  case 0x6d:
  case 0x6e:
  case 0x6f:
-   reg[opcode&7].I = CPUReadMemory(reg[(opcode>>3)&7].I +
-                                   (((opcode>>6)&31)<<2));
+   // LDR Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
+     reg[opcode&7].I = CPUReadMemory(address);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;
  case 0x70:
  case 0x71:
@@ -1513,8 +1593,13 @@ switch(opcode >> 8) {
  case 0x75:
  case 0x76:
  case 0x77:
-   CPUWriteByte(reg[(opcode>>3)&7].I + (((opcode>>6)&31)),
-                reg[opcode&7].B.B0);
+   // STRB Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
+     CPUWriteByte(address,
+                  reg[opcode&7].B.B0);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x78:
  case 0x79:
@@ -1524,8 +1609,12 @@ switch(opcode >> 8) {
  case 0x7d:
  case 0x7e:
  case 0x7f:
-   reg[opcode&7].I = CPUReadByte(reg[(opcode>>3)&7].I +
-                                 (((opcode>>6)&31)));
+   // LDRB Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
+     reg[opcode&7].I = CPUReadByte(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x80:
  case 0x81:
@@ -1535,8 +1624,13 @@ switch(opcode >> 8) {
  case 0x85:
  case 0x86:
  case 0x87:
-   CPUWriteHalfWord(reg[(opcode>>3)&7].I + (((opcode >> 6) & 0x1F) << 1),
-                    reg[opcode&7].W.W0);
+   // STRH Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
+     CPUWriteHalfWord(address,
+                      reg[opcode&7].W.W0);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;   
  case 0x88:
  case 0x89:
@@ -1546,108 +1640,208 @@ switch(opcode >> 8) {
  case 0x8d:
  case 0x8e:
  case 0x8f:
-   reg[opcode&7].I = CPUReadHalfWord(reg[(opcode>>3)&7].I +
-                                     (((opcode >> 6) & 0x1F) << 1));
+   // LDRH Rd, [Rs, #Imm]
+   {
+     u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
+     reg[opcode&7].I = CPUReadHalfWord(address);
+     clockTicks += CPUUpdateTicksAccess16(address);
+   }
    break;
  case 0x90:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[0].I);
+   // STR R0, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);
+     CPUWriteMemory(address, reg[0].I);
+     clockTicks += CPUUpdateTicksAccess32(address);
+   }
    break;      
  case 0x91:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[1].I);
+   // STR R1, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[1].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x92:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[2].I);
+   // STR R2, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[2].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x93:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[3].I);
+   // STR R3, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[3].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x94:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[4].I);
+   // STR R4, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[4].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x95:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[5].I);
+   // STR R5, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[5].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x96:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[6].I);
+   // STR R6, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[6].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;      
  case 0x97:
-   CPUWriteMemory(reg[13].I + ((opcode&255)<<2), reg[7].I);
+   // STR R7, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     CPUWriteMemory(address, reg[7].I);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;   
  case 0x98:
-   reg[0].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R0, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[0].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x99:
-   reg[1].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R1, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[1].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9a:
-   reg[2].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R2, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[2].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9b:
-   reg[3].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R3, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[3].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9c:
-   reg[4].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R4, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[4].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9d:
-   reg[5].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R5, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[5].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9e:
-   reg[6].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R6, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[6].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0x9f:
-   reg[7].I = CPUReadMemoryQuick(reg[13].I + ((opcode&255)<<2));
+   // LDR R7, [SP, #Imm]
+   {
+     u32 address = reg[13].I + ((opcode&255)<<2);   
+     reg[7].I = CPUReadMemoryQuick(address);
+     clockTicks += CPUUpdateTicksAccess32(address);   
+   }
    break;
  case 0xa0:
+   // ADD R0, PC, Imm
    reg[0].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa1:
+   // ADD R1, PC, Imm
    reg[1].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa2:
+   // ADD R2, PC, Imm
    reg[2].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa3:
+   // ADD R3, PC, Imm
    reg[3].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa4:
+   // ADD R4, PC, Imm
    reg[4].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa5:
+   // ADD R5, PC, Imm
    reg[5].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa6:
+   // ADD R6, PC, Imm
    reg[6].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa7:
+   // ADD R7, PC, Imm
    reg[7].I = (reg[15].I & 0xFFFFFFFC) + ((opcode&255)<<2);
    break;   
  case 0xa8:
+   // ADD R0, SP, Imm
    reg[0].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xa9:
+   // ADD R1, SP, Imm
    reg[1].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xaa:
+   // ADD R2, SP, Imm
    reg[2].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xab:
+   // ADD R3, SP, Imm
    reg[3].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xac:
+   // ADD R4, SP, Imm
    reg[4].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xad:
+   // ADD R5, SP, Imm
    reg[5].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xae:
+   // ADD R6, SP, Imm
    reg[6].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xaf:
+   // ADD R7, SP, Imm
    reg[7].I = reg[13].I + ((opcode&255)<<2);
    break;   
  case 0xb0:
    {
-     // add offset to SP
+     // ADD SP, Imm
      int offset = (opcode & 127) << 2;
      if(opcode & 0x80)
        offset = -offset;
@@ -1656,337 +1850,411 @@ switch(opcode >> 8) {
    break;
 #define PUSH_REG(val, r) \
   if(opcode & (val)) {\
-    reg[13].I -= 4;\
-    CPUWriteMemory(reg[13].I & 0xFFFFFFFC, reg[(r)].I);\
-    clockTicks++;\
+    CPUWriteMemory(address, reg[(r)].I);\
+    if(offset)\
+      clockTicks += 1 + CPUUpdateTicksAccessSeq32(address);\
+    else\
+      clockTicks += 1 + CPUUpdateTicksAccess32(address);\
+    offset = 1;\
+    address += 4;\
   }
  case 0xb4:
-   // PUSH
-   PUSH_REG(128, 7);
-   PUSH_REG(64, 6);
-   PUSH_REG(32, 5);
-   PUSH_REG(16, 4);
-   PUSH_REG(8, 3);
-   PUSH_REG(4, 2);
-   PUSH_REG(2, 1);
-   PUSH_REG(1, 0);
+   // PUSH {Rlist}
+   {
+     int offset = 0;
+     u32 temp = reg[13].I - 4 * cpuBitsSet[opcode & 0xff];
+     u32 address = temp & 0xFFFFFFFC;
+     PUSH_REG(1, 0);
+     PUSH_REG(2, 1);
+     PUSH_REG(4, 2);
+     PUSH_REG(8, 3);
+     PUSH_REG(16, 4);
+     PUSH_REG(32, 5);
+     PUSH_REG(64, 6);
+     PUSH_REG(128, 7);
+     reg[13].I = temp;
+   }
    break;
  case 0xb5:
-   reg[13].I -= 4;
-   CPUWriteMemory(reg[13].I & 0xFFFFFFFC, reg[14].I);
-   PUSH_REG(128, 7);
-   PUSH_REG(64, 6);
-   PUSH_REG(32, 5);
-   PUSH_REG(16, 4);
-   PUSH_REG(8, 3);
-   PUSH_REG(4, 2);
-   PUSH_REG(2, 1);
-   PUSH_REG(1, 0);
+   // PUSH {Rlist, LR}
+   {
+     int offset = 0;
+     u32 temp = reg[13].I - 4 - 4 * cpuBitsSet[opcode & 0xff];
+     u32 address = temp & 0xFFFFFFFC;
+     PUSH_REG(1, 0);
+     PUSH_REG(2, 1);
+     PUSH_REG(4, 2);
+     PUSH_REG(8, 3);
+     PUSH_REG(16, 4);
+     PUSH_REG(32, 5);
+     PUSH_REG(64, 6);
+     PUSH_REG(128, 7);
+     PUSH_REG(256, 14);
+     reg[13].I = temp;
+   }
    break;
 #define POP_REG(val, r) \
   if(opcode & (val)) {\
-    reg[(r)].I = CPUReadMemory(reg[13].I & 0xFFFFFFFC);\
-    reg[13].I += 4;\
-    clockTicks += 2;\
+    reg[(r)].I = CPUReadMemory(address);\
+    if(offset)\
+      clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);\
+    else\
+      clockTicks += 2 + CPUUpdateTicksAccess32(address);\
+    offset = 1;\
+    address += 4;\
   }
  case 0xbc:
-   // POP
-   POP_REG(1, 0);
-   POP_REG(2, 1);
-   POP_REG(4, 2);
-   POP_REG(8, 3);
-   POP_REG(16, 4);
-   POP_REG(32, 5);
-   POP_REG(64, 6);
-   POP_REG(128, 7);
+   // POP {Rlist}
+   {
+     int offset = 0;
+     u32 address = reg[13].I & 0xFFFFFFFC;
+     u32 temp = reg[13].I + 4*cpuBitsSet[opcode & 0xFF];
+     POP_REG(1, 0);
+     POP_REG(2, 1);
+     POP_REG(4, 2);
+     POP_REG(8, 3);
+     POP_REG(16, 4);
+     POP_REG(32, 5);
+     POP_REG(64, 6);
+     POP_REG(128, 7);
+     reg[13].I = temp;
+   }
    break;   
  case 0xbd:
-   // POP
-   POP_REG(1, 0);
-   POP_REG(2, 1);
-   POP_REG(4, 2);
-   POP_REG(8, 3);
-   POP_REG(16, 4);
-   POP_REG(32, 5);
-   POP_REG(64, 6);
-   POP_REG(128, 7);
-   reg[15].I = (CPUReadMemory(reg[13].I & 0xFFFFFFFC) & 0xFFFFFFFE);
-   armNextPC = reg[15].I;
-   reg[15].I += 2;
-   reg[13].I += 4;
+   // POP {Rlist, PC}
+   {
+     int offset = 0;
+     u32 address = reg[13].I & 0xFFFFFFFC;
+     u32 temp = reg[13].I + 4 + 4*cpuBitsSet[opcode & 0xFF];
+     POP_REG(1, 0);
+     POP_REG(2, 1);
+     POP_REG(4, 2);
+     POP_REG(8, 3);
+     POP_REG(16, 4);
+     POP_REG(32, 5);
+     POP_REG(64, 6);
+     POP_REG(128, 7);
+     reg[15].I = (CPUReadMemory(address) & 0xFFFFFFFE);
+     if(offset)
+       clockTicks += CPUUpdateTicksAccessSeq32(address);
+     else
+       clockTicks += CPUUpdateTicksAccess32(address);
+     armNextPC = reg[15].I;
+     reg[15].I += 2;
+     reg[13].I = temp;
+   }
    break;      
-#define STM_REG(val,r,b) \
+#define THUMB_STM_REG(val,r,b) \
   if(opcode & (val)) {\
-    CPUWriteMemory(address & 0xFFFFFFFC, reg[(r)].I);\
-    address += 4;\
-    clockTicks++;\
-    if(!offset)\
+    CPUWriteMemory(address, reg[(r)].I);\
+    if(!offset) {\
       reg[(b)].I = temp;\
+      clockTicks += 1 + CPUUpdateTicksAccess32(address);\
+    } else \
+      clockTicks += 1 + CPUUpdateTicksAccessSeq32(address);\
     offset = 1;\
+    address += 4;\
   }
  case 0xc0:
    {
-     u32 address = reg[0].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R0!, {Rlist}
+     u32 address = reg[0].I & 0xFFFFFFFC;
+     u32 temp = reg[0].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 0);
-     STM_REG(2, 1, 0);
-     STM_REG(4, 2, 0);
-     STM_REG(8, 3, 0);
-     STM_REG(16, 4, 0);
-     STM_REG(32, 5, 0);
-     STM_REG(64, 6, 0);
-     STM_REG(128, 7, 0);
+     THUMB_STM_REG(1, 0, 0);
+     THUMB_STM_REG(2, 1, 0);
+     THUMB_STM_REG(4, 2, 0);
+     THUMB_STM_REG(8, 3, 0);
+     THUMB_STM_REG(16, 4, 0);
+     THUMB_STM_REG(32, 5, 0);
+     THUMB_STM_REG(64, 6, 0);
+     THUMB_STM_REG(128, 7, 0);
    }
    break;   
  case 0xc1:
    {
-     u32 address = reg[1].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R1!, {Rlist}
+     u32 address = reg[1].I & 0xFFFFFFFC;
+     u32 temp = reg[1].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 1);
-     STM_REG(2, 1, 1);
-     STM_REG(4, 2, 1);
-     STM_REG(8, 3, 1);
-     STM_REG(16, 4, 1);
-     STM_REG(32, 5, 1);
-     STM_REG(64, 6, 1);
-     STM_REG(128, 7, 1);
+     THUMB_STM_REG(1, 0, 1);
+     THUMB_STM_REG(2, 1, 1);
+     THUMB_STM_REG(4, 2, 1);
+     THUMB_STM_REG(8, 3, 1);
+     THUMB_STM_REG(16, 4, 1);
+     THUMB_STM_REG(32, 5, 1);
+     THUMB_STM_REG(64, 6, 1);
+     THUMB_STM_REG(128, 7, 1);
    }
    break;      
  case 0xc2:
    {
-     u32 address = reg[2].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R2!, {Rlist}
+     u32 address = reg[2].I & 0xFFFFFFFC;
+     u32 temp = reg[2].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 2);
-     STM_REG(2, 1, 2);
-     STM_REG(4, 2, 2);
-     STM_REG(8, 3, 2);
-     STM_REG(16, 4, 2);
-     STM_REG(32, 5, 2);
-     STM_REG(64, 6, 2);
-     STM_REG(128, 7, 2);
+     THUMB_STM_REG(1, 0, 2);
+     THUMB_STM_REG(2, 1, 2);
+     THUMB_STM_REG(4, 2, 2);
+     THUMB_STM_REG(8, 3, 2);
+     THUMB_STM_REG(16, 4, 2);
+     THUMB_STM_REG(32, 5, 2);
+     THUMB_STM_REG(64, 6, 2);
+     THUMB_STM_REG(128, 7, 2);
    }
    break;      
  case 0xc3:
    {
-     u32 address = reg[3].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R3!, {Rlist}
+     u32 address = reg[3].I & 0xFFFFFFFC;
+     u32 temp = reg[3].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 3);
-     STM_REG(2, 1, 3);
-     STM_REG(4, 2, 3);
-     STM_REG(8, 3, 3);
-     STM_REG(16, 4, 3);
-     STM_REG(32, 5, 3);
-     STM_REG(64, 6, 3);
-     STM_REG(128, 7, 3);
+     THUMB_STM_REG(1, 0, 3);
+     THUMB_STM_REG(2, 1, 3);
+     THUMB_STM_REG(4, 2, 3);
+     THUMB_STM_REG(8, 3, 3);
+     THUMB_STM_REG(16, 4, 3);
+     THUMB_STM_REG(32, 5, 3);
+     THUMB_STM_REG(64, 6, 3);
+     THUMB_STM_REG(128, 7, 3);
    }
    break;   
  case 0xc4:
    {
-     u32 address = reg[4].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R4!, {Rlist}
+     u32 address = reg[4].I & 0xFFFFFFFC;
+     u32 temp = reg[4].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 4);
-     STM_REG(2, 1, 4);
-     STM_REG(4, 2, 4);
-     STM_REG(8, 3, 4);
-     STM_REG(16, 4, 4);
-     STM_REG(32, 5, 4);
-     STM_REG(64, 6, 4);
-     STM_REG(128, 7, 4);
+     THUMB_STM_REG(1, 0, 4);
+     THUMB_STM_REG(2, 1, 4);
+     THUMB_STM_REG(4, 2, 4);
+     THUMB_STM_REG(8, 3, 4);
+     THUMB_STM_REG(16, 4, 4);
+     THUMB_STM_REG(32, 5, 4);
+     THUMB_STM_REG(64, 6, 4);
+     THUMB_STM_REG(128, 7, 4);
    }
    break;   
  case 0xc5:
    {
-     u32 address = reg[5].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R5!, {Rlist}
+     u32 address = reg[5].I & 0xFFFFFFFC;
+     u32 temp = reg[5].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 5);
-     STM_REG(2, 1, 5);
-     STM_REG(4, 2, 5);
-     STM_REG(8, 3, 5);
-     STM_REG(16, 4, 5);
-     STM_REG(32, 5, 5);
-     STM_REG(64, 6, 5);
-     STM_REG(128, 7, 5);
+     THUMB_STM_REG(1, 0, 5);
+     THUMB_STM_REG(2, 1, 5);
+     THUMB_STM_REG(4, 2, 5);
+     THUMB_STM_REG(8, 3, 5);
+     THUMB_STM_REG(16, 4, 5);
+     THUMB_STM_REG(32, 5, 5);
+     THUMB_STM_REG(64, 6, 5);
+     THUMB_STM_REG(128, 7, 5);
    }
    break;   
  case 0xc6:
    {
-     u32 address = reg[6].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R6!, {Rlist}
+     u32 address = reg[6].I & 0xFFFFFFFC;
+     u32 temp = reg[6].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 6);
-     STM_REG(2, 1, 6);
-     STM_REG(4, 2, 6);
-     STM_REG(8, 3, 6);
-     STM_REG(16, 4, 6);
-     STM_REG(32, 5, 6);
-     STM_REG(64, 6, 6);
-     STM_REG(128, 7, 6);
+     THUMB_STM_REG(1, 0, 6);
+     THUMB_STM_REG(2, 1, 6);
+     THUMB_STM_REG(4, 2, 6);
+     THUMB_STM_REG(8, 3, 6);
+     THUMB_STM_REG(16, 4, 6);
+     THUMB_STM_REG(32, 5, 6);
+     THUMB_STM_REG(64, 6, 6);
+     THUMB_STM_REG(128, 7, 6);
    }
    break;   
  case 0xc7:
    {
-     u32 address = reg[7].I;
-     u32 temp = address + 4*cpuBitsSet[opcode & 0xff];
+     // STM R7!, {Rlist}
+     u32 address = reg[7].I & 0xFFFFFFFC;
+     u32 temp = reg[7].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
      // store
-     STM_REG(1, 0, 7);
-     STM_REG(2, 1, 7);
-     STM_REG(4, 2, 7);
-     STM_REG(8, 3, 7);
-     STM_REG(16, 4, 7);
-     STM_REG(32, 5, 7);
-     STM_REG(64, 6, 7);
-     STM_REG(128, 7, 7);
+     THUMB_STM_REG(1, 0, 7);
+     THUMB_STM_REG(2, 1, 7);
+     THUMB_STM_REG(4, 2, 7);
+     THUMB_STM_REG(8, 3, 7);
+     THUMB_STM_REG(16, 4, 7);
+     THUMB_STM_REG(32, 5, 7);
+     THUMB_STM_REG(64, 6, 7);
+     THUMB_STM_REG(128, 7, 7);
    }
    break;
-#define LDM_REG(val,r) \
+#define THUMB_LDM_REG(val,r) \
   if(opcode & (val)) {\
-    reg[(r)].I = CPUReadMemory(address & 0xFFFFFFFC);\
+    reg[(r)].I = CPUReadMemory(address);\
+    if(offset)\
+      clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);\
+    else\
+      clockTicks += 2 + CPUUpdateTicksAccess32(address);\
+    offset = 1;\
     address += 4;\
-    clockTicks += 2;\
   }
  case 0xc8:
    {
-     u32 address = reg[0].I;
+     // LDM R0!, {Rlist}
+     u32 address = reg[0].I & 0xFFFFFFFC;
+     u32 temp = reg[0].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);
      if(!(opcode & 1))
-       reg[0].I = address;
+       reg[0].I = temp;
    }
    break;
  case 0xc9:
    {
-     u32 address = reg[1].I;
+     // LDM R1!, {Rlist}
+     u32 address = reg[1].I & 0xFFFFFFFC;
+     u32 temp = reg[1].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);
      if(!(opcode & 2))
-       reg[1].I = address;
+       reg[1].I = temp;
    }
    break;
  case 0xca:
    {
-     u32 address = reg[2].I;
+     // LDM R2!, {Rlist}
+     u32 address = reg[2].I & 0xFFFFFFFC;
+     u32 temp = reg[2].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);
      if(!(opcode & 4))
-       reg[2].I = address;
+       reg[2].I = temp;
    }
    break;
  case 0xcb:
    {
-     u32 address = reg[3].I;
+     // LDM R3!, {Rlist}
+     u32 address = reg[3].I & 0xFFFFFFFC;
+     u32 temp = reg[3].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);
      if(!(opcode & 8))
-       reg[3].I = address;
+       reg[3].I = temp;
    }
    break;
  case 0xcc:
    {
-     u32 address = reg[4].I;
+     // LDM R4!, {Rlist}
+     u32 address = reg[4].I & 0xFFFFFFFC;
+     u32 temp = reg[4].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);   
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);   
      if(!(opcode & 16))
-       reg[4].I = address;
+       reg[4].I = temp;
    }
    break;
  case 0xcd:
    {
-     u32 address = reg[5].I;
+     // LDM R5!, {Rlist}
+     u32 address = reg[5].I & 0xFFFFFFFC;
+     u32 temp = reg[5].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);   
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);   
      if(!(opcode & 32))
-       reg[5].I = address;
+       reg[5].I = temp;
    }
    break;
  case 0xce:
    {
-     u32 address = reg[6].I;
+     // LDM R6!, {Rlist}
+     u32 address = reg[6].I & 0xFFFFFFFC;
+     u32 temp = reg[6].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);   
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);   
      if(!(opcode & 64))
-       reg[6].I = address;
+       reg[6].I = temp;
    }
    break;
  case 0xcf:
    {
-     u32 address = reg[7].I;
+     // LDM R7!, {Rlist}
+     u32 address = reg[7].I & 0xFFFFFFFC;
+     u32 temp = reg[7].I + 4*cpuBitsSet[opcode & 0xFF];
+     int offset = 0;
      // load
-     LDM_REG(1, 0);
-     LDM_REG(2, 1);
-     LDM_REG(4, 2);
-     LDM_REG(8, 3);
-     LDM_REG(16, 4);
-     LDM_REG(32, 5);
-     LDM_REG(64, 6);
-     LDM_REG(128, 7);   
+     THUMB_LDM_REG(1, 0);
+     THUMB_LDM_REG(2, 1);
+     THUMB_LDM_REG(4, 2);
+     THUMB_LDM_REG(8, 3);
+     THUMB_LDM_REG(16, 4);
+     THUMB_LDM_REG(32, 5);
+     THUMB_LDM_REG(64, 6);
+     THUMB_LDM_REG(128, 7);   
      if(!(opcode & 128))
-       reg[7].I = address;
+       reg[7].I = temp;
    }
    break;
  case 0xd0:
+   // BEQ offset
    if(Z_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;
      armNextPC = reg[15].I;
@@ -1995,6 +2263,7 @@ switch(opcode >> 8) {
    }
    break;      
  case 0xd1:
+   // BNE offset
    if(!Z_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2003,6 +2272,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd2:
+   // BCS offset
    if(C_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2011,6 +2281,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd3:
+   // BCC offset
    if(!C_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2019,6 +2290,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd4:
+   // BMI offset
    if(N_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2027,6 +2299,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd5:
+   // BPL offset
    if(!N_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2035,6 +2308,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd6:
+   // BVS offset
    if(V_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2043,6 +2317,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd7:
+   // BVC offset
    if(!V_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2051,6 +2326,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd8:
+   // BHI offset
    if(C_FLAG && !Z_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2059,6 +2335,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xd9:
+   // BLS offset
    if(!C_FLAG || Z_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2067,6 +2344,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xda:
+   // BGE offset
    if(N_FLAG == V_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2075,6 +2353,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xdb:
+   // BLT offset
    if(N_FLAG != V_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2083,6 +2362,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xdc:
+   // BGT offset
    if(!Z_FLAG && (N_FLAG == V_FLAG)) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2091,6 +2371,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xdd:
+   // BLE offset
    if(Z_FLAG || (N_FLAG != V_FLAG)) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
@@ -2099,6 +2380,7 @@ switch(opcode >> 8) {
    }
    break;   
  case 0xdf:
+   // SWI #comment
    CPUSoftwareInterrupt(opcode & 0xFF);
    break;
  case 0xe0:
@@ -2110,7 +2392,7 @@ switch(opcode >> 8) {
  case 0xe6:
  case 0xe7:
    {
-     // unconditional branch
+     // B offset
      int offset = (opcode & 0x3FF) << 1;
      if(opcode & 0x0400)
        offset |= 0xFFFFF800;
@@ -2124,7 +2406,7 @@ switch(opcode >> 8) {
  case 0xf2:
  case 0xf3:
    {
-     // long branch with link
+     // BLL #offset
      int offset = (opcode & 0x7FF);
      reg[14].I = reg[15].I + (offset << 12);
    }
@@ -2134,7 +2416,7 @@ switch(opcode >> 8) {
  case 0xf6:
  case 0xf7:
    {
-     // long branch with link
+     // BLL #offset
      int offset = (opcode & 0x7FF);
      reg[14].I = reg[15].I + ((offset << 12) | 0xFF800000);
    }
@@ -2148,7 +2430,7 @@ switch(opcode >> 8) {
  case 0xfe:
  case 0xff:
    {
-     // long branch with link
+     // BLH #offset
      int offset = (opcode & 0x7FF);
      u32 temp = reg[15].I-2;
      reg[15].I = (reg[14].I + (offset<<1))&0xFFFFFFFE;
@@ -2159,6 +2441,7 @@ switch(opcode >> 8) {
    break;
 #ifdef BKPT_SUPPORT
  case 0xbe:
+   // BKPT #comment
    extern void (*dbgSignal)(int,int);
    reg[15].I -= 2;
    armNextPC -= 2;   

@@ -16,86 +16,33 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include "stdafx.h"
+
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
-#include <stdio.h>
 
 #include "../System.h"
+#include "../gb/gbGlobals.h"
 #include "../GBA.h"
 #include "../Globals.h"
 #include "../Font.h"
 
-#include "Display.h"
+#include "VBA.h"
+#include "MainWnd.h"
 #include "Reg.h"
 #include "resource.h"
-#include "skin.h"
 
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600, VIDEO_OTHER
-};
-
-extern int sizeX;
-extern int sizeY;
-extern int surfaceSizeX;
-extern int surfaceSizeY;
-extern int videoOption;
-extern BOOL fullScreenStretch;
-extern HWND hWindow;
-extern int fsWidth;
-extern int fsHeight;
-extern int fsColorDepth;
-extern RECT rect;
-extern RECT dest;
-extern HINSTANCE hInstance;
-extern int windowPositionX;
-extern int windowPositionY;
-extern BOOL ddrawEmulationOnly;
-extern BOOL ddrawUsingEmulationOnly;
-extern BOOL ddrawUseVideoMemory;
-extern BOOL tripleBuffering;
-extern int ddrawDebug;
-extern BOOL mode320Available;
-extern BOOL mode640Available;
-extern BOOL mode800Available;
-extern GUID *pVideoDriverGUID;
-extern void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int);
-extern void (*ifbFunction)(u8*,u32,int,int);
-extern int RGB_LOW_BITS_MASK;
-extern BOOL vsync;
-extern int filterWidth;
-extern int filterHeight;
-extern u8 *delta[257*244*4];
-extern int cartridgeType;
-extern int gbBorderOn;
-extern int showSpeed;
-extern BOOL showSpeedTransparent;
-extern int systemSpeed;
-extern bool disableMMX;
-extern bool speedup;
-extern int showRenderedFrames;
-extern BOOL menuToggle;
-extern BOOL active;
-extern bool screenMessage;
-extern char screenMessageBuffer[41];
-extern DWORD screenMessageTime;
-extern bool disableStatusMessage;
-extern CSkin *skin;
-
-#ifdef MMX
-extern "C" bool cpu_mmx;
-
-extern bool detectMMX();
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
 #endif
 
-extern void updateFilter();
-extern void updateIFB();
 extern int Init_2xSaI(u32);
+extern int RGB_LOW_BITS_MASK;
 extern void winlog(const char *,...);
-extern void updateMenuBar();
-extern void adjustDestRect();
-extern void directXMessage(char *msg);
-extern int winVideoModeSelect(HWND, GUID **);
+extern int systemSpeed;
+extern int winVideoModeSelect(CWnd *, GUID **);
 
 class DirectDrawDisplay : public IDisplay {
 private:
@@ -132,17 +79,17 @@ static HRESULT WINAPI checkModesAvailable(LPDDSURFACEDESC2 surf, LPVOID lpContex
   if(surf->dwWidth == 320 &&
      surf->dwHeight == 240 &&
      surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode320Available = TRUE;
+    theApp.mode320Available = TRUE;
   }
   if(surf->dwWidth == 640 &&
      surf->dwHeight == 480 &&
      surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode640Available = TRUE;
+    theApp.mode640Available = TRUE;
   }
   if(surf->dwWidth == 800 &&
      surf->dwHeight == 600 &&
      surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode800Available = TRUE;
+    theApp.mode800Available = TRUE;
   }
   return DDENUMRET_OK;
 }
@@ -206,7 +153,7 @@ void DirectDrawDisplay::cleanup()
   }
 
   if(ddrawDLL != NULL) {
-    FreeLibrary(ddrawDLL);
+    AfxFreeLibrary(ddrawDLL);
     ddrawDLL = NULL;
   }
   width = 0;
@@ -215,125 +162,123 @@ void DirectDrawDisplay::cleanup()
 
 bool DirectDrawDisplay::initialize()
 {
-  sizeX = 240;
-  sizeY = 160;
+  theApp.sizeX = 240;
+  theApp.sizeY = 160;
 
-  switch(videoOption) {
+  switch(theApp.videoOption) {
   case VIDEO_1X:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
+    theApp.surfaceSizeX = theApp.sizeX;
+    theApp.surfaceSizeY = theApp.sizeY;
     break;
   case VIDEO_2X:
-    surfaceSizeX = sizeX * 2;
-    surfaceSizeY = sizeY * 2;
+    theApp.surfaceSizeX = theApp.sizeX * 2;
+    theApp.surfaceSizeY = theApp.sizeY * 2;
     break;
   case VIDEO_3X:
-    surfaceSizeX = sizeX * 3;
-    surfaceSizeY = sizeY * 3;
+    theApp.surfaceSizeX = theApp.sizeX * 3;
+    theApp.surfaceSizeY = theApp.sizeY * 3;
     break;
   case VIDEO_4X:
-    surfaceSizeX = sizeX * 4;
-    surfaceSizeY = sizeY * 4;
+    theApp.surfaceSizeX = theApp.sizeX * 4;
+    theApp.surfaceSizeY = theApp.sizeY * 4;
     break;
   case VIDEO_320x240:
   case VIDEO_640x480:
   case VIDEO_800x600:
   case VIDEO_OTHER:
     {
-      int scaleX = (fsWidth / sizeX);
-      int scaleY = (fsHeight / sizeY);
+      int scaleX = (theApp.fsWidth / theApp.sizeX);
+      int scaleY = (theApp.fsHeight / theApp.sizeY);
       int min = scaleX < scaleY ? scaleX : scaleY;
-      surfaceSizeX = sizeX * min;
-      surfaceSizeY = sizeY * min;
-      if(fullScreenStretch) {
-        surfaceSizeX = fsWidth;
-        surfaceSizeY = fsHeight;
+      theApp.surfaceSizeX = theApp.sizeX * min;
+      theApp.surfaceSizeY = theApp.sizeY * min;
+      if(theApp.fullScreenStretch) {
+        theApp.surfaceSizeX = theApp.fsWidth;
+        theApp.surfaceSizeY = theApp.fsHeight;
       }
     }
     break;
   }
   
-  rect.left = 0;
-  rect.top = 0;
-  rect.right = sizeX;
-  rect.bottom = sizeY;
+  theApp.rect.left = 0;
+  theApp.rect.top = 0;
+  theApp.rect.right = theApp.sizeX;
+  theApp.rect.bottom = theApp.sizeY;
 
-  dest.left = 0;
-  dest.top = 0;
-  dest.right = surfaceSizeX;
-  dest.bottom = surfaceSizeY;
+  theApp.dest.left = 0;
+  theApp.dest.top = 0;
+  theApp.dest.right = theApp.surfaceSizeX;
+  theApp.dest.bottom = theApp.surfaceSizeY;
 
   DWORD style = WS_POPUP | WS_VISIBLE;
   DWORD styleEx = 0;
   
-  if(videoOption <= VIDEO_4X)
+  if(theApp.videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
     styleEx = WS_EX_TOPMOST;
 
-  if(videoOption <= VIDEO_4X)
-    AdjustWindowRectEx(&dest, style, TRUE, styleEx);
+  if(theApp.videoOption <= VIDEO_4X)
+    AdjustWindowRectEx(&theApp.dest, style, TRUE, styleEx);
   else
-    AdjustWindowRectEx(&dest, style, FALSE, styleEx);    
+    AdjustWindowRectEx(&theApp.dest, style, FALSE, styleEx);    
 
-  int winSizeX = dest.right-dest.left;
-  int winSizeY = dest.bottom-dest.top;
+  int winSizeX = theApp.dest.right-theApp.dest.left;
+  int winSizeY = theApp.dest.bottom-theApp.dest.top;
 
   int x = 0;
   int y = 0;
 
-  if(videoOption <= VIDEO_4X) {
-    x = windowPositionX;
-    y = windowPositionY;
+  if(theApp.videoOption <= VIDEO_4X) {
+    x = theApp.windowPositionX;
+    y = theApp.windowPositionY;
   }
-  
+
   // Create a window
-  hWindow = CreateWindowEx(styleEx,
-                           "GBA",
-                           "VisualBoyAdvance",
-                           style,
-                           x,
-                           y,
-                           winSizeX,
-                           winSizeY,
-                           NULL,
-                           NULL,
-                           hInstance,
-                           NULL);
+  MainWnd *pWnd = new MainWnd;
+  theApp.m_pMainWnd = pWnd;
+
+  pWnd->CreateEx(styleEx,
+                 theApp.wndClass,
+                 "VisualBoyAdvance",
+                 style,
+                 x,y,winSizeX,winSizeY,
+                 NULL,
+                 0);
   
-  if (!hWindow) {
+  if (!(HWND)*pWnd) {
     winlog("Error creating Window %08x\n", GetLastError());
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_FAILED));
     return FALSE;
   }
+
   
-  updateMenuBar();
+  theApp.updateMenuBar();
   
-  adjustDestRect();
+  theApp.adjustDestRect();
   
   GUID *guid = NULL;
-  if(ddrawEmulationOnly)
+  if(theApp.ddrawEmulationOnly)
     guid = (GUID *)DDCREATE_EMULATIONONLY;
 
-  if(pVideoDriverGUID)
-    guid = pVideoDriverGUID;
+  if(theApp.pVideoDriverGUID)
+    guid = theApp.pVideoDriverGUID;
 
-  ddrawDLL = LoadLibrary("DDRAW.DLL");
+  ddrawDLL = AfxLoadLibrary("DDRAW.DLL");
   HRESULT (WINAPI *DDrawCreateEx)(GUID *,LPVOID *,REFIID,IUnknown *);  
   if(ddrawDLL != NULL) {    
     DDrawCreateEx = (HRESULT (WINAPI *)(GUID *,LPVOID *,REFIID,IUnknown *))
       GetProcAddress(ddrawDLL, "DirectDrawCreateEx");
 
     if(DDrawCreateEx == NULL) {
-      directXMessage("DirectDrawCreateEx");
+      theApp.directXMessage("DirectDrawCreateEx");
       return FALSE;
     }
   } else {
-    directXMessage("DDRAW.DLL");
+    theApp.directXMessage("DDRAW.DLL");
     return FALSE;
   }
 
-  ddrawUsingEmulationOnly = ddrawEmulationOnly;
+  theApp.ddrawUsingEmulationOnly = theApp.ddrawEmulationOnly;
   
   HRESULT hret = DDrawCreateEx(guid,
                                (void **)&pDirectDraw,
@@ -342,7 +287,7 @@ bool DirectDrawDisplay::initialize()
     
   if(hret != DD_OK) {
     winlog("Error creating DirectDraw object %08x\n", hret);
-    if(ddrawEmulationOnly) {
+    if(theApp.ddrawEmulationOnly) {
       // disable emulation only setting in case of failure
       regSetDwordValue("ddrawEmulationOnly", 0);
     }
@@ -350,7 +295,7 @@ bool DirectDrawDisplay::initialize()
     return FALSE;
   }
 
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     DDCAPS driver;
     DDCAPS hel;
     ZeroMemory(&driver, sizeof(driver));
@@ -367,22 +312,22 @@ bool DirectDrawDisplay::initialize()
       winlog("HEL CAPS %2d: %08x\n", i>>2, *p++);
   }
   
-  mode320Available = FALSE;
-  mode640Available = FALSE;
-  mode800Available = FALSE;
+  theApp.mode320Available = false;
+  theApp.mode640Available = false;
+  theApp.mode800Available = false;
   // check for available fullscreen modes
   pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, NULL,
                                 checkModesAvailable);
   
   DWORD flags = DDSCL_NORMAL;
 
-  if(videoOption >= VIDEO_320x240)
+  if(theApp.videoOption >= VIDEO_320x240)
     flags = DDSCL_ALLOWMODEX |
       DDSCL_ALLOWREBOOT |
       DDSCL_EXCLUSIVE |
       DDSCL_FULLSCREEN;
   
-  hret = pDirectDraw->SetCooperativeLevel(hWindow,  
+  hret = pDirectDraw->SetCooperativeLevel(pWnd->m_hWnd,  
                                           flags);
 
   if(hret != DD_OK) {
@@ -391,10 +336,10 @@ bool DirectDrawDisplay::initialize()
     return FALSE;
   }
   
-  if(videoOption > VIDEO_4X) {
-    hret = pDirectDraw->SetDisplayMode(fsWidth,
-                                       fsHeight,
-                                       fsColorDepth,
+  if(theApp.videoOption > VIDEO_4X) {
+    hret = pDirectDraw->SetDisplayMode(theApp.fsWidth,
+                                       theApp.fsHeight,
+                                       theApp.fsColorDepth,
                                        0,
                                        0);
     if(hret != DD_OK) {
@@ -409,8 +354,8 @@ bool DirectDrawDisplay::initialize()
   ddsd.dwSize = sizeof(ddsd);
   ddsd.dwFlags = DDSD_CAPS;
   ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-  if(videoOption > VIDEO_4X) {
-    if(tripleBuffering) {
+  if(theApp.videoOption > VIDEO_4X) {
+    if(theApp.tripleBuffering) {
       // setup triple buffering
       ddsd.dwFlags |= DDSD_BACKBUFFERCOUNT;
       ddsd.ddsCaps.dwCaps |= DDSCAPS_COMPLEX | DDSCAPS_FLIP;
@@ -425,7 +370,7 @@ bool DirectDrawDisplay::initialize()
     return FALSE;
   }
 
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     DDSCAPS2 caps;
     ZeroMemory(&caps, sizeof(caps));
     ddsPrimary->GetCaps(&caps);
@@ -436,7 +381,7 @@ bool DirectDrawDisplay::initialize()
     winlog("Primary CAPS 4: %08x\n", caps.dwCaps4);
   }
 
-  if(videoOption > VIDEO_4X && tripleBuffering) {
+  if(theApp.videoOption > VIDEO_4X && theApp.tripleBuffering) {
     DDSCAPS2 caps;
     ZeroMemory(&caps, sizeof(caps));
     // this gets the third surface. The front one is the primary,
@@ -456,18 +401,18 @@ bool DirectDrawDisplay::initialize()
 
   // create clipper in all modes to avoid paint problems
   //  if(videoOption <= VIDEO_4X) {
-    hret = pDirectDraw->CreateClipper(0, &ddsClipper, NULL);
-    if(hret == DD_OK) {
-      ddsClipper->SetHWnd(0, hWindow);
-      if(videoOption > VIDEO_4X) {
-        if(tripleBuffering)
-          ddsFlip->SetClipper(ddsClipper);
-        else
-          ddsPrimary->SetClipper(ddsClipper);
-      } else
+  hret = pDirectDraw->CreateClipper(0, &ddsClipper, NULL);
+  if(hret == DD_OK) {
+    ddsClipper->SetHWnd(0, pWnd->m_hWnd);
+    if(theApp.videoOption > VIDEO_4X) {
+      if(theApp.tripleBuffering)
+        ddsFlip->SetClipper(ddsClipper);
+      else
         ddsPrimary->SetClipper(ddsClipper);
-    }
-    //  }
+    } else
+      ddsPrimary->SetClipper(ddsClipper);
+  }
+  //  }
 
   DDPIXELFORMAT px;
 
@@ -482,7 +427,7 @@ bool DirectDrawDisplay::initialize()
     break;
   case 24:
     systemColorDepth = 24;
-    filterFunction = NULL;
+    theApp.filterFunction = NULL;
     break;
   case 32:
     systemColorDepth = 32;
@@ -491,13 +436,13 @@ bool DirectDrawDisplay::initialize()
     systemMessage(IDS_ERROR_DISP_COLOR, "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode.",px.dwRGBBitCount);
     return FALSE;
   }
-  updateFilter();
-  updateIFB();
+  theApp.updateFilter();
+  theApp.updateIFB();
 
   if(failed)
     return false;
 
-  DragAcceptFiles(hWindow, TRUE);
+  pWnd->DragAcceptFiles(TRUE);
   
   return true;  
 }
@@ -525,7 +470,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
   ddsd.dwSize = sizeof(ddsd);
   ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
   ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-  if(ddrawUseVideoMemory)
+  if(theApp.ddrawUseVideoMemory)
     ddsd.ddsCaps.dwCaps |= (DDSCAPS_LOCALVIDMEM|DDSCAPS_VIDEOMEMORY);
   ddsd.dwWidth = w;
   ddsd.dwHeight = h;
@@ -534,14 +479,14 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
 
   if(hret != DD_OK) {
     winlog("Error offscreen CreateSurface %08x\n", hret);    
-    if(ddrawUseVideoMemory) {
+    if(theApp.ddrawUseVideoMemory) {
       regSetDwordValue("ddrawUseVideoMemory", 0);
     }    
     //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSURFACE2), hret);
     return false;
   }
 
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     DDSCAPS2 caps;
     ZeroMemory(&caps, sizeof(caps));
     ddsOffscreen->GetCaps(&caps);
@@ -558,7 +503,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
 
   hret = ddsOffscreen->GetPixelFormat(&px);
 
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     DWORD *pdword = (DWORD *)&px;
     for(int ii = 0; ii < 8; ii++) {
       winlog("Pixel format %d %08x\n", ii, pdword[ii]);
@@ -572,7 +517,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
     break;
   case 24:
     systemColorDepth = 24;
-    filterFunction = NULL;
+    theApp.filterFunction = NULL;
     break;
   case 32:
     systemColorDepth = 32;
@@ -581,7 +526,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
     systemMessage(IDS_ERROR_DISP_COLOR, "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode.",px.dwRGBBitCount);
     return FALSE;
   }
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     winlog("R Mask: %08x\n", px.dwRBitMask);
     winlog("G Mask: %08x\n", px.dwGBitMask);
     winlog("B Mask: %08x\n", px.dwBBitMask);
@@ -592,8 +537,8 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
   systemBlueShift = ffs(px.dwBBitMask);
 
 #ifdef MMX
-  if(!disableMMX)
-    cpu_mmx = detectMMX();
+  if(!theApp.disableMMX)
+    cpu_mmx = theApp.detectMMX();
   else
     cpu_mmx = 0;
 #endif
@@ -635,7 +580,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
     }
   }
 
-  if(ddrawDebug) {
+  if(theApp.ddrawDebug) {
     winlog("R shift: %d\n", systemRedShift);
     winlog("G shift: %d\n", systemGreenShift);
     winlog("B shift: %d\n", systemBlueShift);
@@ -675,7 +620,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
 
 void DirectDrawDisplay::clear()
 {
-  if(videoOption <= VIDEO_4X || !tripleBuffering || ddsFlip == NULL)
+  if(theApp.videoOption <= VIDEO_4X || !theApp.tripleBuffering || ddsFlip == NULL)
     return;
 
   DDBLTFX fx;
@@ -693,12 +638,12 @@ void DirectDrawDisplay::clear()
 void DirectDrawDisplay::renderMenu()
 {
   checkFullScreen();
-  DrawMenuBar(hWindow);
+  theApp.m_pMainWnd->DrawMenuBar();
 }
 
 void DirectDrawDisplay::checkFullScreen()
 {
-  if(tripleBuffering)
+  if(theApp.tripleBuffering)
     pDirectDraw->FlipToGDISurface();
 }
 
@@ -711,7 +656,7 @@ void DirectDrawDisplay::render()
      ddsPrimary == NULL)
     return;
 
-  if(vsync && !speedup) {
+  if(theApp.vsync && !speedup) {
     hret = pDirectDraw->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
   }
   
@@ -750,29 +695,29 @@ void DirectDrawDisplay::render()
   }
     
   if(hret == DD_OK) {
-    if(filterFunction) {
+    if(theApp.filterFunction) {
       if(systemColorDepth == 16)
-        (*filterFunction)(pix+filterWidth*2+4,
-                          filterWidth*2+4,
-                          (u8*)delta,
-                          (u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          filterWidth,
-                          filterHeight);
+        (*theApp.filterFunction)(pix+theApp.filterWidth*2+4,
+                                 theApp.filterWidth*2+4,
+                                 (u8*)theApp.delta,
+                                 (u8*)ddsDesc.lpSurface,
+                                 ddsDesc.lPitch,
+                                 theApp.filterWidth,
+                                 theApp.filterHeight);
       else
-        (*filterFunction)(pix+filterWidth*4+4,
-                          filterWidth*4+4,
-                          (u8*)delta,
-                          (u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          filterWidth,
-                          filterHeight);
+        (*theApp.filterFunction)(pix+theApp.filterWidth*4+4,
+                                 theApp.filterWidth*4+4,
+                                 (u8*)theApp.delta,
+                                 (u8*)ddsDesc.lpSurface,
+                                 ddsDesc.lPitch,
+                                 theApp.filterWidth,
+                                 theApp.filterHeight);
         
     } else {
       int copyX = 240;
       int copyY = 160;
       
-      if(cartridgeType == 1) {
+      if(theApp.cartridgeType == 1) {
         if(gbBorderOn) {
           copyX = 256;
           copyY = 224;
@@ -836,89 +781,89 @@ void DirectDrawDisplay::render()
       gbaLoopEnd:
       }
     }
-    if(showSpeed && (videoOption > VIDEO_4X || skin != NULL)) {
+    if(theApp.showSpeed && (theApp.videoOption > VIDEO_4X || theApp.skin != NULL)) {
       char buffer[30];
-      if(showSpeed == 1)
+      if(theApp.showSpeed == 1)
         sprintf(buffer, "%3d%%", systemSpeed);
       else
         sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
                 systemFrameSkip,
-                showRenderedFrames);
-      if(showSpeedTransparent)
+                theApp.showRenderedFrames);
+      if(theApp.showSpeedTransparent)
         fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
                                 ddsDesc.lPitch,
-                                rect.left+10,
-                                rect.bottom-10,
+                                theApp.rect.left+10,
+                                theApp.rect.bottom-10,
                                 buffer);
       else
         fontDisplayString((u8*)ddsDesc.lpSurface,
                           ddsDesc.lPitch,
-                          rect.left+10,
-                          rect.bottom-10,
+                          theApp.rect.left+10,
+                          theApp.rect.bottom-10,
                           buffer);        
     }
-  } else if(ddrawDebug)
+  } else if(theApp.ddrawDebug)
     winlog("Error during lock: %08x\n", hret);
 
   hret = ddsOffscreen->Unlock(NULL);
 
   if(hret == DD_OK) {
     ddsOffscreen->PageLock(0);
-    if(tripleBuffering && videoOption > VIDEO_4X) {
-      hret = ddsFlip->Blt(&dest, ddsOffscreen, NULL, DDBLT_WAIT, NULL);
+    if(theApp.tripleBuffering && theApp.videoOption > VIDEO_4X) {
+      hret = ddsFlip->Blt(&theApp.dest, ddsOffscreen, NULL, DDBLT_WAIT, NULL);
       if(hret == DD_OK) {
-        if(menuToggle || !active) {
+        if(theApp.menuToggle || !theApp.active) {
           pDirectDraw->FlipToGDISurface();
           ddsPrimary->SetClipper(ddsClipper);
-          hret = ddsPrimary->Blt(&dest, ddsFlip, NULL, DDBLT_ASYNC, NULL);
+          hret = ddsPrimary->Blt(&theApp.dest, ddsFlip, NULL, DDBLT_ASYNC, NULL);
           // if using emulation only, then we have to redraw the menu
           // everytime. It seems like a bug in DirectDraw to me as we not
           // overwritting the menu area at all.
-          if(ddrawUsingEmulationOnly)
-            DrawMenuBar(hWindow);
+          if(theApp.ddrawUsingEmulationOnly)
+            theApp.m_pMainWnd->DrawMenuBar();
         } else
           hret = ddsPrimary->Flip(NULL, 0);
       }
     } else {
-      hret = ddsPrimary->Blt(&dest, ddsOffscreen, NULL,DDBLT_ASYNC,NULL);
+      hret = ddsPrimary->Blt(&theApp.dest, ddsOffscreen, NULL,DDBLT_ASYNC,NULL);
       
       if(hret == DDERR_SURFACELOST) {
         hret = ddsPrimary->Restore();
         
         if(hret == DD_OK) {
-          hret = ddsPrimary->Blt(&dest, ddsOffscreen, NULL, DDBLT_ASYNC, NULL);
+          hret = ddsPrimary->Blt(&theApp.dest, ddsOffscreen, NULL, DDBLT_ASYNC, NULL);
         }
       }
     }
     ddsOffscreen->PageUnlock(0);
-  } else if(ddrawDebug)
+  } else if(theApp.ddrawDebug)
     winlog("Error during unlock: %08x\n", hret);
 
-  if(screenMessage) {
-    if(((GetTickCount() - screenMessageTime) < 3000) &&
-       !disableStatusMessage) {
+  if(theApp.screenMessage) {
+    if(((GetTickCount() - theApp.screenMessageTime) < 3000) &&
+       !theApp.disableStatusMessage) {
       ddsPrimary->SetClipper(ddsClipper);
       HDC hdc;
       ddsPrimary->GetDC(&hdc);
       SetTextColor(hdc, RGB(255,0,0));
       SetBkMode(hdc,TRANSPARENT);      
-      TextOut(hdc, dest.left+10, dest.bottom - 20, screenMessageBuffer,
-              strlen(screenMessageBuffer));
+      TextOut(hdc, theApp.dest.left+10, theApp.dest.bottom - 20, theApp.screenMessageBuffer,
+              strlen(theApp.screenMessageBuffer));
       ddsPrimary->ReleaseDC(hdc);
     } else {
-      screenMessage = false;
+      theApp.screenMessage = false;
     }
   }
   
   if(hret != DD_OK) {
-    if(ddrawDebug)
+    if(theApp.ddrawDebug)
       winlog("Error on update screen: %08x\n", hret);
   }  
 }
 
 int DirectDrawDisplay::selectFullScreenMode(GUID **pGUID)
 {
-  return winVideoModeSelect(hWindow, pGUID);
+  return winVideoModeSelect(theApp.m_pMainWnd, pGUID);
 }
 
 IDisplay *newDirectDrawDisplay()

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,70 +16,35 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "resource.h"
-#include "../System.h"
-#include "../GBA.h"
-#include "../Globals.h"
+// GDBConnection.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "vba.h"
+#include "GDBConnection.h"
 
 #include <winsock.h>
 
 #define SOCKET_MESSAGE WM_APP+1
 
-extern HWND hWindow;
-extern void winCenterWindow(HWND);
-extern BOOL useBiosFile;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 static bool initialized = false;
 
-class GDBPortDlg : public Dlg {
-  int port;
-  SOCKET sock;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  GDBPortDlg();
+/////////////////////////////////////////////////////////////////////////////
+// GDBPortDlg dialog
 
-  int getPort() { return port; }
-  SOCKET getSocket() { return sock; }
 
-  virtual BOOL OnInitDialog(LPARAM);
-
-  void OnOk();
-  void OnCancel();
-
-  virtual void OnClose();
-};
-
-class GDBWaitingDlg : public Dlg {
-  int port;
-  SOCKET listenSocket;
-  SOCKET sock;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  GDBWaitingDlg(SOCKET s);
-
-  SOCKET getListenSocket() { return listenSocket; }
-  SOCKET getSocket() { return sock; }
-  
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual LRESULT OnSocketAccept(WPARAM, LPARAM);
-
-  void OnCancel();
-
-  virtual void OnClose();
-};
-
-BEGIN_MESSAGE_MAP(GDBPortDlg, Dlg)
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnCancel)
-  ON_WM_CLOSE()
-END_MESSAGE_MAP()
-
-GDBPortDlg::GDBPortDlg()  :
-  Dlg()
+GDBPortDlg::GDBPortDlg(CWnd* pParent /*=NULL*/)
+  : CDialog(GDBPortDlg::IDD, pParent)
 {
+  //{{AFX_DATA_INIT(GDBPortDlg)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
   port = 55555;
   sock = INVALID_SOCKET;
   
@@ -92,24 +57,60 @@ GDBPortDlg::GDBPortDlg()  :
   }
 }
 
-BOOL GDBPortDlg::OnInitDialog(LPARAM)
+
+void GDBPortDlg::DoDataExchange(CDataExchange* pDX)
 {
-  char buffer[16];
-
-  sprintf(buffer, "%d", port);
-
-  ::SetWindowText(GetDlgItem(IDC_PORT), buffer);
-
-  winCenterWindow(getHandle());
-
-  return TRUE;
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GDBPortDlg)
+  DDX_Control(pDX, IDC_PORT, m_port);
+  //}}AFX_DATA_MAP
 }
 
-void GDBPortDlg::OnOk()
-{
-  char buffer[16];
 
-  ::GetWindowText(GetDlgItem(IDC_PORT), buffer, 16);
+BEGIN_MESSAGE_MAP(GDBPortDlg, CDialog)
+  //{{AFX_MSG_MAP(GDBPortDlg)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  ON_WM_CLOSE()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// GDBPortDlg message handlers
+
+int GDBPortDlg::getPort()
+{
+  return port;
+}
+
+
+SOCKET GDBPortDlg::getSocket()
+{
+  return sock;
+}
+
+
+BOOL GDBPortDlg::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
+  CString buffer;
+
+  buffer.Format("%d", port);
+
+  m_port.SetWindowText(buffer);
+
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void GDBPortDlg::OnOk() 
+{
+  CString buffer;
+
+  m_port.GetWindowText(buffer);
   
   sockaddr_in address;
   address.sin_family = AF_INET;
@@ -143,52 +144,73 @@ void GDBPortDlg::OnOk()
   }
 }
 
-void GDBPortDlg::OnCancel()
+void GDBPortDlg::OnCancel() 
 {
   OnClose();
 }
 
-void GDBPortDlg::OnClose()
+void GDBPortDlg::OnClose() 
 {
   EndDialog(FALSE);
 }
+/////////////////////////////////////////////////////////////////////////////
+// GDBWaitingDlg dialog
 
-BEGIN_MESSAGE_MAP(GDBWaitingDlg, Dlg)
-  ON_BN_CLICKED(ID_CANCEL, OnCancel)
-  ON_WM_CLOSE()
-  ON_MESSAGE(SOCKET_MESSAGE, OnSocketAccept)
-END_MESSAGE_MAP()
 
-GDBWaitingDlg::GDBWaitingDlg(SOCKET s)
-  : Dlg()
+GDBWaitingDlg::GDBWaitingDlg(SOCKET s, int p, CWnd* pParent /*=NULL*/)
+  : CDialog(GDBWaitingDlg::IDD, pParent)
 {
-  port = 55555;
+  //{{AFX_DATA_INIT(GDBWaitingDlg)
+  //}}AFX_DATA_INIT
+  port = p & 65535;
   listenSocket = s;
 }
 
-BOOL GDBWaitingDlg::OnInitDialog(LPARAM l)
+
+void GDBWaitingDlg::DoDataExchange(CDataExchange* pDX)
 {
-  char buffer[16];
-  port = (l & 65535);
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GDBWaitingDlg)
+  DDX_Control(pDX, IDC_PORT, m_port);
+  //}}AFX_DATA_MAP
+}
 
-  sprintf(buffer, "%d", port);
 
-  ::SetWindowText(GetDlgItem(IDC_PORT), buffer);
+BEGIN_MESSAGE_MAP(GDBWaitingDlg, CDialog)
+  //{{AFX_MSG_MAP(GDBWaitingDlg)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  ON_WM_CLOSE()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-  winCenterWindow(getHandle());
+  /////////////////////////////////////////////////////////////////////////////
+// GDBWaitingDlg message handlers
+
+BOOL GDBWaitingDlg::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
+  CString buffer;
+
+  buffer.Format("%d", port);
+
+  m_port.SetWindowText(buffer);
+
+  CenterWindow();
 
   int error = WSAAsyncSelect(listenSocket,
-                             getHandle(),
+                             (HWND )*this,
                              SOCKET_MESSAGE,
                              FD_ACCEPT);
-
-  return TRUE;
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 LRESULT GDBWaitingDlg::OnSocketAccept(WPARAM wParam, LPARAM lParam)
 {
   if(LOWORD(lParam) == FD_ACCEPT) {
-    WSAAsyncSelect(listenSocket, getHandle(), 0, 0);
+    WSAAsyncSelect(listenSocket, (HWND)*this, 0, 0);
     
     int flag = 0;    
     ioctlsocket(listenSocket, FIONBIO, (unsigned long *)&flag);
@@ -210,12 +232,12 @@ LRESULT GDBWaitingDlg::OnSocketAccept(WPARAM wParam, LPARAM lParam)
   return TRUE;
 }
 
-void GDBWaitingDlg::OnCancel()
+void GDBWaitingDlg::OnCancel() 
 {
   OnClose();
 }
 
-void GDBWaitingDlg::OnClose()
+void GDBWaitingDlg::OnClose() 
 {
   if(sock != INVALID_SOCKET) {
     closesocket(sock);
@@ -228,89 +250,12 @@ void GDBWaitingDlg::OnClose()
   EndDialog(FALSE);
 }
 
-extern void remoteSetSockets(SOCKET, SOCKET);
-
-extern bool debugger;
-extern int emulating;
-extern int cartridgeType;
-extern char filename[2048];
-extern char biosFileName[2048];
-
-extern bool (*emuWriteState)(char *);
-extern bool (*emuReadState)(char *);
-extern bool (*emuWriteBattery)(char *);
-extern bool (*emuReadBattery)(char *);
-extern void (*emuReset)();
-extern void (*emuCleanUp)();
-extern bool (*emuWritePNG)(char *);
-extern bool (*emuWriteBMP)(char *);
-extern void (*emuMain)(int);
-extern int emuCount;
-
-void toolsDebugGDB()
+SOCKET GDBWaitingDlg::getListenSocket()
 {
-  GDBPortDlg dlg;
-
-  if(dlg.DoModal(IDD_GDB_PORT, hWindow)) {
-    GDBWaitingDlg wait(dlg.getSocket());
-    if(wait.DoModal(IDD_GDB_WAITING, hWindow, dlg.getPort())) {
-      remoteSetSockets(wait.getListenSocket(), wait.getSocket());
-      debugger = true;
-      emulating = 1;
-      cartridgeType = 0;
-      strcpy(filename, "\\gnu_stub");
-      rom = (u8 *)malloc(0x2000000);
-      workRAM = (u8 *)calloc(1, 0x40000);
-      bios = (u8 *)calloc(1,0x4000);
-      internalRAM = (u8 *)calloc(1,0x8000);
-      paletteRAM = (u8 *)calloc(1,0x400);
-      vram = (u8 *)calloc(1, 0x20000);
-      oam = (u8 *)calloc(1, 0x400);
-      pix = (u8 *)calloc(1, 4 * 240 * 160);
-      ioMem = (u8 *)calloc(1, 0x400);
-      
-      emuWriteState = CPUWriteState;
-      emuReadState = CPUReadState;
-      emuWriteBattery = CPUWriteBatteryFile;
-      emuReadBattery = CPUReadBatteryFile;
-      emuReset = CPUReset;
-      emuCleanUp = CPUCleanUp;
-      emuWritePNG = CPUWritePNGFile;
-      emuWriteBMP = CPUWriteBMPFile;
-      emuMain = CPULoop;
-      //      emuUpdateCPSR = CPUUpdateCPSR;
-      //      emuHasDebugger = true;
-      emuCount = 50000;    
-      
-      CPUInit(biosFileName, useBiosFile ? true : false);
-      CPUReset();    
-    }
-  }
+  return listenSocket;
 }
 
-extern BOOL fileOpenSelect();
-extern BOOL fileOpen();
-extern void fileClose();
-
-void toolsDebugGDBLoad()
+SOCKET GDBWaitingDlg::getSocket()
 {
-  if(fileOpenSelect()) {
-    if(fileOpen()) {
-      if(cartridgeType != 0) {
-        systemMessage(IDS_ERROR_NOT_GBA_IMAGE, "Error: not a GBA image");
-        fileClose();
-        return;
-      }
-      GDBPortDlg dlg;
-
-      if(dlg.DoModal(IDD_GDB_PORT, hWindow)) {
-        GDBWaitingDlg wait(dlg.getSocket());
-        if(wait.DoModal(IDD_GDB_WAITING, hWindow, dlg.getPort())) {
-          remoteSetSockets(wait.getListenSocket(), wait.getSocket());
-          debugger = true;
-          emulating = 1;
-        }
-      }
-    }
-  }
+  return sock;
 }

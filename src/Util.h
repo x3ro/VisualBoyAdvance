@@ -31,9 +31,9 @@ typedef struct {
   int size;
 } variable_desc;
 
-extern bool utilWritePNGFile(char *, int, int, u8 *);
-extern bool utilWriteBMPFile(char *, int, int, u8 *);
-extern void utilApplyIPS(char *ips, u8 **rom, int *size);
+extern bool utilWritePNGFile(const char *, int, int, u8 *);
+extern bool utilWriteBMPFile(const char *, int, int, u8 *);
+extern void utilApplyIPS(const char *ips, u8 **rom, int *size);
 extern void utilWriteBMP(char *, int, int, u8 *);
 extern bool utilIsGBAImage(const char *);
 extern bool utilIsGBImage(const char *);

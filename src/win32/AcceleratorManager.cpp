@@ -1,21 +1,3 @@
-/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 ////////////////////////////////////////////////////////////////////////////////
 // Copyright (C) 1998 by Thierry Maurel
 // All rights reserved
@@ -48,14 +30,16 @@
 //#include "resource.h"
 #include "../System.h"
 
-#include "Wnd.h"
 #include "AcceleratorManager.h"
 #include "Reg.h"
 
-#include <vector>
+#ifdef _DEBUG
+#undef THIS_FILE
+static char THIS_FILE[]=__FILE__;
+#define new DEBUG_NEW
+#endif
 
-extern HACCEL hAccel;
-extern HWND hWindow;
+
 
 //////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -67,7 +51,7 @@ CAcceleratorManager::CAcceleratorManager()
   m_hRegKey = HKEY_CURRENT_USER;
   m_szRegKey = "";
   m_bAutoSave = FALSE;
-  hWndConnected = NULL;
+  m_pWndConnected = NULL;
 
   m_bDefaultTable = false;
 }
@@ -78,7 +62,7 @@ CAcceleratorManager::CAcceleratorManager()
 //
 CAcceleratorManager::~CAcceleratorManager()
 {
-  if ((m_bAutoSave == true) && (m_szRegKey.IsEmpty() != false)) {
+  if ((m_bAutoSave == true) && (m_szRegKey.IsEmpty() != FALSE)) {
     //          bool bRet = Write();
     //          if (!bRet)
     //                  systemMessage(0, "CAcceleratorManager::~CAcceleratorManager\nError in CAcceleratorManager::Write...");
@@ -95,23 +79,22 @@ CAcceleratorManager::~CAcceleratorManager()
 //
 void CAcceleratorManager::Reset()
 {
-  //CCmdAccelOb* pCmdAccel;
-  //WORD wKey;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-
-  while (it != m_mapAccelTable.end()) {
-    delete it->second;
-    it++;
+  CCmdAccelOb* pCmdAccel;
+  WORD wKey;
+  POSITION pos = m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
+    delete pCmdAccel;
   }
-  m_mapAccelTable.clear();
-  m_mapAccelString.clear();
+  m_mapAccelTable.RemoveAll();
+  m_mapAccelString.RemoveAll();
 
-  it = m_mapAccelTableSaved.begin();
-  while (it != m_mapAccelTableSaved.end()) {
-    delete it->second;
-    it++;
+  pos = m_mapAccelTableSaved.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTableSaved.GetNextAssoc(pos, wKey, pCmdAccel);
+    delete pCmdAccel;
   }
-  m_mapAccelTableSaved.clear();
+  m_mapAccelTableSaved.RemoveAll();
 }
 
 
@@ -122,35 +105,24 @@ bool CAcceleratorManager::AddAccel(BYTE cVirt, WORD wIDCommand, WORD wKey, LPCTS
 {
   ASSERT(szCommand != NULL);
 
-  //    WORD wIDCmd;
-  CMapStringToWord::iterator it;
-
-  it = m_mapAccelString.find((char *)szCommand);
-
-  if (it != m_mapAccelString.end()) {
-    if (it->second != wIDCommand)
+  WORD wIDCmd;
+  if (m_mapAccelString.Lookup(szCommand, wIDCmd) == TRUE) {
+    if (wIDCmd != wIDCommand)
       return false;
   }
 
   CCmdAccelOb* pCmdAccel = NULL;
-  CMapWordToCCmdAccelOb::iterator it2;
-
-  it2 = m_mapAccelTable.find(wIDCommand);
-
-  if(it2 != m_mapAccelTable.end()) {
-    pCmdAccel = it2->second;
-    if(strcmp(pCmdAccel->m_szCommand, szCommand)) {
+  if (m_mapAccelTable.Lookup(wIDCommand, pCmdAccel) == TRUE) {
+    if (pCmdAccel->m_szCommand != szCommand) {
       return false;
     }
     CAccelsOb* pAccel;
-
-    std::list<CAccelsOb *>::iterator it3 = pCmdAccel->m_Accels.begin();
-    while (it3 != pCmdAccel->m_Accels.end()) {
-      pAccel = *it3;
+    POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+    while (pos != NULL) {
+      pAccel = pCmdAccel->m_Accels.GetNext(pos);
       if (pAccel->m_cVirt == cVirt &&
           pAccel->m_wKey == wKey)
         return FALSE;
-      it3++;
     }
     // Adding the accelerator
     pCmdAccel->Add(cVirt, wKey, bLocked);
@@ -158,22 +130,61 @@ bool CAcceleratorManager::AddAccel(BYTE cVirt, WORD wIDCommand, WORD wKey, LPCTS
   } else {
     pCmdAccel = new CCmdAccelOb(cVirt, wIDCommand, wKey, szCommand, bLocked);
     ASSERT(pCmdAccel != NULL);
-    m_mapAccelTable.insert(CMapWordToCCmdAccelOb::value_type(wIDCommand, pCmdAccel));
+    m_mapAccelTable.SetAt(wIDCommand, pCmdAccel);
   }
   // 2nd table
-  m_mapAccelString.insert(CMapStringToWord::value_type((char *)szCommand, wIDCommand));
+  m_mapAccelString.SetAt(szCommand, wIDCommand);
   return true;
 }
+
+
+//////////////////////////////////////////////////////////////////////
+// Debug fcts
+//////////////////////////////////////////////////////////////////////
+//
+//
+#ifdef _DEBUG
+void CAcceleratorManager::AssertValid() const
+{
+}
+
+//////////////////////////////////////////////////////////////////////
+//
+//
+void CAcceleratorManager::Dump(CDumpContext& dc) const
+{
+  CCmdAccelOb* pCmdAccel;
+  WORD wKey;
+  dc << "CAcceleratorManager::Dump :\n";
+  dc << "m_mapAccelTable :\n";
+  POSITION pos = m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
+    dc << "a CCmdAccelOb at 0x"  << (void*)pCmdAccel << " = {\n";
+    dc << pCmdAccel;
+    dc << "}\n";
+  }
+  dc << "\nm_mapAccelTableSaved\n";
+  pos = m_mapAccelTableSaved.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTableSaved.GetNextAssoc(pos, wKey, pCmdAccel);
+    dc << "a CCmdAccelOb at 0x" << (void*)pCmdAccel << " = {\n";
+    dc << pCmdAccel;
+    dc << "}\n";
+  }
+}
+#endif
+
 
 //////////////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////////////
 //
 //
-void CAcceleratorManager::Connect(HWND pWnd, bool bAutoSave)
+void CAcceleratorManager::Connect(CWnd* pWnd, bool bAutoSave)
 {
-  ASSERT(hWndConnected == NULL);
-  hWndConnected = pWnd;
+  ASSERT(m_pWndConnected == NULL);
+  m_pWndConnected = pWnd;
   m_bAutoSave = bAutoSave;
 }
 
@@ -181,7 +192,7 @@ void CAcceleratorManager::Connect(HWND pWnd, bool bAutoSave)
 //////////////////////////////////////////////////////////////////////
 //
 //
-bool CAcceleratorManager::GetRegKey(HKEY& hRegKey, CStdString &szRegKey)
+bool CAcceleratorManager::GetRegKey(HKEY& hRegKey, CString& szRegKey)
 {
   if (m_szRegKey.IsEmpty())
     return false;
@@ -214,68 +225,63 @@ bool CAcceleratorManager::SetRegKey(HKEY hRegKey, LPCTSTR szRegKey)
 bool CAcceleratorManager::UpdateWndTable()
 {
   int iLoop = 0;
-  std::vector<LPACCEL> arrayACCEL;
+  CTypedPtrArray<CPtrArray, LPACCEL> arrayACCEL;
 
   CCmdAccelOb* pCmdAccel;
   WORD wKey;
   LPACCEL pACCEL;
   CAccelsOb* pAccelOb;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-  while (it != m_mapAccelTable.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
-    std::list<CAccelsOb*>::iterator it2 = pCmdAccel->m_Accels.begin();
-
-    while (it2 != pCmdAccel->m_Accels.end()) {
-      pAccelOb = *it2;
-      it2++;
+  POSITION pos = m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
+    POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+    while (pos != NULL) {
+      pAccelOb = pCmdAccel->m_Accels.GetNext(pos);
 
       pACCEL = new ACCEL;
       ASSERT(pACCEL != NULL);
       pACCEL->fVirt = pAccelOb->m_cVirt;
       pACCEL->key = pAccelOb->m_wKey;
       pACCEL->cmd = pCmdAccel->m_wIDCommand;
-      arrayACCEL.push_back(pACCEL);
+      arrayACCEL.Add(pACCEL);
     }
-
-    it++;
   }
-        
-  int nAccel = arrayACCEL.size();
+  
+  int nAccel = arrayACCEL.GetSize();
   LPACCEL lpAccel = (LPACCEL)LocalAlloc(LPTR, nAccel * sizeof(ACCEL));
   if (!lpAccel) {
     for (iLoop = 0; iLoop < nAccel; iLoop++)
-      delete arrayACCEL.at(iLoop);
-    arrayACCEL.clear();
+      delete arrayACCEL.GetAt(iLoop);
+    arrayACCEL.RemoveAll();
 
     return false;
   }
 
   for (iLoop = 0; iLoop < nAccel; iLoop++) {
-                
-    pACCEL = arrayACCEL.at(iLoop);
+    
+    pACCEL = arrayACCEL.GetAt(iLoop);
     lpAccel[iLoop].fVirt = pACCEL->fVirt;
     lpAccel[iLoop].key = pACCEL->key;
     lpAccel[iLoop].cmd = pACCEL->cmd;
 
     delete pACCEL;
   }
-  arrayACCEL.clear();
+  arrayACCEL.RemoveAll();
 
   HACCEL hNewTable = CreateAcceleratorTable(lpAccel, nAccel);
   if (!hNewTable) {
     ::LocalFree(lpAccel);
     return false;
   }
-  HACCEL hOldTable = hAccel;
+  HACCEL hOldTable = theApp.hAccel;
   if (!::DestroyAcceleratorTable(hOldTable)) {
     ::LocalFree(lpAccel);
     return false;
   }
-  hAccel = hNewTable;
+  theApp.hAccel = hNewTable;
   ::LocalFree(lpAccel);
 
-  UpdateMenu(GetMenu(hWindow));
+  UpdateMenu(GetMenu(*AfxGetApp()->m_pMainWnd));
 
   return true;
 }
@@ -289,23 +295,21 @@ bool CAcceleratorManager::UpdateWndTable()
 bool CAcceleratorManager::DeleteAccel(BYTE cVirt, WORD wIDCommand, WORD wKey)
 {
   CCmdAccelOb* pCmdAccel = NULL;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(wIDCommand);
-
-  if(it != m_mapAccelTable.end()) {
-    pCmdAccel = it->second;
-    std::list<CAccelsOb*>::iterator it2 = pCmdAccel->m_Accels.begin();
+  if (m_mapAccelTable.Lookup(wIDCommand, pCmdAccel) == TRUE) {
+    POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+    POSITION PrevPos;
     CAccelsOb* pAccel = NULL;
-    while (it2 != pCmdAccel->m_Accels.end()) {
-      pAccel = *it2;
+    while (pos != NULL) {
+      PrevPos = pos;
+      pAccel = pCmdAccel->m_Accels.GetNext(pos);
       if (pAccel->m_bLocked == true)
         return false;
 
       if (pAccel->m_cVirt == cVirt && pAccel->m_wKey == wKey) {
-        pCmdAccel->m_Accels.erase(it2);
+        pCmdAccel->m_Accels.RemoveAt(PrevPos);
         delete pAccel;
         return true;
       }
-      it2++;
     }
   }
   return false;
@@ -318,21 +322,17 @@ bool CAcceleratorManager::DeleteAccel(BYTE cVirt, WORD wIDCommand, WORD wKey)
 bool CAcceleratorManager::DeleteEntry(WORD wIDCommand)
 {
   CCmdAccelOb* pCmdAccel = NULL;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(wIDCommand);
-
-  ASSERT(it != m_mapAccelTable.end());
+  VERIFY(m_mapAccelTable.Lookup(wIDCommand, pCmdAccel) == TRUE);
 
   CAccelsOb* pAccel;
-
-  std::list<CAccelsOb *>::iterator it2 = pCmdAccel->m_Accels.begin();
-  while (it2 != pCmdAccel->m_Accels.end() ) {
-    pAccel = *it2;
+  POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+  while (pos != NULL) {
+    pAccel = pCmdAccel->m_Accels.GetNext(pos);
     if (pAccel->m_bLocked == true)
       return false;
-    it2++;
   }
-  m_mapAccelString.erase(pCmdAccel->m_szCommand);
-  m_mapAccelTable.erase(wIDCommand);
+  m_mapAccelString.RemoveKey(pCmdAccel->m_szCommand);
+  m_mapAccelTable.RemoveKey(wIDCommand);
   delete pCmdAccel;
 
   return true;
@@ -346,10 +346,9 @@ bool CAcceleratorManager::DeleteEntry(LPCTSTR szCommand)
 {
   ASSERT(szCommand != NULL);
 
-  //    WORD wIDCommand;
-  CMapStringToWord::iterator it = m_mapAccelString.find((char *)szCommand);
-  if (it != m_mapAccelString.end()) {
-    return DeleteEntry(it->second);
+  WORD wIDCommand;
+  if (m_mapAccelString.Lookup(szCommand, wIDCommand) == TRUE) {
+    return DeleteEntry(wIDCommand);
   }
   return true;
 }
@@ -373,9 +372,8 @@ bool CAcceleratorManager::AddCommandAccel(WORD wIDCommand, LPCTSTR szCommand, bo
 {
   ASSERT(szCommand != NULL);
 
-  ASSERT(hWndConnected != NULL);
-  HACCEL hOriginalTable = hAccel;
-  ASSERT(hAccel != NULL);
+  ASSERT(m_pWndConnected != NULL);
+  HACCEL hOriginalTable = theApp.hAccel;
 
   int nAccel = ::CopyAcceleratorTable(hOriginalTable, NULL, 0);
   LPACCEL lpAccel = (LPACCEL)LocalAlloc(LPTR, (nAccel) * sizeof(ACCEL));
@@ -400,16 +398,14 @@ bool CAcceleratorManager::CreateEntry(WORD wIDCommand, LPCTSTR szCommand)
 {
   ASSERT(szCommand != NULL);
 
-  //    WORD wIDDummy;
-  CMapStringToWord::iterator it = m_mapAccelString.find((char *)szCommand);
-
-  if ( it != m_mapAccelString.end())
+  WORD wIDDummy;
+  if (m_mapAccelString.Lookup(szCommand, wIDDummy) == TRUE)
     return false;
 
   CCmdAccelOb* pCmdAccel = new CCmdAccelOb(wIDCommand, szCommand);
   ASSERT(pCmdAccel != NULL);
-  m_mapAccelTable.insert(CMapWordToCCmdAccelOb::value_type(wIDCommand, pCmdAccel));
-  m_mapAccelString.insert(CMapStringToWord::value_type((char *)szCommand, wIDCommand));
+  m_mapAccelTable.SetAt(wIDCommand, pCmdAccel);
+  m_mapAccelString.SetAt(szCommand, wIDCommand);
 
   return false;
 }
@@ -420,10 +416,10 @@ bool CAcceleratorManager::CreateEntry(WORD wIDCommand, LPCTSTR szCommand)
 //////////////////////////////////////////////////////////////////////
 //
 //
-bool CAcceleratorManager::GetStringFromACCEL(ACCEL* pACCEL, CStdString& szAccel)
+bool CAcceleratorManager::GetStringFromACCEL(ACCEL* pACCEL, CString& szAccel)
 {
   ASSERT(pACCEL != NULL);
-        
+  
   CAccelsOb accel(pACCEL);
   accel.GetString(szAccel);
 
@@ -437,7 +433,7 @@ bool CAcceleratorManager::GetStringFromACCEL(ACCEL* pACCEL, CStdString& szAccel)
 //////////////////////////////////////////////////////////////////////
 //
 //
-bool CAcceleratorManager::GetStringFromACCEL(BYTE cVirt, WORD nCode, CStdString& szAccel)
+bool CAcceleratorManager::GetStringFromACCEL(BYTE cVirt, WORD nCode, CString& szAccel)
 {
   CAccelsOb accel(cVirt, nCode);
   accel.GetString(szAccel);
@@ -460,37 +456,30 @@ CAcceleratorManager& CAcceleratorManager::operator=(const CAcceleratorManager& a
   CCmdAccelOb* pNewCmdAccel;
   WORD wKey;
   // Copy the 2 tables : normal accel table...
-  CMapWordToCCmdAccelOb::const_iterator it = accelmgr.m_mapAccelTable.begin();
-
-  while (it != accelmgr.m_mapAccelTable.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
+  POSITION pos = accelmgr.m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    accelmgr.m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
     pNewCmdAccel = new CCmdAccelOb;
     ASSERT(pNewCmdAccel != NULL);
     *pNewCmdAccel = *pCmdAccel;
-    m_mapAccelTable.insert(CMapWordToCCmdAccelOb::value_type(wKey, pNewCmdAccel));
-    it++;
+    m_mapAccelTable.SetAt(wKey, pNewCmdAccel);
   }
   // ... and saved accel table.
-  it = accelmgr.m_mapAccelTableSaved.begin();
-  while (it != accelmgr.m_mapAccelTableSaved.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
+  pos = accelmgr.m_mapAccelTableSaved.GetStartPosition();
+  while (pos != NULL) {
+    accelmgr.m_mapAccelTableSaved.GetNextAssoc(pos, wKey, pCmdAccel);
     pNewCmdAccel = new CCmdAccelOb;
     ASSERT(pNewCmdAccel != NULL);
     *pNewCmdAccel = *pCmdAccel;
-    m_mapAccelTableSaved.insert(CMapWordToCCmdAccelOb::value_type(wKey, pNewCmdAccel));
-    it++;
+    m_mapAccelTableSaved.SetAt(wKey, pNewCmdAccel);
   }
 
   // The Strings-ID table
-  CStdString szKey;
-  CMapStringToWord::const_iterator it2 = accelmgr.m_mapAccelString.begin();
-  while (it2 != accelmgr.m_mapAccelString.end()) {
-    szKey = it2->first;
-    wKey = it2->second;
-    m_mapAccelString.insert(CMapStringToWord::value_type(szKey, wKey));
-    it2++;
+  CString szKey;
+  pos = accelmgr.m_mapAccelString.GetStartPosition();
+  while (pos != NULL) {
+    accelmgr.m_mapAccelString.GetNextAssoc(pos, szKey, wKey);
+    m_mapAccelString.SetAt(szKey, wKey);
   }
   m_bDefaultTable = accelmgr.m_bDefaultTable;
 
@@ -517,7 +506,7 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
       if(info.hSubMenu != NULL) {
         UpdateMenu(info.hSubMenu);
       } else {
-        if(info.wID != -1) {
+        if(info.wID != (UINT)-1) {
           MENUITEMINFO info2;
           ZeroMemory(&info2, sizeof(info2));
           info2.cbSize = sizeof(info2) - sizeof(HBITMAP);
@@ -525,21 +514,20 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
           info2.dwTypeData = ss;
           info2.cch = 128;
           GetMenuItemInfo(menu, i, MF_BYPOSITION, &info2);
-          CStdString str = ss;
+          CString str = ss;
           int index = str.Find('\t');
           if(index != -1)
             str = str.Left(index);
           
-          CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(info.wID);
+          WORD command = info.wID;
           
-          if(it != m_mapAccelTable.end()) {
-            CCmdAccelOb *o = it->second;
-            if(o->m_Accels.begin() != o->m_Accels.end()) {
-              std::list<CAccelsOb*>::iterator j = o->m_Accels.begin();
+          CCmdAccelOb *o;
+          if(m_mapAccelTable.Lookup(command, o)) {
+            if(o->m_Accels.GetCount()) {
+              POSITION pos = o->m_Accels.GetHeadPosition();
+              CAccelsOb *accel = o->m_Accels.GetNext(pos);
               
-              CAccelsOb *accel = *j;
-              
-              CStdString s;
+              CString s;
               accel->GetString(s);
               str += "\t";
               str += s;
@@ -553,6 +541,8 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
   } else {
     MENUITEMINFO info;
     wchar_t ss[128];
+    wchar_t str[512];
+    
     ZeroMemory(&info, sizeof(info));
     info.cbSize = sizeof(info);
     info.fMask = MIIM_ID | MIIM_SUBMENU;
@@ -562,7 +552,7 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
       if(info.hSubMenu != NULL) {
         UpdateMenu(info.hSubMenu);
       } else {
-        if(info.wID != -1) {
+        if(info.wID != (WORD)-1) {
           MENUITEMINFOW info2;
           ZeroMemory(&info2, sizeof(info2));
           info2.cbSize = sizeof(info2);
@@ -570,27 +560,36 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
           info2.dwTypeData = ss;
           info2.cch = 128;
           GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info2);
-          CStdStringW str = ss;
-          int index = str.Find('\t');
-          if(index != -1)
-            str = str.Left(index);
+
+          wcscpy(str, ss);
           
-          CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(info.wID);
+          wchar_t *p = wcschr(str, '\t');
+          if(p)
+            *p = 0;
           
-          if(it != m_mapAccelTable.end()) {
-            CCmdAccelOb *o = it->second;
-            if(o->m_Accels.begin() != o->m_Accels.end()) {
-              std::list<CAccelsOb*>::iterator j = o->m_Accels.begin();
+          CCmdAccelOb *o;
+          WORD command = info.wID;
+          if(m_mapAccelTable.Lookup(command, o)) {
+            if(o->m_Accels.GetCount()) {
+              POSITION pos = o->m_Accels.GetHeadPosition();
               
-              CAccelsOb *accel = *j;
+              CAccelsOb *accel = o->m_Accels.GetNext(pos);
               
-              CStdString s;
+              CString s;
               accel->GetString(s);
-              str += "\t";
-              str += s;
+
+              wchar_t temp[128];
+              temp[0] = '\t';
+              temp[1] = 0;
+              wcscat(str, temp);
+              p = temp;
+              for(const char *sp = s; *sp; sp++)
+                *p++ = *sp;
+              *p = 0;
+              wcscat(str, temp);
             }
           }
-          if(str != ss)
+          if(wcscmp(str,ss))
             ModifyMenuW(menu, i, MF_BYPOSITION | MF_STRING, info.wID, str);
         }
       }
@@ -619,27 +618,24 @@ bool CAcceleratorManager::Load(HKEY hRegKey, LPCTSTR szRegKey)
     CCmdAccelOb* pCmdAccel;
     CAccelsOb* pAccel;
     DWORD dwIDAccelData, dwAccelData;
-    
+    BOOL bExistID;    
     int iIndex = 0;
     if(count) {
+      WORD wKey;
+      POSITION pos = m_mapAccelTable.GetStartPosition();
 
-      CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-
-      while(it != m_mapAccelTable.end()) {
-        pCmdAccel = it->second;
+      while(pos != NULL) {
+        m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
         pCmdAccel->DeleteUserAccels();
-        it++;
       }
       
       while(iIndex < count) {
         dwIDAccelData = data[iIndex++];
         
         WORD wIDCommand = LOWORD(dwIDAccelData);
-        CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(wIDCommand);
-        bool bExistID = (it != m_mapAccelTable.end());
-        
+        bExistID = m_mapAccelTable.Lookup(wIDCommand, pCmdAccel);
+
         if (bExistID) {
-          pCmdAccel = it->second;
           pCmdAccel->DeleteUserAccels();
         }
         for (int j = 0; j < HIWORD(dwIDAccelData) && iIndex < count; j++) {
@@ -681,56 +677,49 @@ bool CAcceleratorManager::Load()
 //
 bool CAcceleratorManager::Write()
 {
-  std::vector<DWORD> AccelsDatasArray;
-  std::vector<DWORD> CmdDatasArray;
-
+  CDWordArray AccelsDatasArray;
+  CDWordArray CmdDatasArray;
+  
   int iCount = 0;
   CCmdAccelOb* pCmdAccel;
   CAccelsOb* pAccel;
   DWORD dwAccelData;
-
+  
   WORD wKey;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-  while (it != m_mapAccelTable.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
+  POSITION pos = m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
+    CmdDatasArray.RemoveAll();
 
-    CmdDatasArray.clear();
-
-    std::list<CAccelsOb*>::iterator it2 = pCmdAccel->m_Accels.begin();
-    while (it2 != pCmdAccel->m_Accels.end()) {
-      pAccel = *it2;
-      //                        if (!pAccel->m_bLocked) {
+    POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+    while (pos != NULL) {
+      pAccel = pCmdAccel->m_Accels.GetNext(pos);
+      //      if (!pAccel->m_bLocked) {
       dwAccelData = pAccel->GetData();
-      CmdDatasArray.push_back(dwAccelData);
-      //}
-      it2++;
+      CmdDatasArray.Add(dwAccelData);
+      //      }
     }
-    if (CmdDatasArray.size() > 0) {
-      CmdDatasArray.insert(CmdDatasArray.begin(), MAKELONG(pCmdAccel->m_wIDCommand, CmdDatasArray.size()));
-                        
-      AccelsDatasArray.insert(AccelsDatasArray.end(), CmdDatasArray.begin(), CmdDatasArray.end());
+
+    if (CmdDatasArray.GetSize() > 0) {
+      CmdDatasArray.InsertAt(0, MAKELONG(pCmdAccel->m_wIDCommand, CmdDatasArray.GetSize()));
+      
+      AccelsDatasArray.Append(CmdDatasArray);
       iCount++;
     }
-    it++;
   }
-  //    AccelsDatasArray.insert(AccelsDataArray.begin(), MAKELONG(65535, iCount));
+  //  AccelsDatasArray.InsertAt(0, MAKELONG(65535, iCount));
   
-  int count = AccelsDatasArray.size();
+  int count = AccelsDatasArray.GetSize();
   DWORD *data = (DWORD *)malloc(count * sizeof(DWORD));
   ASSERT(data != NULL);
-  std::vector<DWORD>::iterator it3 = AccelsDatasArray.begin();
-  int index = 0;
-  while(it3 != AccelsDatasArray.end()) {
+
+  for(int index = 0; index < count; index++)
     data[index] = AccelsDatasArray[index];
-    index++;
-    it3++;
-  }
 
   regSetBinaryValue("keyboard", (char *)data, count*sizeof(DWORD));
 
-  AccelsDatasArray.clear();
-  CmdDatasArray.clear();
+  AccelsDatasArray.RemoveAll();
+  CmdDatasArray.RemoveAll();
 
   free(data);
 
@@ -755,31 +744,28 @@ bool CAcceleratorManager::CreateDefaultTable()
   CAccelsOb* pNewAccel;
 
   WORD wKey;
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-  while (it != m_mapAccelTable.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
-    it++;
+  POSITION pos = m_mapAccelTable.GetStartPosition();
+  while (pos != NULL) {
+    m_mapAccelTable.GetNextAssoc(pos, wKey, pCmdAccel);
     pNewCmdAccel = new CCmdAccelOb;
     ASSERT(pNewCmdAccel != NULL);
-
-    std::list<CAccelsOb*>::iterator it2 = pCmdAccel->m_Accels.begin();
-    while (it2 != pCmdAccel->m_Accels.end()) {
-      pAccel = *it2;
-      it2++;
+    
+    POSITION pos = pCmdAccel->m_Accels.GetHeadPosition();
+    while (pos != NULL) {
+      pAccel = pCmdAccel->m_Accels.GetNext(pos);
       if (!pAccel->m_bLocked) {
         pNewAccel = new CAccelsOb;
         ASSERT(pNewAccel != NULL);
-
+  
         *pNewAccel = *pAccel;
-        pNewCmdAccel->m_Accels.push_back(pNewAccel);
+        pNewCmdAccel->m_Accels.AddTail(pNewAccel);
       }
     }
-    if (pNewCmdAccel->m_Accels.size() != 0) {
+    if (pNewCmdAccel->m_Accels.GetCount() != 0) {
       pNewCmdAccel->m_wIDCommand = pCmdAccel->m_wIDCommand;
       pNewCmdAccel->m_szCommand = pCmdAccel->m_szCommand;
-
-      m_mapAccelTableSaved.insert(CMapWordToCCmdAccelOb::value_type(wKey, pNewCmdAccel));
+      
+      m_mapAccelTableSaved.SetAt(wKey, pNewCmdAccel);
     } else 
       delete pNewCmdAccel;
   }
@@ -794,42 +780,5 @@ bool CAcceleratorManager::CreateDefaultTable()
 //
 bool CAcceleratorManager::Default()
 {
-  CCmdAccelOb* pCmdAccel;
-  CCmdAccelOb* pSavedCmdAccel;
-
-  CAccelsOb* pAccel;
-  CAccelsOb* pSavedAccel;
-
-  WORD wKey;
-
-  CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
-
-  while(it != m_mapAccelTable.end()) {
-    wKey = it->first;
-    pCmdAccel = it->second;
-    pCmdAccel->DeleteUserAccels();
-    it++;
-  }
-
-// @ Add the saved Accelerators
-  it = m_mapAccelTableSaved.begin();
-        while (it != m_mapAccelTableSaved.end()) {
-    wKey = it->first;
-    pSavedCmdAccel = it->second;
-    it++;
-
-    pCmdAccel = m_mapAccelTable.find(wKey)->second;
-
-                // @ Removed by kukac  pCmdAccel->DeleteUserAccels();
-    std::list<CAccelsOb*>::iterator it = pSavedCmdAccel->m_Accels.begin();
-                while (it != pSavedCmdAccel->m_Accels.end()) {
-                        pSavedAccel = *it;
-      it++;
-                        pAccel = new CAccelsOb(pSavedAccel);
-                        ASSERT(pAccel != NULL);
-                        pCmdAccel->m_Accels.push_back(pAccel);
-                }
-        }
-
   return true;
 }

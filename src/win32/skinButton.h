@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,27 +16,40 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "StdString.h"
+#if !defined(AFX_SKINBUTTON_H__E51B4507_EAD7_43EE_9F54_204BC485D59C__INCLUDED_)
+#define AFX_SKINBUTTON_H__E51B4507_EAD7_43EE_9F54_204BC485D59C__INCLUDED_
 
-class SkinButton : public Wnd {
-  DECLARE_MESSAGE_MAP()
-private:
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+// skinButton.h : header file
+//
+
+/////////////////////////////////////////////////////////////////////////////
+// SkinButton window
+
+class SkinButton : public CWnd
+{
+  // Construction
+ public:
+  SkinButton();
+
+  // Attributes
+ private:
   HBITMAP normalBmp;
   HBITMAP downBmp;
   HBITMAP overBmp;
   RECT rect;
   bool mouseOver;
-  CStdString id;
+  CString id;
   HRGN region;
   WORD idCommand;
   int buttonMask;
   int menu;
-public:
-  SkinButton();
-  virtual ~SkinButton();
 
-  BOOL Create(const char *, DWORD, const RECT&, HWND, UINT);
+  // Operations
+ public:
+  BOOL CreateButton(const char *, DWORD, const RECT&, CWnd *, UINT);
 
   void SetNormalBitmap(HBITMAP);
   void SetDownBitmap(HBITMAP);
@@ -46,13 +59,34 @@ public:
   void SetId(const char *);
   void SetRegion(HRGN);
 
-  virtual BOOL OnEraseBkgnd(HDC);
-  virtual void OnPaint();
-  virtual LRESULT OnLButtonUpMsg(WPARAM, LPARAM);
-  virtual LRESULT OnLButtonDownMsg(WPARAM, LPARAM);
-  virtual LRESULT OnMouseMoveMsg(WPARAM, LPARAM);
-  virtual LRESULT OnKillFocusMsg(WPARAM, LPARAM);
-  virtual LRESULT OnCaptureChangedMsg(WPARAM, LPARAM);
-  virtual LRESULT OnRButtonDownMsg(WPARAM, LPARAM);
-  virtual LRESULT OnMouseLeaveMsg(WPARAM, LPARAM);
-};
+  // Overrides
+  // ClassWizard generated virtual function overrides
+  //{{AFX_VIRTUAL(SkinButton)
+  //}}AFX_VIRTUAL
+
+  // Implementation
+ public:
+  afx_msg LRESULT OnMouseLeaveMsg(WPARAM wParam, LPARAM lParam);
+  afx_msg LRESULT OnMouseMoveMsg(WPARAM wParam, LPARAM lParam);
+  afx_msg LRESULT OnLButtonDownMsg(WPARAM wParam, LPARAM lParam);
+  afx_msg LRESULT OnLButtonUpMsg(WPARAM wParam, LPARAM lParam);
+  virtual ~SkinButton();
+
+  // Generated message map functions
+ protected:
+  //{{AFX_MSG(SkinButton)
+  afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+  afx_msg void OnPaint();
+  afx_msg void OnKillFocus(CWnd* pNewWnd);
+  afx_msg void OnCaptureChanged(CWnd *pWnd);
+  afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
+  //}}AFX_MSG
+  DECLARE_MESSAGE_MAP()
+    };
+
+    /////////////////////////////////////////////////////////////////////////////
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_SKINBUTTON_H__E51B4507_EAD7_43EE_9F54_204BC485D59C__INCLUDED_)

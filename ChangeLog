@@ -1,3 +1,7 @@
+2003-09-03  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/armdis.cpp: fixed thumb disassembly bug with ldsb and ldrh opcodes
+
 2003-08-23  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (updateRenderMethod0): return true if render type did not change

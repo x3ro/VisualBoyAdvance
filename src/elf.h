@@ -267,7 +267,7 @@ struct Symbol {
 
 extern u32 elfReadLEB128(u8 *, int *);
 extern s32 elfReadSignedLEB128(u8 *, int *);
-extern bool elfRead(char *, int &, FILE *f);
+extern bool elfRead(const char *, int &, FILE *f);
 extern bool elfGetSymbolAddress(char *,u32 *, u32 *, int *);
 extern char *elfGetAddressSymbol(u32);
 extern char *elfGetSymbol(int, u32 *, u32 *, int *);

@@ -684,7 +684,7 @@ BEGIN
     LTEXT           "",IDC_ADDRESS,135,26,50,8
 END
 
-IDD_GB_COLORS DIALOG DISCARDABLE  0, 0, 169, 105
+IDD_GB_COLORS DIALOG DISCARDABLE  0, 0, 169, 121
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Gameboy Mono Colors"
 FONT 8, "MS Sans Serif"
@@ -695,19 +695,21 @@ BEGIN
                     10
     CONTROL         "User 2",IDC_USER2,"Button",BS_AUTORADIOBUTTON,125,7,37,
                     10
-    PUSHBUTTON      "",IDC_COLOR_BG0,15,29,28,14,WS_GROUP
-    PUSHBUTTON      "",IDC_COLOR_BG1,52,29,28,14
-    PUSHBUTTON      "",IDC_COLOR_BG2,89,29,28,14
-    PUSHBUTTON      "",IDC_COLOR_BG3,126,29,28,14
-    PUSHBUTTON      "",IDC_COLOR_OB0,15,60,28,14
-    PUSHBUTTON      "",IDC_COLOR_OB1,52,60,28,14
-    PUSHBUTTON      "",IDC_COLOR_OB2,89,60,28,14
-    PUSHBUTTON      "",IDC_COLOR_OB3,126,60,28,14
-    DEFPUSHBUTTON   "OK",ID_OK,59,84,50,14
-    PUSHBUTTON      "Cancel",ID_CANCEL,111,84,50,14
-    GROUPBOX        "Background",IDC_STATIC,8,19,154,29
-    GROUPBOX        "Sprite",IDC_STATIC,8,49,154,30
-    PUSHBUTTON      "Reset",IDC_RESET,7,84,50,14
+    COMBOBOX        IDC_PREDEFINED,7,21,155,30,CBS_DROPDOWNLIST | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "",IDC_COLOR_BG0,15,47,28,14,WS_GROUP
+    PUSHBUTTON      "",IDC_COLOR_BG1,52,47,28,14
+    PUSHBUTTON      "",IDC_COLOR_BG2,89,47,28,14
+    PUSHBUTTON      "",IDC_COLOR_BG3,126,47,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB0,15,78,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB1,52,78,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB2,89,78,28,14
+    PUSHBUTTON      "",IDC_COLOR_OB3,126,78,28,14
+    PUSHBUTTON      "Reset",IDC_RESET,7,100,50,14
+    DEFPUSHBUTTON   "OK",ID_OK,59,100,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,111,100,50,14
+    GROUPBOX        "Background",IDC_STATIC,8,37,154,29
+    GROUPBOX        "Sprite",IDC_STATIC,8,67,154,30
 END
 
 IDD_DISASSEMBLE DIALOG DISCARDABLE  0, 0, 402, 225
@@ -1125,6 +1127,54 @@ BEGIN
     LTEXT           "Enter 0 to disable rewind.",IDC_STATIC,7,17,172,8
 END
 
+IDD_IO_VIEWER DIALOG DISCARDABLE  0, 0, 269, 238
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "I/O Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_ADDRESSES,7,7,255,30,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    RTEXT           "",IDC_VALUE,103,23,159,8
+    CONTROL         "",IDC_BIT_15,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,34,
+                    255,10
+    CONTROL         "",IDC_BIT_14,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,44,
+                    255,10
+    CONTROL         "",IDC_BIT_13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,54,
+                    255,8
+    CONTROL         "",IDC_BIT_12,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,64,
+                    255,10
+    CONTROL         "",IDC_BIT_11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,74,
+                    255,10
+    CONTROL         "",IDC_BIT_10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,84,
+                    255,10
+    CONTROL         "",IDC_BIT_9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,94,
+                    255,10
+    CONTROL         "",IDC_BIT_8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,104,
+                    255,10
+    CONTROL         "",IDC_BIT_7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,114,
+                    255,10
+    CONTROL         "",IDC_BIT_6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,124,
+                    255,10
+    CONTROL         "",IDC_BIT_5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,134,
+                    255,10
+    CONTROL         "",IDC_BIT_4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,144,
+                    255,10
+    CONTROL         "",IDC_BIT_3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,154,
+                    255,10
+    CONTROL         "",IDC_BIT_2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,164,
+                    255,10
+    CONTROL         "",IDC_BIT_1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,174,
+                    255,10
+    CONTROL         "",IDC_BIT_0,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,184,
+                    255,10
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,201,71,10
+    DEFPUSHBUTTON   "&Refresh",IDC_REFRESH,54,221,50,14
+    DEFPUSHBUTTON   "&Apply",IDC_APPLY,110,221,50,14
+    PUSHBUTTON      "&Close",IDC_CLOSE,166,221,50,14
+    LTEXT           "Value:",IDC_STATIC,7,23,72,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1312,7 +1362,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 162
         TOPMARGIN, 7
-        BOTTOMMARGIN, 98
+        BOTTOMMARGIN, 114
     END
 
     IDD_DISASSEMBLE, DIALOG
@@ -1442,6 +1492,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 61
     END
+
+    IDD_IO_VIEWER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 262
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 235
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1462,6 +1520,11 @@ BEGIN
         MENUITEM "&Save...",                    ID_FILE_SAVE
         POPUP "Loa&d Game"
         BEGIN
+            MENUITEM "Most recent",                 ID_FILE_LOADGAME_MOSTRECENT
+
+            MENUITEM "Auto load most recent",       ID_FILE_LOADGAME_AUTOLOADMOSTRECENT
+
+            MENUITEM SEPARATOR
             MENUITEM "Slot #1",                     ID_FILE_LOADGAME_SLOT1
             MENUITEM "Slot #2",                     ID_FILE_LOADGAME_SLOT2
             MENUITEM "Slot #3",                     ID_FILE_LOADGAME_SLOT3
@@ -1475,6 +1538,9 @@ BEGIN
         END
         POPUP "S&ave Game"
         BEGIN
+            MENUITEM "Oldest slot",                 ID_FILE_SAVEGAME_OLDESTSLOT
+
+            MENUITEM SEPARATOR
             MENUITEM "Slot #1",                     ID_FILE_SAVEGAME_SLOT1
             MENUITEM "Slot #2",                     ID_FILE_SAVEGAME_SLOT2
             MENUITEM "Slot #3",                     ID_FILE_SAVEGAME_SLOT3
@@ -1754,6 +1820,10 @@ BEGIN
             MENUITEM SEPARATOR
             POPUP "&Volume"
             BEGIN
+                MENUITEM ".25X",                        ID_OPTIONS_SOUND_VOLUME_25X
+
+                MENUITEM ".5X",                         ID_OPTIONS_SOUND_VOLUME_5X
+
                 MENUITEM "&1x",                         ID_OPTIONS_SOUND_VOLUME_1X
 
                 MENUITEM "&2x",                         ID_OPTIONS_SOUND_VOLUME_2X
@@ -1900,6 +1970,7 @@ BEGIN
     BEGIN
         MENUITEM "Disassemble...",              ID_TOOLS_DISASSEMBLE
         MENUITEM "Logging...",                  ID_TOOLS_LOGGING
+        MENUITEM "&IO Viewer...",               ID_TOOLS_IOVIEWER
         MENUITEM "&Map Viewer...",              ID_TOOLS_MAPVIEW
         MENUITEM "&Memory viewer...",           ID_TOOLS_MEMORYVIEWER
         MENUITEM "OAM Viewer...",               ID_TOOLS_OAMVIEWER

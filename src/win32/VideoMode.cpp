@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,19 +16,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#define DIRECTDRAW_VERSION 0x0700
+// VideoMode.cpp : implementation file
+//
 
-#include "Wnd.h"
+#include "stdafx.h"
+#include "VBA.h"
+
+#define DIRECTDRAW_VERSION 0x0700
+#include <ddraw.h>
+
+#include "VideoMode.h"
+
 #include "../System.h"
 #include "resource.h"
 
-#include <ddraw.h>
 
-extern void winCenterWindow(HWND);
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-//-----------------------------------------------------------------------------
-// Default settings
-//-----------------------------------------------------------------------------
 #define MAX_DRIVERS         32                  // 32 drivers maximum
 
 //-----------------------------------------------------------------------------
@@ -37,11 +45,11 @@ extern void winCenterWindow(HWND);
 // Keeps data on the available DDraw drivers
 struct
 {
-    char        szDescription[128];
-    char        szName[128];
-    GUID        *pGUID;
-    GUID        GUIDcopy;
-    HMONITOR    hm;
+  char        szDescription[128];
+  char        szName[128];
+  GUID        *pGUID;
+  GUID        GUIDcopy;
+  HMONITOR    hm;
 } Drivers[MAX_DRIVERS];
 
 //-----------------------------------------------------------------------------
@@ -49,33 +57,6 @@ struct
 //-----------------------------------------------------------------------------
 static int                  gDriverCnt = 0;     // Total number of drivers
 static GUID                *gpSelectedDriverGUID;
-
-class VideoModeSelect : public Dlg {
-  LPDIRECTDRAW7 pDirectDraw;  
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  VideoModeSelect();
-
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
-
-  void OnOk();
-  void OnSelChange();
-};
-
-class VideoDriverSelect : public Dlg {
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  VideoDriverSelect();
-
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
-
-  void OnOk();
-  void OnSelChange();
-};
 
 //-----------------------------------------------------------------------------
 // Name: DDEnumCallbackEx()
@@ -85,23 +66,23 @@ public:
 BOOL WINAPI 
 DDEnumCallbackEx(GUID *pGUID, LPSTR pDescription, LPSTR pName, LPVOID pContext, HMONITOR hm)
 {
-    if (pGUID)
+  if (pGUID)
     {
-        Drivers[gDriverCnt].GUIDcopy = *pGUID;
-        Drivers[gDriverCnt].pGUID = &Drivers[gDriverCnt].GUIDcopy;
+      Drivers[gDriverCnt].GUIDcopy = *pGUID;
+      Drivers[gDriverCnt].pGUID = &Drivers[gDriverCnt].GUIDcopy;
     }
-    else
-        Drivers[gDriverCnt].pGUID = NULL;
-    Drivers[gDriverCnt].szDescription[127] = '\0';
-    Drivers[gDriverCnt].szName[127] = '\0';
-    strncpy(Drivers[gDriverCnt].szDescription,pDescription,127);
-    strncpy(Drivers[gDriverCnt].szName,pName,127);
-    Drivers[gDriverCnt].hm = hm;
-    if (gDriverCnt < MAX_DRIVERS)
-        gDriverCnt++;
-    else
-        return DDENUMRET_CANCEL;
-    return DDENUMRET_OK;
+  else
+    Drivers[gDriverCnt].pGUID = NULL;
+  Drivers[gDriverCnt].szDescription[127] = '\0';
+  Drivers[gDriverCnt].szName[127] = '\0';
+  strncpy(Drivers[gDriverCnt].szDescription,pDescription,127);
+  strncpy(Drivers[gDriverCnt].szName,pName,127);
+  Drivers[gDriverCnt].hm = hm;
+  if (gDriverCnt < MAX_DRIVERS)
+    gDriverCnt++;
+  else
+    return DDENUMRET_CANCEL;
+  return DDENUMRET_OK;
 }
 
 
@@ -114,12 +95,35 @@ DDEnumCallbackEx(GUID *pGUID, LPSTR pDescription, LPSTR pName, LPVOID pContext, 
 BOOL WINAPI 
 DDEnumCallback(GUID *pGUID, LPSTR pDescription, LPSTR pName, LPVOID context)
 {
-    return (DDEnumCallbackEx(pGUID, pDescription, pName, context, NULL));
+  return (DDEnumCallbackEx(pGUID, pDescription, pName, context, NULL));
 }
 
-int winVideoModeSelect(HWND hWindow, GUID **guid)
+static HRESULT WINAPI addVideoMode(LPDDSURFACEDESC2 surf, LPVOID lpContext)
 {
-  HINSTANCE h = LoadLibrary("ddraw.dll");
+  HWND h = (HWND)lpContext;
+  char buffer[50];
+  
+  switch(surf->ddpfPixelFormat.dwRGBBitCount) {
+  case 16:
+  case 24:
+  case 32:
+    if(surf->dwWidth >= 640 && surf->dwHeight >= 480) {
+      sprintf(buffer, "%4dx%4dx%2d", surf->dwWidth, surf->dwHeight,
+              surf->ddpfPixelFormat.dwRGBBitCount);
+      int pos = ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
+      ::SendMessage(h, LB_SETITEMDATA, pos,
+                    (surf->ddpfPixelFormat.dwRGBBitCount << 24) |
+                    ((surf->dwWidth & 4095) << 12) |
+                    (surf->dwHeight & 4095));
+    }
+  }
+
+  return DDENUMRET_OK;
+}
+
+int winVideoModeSelect(CWnd *pWnd, GUID **guid)
+{
+  HINSTANCE h = AfxLoadLibrary("ddraw.dll");
  
   // If ddraw.dll doesn't exist in the search path,
   // then DirectX probably isn't installed, so fail.
@@ -174,15 +178,14 @@ int winVideoModeSelect(HWND hWindow, GUID **guid)
   int selected = 0;
 
   if(gDriverCnt > 1) {
-    VideoDriverSelect d;
+    VideoDriverSelect d(pWnd);
 
-    selected = d.DoModal(IDD_DRIVERS,
-                         hWindow,
-                         NULL);
+    selected = d.DoModal();
+
     if(selected == -1) {
       // If the library was loaded by calling LoadLibrary(),
       // then you must use FreeLibrary() to let go of it.
-      FreeLibrary(h);
+      AfxFreeLibrary(h);
       
       return -1;
     }
@@ -200,20 +203,20 @@ int winVideoModeSelect(HWND hWindow, GUID **guid)
                                  NULL);
     if(hret != DD_OK) {
       systemMessage(0, "Error during DirectDrawCreateEx: %08x", hret);
-      FreeLibrary(h);
+      AfxFreeLibrary(h);
       return -1;
     }
   } else {
     // should not happen....
     systemMessage(0, "Error getting DirectDrawCreateEx");
-    FreeLibrary(h);
+    AfxFreeLibrary(h);
     return -1;
   }  
   
-  VideoModeSelect dlg;
-  int res = dlg.DoModal(IDD_MODES,
-                        hWindow,
-                        (LPARAM)ddraw);
+  VideoMode dlg(ddraw, pWnd);
+
+  int res = dlg.DoModal();
+
   if(res != -1) {
     *guid = Drivers[selected].pGUID;
   }
@@ -222,143 +225,135 @@ int winVideoModeSelect(HWND hWindow, GUID **guid)
 
   // If the library was loaded by calling LoadLibrary(),
   // then you must use FreeLibrary() to let go of it.
-  FreeLibrary(h);
+  AfxFreeLibrary(h);
 
   return res;
 }
 
-static HRESULT WINAPI addVideoMode(LPDDSURFACEDESC2 surf, LPVOID lpContext)
-{
-  HWND h = (HWND)lpContext;
-  char buffer[50];
-  
-  switch(surf->ddpfPixelFormat.dwRGBBitCount) {
-  case 16:
-  case 24:
-  case 32:
-    if(surf->dwWidth >= 640 && surf->dwHeight >= 480) {
-      sprintf(buffer, "%4dx%4dx%2d", surf->dwWidth, surf->dwHeight,
-              surf->ddpfPixelFormat.dwRGBBitCount);
-      int pos = ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
-      ::SendMessage(h, LB_SETITEMDATA, pos,
-                    (surf->ddpfPixelFormat.dwRGBBitCount << 24) |
-                    ((surf->dwWidth & 4095) << 12) |
-                    (surf->dwHeight & 4095));
-    }
-  }
+/////////////////////////////////////////////////////////////////////////////
+// VideoMode dialog
 
-  return DDENUMRET_OK;
+
+VideoMode::VideoMode(LPDIRECTDRAW7 pDraw, CWnd* pParent /*=NULL*/)
+  : CDialog(VideoMode::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(VideoMode)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+  pDirectDraw = pDraw;
 }
 
 
-BEGIN_MESSAGE_MAP(VideoModeSelect, Dlg)
-  ON_WM_CLOSE()
+void VideoMode::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(VideoMode)
+  DDX_Control(pDX, IDC_MODES, m_modes);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(VideoMode, CDialog)
+  //{{AFX_MSG_MAP(VideoMode)
+  ON_LBN_SELCHANGE(IDC_MODES, OnSelchangeModes)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
   ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnClose)
-  ON_CONTROL(LBN_SELCHANGE, IDC_MODES, OnSelChange)
-END_MESSAGE_MAP()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-VideoModeSelect::VideoModeSelect()
-  : Dlg()
+  /////////////////////////////////////////////////////////////////////////////
+// VideoMode message handlers
+
+void VideoMode::OnSelchangeModes() 
 {
-  pDirectDraw = NULL;
+  int item = m_modes.GetCurSel();
+
+  GetDlgItem(ID_OK)->EnableWindow(item != -1);
 }
 
-BOOL VideoModeSelect::OnInitDialog(LPARAM lParam)
+void VideoMode::OnCancel() 
 {
-  HWND h = GetDlgItem(IDC_MODES);
+  EndDialog(-1);
+}
 
-  pDirectDraw = (LPDIRECTDRAW7)lParam;
+void VideoMode::OnOk() 
+{
+  int cur = m_modes.GetCurSel();
+
+  if(cur != -1) {
+    cur = m_modes.GetItemData(cur);
+  }
+  EndDialog(cur);
+}
+
+BOOL VideoMode::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
   
   // check for available fullscreen modes
-  pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, h,
+  pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, m_modes.m_hWnd,
                                 addVideoMode);
   
-  EnableWindow(GetDlgItem(ID_OK), FALSE);      
-  winCenterWindow(getHandle());
-  return TRUE;  
+  GetDlgItem(ID_OK)->EnableWindow(FALSE);      
+  CenterWindow();
+
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void VideoModeSelect::OnClose()
+/////////////////////////////////////////////////////////////////////////////
+// VideoDriverSelect dialog
+
+
+VideoDriverSelect::VideoDriverSelect(CWnd* pParent /*=NULL*/)
+  : CDialog(VideoDriverSelect::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(VideoDriverSelect)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+}
+
+
+void VideoDriverSelect::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(VideoDriverSelect)
+  DDX_Control(pDX, IDC_DRIVERS, m_drivers);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(VideoDriverSelect, CDialog)
+  //{{AFX_MSG_MAP(VideoDriverSelect)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// VideoDriverSelect message handlers
+
+void VideoDriverSelect::OnCancel() 
 {
   EndDialog(-1);
 }
 
-void VideoModeSelect::OnOk()
+void VideoDriverSelect::OnOk() 
 {
-  int cur = SendMessage(GetDlgItem(IDC_MODES),
-                        LB_GETCURSEL,
-                        0,
-                        0);
-  if(cur != -1) {
-    cur = ::SendMessage(GetDlgItem(IDC_MODES),
-                        LB_GETITEMDATA,
-                        cur,
-                        0);
-  }
-  EndDialog(cur);
+  EndDialog(m_drivers.GetCurSel());
 }
 
-void VideoModeSelect::OnSelChange()
+BOOL VideoDriverSelect::OnInitDialog() 
 {
-  int item = SendMessage(GetDlgItem(IDC_MODES),
-                         LB_GETCURSEL,
-                         0,
-                         0);
-  if(item != -1)
-    EnableWindow(GetDlgItem(ID_OK), TRUE);
-  else
-    EnableWindow(GetDlgItem(ID_OK), FALSE);
-}
-
-/*********************************************************************/
-BEGIN_MESSAGE_MAP(VideoDriverSelect, Dlg)
-  ON_WM_CLOSE()
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnClose)
-  ON_CONTROL(LBN_SELCHANGE, IDC_DRIVERS, OnSelChange)
-END_MESSAGE_MAP()
-
-VideoDriverSelect::VideoDriverSelect()
-  : Dlg()
-{
-}
-
-BOOL VideoDriverSelect::OnInitDialog(LPARAM lParam)
-{
-  HWND h = GetDlgItem(IDC_DRIVERS);
-
+  CDialog::OnInitDialog();
+  
   for(int i = 0; i < gDriverCnt; i++) {
-    ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)Drivers[i].szDescription);
+    m_drivers.AddString(Drivers[i].szDescription);
   }
   
-  EnableWindow(GetDlgItem(ID_OK), FALSE);      
-  winCenterWindow(getHandle());
-  return TRUE;  
-}
-
-void VideoDriverSelect::OnClose()
-{
-  EndDialog(-1);
-}
-
-void VideoDriverSelect::OnOk()
-{
-  int cur = SendMessage(GetDlgItem(IDC_DRIVERS),
-                        LB_GETCURSEL,
-                        0,
-                        0);
-  EndDialog(cur);
-}
-
-void VideoDriverSelect::OnSelChange()
-{
-  int item = SendMessage(GetDlgItem(IDC_DRIVERS),
-                         LB_GETCURSEL,
-                         0,
-                         0);
-  if(item != -1)
-    EnableWindow(GetDlgItem(ID_OK), TRUE);
-  else
-    EnableWindow(GetDlgItem(ID_OK), FALSE);
+  GetDlgItem(ID_OK)->EnableWindow(FALSE);      
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }

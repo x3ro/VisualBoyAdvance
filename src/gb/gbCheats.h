@@ -36,39 +36,22 @@ struct gbCheat {
   bool enabled;
 };
 
-struct GbCheatsSearchMap {
-  u16 address;
-  u8 *memory;
-  u8 *data;
-  u16 mask;
-  u32 *bits;
-};
-
 extern void gbCheatsSaveGame(gzFile);
 extern void gbCheatsReadGame(gzFile, int);
-extern void gbCheatsSaveCheatList(char *);
-extern bool gbCheatsLoadCheatList(char *);
-extern bool gbCheatReadGSCodeFile(char *);
+extern void gbCheatsSaveCheatList(const char *);
+extern bool gbCheatsLoadCheatList(const char *);
+extern bool gbCheatReadGSCodeFile(const char *);
 
-extern void gbAddGsCheat(char *, char*);
-extern void gbAddGgCheat(char *, char*);
+extern void gbAddGsCheat(const char *, const char*);
+extern void gbAddGgCheat(const char *, const char*);
 extern void gbCheatRemove(int);
 extern void gbCheatRemoveAll();
 extern void gbCheatEnable(int);
 extern void gbCheatDisable(int);
 extern u8 gbCheatRead(u16);
-extern int gbCheatsGetCount(int);
-extern void gbCheatsSearchChange(int, int, bool);
-extern void gbCheatsSearchValue(int, int, bool, u32);
-extern void gbCheatsUpdateValues();
-extern void gbCheatsInitialize();
-extern void gbCheatsCleanup();
 
 extern int gbCheatNumber;
 extern gbCheat gbCheatList[100];
 extern bool gbCheatMap[0x10000];
-
-extern int gbCheatsSearchCount;
-extern GbCheatsSearchMap gbCheatsSearchMap[3];
 #endif
 

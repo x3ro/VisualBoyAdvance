@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,71 +16,40 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "../System.h"
-#include "resource.h"
-#include "WinResUtil.h"
+// GBPrinter.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "vba.h"
+#include "FileDlg.h"
+#include "GBPrinterDlg.h"
 #include "Reg.h"
+#include "WinResUtil.h"
+
+#include "../System.h"
 #include "../NLS.h"
+#include "../Util.h"
 
 extern "C" {
 #include <png.h>
 }
 
-extern void winCenterWindow(HWND);
-extern char *winLoadFilter(int id);
-extern HWND hWindow;
-extern int videoOption;
-extern int captureFormat;
-extern void utilPutDword(u8 *, u32);
-extern void utilPutWord(u8 *, u16);
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
-};
+/////////////////////////////////////////////////////////////////////////////
+// GBPrinter dialog
 
-class GBPrinterDlg : public Dlg {
-protected:
-  DECLARE_MESSAGE_MAP()
-private:
-  u8 bitmapHeader[sizeof(BITMAPINFO)+4*sizeof(RGBQUAD)];
-  BITMAPINFO *bitmap;
-  u8 bitmapData[160*144];
-  int scale;
 
-public:
-  GBPrinterDlg();
-
-  void saveAsPNG(char *);
-  void saveAsBMP(char *);
-  void save();
-  void print();
-  void processData(u8 *);
-
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnPaint();
-  void OnOk();
-  void On1x();
-  void On2x();
-  void On3x();
-  void On4x();
-};
-
-BEGIN_MESSAGE_MAP(GBPrinterDlg, Dlg)
-  ON_WM_PAINT()
-  ON_BN_CLICKED(IDC_SAVE, save)
-  ON_BN_CLICKED(ID_PRINT, print)
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(IDC_1X, On1x)
-  ON_BN_CLICKED(IDC_2X, On2x)
-  ON_BN_CLICKED(IDC_3X, On3x)
-  ON_BN_CLICKED(IDC_4X, On4x)
-END_MESSAGE_MAP()
-  
-GBPrinterDlg::GBPrinterDlg()
-  : Dlg()
+GBPrinterDlg::GBPrinterDlg(CWnd* pParent /*=NULL*/)
+  : CDialog(GBPrinterDlg::IDD, pParent)
 {
+  //{{AFX_DATA_INIT(GBPrinterDlg)
+  m_scale = -1;
+  //}}AFX_DATA_INIT
   bitmap = (BITMAPINFO *)bitmapHeader;
   
   bitmap->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -116,7 +85,33 @@ GBPrinterDlg::GBPrinterDlg()
   bitmap->bmiColors[3].rgbReserved = 0;  
 }
 
-void GBPrinterDlg::saveAsBMP(char *name)
+
+void GBPrinterDlg::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GBPrinterDlg)
+  DDX_Radio(pDX, IDC_1X, m_scale);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(GBPrinterDlg, CDialog)
+  //{{AFX_MSG_MAP(GBPrinterDlg)
+  ON_BN_CLICKED(ID_SAVE, OnSave)
+  ON_BN_CLICKED(ID_PRINT, OnPrint)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_BN_CLICKED(IDC_1X, On1x)
+  ON_BN_CLICKED(IDC_2X, On2x)
+  ON_BN_CLICKED(IDC_3X, On3x)
+  ON_BN_CLICKED(IDC_4X, On4x)
+  ON_WM_PAINT()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// GBPrinter message handlers
+
+void GBPrinterDlg::saveAsBMP(const char *name)
 {
   u8 writeBuffer[512 * 3];
   
@@ -182,7 +177,8 @@ void GBPrinterDlg::saveAsBMP(char *name)
   fclose(fp);
 }
 
-void GBPrinterDlg::saveAsPNG(char *name)
+
+void GBPrinterDlg::saveAsPNG(const char *name)
 {
   u8 writeBuffer[160 * 3];
   
@@ -256,89 +252,86 @@ void GBPrinterDlg::saveAsPNG(char *name)
   fclose(fp);  
 }
 
-void GBPrinterDlg::save()
+
+void GBPrinterDlg::OnSave() 
 {
-  OPENFILENAME ofn;
-  char captureBuffer[2048];
+  CString captureBuffer;
 
-  if(captureFormat == 0)
-    strcpy(captureBuffer, "printer.png");
+  if(theApp.captureFormat == 0)
+    captureBuffer = "printer.png";
   else
-    strcpy(captureBuffer, "printer.bmp");
+    captureBuffer = "printer.bmp";
 
-  ZeroMemory(&ofn, sizeof(OPENFILENAME));
-  ofn.lStructSize = sizeof(OPENFILENAME);
-  ofn.hwndOwner = getHandle();
-  ofn.lpstrFile = captureBuffer;
-  ofn.nMaxFile = sizeof(captureBuffer);
-  ofn.lpstrFilter =  winLoadFilter(IDS_FILTER_PNG);
-  ofn.nFilterIndex = captureFormat ? 2 : 1; //selectedFileIndex;
-  ofn.lpstrFileTitle = NULL;
-  ofn.nMaxFileTitle = 0;
-  ofn.lpstrDefExt = captureFormat ? "BMP" : "PNG";  
-  ofn.lpstrInitialDir = NULL;
-  ofn.lpstrTitle = winResLoadString(IDS_SELECT_CAPTURE_NAME);
-  ofn.Flags = OFN_PATHMUSTEXIST;
+  LPCTSTR exts[] = {".png", ".bmp" };
 
-  if(videoOption == VIDEO_320x240) {
-    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
-    ofn.Flags |= OFN_ENABLETEMPLATE;
-  }
-  
-  if(GetSaveFileName(&ofn) == FALSE) {
-    DWORD res = CommDlgExtendedError();
+  CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
+  CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
+
+  FileDlg dlg(this,
+              captureBuffer,
+              filter,
+              theApp.captureFormat ? 2 : 1,
+              theApp.captureFormat ? "BMP" : "PNG",
+              exts,
+              "",
+              title,
+              true);
+
+  if(dlg.DoModal() == IDCANCEL) {
     return;
   }
 
-  if(captureFormat)
+  captureBuffer = dlg.GetPathName();
+
+  if(dlg.getFilterIndex() == 2)
     saveAsBMP(captureBuffer);
   else
     saveAsPNG(captureBuffer);
 }
 
-void GBPrinterDlg::print()
+void GBPrinterDlg::OnPrint() 
 {
-  PRINTDLG dlg;
-  memset(&dlg, 0, sizeof(PRINTDLG));
-  dlg.lStructSize = sizeof(PRINTDLG);
-  dlg.hwndOwner = hWindow;
-  dlg.Flags = PD_RETURNDC;
-  dlg.nFromPage = 1;
-  dlg.nToPage = 1;
-  dlg.nMinPage = 1;
-  dlg.nMaxPage = 1;
-  dlg.nCopies = 1;
-  if(PrintDlg(&dlg)) {
+  CPrintDialog dlg(FALSE);
+
+  dlg.m_pd.nFromPage = 1;
+  dlg.m_pd.nToPage = 1;
+  dlg.m_pd.nMinPage = 1;
+  dlg.m_pd.nMaxPage = 1;
+  dlg.m_pd.nCopies = 1;
+
+  if(dlg.DoModal() == IDOK) {
     DOCINFO di;
     float fLogPelsX1 = 0;
     float fLogPelsX2 = 0;
     float fLogPelsY1 = 0;
     float fLogPelsY2 = 0;
     float fScaleX = 0, fScaleY = 0;    
-    HDC hWinDC = NULL;
+    CDC *winDC = NULL;
     memset(&di, 0, sizeof(di));
     di.cbSize = sizeof(DOCINFO);
-    di.lpszDocName = winResLoadString(IDS_POCKET_PRINTER);
-
-    int nError = StartDoc(dlg.hDC, &di);
+    CString docName = winResLoadString(IDS_POCKET_PRINTER);
+    di.lpszDocName = docName;
+    CDC dc;
+    dc.Attach(dlg.GetPrinterDC());
+    int nError = dc.StartDoc(&di);
 
     if(nError == SP_ERROR) {
       systemMessage(IDS_ERROR_ON_STARTDOC,"Error on StartDoc");
       goto error;
     }
-    nError = StartPage(dlg.hDC);
+    nError = dc.StartPage();
     if(nError <= 0) {
       systemMessage(IDS_ERROR_ON_STARTPAGE, "Error on StartPage");
       goto error;
     }
 
-    hWinDC = GetDC();
-    fLogPelsX1 = (float)GetDeviceCaps(hWinDC, LOGPIXELSX);
-    fLogPelsY1 = (float)GetDeviceCaps(hWinDC, LOGPIXELSY);
-    ReleaseDC(hWinDC);
+    winDC = GetDC();
+    fLogPelsX1 = (float)winDC->GetDeviceCaps(LOGPIXELSX);
+    fLogPelsY1 = (float)winDC->GetDeviceCaps(LOGPIXELSY);
+    ReleaseDC(winDC);
 
-    fLogPelsX2 = (float)GetDeviceCaps(dlg.hDC, LOGPIXELSX);
-    fLogPelsY2 = (float)GetDeviceCaps(dlg.hDC, LOGPIXELSY);
+    fLogPelsX2 = (float)dc.GetDeviceCaps(LOGPIXELSX);
+    fLogPelsY2 = (float)dc.GetDeviceCaps(LOGPIXELSY);
     
     if(fLogPelsX1 > fLogPelsX2)
       fScaleX = fLogPelsX1 / fLogPelsX2;
@@ -353,7 +346,7 @@ void GBPrinterDlg::print()
     fScaleX *= (scale+1);
     fScaleY *= (scale+1);
     
-    if(StretchDIBits(dlg.hDC,
+    if(StretchDIBits(dc,
                      0,
                      0,
                      (int)((float)160*fScaleX),
@@ -370,19 +363,19 @@ void GBPrinterDlg::print()
                     "Error printing on StretchDIBits");
     }
 
-    nError = EndPage(dlg.hDC);
+    nError = dc.EndPage();
 
     if(nError <= 0) {
       systemMessage(IDS_ERROR_ON_ENDPAGE, "Error on EndPage");
       goto error;
     }
 
-    nError = EndDoc(dlg.hDC);
+    nError = dc.EndDoc();
 
     if(nError <= 0)
       systemMessage(IDS_ERROR_ON_ENDDOC, "Error on EndDoc");
   error:
-    DeleteDC(dlg.hDC);
+    dc.DeleteDC();
   }
 }
 
@@ -407,65 +400,71 @@ void GBPrinterDlg::processData(u8 *data)
   }  
 }
 
-BOOL GBPrinterDlg::OnInitDialog(LPARAM)
+
+BOOL GBPrinterDlg::OnInitDialog() 
 {
+  CDialog::OnInitDialog();
+  
   scale = regQueryDwordValue("printerScale", 0);
   if(scale < 0 || scale > 3)
     scale = 0;
-  DoRadio(false, IDC_1X, scale);
+  m_scale = scale;
+  UpdateData(FALSE);
   
-  winCenterWindow(getHandle());
-  return TRUE;
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void GBPrinterDlg::OnOk()
+void GBPrinterDlg::OnOk() 
 {
   EndDialog(TRUE);
 }
 
-void GBPrinterDlg::On1x()
+void GBPrinterDlg::On1x() 
 {
   regSetDwordValue("printerScale", 0);
   scale = 0;
 }
 
-void GBPrinterDlg::On2x()
+void GBPrinterDlg::On2x() 
 {
   regSetDwordValue("printerScale", 1);
   scale = 1;
 }
 
-void GBPrinterDlg::On3x()
+void GBPrinterDlg::On3x() 
 {
   regSetDwordValue("printerScale", 2);
   scale = 2;
 }
 
-void GBPrinterDlg::On4x()
+void GBPrinterDlg::On4x() 
 {
   regSetDwordValue("printerScale", 3);
   scale = 3;
 }
 
-void GBPrinterDlg::OnPaint()
+void GBPrinterDlg::OnPaint() 
 {
+  CPaintDC dc(this); // device context for painting
+  
   RECT rect;
-  HWND h = GetDlgItem(IDC_GB_PRINTER);
-  GetWindowRect(h, &rect);
-  PAINTSTRUCT ps;
+  CWnd *h = GetDlgItem(IDC_GB_PRINTER);
+  h->GetWindowRect(&rect);
   POINT p;
   p.x = rect.left;
   p.y = rect.top;
-  ScreenToClient(getHandle(), (POINT *)&p);
+  ScreenToClient((POINT *)&p);
   rect.left = p.x+1;
   rect.top = p.y+1;
   p.x = rect.right;
   p.y = rect.bottom;
-  ScreenToClient(getHandle(), (POINT *)&p);
+  ScreenToClient((POINT *)&p);
   rect.right = p.x-1;
   rect.bottom = p.y-1;
   
-  HDC dc = BeginPaint(getHandle(), &ps);
   StretchDIBits(dc,
                 rect.left,
                 rect.top,
@@ -479,10 +478,7 @@ void GBPrinterDlg::OnPaint()
                 bitmap,
                 DIB_RGB_COLORS,
                 SRCCOPY);
-  EndPaint(getHandle(), &ps);
 }
-
-extern void winCheckFullscreen();
 
 void systemGbPrint(u8 *data,
                    int pages,
@@ -490,9 +486,9 @@ void systemGbPrint(u8 *data,
                    int palette,
                    int contrast)
 {
-  winCheckFullscreen();
+  theApp.winCheckFullscreen();
   GBPrinterDlg printer;
   printer.processData(data);
-  printer.DoModal(IDD_GB_PRINTER, hWindow);
+  printer.DoModal();
 }
 

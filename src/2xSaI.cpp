@@ -1,63 +1,5 @@
-/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-/*
- * Snes9x - Portable Super Nintendo Entertainment System (TM) emulator.
- *
- * (c) Copyright 1996 - 2001 Gary Henderson (gary@daniver.demon.co.uk) and
- *                           Jerremy Koot (jkoot@snes9x.com)
- *
- * Super FX C emulator code 
- * (c) Copyright 1997 - 1999 Ivar (Ivar@snes9x.com) and
- *                           Gary Henderson.
- * Super FX assembler emulator code (c) Copyright 1998 zsKnight and _Demo_.
- *
- * DSP1 emulator code (c) Copyright 1998 Ivar, _Demo_ and Gary Henderson.
- * C4 asm and some C emulation code (c) Copyright 2000 zsKnight and _Demo_.
- * C4 C code (c) Copyright 2001 Gary Henderson (gary@daniver.demon.co.uk).
- *
- * DOS port code contains the works of other authors. See headers in
- * individual files.
- *
- * Snes9x homepage: www.snes9x.com
- *
- * Permission to use, copy, modify and distribute Snes9x in both binary and
- * source form, for non-commercial purposes, is hereby granted without fee,
- * providing that this license information and copyright notice appear with
- * all copies and any derived work.
- *
- * This software is provided 'as-is', without any express or implied
- * warranty. In no event shall the authors be held liable for any damages
- * arising from the use of this software.
- *
- * Snes9x is freeware for PERSONAL USE only. Commercial users should
- * seek permission of the copyright holders first. Commercial use includes
- * charging money for Snes9x or software derived from Snes9x.
- *
- * The copyright holders request that bug fixes and improvements to the code
- * should be forwarded to them so everyone can benefit from the modifications
- * in future versions.
- *
- * Super NES and Super Nintendo Entertainment System are trademarks of
- * Nintendo Co., Limited and its subsidiary companies.
- */
-
 #include "System.h"
+#include "Port.h"
 
 extern "C"
 {
@@ -390,8 +332,13 @@ void Super2xSaI (u8 *srcPtr, u32 srcPitch,
             else
               product1a = color5;
           
+#ifdef WORDS_BIGENDIAN
+          product1a = (product1a << 16) | product1b;
+          product2a = (product2a << 16) | product2b;
+#else
           product1a = product1a | (product1b << 16);
           product2a = product2a | (product2b << 16);
+#endif
           
           *((u32 *) dP) = product1a;
           *((u32 *) (dP + dstPitch)) = product2a;
@@ -654,8 +601,13 @@ void SuperEagle (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
           //                    product2a = color2;
           //                    product2b = color3;
         }
+#ifdef WORDS_BIGENDIAN
+        product1a = (product1a << 16) | product1b;
+        product2a = (product2a << 16) | product2b;
+#else
         product1a = product1a | (product1b << 16);
         product2a = product2a | (product2b << 16);
+#endif
         
         *((u32 *) dP) = product1a;
         *((u32 *) (dP + dstPitch)) = product2a;
@@ -954,8 +906,13 @@ void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
           }
         }
         
+#ifdef WORDS_BIGENDIAN
+        product = (colorA << 16) | product ;
+        product1 = (product1 << 16) | product2 ;
+#else
         product = colorA | (product << 16);
         product1 = product1 | (product2 << 16);
+#endif
         *((s32 *) dP) = product;
         *((u32 *) (dP + dstPitch)) = product1;
         

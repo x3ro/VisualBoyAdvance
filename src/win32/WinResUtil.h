@@ -27,9 +27,4 @@ extern int winResDialogBox(LPCTSTR boxName,
                            DLGPROC dlgProc,
                            LPARAM lParam);
 
-extern const char *winResLoadString(UINT id);
-
-extern const char *winResLoadString(UINT id,
-                                    WORD &length);
-
-extern void winResSetLanguageModule(HINSTANCE);
+extern CString winResLoadString(UINT id);

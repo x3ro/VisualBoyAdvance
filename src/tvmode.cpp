@@ -94,12 +94,34 @@ void TVMode (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         
         *(xP - 2) = currentPixel;
 #ifdef WORDS_BIGENDIAN
-        colorA = currentPixel >> 16;
-        colorB = (currentPixel << 16) >> 16;
+        
+        colorA = (currentPixel & 0xffff0000) >> 16;
+        colorB = (currentPixel & 0xffff) ;
+
+        *(dP) = product = (colorA << 16) |
+          (((colorA & colorMask) >> 1) +
+            ((colorB & colorMask) >> 1) +
+            (colorA & colorB & lowPixelMask));
+        darkened = (product = ((product & colorMask) >> 1));
+        darkened += (product = ((product & colorMask) >> 1));
+        darkened += (product & colorMask) >> 1;
+        *(nL) = darkened;
+
+        colorA = (nextPixel & 0xffff0000) >> 16;
+
+        *(dP + 1) = product = (colorB << 16) |
+          ((((colorA & colorMask) >> 1) +
+            ((colorB & colorMask) >> 1) +
+            (colorA & colorB & lowPixelMask)) );
+        darkened = (product = ((product & colorMask) >> 1));
+        darkened += (product = ((product & colorMask) >> 1));
+        darkened += (product & colorMask) >> 1;
+        *(nL + 1) = darkened;
+        
 #else
+        
         colorA = currentPixel & 0xffff;
         colorB = (currentPixel & 0xffff0000) >> 16;
-#endif
 
         *(dP) = product = colorA |
           ((((colorA & colorMask) >> 1) +
@@ -110,11 +132,7 @@ void TVMode (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         darkened += (product & colorMask) >> 1;
         *(nL) = darkened;
 
-#ifdef WORDS_BIGENDIAN
-        colorA = nextPixel >> 16;
-#else
         colorA = nextPixel & 0xffff;
-#endif
 
         *(dP + 1) = product = colorB |
           ((((colorA & colorMask) >> 1) +
@@ -124,6 +142,8 @@ void TVMode (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         darkened += (product = ((product & colorMask) >> 1));
         darkened += (product & colorMask) >> 1;
         *(nL + 1) = darkened;
+        
+        #endif
       }
       
       dP += 2;

@@ -21,18 +21,17 @@
 #include "resource.h"
 #include <afxres.h>
 
-#include <map>
-
+#include <afxtempl.h>  // MFC Templates extension
 #ifndef CMapStringToWord
-typedef std::map< CStdString, WORD > CMapStringToWord;
+typedef CMap< CString, LPCSTR, WORD, WORD& > CMapStringToWord;
 #endif
 
 static CMapStringToWord winAccelStrings;
 static bool initialized = false;
 
 struct {
-  char *command;
-  UINT id;
+  const char *command;
+  WORD id;
 } winAccelCommands[] = {
   { "FileOpen", ID_FILE_OPEN },
   { "FileOpenGameboy", ID_FILE_OPENGAMEBOY },
@@ -48,6 +47,8 @@ struct {
   { "FileLoadGame08", ID_FILE_LOADGAME_SLOT8 },
   { "FileLoadGame09", ID_FILE_LOADGAME_SLOT9 },
   { "FileLoadGame10", ID_FILE_LOADGAME_SLOT10 },
+  { "FileLoadGameAutoLoad", ID_FILE_LOADGAME_AUTOLOADMOSTRECENT },
+  { "FileLoadGameRecent", ID_FILE_LOADGAME_MOSTRECENT },
   { "FileSaveGame01", ID_FILE_SAVEGAME_SLOT1 },
   { "FileSaveGame02", ID_FILE_SAVEGAME_SLOT2 },
   { "FileSaveGame03", ID_FILE_SAVEGAME_SLOT3 },
@@ -58,6 +59,7 @@ struct {
   { "FileSaveGame08", ID_FILE_SAVEGAME_SLOT8 },
   { "FileSaveGame09", ID_FILE_SAVEGAME_SLOT9 },
   { "FileSaveGame10", ID_FILE_SAVEGAME_SLOT10 },
+  { "FileSaveGameOldest", ID_FILE_SAVEGAME_OLDESTSLOT },
   { "FileRecentReset", ID_FILE_RECENT_RESET },
   { "FileRecentFreeze", ID_FILE_RECENT_FREEZE },
   { "FileRecent01", ID_FILE_MRU_FILE1 },
@@ -201,6 +203,7 @@ struct {
   { "ToolsDebugGDBBreak", ID_TOOLS_DEBUG_BREAK },
   { "ToolsDebugGDBDisconnect", ID_TOOLS_DEBUG_DISCONNECT },
   { "ToolsDisassemble", ID_TOOLS_DISASSEMBLE },
+  { "ToolsIOViewer", ID_TOOLS_IOVIEWER },
   { "ToolsLogging", ID_TOOLS_LOGGING },
   { "ToolsMapViewer", ID_TOOLS_MAPVIEW },
   { "ToolsMemoryViewer", ID_TOOLS_MEMORYVIEWER },
@@ -230,22 +233,12 @@ bool winAccelGetID(const char *command, WORD& id)
     int count = sizeof(winAccelCommands)/sizeof(winAccelCommands[0]);
     
     for(int i = 0; i < count; i++) {
-      winAccelStrings.
-	insert(CMapStringToWord::
-	       value_type((char *)winAccelCommands[i].command, 
-			  winAccelCommands[i].id));      
+      winAccelStrings.SetAt(winAccelCommands[i].command, winAccelCommands[i].id);      
     }
     initialized = true;
   }
   
-  CMapStringToWord::iterator it = winAccelStrings.find((char *)command);
-
-  if(it == winAccelStrings.end())
-    return false;
-  
-  id = it->second;
-
-  return true;
+  return winAccelStrings.Lookup(command, id) ? true : false;
 }
 
 void winAccelAddCommands(CAcceleratorManager& mgr)

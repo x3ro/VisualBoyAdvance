@@ -16,71 +16,29 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include "stdafx.h"
+#include "vba.h"
+
 #define DIRECT3D_VERSION 0x0800
 #include <d3d8.h>
 #include <d3dx8.h>
-#include <stdio.h>
+
+#include "MainWnd.h"
 
 #include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
 #include "../Font.h"
+#include "../gb/gbGlobals.h"
 
-#include "Display.h"
 #include "Reg.h"
 #include "resource.h"
 
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600, VIDEO_OTHER
-};
-
-extern int sizeX;
-extern int sizeY;
-extern int surfaceSizeX;
-extern int surfaceSizeY;
-extern int videoOption;
-extern BOOL fullScreenStretch;
-extern HWND hWindow;
-extern int fsWidth;
-extern int fsHeight;
-extern int fsColorDepth;
-extern RECT rect;
-extern RECT dest;
-extern HINSTANCE hInstance;
-extern int windowPositionX;
-extern int windowPositionY;
-extern BOOL ddrawEmulationOnly;
-extern BOOL ddrawUsingEmulationOnly;
-extern BOOL ddrawUseVideoMemory;
-extern BOOL tripleBuffering;
-extern int ddrawDebug;
-extern BOOL mode320Available;
-extern BOOL mode640Available;
-extern BOOL mode800Available;
-extern GUID *pVideoDriverGUID;
-extern void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int);
-extern void (*ifbFunction)(u8*,u32,int,int);
-extern int filterType;
-extern int RGB_LOW_BITS_MASK;
-extern BOOL vsync;
-extern int filterWidth;
-extern int filterHeight;
-extern u8 *delta[257*244*4];
-extern int cartridgeType;
-extern int gbBorderOn;
-extern int showSpeed;
-extern BOOL showSpeedTransparent;
-extern int systemSpeed;
-extern bool disableMMX;
-extern bool speedup;
-extern int showRenderedFrames;
-extern BOOL menuToggle;
-extern BOOL active;
-extern bool screenMessage;
-extern char screenMessageBuffer[41];
-extern DWORD screenMessageTime;
-extern bool disableStatusMessage;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -88,30 +46,26 @@ extern "C" bool cpu_mmx;
 extern bool detectMMX();
 #endif
 
-extern void updateFilter();
-extern void updateIFB();
 extern int Init_2xSaI(u32);
 extern void winlog(const char *,...);
-extern void updateMenuBar();
-extern void adjustDestRect();
-extern void directXMessage(char *msg);
+extern int systemSpeed;
 
 typedef struct _D3DTLVERTEX {
-    float sx; /* Screen coordinates */
-    float sy;
-    float sz;
-    float rhw; /* Reciprocal of homogeneous w */
-    D3DCOLOR color; /* Vertex color */
-    float tu; /* Texture coordinates */
-    float tv;
-    _D3DTLVERTEX() { }
-    _D3DTLVERTEX(const D3DVECTOR& v, float _rhw,
-                 D3DCOLOR _color, 
-                 float _tu, float _tv)
-    { sx = v.x; sy = v.y; sz = v.z; rhw = _rhw;
-      color = _color; 
-      tu = _tu; tv = _tv;
-    }
+  float sx; /* Screen coordinates */
+  float sy;
+  float sz;
+  float rhw; /* Reciprocal of homogeneous w */
+  D3DCOLOR color; /* Vertex color */
+  float tu; /* Texture coordinates */
+  float tv;
+  _D3DTLVERTEX() { }
+  _D3DTLVERTEX(const D3DVECTOR& v, float _rhw,
+               D3DCOLOR _color, 
+               float _tu, float _tv)
+  { sx = v.x; sy = v.y; sz = v.z; rhw = _rhw;
+  color = _color; 
+  tu = _tu; tv = _tv;
+  }
 } D3DTLVERTEX, *LPD3DTLVERTEX;
  
 #define D3DFVF_TLVERTEX D3DFVF_XYZRHW|D3DFVF_DIFFUSE|D3DFVF_TEX1
@@ -201,25 +155,25 @@ void Direct3DDisplay::cleanup()
 
 bool Direct3DDisplay::initialize()
 {
-  sizeX = 240;
-  sizeY = 160;
+  theApp.sizeX = 240;
+  theApp.sizeY = 160;
 
-  switch(videoOption) {
+  switch(theApp.videoOption) {
   case VIDEO_1X:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
+    theApp.surfaceSizeX = theApp.sizeX;
+    theApp.surfaceSizeY = theApp.sizeY;
     break;
   case VIDEO_2X:
-    surfaceSizeX = sizeX * 2;
-    surfaceSizeY = sizeY * 2;
+    theApp.surfaceSizeX = theApp.sizeX * 2;
+    theApp.surfaceSizeY = theApp.sizeY * 2;
     break;
   case VIDEO_3X:
-    surfaceSizeX = sizeX * 3;
-    surfaceSizeY = sizeY * 3;
+    theApp.surfaceSizeX = theApp.sizeX * 3;
+    theApp.surfaceSizeY = theApp.sizeY * 3;
     break;
   case VIDEO_4X:
-    surfaceSizeX = sizeX * 4;
-    surfaceSizeY = sizeY * 4;
+    theApp.surfaceSizeX = theApp.sizeX * 4;
+    theApp.surfaceSizeY = theApp.sizeY * 4;
     break;
   case VIDEO_320x240:
   case VIDEO_640x480:
@@ -227,85 +181,85 @@ bool Direct3DDisplay::initialize()
   case VIDEO_OTHER:
     {
       RECT r;
-      GetWindowRect(GetDesktopWindow(), &r);
-      fsWidth = r.right - r.left;
-      fsHeight = r.bottom - r.top;
+      ::GetWindowRect(GetDesktopWindow(), &r);
+      theApp.fsWidth = r.right - r.left;
+      theApp.fsHeight = r.bottom - r.top;
 
-      int scaleX = (fsWidth / sizeX);
-      int scaleY = (fsHeight / sizeY);
-      int min = scaleX < scaleY ? scaleX : scaleY;
-      surfaceSizeX = sizeX * min;
-      surfaceSizeY = sizeY * min;
-      //      if(fullScreenStretch) {
-      //        surfaceSizeX = fsWidth;
-      //        surfaceSizeY = fsHeight;
+      /* Need to fix this code later. For now, Fullscreen takes the whole
+         screen.
+         int scaleX = (fsWidth / sizeX);
+         int scaleY = (fsHeight / sizeY);
+         int min = scaleX < scaleY ? scaleX : scaleY;
+         surfaceSizeX = sizeX * min;
+         surfaceSizeY = sizeY * min;
+         if(fullScreenStretch) {
+      */
+      theApp.surfaceSizeX = theApp.fsWidth;
+      theApp.surfaceSizeY = theApp.fsHeight;
       //      }
     }
     break;
   }
   
-  rect.left = 0;
-  rect.top = 0;
-  rect.right = sizeX;
-  rect.bottom = sizeY;
+  theApp.rect.left = 0;
+  theApp.rect.top = 0;
+  theApp.rect.right = theApp.sizeX;
+  theApp.rect.bottom = theApp.sizeY;
 
-  dest.left = 0;
-  dest.top = 0;
-  dest.right = surfaceSizeX;
-  dest.bottom = surfaceSizeY;
+  theApp.dest.left = 0;
+  theApp.dest.top = 0;
+  theApp.dest.right = theApp.surfaceSizeX;
+  theApp.dest.bottom = theApp.surfaceSizeY;
 
   DWORD style = WS_POPUP | WS_VISIBLE;
   DWORD styleEx = 0;
   
-  if(videoOption <= VIDEO_4X)
+  if(theApp.videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
     styleEx = 0;
 
-  if(videoOption <= VIDEO_4X)
-    AdjustWindowRectEx(&dest, style, TRUE, styleEx);
+  if(theApp.videoOption <= VIDEO_4X)
+    AdjustWindowRectEx(&theApp.dest, style, TRUE, styleEx);
   else
-    AdjustWindowRectEx(&dest, style, FALSE, styleEx);    
+    AdjustWindowRectEx(&theApp.dest, style, FALSE, styleEx);    
 
-  int winSizeX = dest.right-dest.left;
-  int winSizeY = dest.bottom-dest.top;
+  int winSizeX = theApp.dest.right-theApp.dest.left;
+  int winSizeY = theApp.dest.bottom-theApp.dest.top;
 
-  if(videoOption > VIDEO_4X) {
-    winSizeX = fsWidth;
-    winSizeY = fsHeight;
+  if(theApp.videoOption > VIDEO_4X) {
+    winSizeX = theApp.fsWidth;
+    winSizeY = theApp.fsHeight;
   }
   
   int x = 0;
   int y = 0;
 
-  if(videoOption <= VIDEO_4X) {
-    x = windowPositionX;
-    y = windowPositionY;
+  if(theApp.videoOption <= VIDEO_4X) {
+    x = theApp.windowPositionX;
+    y = theApp.windowPositionY;
   }
   
   // Create a window
-  hWindow = CreateWindowEx(styleEx,
-                           "GBA",
-                           "VisualBoyAdvance",
-                           style,
-                           x,
-                           y,
-                           winSizeX,
-                           winSizeY,
-                           NULL,
-                           NULL,
-                           hInstance,
-                           NULL);
+  MainWnd *pWnd = new MainWnd;
+  theApp.m_pMainWnd = pWnd;
+
+  pWnd->CreateEx(styleEx,
+                 theApp.wndClass,
+                 "VisualBoyAdvance",
+                 style,
+                 x,y,winSizeX,winSizeY,
+                 NULL,
+                 0);
   
-  if (!hWindow) {
+  if (!(HWND)*pWnd) {
     winlog("Error creating Window %08x\n", GetLastError());
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_FAILED));
     return FALSE;
   }
   
-  updateMenuBar();
+  theApp.updateMenuBar();
   
-  adjustDestRect();
+  theApp.adjustDestRect();
   
   d3dDLL = LoadLibrary("D3D8.DLL");
   LPDIRECT3D8 (WINAPI *D3DCreate)(UINT);
@@ -314,11 +268,11 @@ bool Direct3DDisplay::initialize()
       GetProcAddress(d3dDLL, "Direct3DCreate8");
 
     if(D3DCreate == NULL) {
-      directXMessage("Direct3DCreate8");
+      theApp.directXMessage("Direct3DCreate8");
       return FALSE;
     }
   } else {
-    directXMessage("D3D8.DLL");
+    theApp.directXMessage("D3D8.DLL");
     return FALSE;
   }
 
@@ -329,9 +283,9 @@ bool Direct3DDisplay::initialize()
     return FALSE;
   }
   
-  mode320Available = FALSE;
-  mode640Available = FALSE;
-  mode800Available = FALSE;
+  theApp.mode320Available = FALSE;
+  theApp.mode640Available = FALSE;
+  theApp.mode800Available = FALSE;
 
   D3DDISPLAYMODE mode;
   pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &mode);
@@ -348,24 +302,34 @@ bool Direct3DDisplay::initialize()
     systemRedShift = 19;
     systemGreenShift = 11;
     systemBlueShift = 3;
+    Init_2xSaI(32);
     break;
   case D3DFMT_R5G6B5:
     systemColorDepth = 16;
     systemRedShift = 11;
     systemGreenShift = 6;
     systemBlueShift = 0;    
+    Init_2xSaI(565);
     break;
   case D3DFMT_X1R5G5B5:
     systemColorDepth = 16;
     systemRedShift = 10;
     systemGreenShift = 5;
     systemBlueShift = 0;
+    Init_2xSaI(555);
     break;
   default:
     systemMessage(0,"Unsupport D3D format %d", mode.Format);
     return false;
   }
-  fsColorDepth = systemColorDepth;
+  theApp.fsColorDepth = systemColorDepth;
+
+#ifdef MMX
+  if(!theApp.disableMMX)
+    cpu_mmx = theApp.detectMMX();
+  else
+    cpu_mmx = 0;
+#endif
   
   screenFormat = mode.Format;
 
@@ -375,12 +339,12 @@ bool Direct3DDisplay::initialize()
   dpp.BackBufferFormat = mode.Format;
   dpp.BackBufferCount = 1;
   dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-  dpp.BackBufferWidth = surfaceSizeX;
-  dpp.BackBufferHeight = surfaceSizeY;
+  dpp.BackBufferWidth = theApp.surfaceSizeX;
+  dpp.BackBufferHeight = theApp.surfaceSizeY;
   
   HRESULT hret = pD3D->CreateDevice(D3DADAPTER_DEFAULT,
                                     D3DDEVTYPE_HAL,
-                                    hWindow,
+                                    pWnd->GetSafeHwnd(),
                                     D3DCREATE_SOFTWARE_VERTEXPROCESSING,
                                     &dpp,
                                     &pDevice);
@@ -419,13 +383,13 @@ bool Direct3DDisplay::initialize()
     systemGbPalette[i++] = 0;
   }
   
-  updateFilter();
-  updateIFB();
+  theApp.updateFilter();
+  theApp.updateIFB();
 
   if(failed)
     return false;
   
-  DragAcceptFiles(hWindow, TRUE);
+  pWnd->DragAcceptFiles(TRUE);
   
   return TRUE;  
 }
@@ -448,9 +412,9 @@ bool Direct3DDisplay::initializeOffscreen(int w, int h)
                                             &format,
                                             D3DPOOL_MANAGED))) {
     if((int)ww < w || (int)hh < h) {
-      if(filterFunction) {
+      if(theApp.filterFunction) {
         filterDisabled = true;
-        filterFunction = NULL;
+        theApp.filterFunction = NULL;
         systemMessage(0, "3D card cannot support needed texture size for filter function. Disabling it");
       }
     } else
@@ -542,7 +506,8 @@ void Direct3DDisplay::clear()
 void Direct3DDisplay::renderMenu()
 {
   checkFullScreen();
-  DrawMenuBar(hWindow);
+  if(theApp.m_pMainWnd)
+    theApp.m_pMainWnd->DrawMenuBar();
 }
 
 void Direct3DDisplay::checkFullScreen()
@@ -557,29 +522,29 @@ static void BlitRect(LPDIRECT3DDEVICE8 lpDevice,
                      float right, float bottom,
                      D3DCOLOR col,float z)
 {
-    // calculate rhw
+  // calculate rhw
 
-    float rhw=1.0f/(z*990.0f+10.0f);
+  float rhw=1.0f/(z*990.0f+10.0f);
 
-    // set up rectangle
+  // set up rectangle
 
-    D3DTLVERTEX verts[4];
-    verts[0]=D3DTLVERTEX(D3DXVECTOR3(left-0.5f,  top-0.5f,    z),rhw,col,0.0f,0.0f); 
-    verts[1]=D3DTLVERTEX(D3DXVECTOR3(right-0.5f, top-0.5f,    z),rhw,col,1.0f,0.0f);
-    verts[2]=D3DTLVERTEX(D3DXVECTOR3(right-0.5f, bottom-0.5f, z),rhw,col,1.0f,1.0f); 
-    verts[3]=D3DTLVERTEX(D3DXVECTOR3(left-0.5f,  bottom-0.5f, z),rhw,col,0.0f,1.0f);
+  D3DTLVERTEX verts[4];
+  verts[0]=D3DTLVERTEX(D3DXVECTOR3(left-0.5f,  top-0.5f,    z),rhw,col,0.0f,0.0f); 
+  verts[1]=D3DTLVERTEX(D3DXVECTOR3(right-0.5f, top-0.5f,    z),rhw,col,1.0f,0.0f);
+  verts[2]=D3DTLVERTEX(D3DXVECTOR3(right-0.5f, bottom-0.5f, z),rhw,col,1.0f,1.0f); 
+  verts[3]=D3DTLVERTEX(D3DXVECTOR3(left-0.5f,  bottom-0.5f, z),rhw,col,0.0f,1.0f);
 
-    // set the texture
+  // set the texture
 
-    lpDevice->SetTexture(0,lpSrc);
+  lpDevice->SetTexture(0,lpSrc);
 
-    // configure shader for vertex type
+  // configure shader for vertex type
 
-    lpDevice->SetVertexShader(D3DFVF_TLVERTEX);
+  lpDevice->SetVertexShader(D3DFVF_TLVERTEX);
 
-    // draw the rectangle
+  // draw the rectangle
 
-    lpDevice->DrawPrimitiveUP(D3DPT_TRIANGLEFAN,2,verts,sizeof(D3DTLVERTEX));
+  lpDevice->DrawPrimitiveUP(D3DPT_TRIANGLEFAN,2,verts,sizeof(D3DTLVERTEX));
 }
 
 void Direct3DDisplay::render()
@@ -597,28 +562,28 @@ void Direct3DDisplay::render()
   if(SUCCEEDED(pDevice->BeginScene())) {
     D3DLOCKED_RECT locked;
     if(pTexture && SUCCEEDED(pTexture->LockRect(0, &locked, NULL, 0))) {
-      if(filterFunction) {
+      if(theApp.filterFunction) {
         if(systemColorDepth == 16)
-          (*filterFunction)(pix+filterWidth*2+4,
-                            filterWidth*2+4,
-                            (u8*)delta,
-                            (u8*)locked.pBits,
-                            locked.Pitch,
-                            filterWidth,
-                            filterHeight);
+          theApp.filterFunction(pix+theApp.filterWidth*2+4,
+                                theApp.filterWidth*2+4,
+                                (u8*)theApp.delta,
+                                (u8*)locked.pBits,
+                                locked.Pitch,
+                                theApp.filterWidth,
+                                theApp.filterHeight);
         else
-          (*filterFunction)(pix+filterWidth*4+4,
-                            filterWidth*4+4,
-                            (u8*)delta,
-                            (u8*)locked.pBits,
-                            locked.Pitch,
-                            filterWidth,
-                            filterHeight);
+          theApp.filterFunction(pix+theApp.filterWidth*4+4,
+                                theApp.filterWidth*4+4,
+                                (u8*)theApp.delta,
+                                (u8*)locked.pBits,
+                                locked.Pitch,
+                                theApp.filterWidth,
+                                theApp.filterHeight);
       } else {
         int copyX = 240;
         int copyY = 160;
         
-        if(cartridgeType == 1) {
+        if(theApp.cartridgeType == 1) {
           if(gbBorderOn) {
             copyX = 256;
             copyY = 224;
@@ -683,38 +648,38 @@ void Direct3DDisplay::render()
         }
       }
 
-      if(videoOption > VIDEO_4X && showSpeed) {
+      if(theApp.videoOption > VIDEO_4X && theApp.showSpeed) {
         char buffer[30];
-        if(showSpeed == 1)
+        if(theApp.showSpeed == 1)
           sprintf(buffer, "%3d%%", systemSpeed);
         else
           sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
                   systemFrameSkip,
-                  showRenderedFrames);
-        if(showSpeedTransparent)
+                  theApp.showRenderedFrames);
+        if(theApp.showSpeedTransparent)
           fontDisplayStringTransp((u8*)locked.pBits,
                                   locked.Pitch,
-                                  rect.left+10,
-                                  rect.bottom-10,
+                                  theApp.rect.left+10,
+                                  theApp.rect.bottom-10,
                                   buffer);
         else
           fontDisplayString((u8*)locked.pBits,
                             locked.Pitch,
-                            rect.left+10,
-                            rect.bottom-10,
+                            theApp.rect.left+10,
+                            theApp.rect.bottom-10,
                             buffer);
       }
       
       pTexture->UnlockRect(0);
 
-      float scaleX = (float)surfaceSizeX / sizeX;
-      float scaleY = (float)surfaceSizeY / sizeY;
+      float scaleX = (float)theApp.surfaceSizeX / theApp.sizeX;
+      float scaleY = (float)theApp.surfaceSizeY / theApp.sizeY;
       BlitRect(pDevice, pTexture, 0, 0, scaleX*256, scaleY*256, 0xffffff, 0.1f);
     }
     
-    if(screenMessage) {
-      if(((GetTickCount() - screenMessageTime) < 3000) &&
-         !disableStatusMessage && pFont) {
+    if(theApp.screenMessage) {
+      if(((GetTickCount() - theApp.screenMessageTime) < 3000) &&
+         !theApp.disableStatusMessage && pFont) {
         D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 0, 0);
         pFont->Begin();
         RECT r;
@@ -723,10 +688,10 @@ void Direct3DDisplay::render()
         r.right = dpp.BackBufferWidth - 10;
         r.bottom = r.top + 20;
 
-        pFont->DrawText(screenMessageBuffer, -1, &r, 0, color);
+        pFont->DrawText(theApp.screenMessageBuffer, -1, &r, 0, color);
         pFont->End();
       } else {
-        screenMessage = false;
+        theApp.screenMessage = false;
       }
     }
     
@@ -769,8 +734,8 @@ bool Direct3DDisplay::changeRenderSize(int w, int h)
       return false;
     }
   }
-  if(filterDisabled && filterFunction)
-    filterFunction = NULL;
+  if(filterDisabled && theApp.filterFunction)
+    theApp.filterFunction = NULL;
 
   return true;
 }

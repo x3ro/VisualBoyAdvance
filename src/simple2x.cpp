@@ -47,7 +47,7 @@ void Simple2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
       *(nL) = color;
 
 #ifdef WORDS_BIGENDIAN
-      color = (currentPixel << 16) >> 16;
+      color = currentPixel & 0xffff;
 #else
       color = currentPixel >> 16;
 #endif

@@ -30,9 +30,9 @@ extern "C" bool cpu_mmx;
    Incorporated into vba by Anthony Di Franco
 */
 
-static u8 *frm1;
-static u8 *frm2;
-static u8 *frm3;
+static u8 *frm1 = NULL;
+static u8 *frm2 = NULL;
+static u8 *frm3 = NULL;
 
 extern int RGB_LOW_BITS_MASK;
 extern u32 qRGB_COLOR_MASK[2];
@@ -45,6 +45,17 @@ static void Init()
   // 2 frames ago
   frm3 = (u8 *)calloc(322*242,4);
   // 3 frames ago
+}
+
+void InterframeCleanup()
+{
+  if(frm1)
+    free(frm1);
+  if(frm2)
+    free(frm2);
+  if(frm3)
+    free(frm3);
+  frm1 = frm2 = frm3 = NULL;
 }
 
 #ifdef MMX

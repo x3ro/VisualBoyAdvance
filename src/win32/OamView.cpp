@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,102 +16,42 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "ResizeDlg.h"
+// OamView.cpp : implementation file
+//
 
-#include <memory.h>
+#include "stdafx.h"
+#include "vba.h"
+#include "FileDlg.h"
+#include "OamView.h"
+#include "Reg.h"
+#include "WinResUtil.h"
 
+#include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
-#include "WinResUtil.h"
-#include "Reg.h"
-#include "resource.h"
 #include "../NLS.h"
-
-#include "Controls.h"
-#include "CommDlg.h"
-#include "IUpdate.h"
+#include "../Util.h"
 
 extern "C" {
 #include <png.h>
 }
 
-class OamView : public ResizeDlg, IUpdateListener {
-private:
-  BITMAPINFO bmpInfo;
-  u8 *data;
-  int w;
-  int h;
-  int number;
-  bool autoUpdate;
-  BitmapControl oamView;
-  ZoomControl oamZoom;
-  ColorControl color;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-protected:
-  DECLARE_MESSAGE_MAP()
-  
-public:
-  OamView();
-  ~OamView();
+/////////////////////////////////////////////////////////////////////////////
+// OamView dialog
 
-  void paint();
-  void render();
-  void setAttributes(u16, u16, u16);
-  void save();
-  void saveBMP(char *);
-  void savePNG(char *);
-  void updateScrollInfo();
 
-  void OnStretch();
-  void OnSprite();
-  void OnAutoUpdate();
-
-  virtual void update();
-  
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
-  virtual LRESULT OnMapInfo(WPARAM, LPARAM);
-  virtual LRESULT OnColInfo(WPARAM, LPARAM);
-  virtual void OnHScroll(UINT, UINT, HWND);
-};
-
-extern char *winLoadFilter(int id);
-extern void utilPutDword(u8 *, u32);
-extern void utilPutWord(u8 *, u16);
-
-extern HWND hWindow;
-extern HINSTANCE hInstance;
-extern int videoOption;
-extern int captureFormat;
-
-extern void winAddUpdateListener(IUpdateListener *);
-extern void winRemoveUpdateListener(IUpdateListener *);
-
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
-};
-
-BEGIN_MESSAGE_MAP(OamView,ResizeDlg)
-  ON_WM_HSCROLL()
-  ON_WM_CLOSE()
-  ON_MESSAGE(WM_MAPINFO, OnMapInfo)
-  ON_MESSAGE(WM_COLINFO, OnColInfo)
-  ON_BN_CLICKED(IDC_REFRESH, paint)
-  ON_BN_CLICKED(IDC_CLOSE, OnClose)
-  ON_BN_CLICKED(IDC_SAVE, save)
-  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
-  ON_CONTROL(EN_CHANGE, IDC_SPRITE, OnSprite)
-  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
-END_MESSAGE_MAP()
-
-OamView::OamView()
-  : ResizeDlg()
+OamView::OamView(CWnd* pParent /*=NULL*/)
+  : ResizeDlg(OamView::IDD, pParent)
 {
-  BitmapControl::registerClass();
-  ZoomControl::registerClass();
-  ColorControl::registerClass();
-
+  //{{AFX_DATA_INIT(OamView)
+  m_stretch = FALSE;
+  //}}AFX_DATA_INIT
   autoUpdate = false;
   
   memset(&bmpInfo.bmiHeader, 0, sizeof(bmpInfo.bmiHeader));
@@ -129,6 +69,36 @@ OamView::OamView()
 
   number = 0;
 }
+
+
+void OamView::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(OamView)
+  DDX_Control(pDX, IDC_SPRITE, m_sprite);
+  DDX_Check(pDX, IDC_STRETCH, m_stretch);
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_COLOR, color);
+  DDX_Control(pDX, IDC_OAM_VIEW, oamView);
+  DDX_Control(pDX, IDC_OAM_VIEW_ZOOM, oamZoom);
+}
+
+
+BEGIN_MESSAGE_MAP(OamView, CDialog)
+  //{{AFX_MSG_MAP(OamView)
+  ON_BN_CLICKED(IDC_SAVE, OnSave)
+  ON_BN_CLICKED(IDC_STRETCH, OnStretch)
+  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
+  ON_EN_CHANGE(IDC_SPRITE, OnChangeSprite)
+  ON_BN_CLICKED(IDC_CLOSE, OnClose)
+  ON_WM_HSCROLL()
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(WM_MAPINFO, OnMapInfo)
+  ON_MESSAGE(WM_COLINFO, OnColInfo)
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// OamView message handlers
 
 OamView::~OamView()
 {
@@ -151,9 +121,11 @@ void OamView::update()
   paint();
 }
 
+
+
 void OamView::setAttributes(u16 a0, u16 a1, u16 a2)
 {
-  char buffer[256];
+  CString buffer;
   
   int y = a0 & 255;
   int rot = a0 & 512;
@@ -171,59 +143,60 @@ void OamView::setAttributes(u16 a0, u16 a1, u16 a2)
   int prio = (a2 >> 10) & 3;
   int pal = (a2 >> 12) & 15;
 
-  wsprintf(buffer, "%d,%d", x,y);
-  ::SetWindowText(GetDlgItem(IDC_POS), buffer);
+  buffer.Format("%d,%d", x,y);
+  GetDlgItem(IDC_POS)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", mode);
-  ::SetWindowText(GetDlgItem(IDC_MODE), buffer);
+  buffer.Format("%d", mode);
+  GetDlgItem(IDC_MODE)->SetWindowText(buffer);
 
-  ::SetWindowText(GetDlgItem(IDC_COLORS), color ? "256" : "16");
+  GetDlgItem(IDC_COLORS)->SetWindowText(color ? "256" : "16");
 
-  wsprintf(buffer, "%d", pal);
-  ::SetWindowText(GetDlgItem(IDC_PALETTE), buffer);
+  buffer.Format("%d", pal);
+  GetDlgItem(IDC_PALETTE)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", tile);
-  ::SetWindowText(GetDlgItem(IDC_TILE), buffer);
+  buffer.Format("%d", tile);
+  GetDlgItem(IDC_TILE)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", prio);
-  ::SetWindowText(GetDlgItem(IDC_PRIO), buffer);
+  buffer.Format("%d", prio);
+  GetDlgItem(IDC_PRIO)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d,%d", w,h);
-  ::SetWindowText(GetDlgItem(IDC_SIZE2), buffer);
+  buffer.Format("%d,%d", w,h);
+  GetDlgItem(IDC_SIZE2)->SetWindowText(buffer);
 
   if(rot) {
-    wsprintf(buffer, "%d", rotParam);
+    buffer.Format("%d", rotParam);
   } else
-    buffer[0] = 0;
-  ::SetWindowText(GetDlgItem(IDC_ROT), buffer);
+    buffer.Empty();
+  GetDlgItem(IDC_ROT)->SetWindowText(buffer);
+
+  buffer.Empty();
 
   if(rot)
-    buffer[0] = 'R';
-  else buffer[0] = ' ';
+    buffer += 'R';
+  else buffer += ' ';
   if(!rot) {
     if(flipH)
-      buffer[1] = 'H';
+      buffer += 'H';
     else
-      buffer[1] = ' ';
+      buffer += ' ';
     if(flipV)
-      buffer[2] = 'V';
+      buffer += 'V';
     else
-      buffer[2] = ' ';
+      buffer += ' ';
   } else {
-    buffer[1] = ' ';
-    buffer[2] = ' ';
+    buffer += ' ';
+    buffer += ' ';
   }
   if(mosaic)
-    buffer[3] = 'M';
+    buffer += 'M';
   else
-    buffer[3] = ' ';
+    buffer += ' ';
   if(duple)
-    buffer[4] = 'D';
+    buffer += 'D';
   else
-    buffer[4] = ' ';
+    buffer += ' ';
   
-  buffer[5] = 0;
-  ::SetWindowText(GetDlgItem(IDC_FLAGS), buffer);
+  GetDlgItem(IDC_FLAGS)->SetWindowText(buffer);
 }
 
 void OamView::render()
@@ -343,7 +316,7 @@ void OamView::render()
   }
 }
 
-void OamView::saveBMP(char *name)
+void OamView::saveBMP(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -410,7 +383,9 @@ void OamView::saveBMP(char *name)
   fclose(fp);
 }
 
-void OamView::savePNG(char *name)
+
+
+void OamView::savePNG(const char *name)
 {
   u8 writeBuffer[1024 * 3];
   
@@ -486,43 +461,42 @@ void OamView::savePNG(char *name)
   fclose(fp);
 }
 
-void OamView::save()
+void OamView::OnSave() 
 {
-  char captureBuffer[2048];
+  CString captureBuffer;
 
-  if(captureFormat == 0)
-    strcpy(captureBuffer, "oam.png");
+  if(theApp.captureFormat == 0)
+    captureBuffer = "oam.png";
   else
-    strcpy(captureBuffer, "oam.bmp");
+    captureBuffer = "oam.bmp";
 
-  char *exts[] = {".png", ".bmp" };
+  LPCTSTR exts[] = {".png", ".bmp" };
 
-  FileDlg dlg(getHandle(),
-              (char *)captureBuffer,
-              (int)sizeof(captureBuffer),
-              (char *)winLoadFilter(IDS_FILTER_PNG),
-              captureFormat ? 2 : 1,
-              captureFormat ? "BMP" : "PNG",
+  FileDlg dlg(this,
+              captureBuffer,
+              theApp.winLoadFilter(IDS_FILTER_PNG),
+              theApp.captureFormat ? 2 : 1,
+              theApp.captureFormat ? "BMP" : "PNG",
               exts,
-              (char *)NULL, 
-              (char *)winResLoadString(IDS_SELECT_CAPTURE_NAME),
-              TRUE);
+              "",
+              winResLoadString(IDS_SELECT_CAPTURE_NAME),
+              true);
 
-  BOOL res = dlg.DoModal();  
-  if(res == FALSE) {
-    DWORD res = CommDlgExtendedError();
+  if(!dlg.DoModal()) {
     return;
   }
+  captureBuffer = dlg.GetPathName();
 
-  if(captureFormat)
+  if(dlg.getFilterIndex() == 2)
     saveBMP(captureBuffer);
   else
     savePNG(captureBuffer);  
 }
 
-BOOL OamView::OnInitDialog(LPARAM)
+BOOL OamView::OnInitDialog() 
 {
-  // winCenterWindow(getHandle());
+  CDialog::OnInitDialog();
+  
   DIALOG_SIZER_START( sz )
     DIALOG_SIZER_ENTRY( IDC_OAM_VIEW, DS_SizeX | DS_SizeY )
     DIALOG_SIZER_ENTRY( IDC_OAM_VIEW_ZOOM, DS_MoveX)
@@ -539,48 +513,47 @@ BOOL OamView::OnInitDialog(LPARAM)
             HKEY_CURRENT_USER,
             "Software\\Emulators\\VisualBoyAdvance\\Viewer\\OamView",
             NULL);
-  oamView.Attach(GetDlgItem(IDC_OAM_VIEW));
-  oamZoom.Attach(GetDlgItem(IDC_OAM_VIEW_ZOOM));
-  color.Attach(GetDlgItem(IDC_COLOR));
-  ::SetWindowText(GetDlgItem(IDC_SPRITE), "0");
+  m_sprite.SetWindowText("0");
 
   updateScrollInfo();
 
-  int s = regQueryDwordValue("oamViewStretch", 0);
-  if(s)
+  m_stretch = regQueryDwordValue("oamViewStretch", 0);
+  if(m_stretch)
     oamView.setStretch(true);
-  DoCheckbox(false, IDC_STRETCH, s);
+  UpdateData(FALSE);
   
   paint();
-  return TRUE;
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void OamView::OnStretch()
+void OamView::OnStretch() 
 {
   oamView.setStretch(!oamView.getStretch());
   paint();
   regSetDwordValue("oamViewStretch", oamView.getStretch());  
 }
 
-void OamView::OnAutoUpdate()
+
+void OamView::OnAutoUpdate() 
 {
   autoUpdate = !autoUpdate;
   if(autoUpdate) {
-    winAddUpdateListener(this);
+    theApp.winAddUpdateListener(this);
   } else {
-    winRemoveUpdateListener(this);    
+    theApp.winRemoveUpdateListener(this);    
   }  
 }
 
-void OamView::OnSprite()
+void OamView::OnChangeSprite() 
 {
-  HWND h = GetDlgItem(IDC_SPRITE);
-  char buffer[10];
-  GetWindowText(h,  buffer, 10);
+  CString buffer;
+  m_sprite.GetWindowText(buffer);
   int n = atoi(buffer);
   if(n < 0 || n > 127) {
-    sprintf(buffer, "%d", number);
-    ::SetWindowText(h, buffer);
+    buffer.Format("%d", number);
+    m_sprite.SetWindowText(buffer);
     return;
   }
   number = n;
@@ -588,14 +561,14 @@ void OamView::OnSprite()
   updateScrollInfo();
 }
 
-void OamView::OnClose()
+void OamView::OnClose() 
 {
-  winRemoveUpdateListener(this);
+  theApp.winRemoveUpdateListener(this);
   
   DestroyWindow();
 }
 
-LRESULT OamView::OnMapInfo(WPARAM, LPARAM lParam)
+LRESULT OamView::OnMapInfo(WPARAM wParam, LPARAM lParam)
 {
   u8 *colors = (u8 *)lParam;
   oamZoom.setColors(colors);
@@ -603,10 +576,9 @@ LRESULT OamView::OnMapInfo(WPARAM, LPARAM lParam)
   return TRUE;
 }
 
-LRESULT OamView::OnColInfo(WPARAM wParam, LPARAM)
+LRESULT OamView::OnColInfo(WPARAM wParam, LPARAM lParam)
 {
   u16 c = (u16)wParam;
-  char buffer[16];
 
   color.setColor(c);  
 
@@ -614,14 +586,15 @@ LRESULT OamView::OnColInfo(WPARAM wParam, LPARAM)
   int g = (c & 0x3e0) >> 5;
   int b = (c & 0x7c00) >> 10;
 
-  sprintf(buffer, "R: %d", r);
-  ::SetWindowText(GetDlgItem(IDC_R), buffer);
+  CString buffer;
+  buffer.Format("R: %d", r);
+  GetDlgItem(IDC_R)->SetWindowText(buffer);
 
-  sprintf(buffer, "G: %d", g);
-  ::SetWindowText(GetDlgItem(IDC_G), buffer);
+  buffer.Format("G: %d", g);
+  GetDlgItem(IDC_G)->SetWindowText(buffer);
 
-  sprintf(buffer, "B: %d", b);
-  ::SetWindowText(GetDlgItem(IDC_B), buffer);
+  buffer.Format("B: %d", b);
+  GetDlgItem(IDC_B)->SetWindowText(buffer);
 
   return TRUE;
 }
@@ -636,15 +609,14 @@ void OamView::updateScrollInfo()
   si.nMax = 127;
   si.nPage = 1;
   si.nPos = number;
-  SetScrollInfo(GetDlgItem(IDC_SCROLLBAR),
-                SB_CTL,
-                &si,
-                TRUE);    
+  GetDlgItem(IDC_SCROLLBAR)->SetScrollInfo(SB_CTL,
+                                           &si,
+                                           TRUE);    
 }
 
-void OamView::OnHScroll(UINT type, UINT pos, HWND)
+void OamView::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) 
 {
-  switch(type) {
+  switch(nSBCode) {
   case SB_BOTTOM:
     number = 127;
     break;
@@ -672,7 +644,7 @@ void OamView::OnHScroll(UINT type, UINT pos, HWND)
     number = 0;
     break;
   case SB_THUMBTRACK:
-    number = pos;
+    number = nPos;
     if(number < 0)
       number = 0;
     if(number > 127)
@@ -682,17 +654,13 @@ void OamView::OnHScroll(UINT type, UINT pos, HWND)
 
   updateScrollInfo();
   
-  char buffer[10];
-  sprintf(buffer, "%d", number);
-  ::SetWindowText(GetDlgItem(IDC_SPRITE), buffer);
+  CString buffer;
+  buffer.Format("%d", number);
+  m_sprite.SetWindowText(buffer);
   paint();
-}                       
+}
 
-void toolsOamViewer()
+void OamView::PostNcDestroy() 
 {
-  OamView *dlg = new OamView();
-  dlg->setAutoDelete(true);
-  dlg->MakeDialog(hInstance,
-                  IDD_OAM_VIEW,
-                  hWindow);  
+  delete this;
 }

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,22 +16,54 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "stdafx.h"
+#if !defined(AFX_EXPORTGSASNAPSHOT_H__ADF8566A_C64D_43CF_9CD2_A290370BA4F1__INCLUDED_)
+#define AFX_EXPORTGSASNAPSHOT_H__ADF8566A_C64D_43CF_9CD2_A290370BA4F1__INCLUDED_
 
-#include "Wnd.h"
-#include "../System.h"
-#include "resource.h"
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+// ExportGSASnapshot.h : header file
+//
 
-class ExportGSASnapshot : public Dlg {
-  char *filename;
-  char *title;
-protected:
+/////////////////////////////////////////////////////////////////////////////
+// ExportGSASnapshot dialog
+
+class ExportGSASnapshot : public CDialog
+{
+  // Construction
+ public:
+  ExportGSASnapshot(CString filename, CString title,CWnd* pParent = NULL);   // standard constructor
+
+  // Dialog Data
+  //{{AFX_DATA(ExportGSASnapshot)
+  enum { IDD = IDD_EXPORT_SPS };
+  CString  m_desc;
+  CString  m_notes;
+  CString  m_title;
+  //}}AFX_DATA
+  CString m_filename;
+
+
+  // Overrides
+  // ClassWizard generated virtual function overrides
+  //{{AFX_VIRTUAL(ExportGSASnapshot)
+ protected:
+  virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+  //}}AFX_VIRTUAL
+
+  // Implementation
+ protected:
+
+  // Generated message map functions
+  //{{AFX_MSG(ExportGSASnapshot)
+  virtual BOOL OnInitDialog();
+  afx_msg void OnCancel();
+  afx_msg void OnOk();
+  //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
-public:
-  ExportGSASnapshot(char *, char *);
+    };
 
-  virtual BOOL OnInitDialog(LPARAM);
+    //{{AFX_INSERT_LOCATION}}
+    // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 
-  void OnOk();
-  void OnCancel();
-};
+#endif // !defined(AFX_EXPORTGSASNAPSHOT_H__ADF8566A_C64D_43CF_9CD2_A290370BA4F1__INCLUDED_)

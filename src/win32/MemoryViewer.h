@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,15 +16,26 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "../System.h"
+#if !defined(AFX_MEMORYVIEWER_H__52C50474_5399_4D0B_A3E4_4C52C4E0EAA0__INCLUDED_)
+#define AFX_MEMORYVIEWER_H__52C50474_5399_4D0B_A3E4_4C52C4E0EAA0__INCLUDED_
+
+#include "..\System.h"  // Added by ClassView
+#if _MSC_VER > 1000
+#pragma once
+#endif // _MSC_VER > 1000
+// MemoryViewer.h : header file
+//
+
+/////////////////////////////////////////////////////////////////////////////
+// MemoryViewer window
 
 class IMemoryViewerDlg {
  public:
   virtual void setCurrentAddress(u32 address)=0;
 };
 
-class MemoryViewer : public Wnd {
+class MemoryViewer : public CWnd
+{
   u32 address;
   int addressSize;
   int dataSize;
@@ -32,7 +43,7 @@ class MemoryViewer : public Wnd {
   int caretWidth;
   int caretHeight;
   HFONT font;
-  SIZE fontSize;
+  CSize fontSize;
   u32 editAddress;
   int editNibble;
   int maxNibble;
@@ -43,55 +54,60 @@ class MemoryViewer : public Wnd {
   IMemoryViewerDlg *dlg;
 
   static bool isRegistered;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
+  // Construction
+ public:
+  MemoryViewer();
+
+  // Attributes
+ public:
+
+  // Operations
+ public:
+  virtual void readData(u32,int,u8 *) = 0;
+  virtual void editData(u32,int,int,u32)=0;
+
+  // Overrides
+  // ClassWizard generated virtual function overrides
+  //{{AFX_VIRTUAL(MemoryViewer)
+  //}}AFX_VIRTUAL
+
+  // Implementation
+ public:
+  int getSize();
+  u32 getCurrentAddress();
+  void setAddressSize(int s);
+  void registerClass();
   void beep();
-  void setDialog(IMemoryViewerDlg *);
-  BOOL OnEditInput(UINT c);
-  LRESULT OnWMChar(WPARAM wParam, LPARAM lParam);
-  
+  bool OnEditInput(UINT c);
+  void moveAddress(s32 offset, int nibbleOff);
   void setCaretPos();
   void destroyEditCaret();
   void createEditCaret(int w, int h);
-  void moveAddress(s32 off, int nibble);
-  MemoryViewer();
-
-  static void registerClass();
-
-  virtual void readData(u32,int,u8 *) = 0;
-  virtual void editData(u32,int,int,u32)=0;
-  void setAddress(u32);
-  void setAddressSize(int s) { addressSize = s; }
-  u32 getCurrentAddress() { return editAddress; }
-  void setSize(int);
-  int getSize() { return dataSize; }
   void updateScrollInfo(int lines);
+  void setSize(int s);
+  void setAddress(u32 a);
+  void setDialog(IMemoryViewerDlg *d);
+  virtual ~MemoryViewer();
 
-  virtual BOOL OnEraseBkgnd(HDC);
-  virtual void OnPaint();
-  virtual void OnVScroll(UINT, UINT, HWND);
-  virtual void OnKeyDown(UINT virtKey, UINT, UINT);
-  virtual void OnKillFocus(HWND next);
-  virtual void OnSetFocus(HWND old);
-  virtual void OnLButtonDown(UINT flags, int x, int y);
-  virtual UINT OnGetDlgCode();
-};
-
-class MemoryViewerAddressSize : public Dlg {
-  u32 address;
-  int size;
-protected:
+  // Generated message map functions
+ protected:
+  //{{AFX_MSG(MemoryViewer)
+  afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+  afx_msg void OnPaint();
+  afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+  afx_msg UINT OnGetDlgCode();
+  afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+  afx_msg void OnSetFocus(CWnd* pOldWnd);
+  afx_msg void OnKillFocus(CWnd* pNewWnd);
+  afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+  //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
-public:
-  MemoryViewerAddressSize();
-  
-  void setAddress(u32 a) { address = a; }
-  void setSize(int s) { size = s; }
-  u32 getAddress() { return address; }
-  int getSize() { return size; }
-
-  virtual BOOL OnInitDialog(LPARAM);  
-  void OnOk();
-  void OnCancel();
+    afx_msg LRESULT OnWMChar(WPARAM wParam, LPARAM lParam);
 };
+
+/////////////////////////////////////////////////////////////////////////////
+
+//{{AFX_INSERT_LOCATION}}
+// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+
+#endif // !defined(AFX_MEMORYVIEWER_H__52C50474_5399_4D0B_A3E4_4C52C4E0EAA0__INCLUDED_)

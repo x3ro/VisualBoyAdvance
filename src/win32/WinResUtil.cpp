@@ -16,47 +16,19 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <windows.h>
+#include "stdafx.h"
 
-char winResBuffer[10][512];
-int winResNextBuffer = 0;
-HINSTANCE winResInstance = NULL;
-WORD winResLangId = 0;
-UINT winResCodePage = 1252;
-extern HINSTANCE hInstance;
-
-BOOL CALLBACK winResEnumLangProc(HANDLE module,
-                                 LPCTSTR type,
-                                 LPCTSTR name,
-                                 WORD lang,
-                                 LONG_PTR lParam)
+static HINSTANCE winResGetInstance(LPCTSTR resType, LPCTSTR resName)
 {
-  char buffer[20];
-  
-  winResLangId = lang;
-
-  if(GetLocaleInfo(MAKELCID(lang, SORT_DEFAULT),
-                   LOCALE_IDEFAULTANSICODEPAGE,
-                   buffer,
-                   20)) {
-    winResCodePage = atoi(buffer);
-    OSVERSIONINFO info;
-    info.dwOSVersionInfoSize = sizeof(info);
-    GetVersionEx(&info);
-    if(info.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-      SetThreadLocale(MAKELCID(lang, SORT_DEFAULT));
-    }
-  } else
-    winResCodePage = GetACP();
-  return TRUE;
+  // TODO: make language DLL first
+  return AfxFindResourceHandle(resName, resType);
 }
+
 
 UCHAR *winResGetResource(LPCTSTR resType, LPCTSTR resName)
 {
-  EnumResourceLanguages(winResInstance, resType, resName,
-                        (ENUMRESLANGPROC)winResEnumLangProc,
-                        NULL);
-  
+  HINSTANCE winResInstance = winResGetInstance(resType, resName);
+
   HRSRC hRsrc = FindResourceEx(winResInstance, resType, resName, 0);
 
   if(hRsrc != NULL) {
@@ -90,22 +62,25 @@ int winResDialogBox(LPCTSTR boxName,
                     DLGPROC dlgProc,
                     LPARAM lParam)
 {
-  UCHAR * b = winResGetResource(RT_DIALOG, boxName);
+  /*
+    UCHAR * b = winResGetResource(RT_DIALOG, boxName);
   
-  if(b != NULL) {
+    if(b != NULL) {
     
     return DialogBoxIndirectParam(hInstance,
-                                  (LPCDLGTEMPLATE)b,
-                                  parent,
-                                  dlgProc,
-                                  lParam);
-  }
+    (LPCDLGTEMPLATE)b,
+    parent,
+    dlgProc,
+    lParam);
+    }
 
-  return DialogBoxParam(hInstance,
-                        boxName,
-                        parent,
-                        dlgProc,
-                        lParam);
+    return DialogBoxParam(hInstance,
+    boxName,
+    parent,
+    dlgProc,
+    lParam);
+  */
+  return 0;
 }
 
 int winResDialogBox(LPCTSTR boxName,
@@ -118,68 +93,17 @@ int winResDialogBox(LPCTSTR boxName,
                          0);
 }
 
-const char *winResLoadString(UINT id,
-                             WORD &length)
+CString winResLoadString(UINT id)
 {
-  char * buffer  = winResBuffer[winResNextBuffer];
-  winResNextBuffer++;
-  if(winResNextBuffer >= 10)
-    winResNextBuffer = 0;
-  
   int stId = id / 16 + 1;
-  UCHAR * b = winResGetResource(RT_STRING, MAKEINTRESOURCE(stId));
+  HINSTANCE inst = winResGetInstance(RT_STRING, MAKEINTRESOURCE(stId));
   
-  if(b != NULL) {
-    
-    int res = id % 16 ;
-    
-    int i = 0;
-    
-    while(i != res) {
-      WORD len = *((WORD *)b);
-      
-      b += (2 + 2*len);
-      i++;
-    }
-    
-    WORD len = *((WORD *)b);
-    
-    if(len) {
-      b+=2;
-      int j = 0;
-      if(len >= 512)
-        len = 511;
-      length = WideCharToMultiByte(winResCodePage,
-                                   0,
-                                   (LPCWSTR)b,
-                                   len,
-                                   buffer,
-                                   512,
-                                   NULL,
-                                   NULL);
-      buffer[length] = 0;
-      return (const char *)buffer;
-    }
-  }
+  CString res;
+  if(res.LoadString(id))
+    return res;
 
-  int res = LoadString(hInstance,
-                       id,
-                       buffer,
-                       512);
+  // TODO: handle case where string is only in the default English
+  res = "";
 
-  length = res;
-  
-  return (const char *)buffer;
-}
-
-const char *winResLoadString(UINT id)
-{
-  WORD length = 0;
-  
-  return winResLoadString(id,length);
-}
-
-void winResSetLanguageModule(HINSTANCE hi)
-{
-  winResInstance = hi;
+  return res;
 }

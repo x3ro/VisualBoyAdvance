@@ -22,7 +22,6 @@
 #include <ctype.h>
 
 #include "../System.h"
-#include "../Cheats.h"
 #include "../NLS.h"
 #include "../Util.h"
 
@@ -32,9 +31,6 @@
 gbCheat gbCheatList[100];
 int gbCheatNumber = 0;
 bool gbCheatMap[0x10000];
-
-int gbCheatsSearchCount = 0;
-GbCheatsSearchMap gbCheatsSearchMap[3];
 
 #define GBCHEAT_IS_HEX(a) ( ((a)>='A' && (a) <='F') || ((a) >='0' && (a) <= '9'))
 #define GBCHEAT_HEX_VALUE(a) ( (a) >= 'A' ? (a) - 'A' + 10 : (a) - '0')
@@ -91,7 +87,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
   gbCheatUpdateMap();
 }
 
-void gbCheatsSaveCheatList(char *file)
+void gbCheatsSaveCheatList(const char *file)
 {
   if(gbCheatNumber == 0)
     return;
@@ -107,7 +103,7 @@ void gbCheatsSaveCheatList(char *file)
   fclose(f);
 }
 
-bool gbCheatsLoadCheatList(char *file)
+bool gbCheatsLoadCheatList(const char *file)
 {
   gbCheatNumber = 0;
 
@@ -163,14 +159,7 @@ bool gbCheatsLoadCheatList(char *file)
   return true;
 }
 
-void gbCheatToUpper(char *s)
-{
-  while(*s) {
-    *s++ = toupper(*s);
-  }
-}
-
-bool gbVerifyGsCode(char *code)
+bool gbVerifyGsCode(const char *code)
 {
   int len = strlen(code);
 
@@ -196,7 +185,7 @@ bool gbVerifyGsCode(char *code)
   return true;
 }
 
-void gbAddGsCheat(char *code, char *desc)
+void gbAddGsCheat(const char *code, const char *desc)
 {
   if(gbCheatNumber > 99) {
     systemMessage(MSG_MAXIMUM_NUMBER_OF_CHEATS,
@@ -204,8 +193,6 @@ void gbAddGsCheat(char *code, char *desc)
     return;
   }
 
-  gbCheatToUpper(code);
-  
   if(!gbVerifyGsCode(code)) {
     systemMessage(MSG_INVALID_GAMESHARK_CODE,
                   "Invalid GameShark code: %s", code);
@@ -237,7 +224,7 @@ void gbAddGsCheat(char *code, char *desc)
   gbCheatNumber++;
 }
 
-bool gbVerifyGgCode(char *code)
+bool gbVerifyGgCode(const char *code)
 {
   int len = strlen(code);
 
@@ -308,7 +295,7 @@ bool gbVerifyGgCode(char *code)
   return true;
 }
 
-void gbAddGgCheat(char *code, char *desc)
+void gbAddGgCheat(const char *code, const char *desc)
 {
   if(gbCheatNumber > 99) {
     systemMessage(MSG_MAXIMUM_NUMBER_OF_CHEATS,
@@ -316,8 +303,6 @@ void gbAddGgCheat(char *code, char *desc)
     return;
   }
 
-  gbCheatToUpper(code);
-  
   if(!gbVerifyGgCode(code)) {
     systemMessage(MSG_INVALID_GAMEGENIE_CODE,
                   "Invalid GameGenie code: %s", code);
@@ -405,7 +390,7 @@ void gbCheatDisable(int i)
   }
 }
 
-bool gbCheatReadGSCodeFile(char *fileName)
+bool gbCheatReadGSCodeFile(const char *fileName)
 {
   FILE *file = fopen(fileName, "rb");
     
@@ -469,195 +454,4 @@ u8 gbCheatRead(u16 address)
     }
   }
   return gbMemoryMap[address>>12][address&0xFFF];
-}
-
-void gbCheatsCleanup()
-{
-  int i;
-  for(i = 0; i < gbCheatsSearchCount; i++) {
-    if(gbCheatsSearchMap[i].bits != NULL) {
-      free(gbCheatsSearchMap[i].bits);
-      gbCheatsSearchMap[i].bits = NULL;
-    }
-    if(gbCheatsSearchMap[i].data != NULL) {
-      free(gbCheatsSearchMap[i].data);
-      gbCheatsSearchMap[i].data = NULL;
-    }
-    gbCheatsSearchMap[i].memory = NULL;
-    gbCheatsSearchMap[i].address = 0;
-    gbCheatsSearchMap[i].mask = 0;
-  }
-}
-
-void gbCheatsInitialize()
-{
-  int i;
-  gbCheatsCleanup();
-  i = 0;
-  
-  if(gbRamSize) {
-    gbCheatsSearchMap[i].address = 0xa000;
-    if(gbRam)
-      gbCheatsSearchMap[i].memory = gbRam;
-    else
-      gbCheatsSearchMap[i].memory = &gbMemory[0xa000];
-    gbCheatsSearchMap[i].data = (u8*)malloc(gbRamSize);
-    memcpy(gbCheatsSearchMap[i].data, gbCheatsSearchMap[i].memory, gbRamSize);
-    gbCheatsSearchMap[i].mask = gbRamSize - 1;
-    gbCheatsSearchMap[i].bits = (u32 *)malloc(gbRamSize >> 3);
-    memset(gbCheatsSearchMap[i].bits, 255, gbRamSize>>3);
-    i++;
-  }
-  if(gbCgbMode) {
-    gbCheatsSearchMap[i].address = 0xc000;
-    gbCheatsSearchMap[i].memory = &gbMemory[0xc000];
-    gbCheatsSearchMap[i].data = (u8*)malloc(0x1000);
-    memcpy(gbCheatsSearchMap[i].data, gbCheatsSearchMap[i].memory, 0x1000);
-    gbCheatsSearchMap[i].mask = 0xfff;
-    gbCheatsSearchMap[i].bits = (u32 *)malloc(0x1000 >> 3);
-    memset(gbCheatsSearchMap[i].bits, 255, 0x1000 >> 3);    
-    i++;
-    gbCheatsSearchMap[i].address = 0xd000;
-    gbCheatsSearchMap[i].memory = gbWram;
-    gbCheatsSearchMap[i].data = (u8*)malloc(0x8000);
-    memcpy(gbCheatsSearchMap[i].data, gbCheatsSearchMap[i].memory, 0x8000);    
-    gbCheatsSearchMap[i].mask = 0x7fff;
-    gbCheatsSearchMap[i].bits = (u32 *)malloc(0x8000 >> 3);
-    memset(gbCheatsSearchMap[i].bits, 0xff, 0x8000>>3);
-    i++;        
-  } else {
-    gbCheatsSearchMap[i].address = 0xc000;
-    gbCheatsSearchMap[i].memory = &gbMemory[0xc000];
-    gbCheatsSearchMap[i].data = (u8*)malloc(0x2000);
-    memcpy(gbCheatsSearchMap[i].data, gbCheatsSearchMap[i].memory, 0x2000);    
-    gbCheatsSearchMap[i].mask = 0x1fff;
-    gbCheatsSearchMap[i].bits = (u32 *)malloc(0x2000 >> 3);
-    memset(gbCheatsSearchMap[i].bits, 255, 0x2000>>3);    
-    i++;    
-  }
-
-  gbCheatsSearchCount = i;
-}
-
-void gbCheatsSearchChange(int compare, int size, bool isSigned)
-{
-  int inc = 1;
-
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  if(isSigned) {
-    int i;
-    for(i = 0; i < gbCheatsSearchCount; i++) {
-      int j;
-      int end = gbCheatsSearchMap[i].mask + 1;
-      end -= (inc - 1);
-      for(j = 0; j < end; j++) {
-        if(TEST_BIT(gbCheatsSearchMap[i].bits, j) &&
-           COMPARE(compare,
-                   SIGNED_DATA(size, gbCheatsSearchMap[i].memory, j),
-                   SIGNED_DATA(size, gbCheatsSearchMap[i].data, j))) {
-        } else {
-          BIT_CLEAR(gbCheatsSearchMap[i].bits, j);
-        }
-      }
-    }
-  } else {
-    int i;
-    for(i = 0; i < gbCheatsSearchCount; i++) {
-      int j;
-      int end = gbCheatsSearchMap[i].mask + 1;
-      end -= (inc - 1);
-      for(j = 0; j < end; j++) {
-        if(TEST_BIT(gbCheatsSearchMap[i].bits, j) &&
-           COMPARE(compare,
-                   UNSIGNED_DATA(size, gbCheatsSearchMap[i].memory, j),
-                   UNSIGNED_DATA(size, gbCheatsSearchMap[i].data, j))) {
-        } else {
-          BIT_CLEAR(gbCheatsSearchMap[i].bits, j);
-        }
-      }
-    }
-  }
-}
-
-void gbCheatsSearchValue(int compare, int size, bool isSigned, u32 value)
-{
-  int inc = 1;
-
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  if(isSigned) {
-    int i;
-    for(i = 0; i < gbCheatsSearchCount; i++) {
-      int j;
-      int end = gbCheatsSearchMap[i].mask + 1;
-      end -= (inc - 1);
-      for(j = 0; j < end; j++) {
-        if(TEST_BIT(gbCheatsSearchMap[i].bits, j) &&
-           COMPARE(compare,
-                   SIGNED_DATA(size, gbCheatsSearchMap[i].memory, j),
-                   (s32)value)) {
-        } else {
-          BIT_CLEAR(gbCheatsSearchMap[i].bits, j);
-        }
-      }
-    }
-  } else {
-    int i;
-    for(i = 0; i < gbCheatsSearchCount; i++) {
-      int j;
-      int end = gbCheatsSearchMap[i].mask + 1;
-      end -= (inc - 1);
-      for(j = 0; j < end; j++) {
-        if(TEST_BIT(gbCheatsSearchMap[i].bits, j) &&
-           COMPARE(compare,
-                   UNSIGNED_DATA(size, gbCheatsSearchMap[i].memory, j),
-                   (u32)value)) {
-        } else {
-          BIT_CLEAR(gbCheatsSearchMap[i].bits, j);
-        }
-      }
-    }
-  }
-}
-
-int gbCheatsGetCount(int size)
-{
-  int count = 0;
-  int i;
-  int inc = 1;
-  if(size == SIZE_16)
-    inc = 2;
-  else if(size == SIZE_32)
-    inc = 4;
-
-  for(i = 0; i < gbCheatsSearchCount; i++) {
-    int j;
-    int end = gbCheatsSearchMap[i].mask + 1;
-    end -= (inc - 1);
-    for(j = 0; j < end; j++) {
-      if(TEST_BIT(gbCheatsSearchMap[i].bits, j))
-        count++;
-    }
-  }
-  return count;
-}
-
-void gbCheatsUpdateValues()
-{
-  int i;
-  for(i = 0; i < gbCheatsSearchCount; i++) {
-    int j;
-    int end = gbCheatsSearchMap[i].mask + 1;
-    for(j = 0; j < end; j++) {
-      if(TEST_BIT(gbCheatsSearchMap[i].bits, j))
-        gbCheatsSearchMap[i].data[j] = gbCheatsSearchMap[i].memory[j];
-    }
-  }
 }

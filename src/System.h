@@ -45,7 +45,7 @@ typedef signed __int64 s64;
 typedef signed long long s64;
 #endif
 
-extern void log(char *,...);
+extern void log(const char *,...);
 
 extern bool systemPauseOnFrame();
 extern void systemGbPrint(u8 *,int,int,int,int);
@@ -56,15 +56,15 @@ extern bool systemReadJoypads();
 // return information about the given joystick, -1 for default joystick
 extern u32 systemReadJoypad(int);
 extern u32 systemGetClock();
-extern void systemMessage(int, char *, ...);
-extern void systemSetTitle(char *);
+extern void systemMessage(int, const char *, ...);
+extern void systemSetTitle(const char *);
 extern void systemWriteDataToSoundBuffer();
 extern void systemSoundShutdown();
 extern void systemSoundPause();
 extern void systemSoundResume();
 extern void systemSoundReset();
 extern bool systemSoundInit();
-extern void systemScreenMessage(char *);
+extern void systemScreenMessage(const char *);
 extern void systemUpdateMotionSensor();
 extern int  systemGetSensorX();
 extern int  systemGetSensorY();

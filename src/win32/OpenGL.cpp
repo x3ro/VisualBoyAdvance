@@ -16,70 +16,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <windows.h>
+#include "stdafx.h"
+#include "MainWnd.h"
 #include <gl/GL.h>
-#include <stdio.h>
 
 #include "../System.h"
 #include "../GBA.h"
 #include "../Globals.h"
 #include "../Font.h"
 
-#include "Display.h"
 #include "Reg.h"
 #include "resource.h"
 
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600, VIDEO_OTHER
-};
-
-extern int sizeX;
-extern int sizeY;
-extern int surfaceSizeX;
-extern int surfaceSizeY;
-extern int videoOption;
-extern BOOL fullScreenStretch;
-extern HWND hWindow;
-extern int fsWidth;
-extern int fsHeight;
-extern int fsColorDepth;
-extern RECT rect;
-extern RECT dest;
-extern HINSTANCE hInstance;
-extern int windowPositionX;
-extern int windowPositionY;
-extern BOOL ddrawEmulationOnly;
-extern BOOL ddrawUsingEmulationOnly;
-extern BOOL ddrawUseVideoMemory;
-extern BOOL tripleBuffering;
-extern int ddrawDebug;
-extern BOOL mode320Available;
-extern BOOL mode640Available;
-extern BOOL mode800Available;
-extern GUID *pVideoDriverGUID;
-extern void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int);
-extern void (*ifbFunction)(u8*,u32,int,int);
-extern int RGB_LOW_BITS_MASK;
-extern BOOL vsync;
-extern int filterWidth;
-extern int filterHeight;
-extern u8 *delta[257*244*4];
-extern int cartridgeType;
-extern int gbBorderOn;
-extern int showSpeed;
-extern BOOL showSpeedTransparent;
-extern int systemSpeed;
-extern bool disableMMX;
-extern bool speedup;
-extern int showRenderedFrames;
-extern BOOL menuToggle;
-extern BOOL active;
-extern bool screenMessage;
-extern char screenMessageBuffer[41];
-extern DWORD screenMessageTime;
-extern bool disableStatusMessage;
-extern int glType;
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -87,12 +40,9 @@ extern "C" bool cpu_mmx;
 extern bool detectMMX();
 #endif
 
-extern void updateFilter();
-extern void updateIFB();
 extern int Init_2xSaI(u32);
 extern void winlog(const char *,...);
-extern void updateMenuBar();
-extern void adjustDestRect();
+extern int systemSpeed;
 
 class OpenGLDisplay : public IDisplay {
 private:
@@ -153,7 +103,7 @@ void OpenGLDisplay::cleanup()
     hglrc = NULL;
   }
   if(hDC != NULL) {
-    ReleaseDC(hWindow, hDC);
+    ReleaseDC(*theApp.m_pMainWnd, hDC);
     hDC = NULL;
   }
   if(filterData) {
@@ -167,25 +117,25 @@ void OpenGLDisplay::cleanup()
 
 bool OpenGLDisplay::initialize()
 {
-  sizeX = 240;
-  sizeY = 160;
+  theApp.sizeX = 240;
+  theApp.sizeY = 160;
 
-  switch(videoOption) {
+  switch(theApp.videoOption) {
   case VIDEO_1X:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
+    theApp.surfaceSizeX = theApp.sizeX;
+    theApp.surfaceSizeY = theApp.sizeY;
     break;
   case VIDEO_2X:
-    surfaceSizeX = sizeX * 2;
-    surfaceSizeY = sizeY * 2;
+    theApp.surfaceSizeX = theApp.sizeX * 2;
+    theApp.surfaceSizeY = theApp.sizeY * 2;
     break;
   case VIDEO_3X:
-    surfaceSizeX = sizeX * 3;
-    surfaceSizeY = sizeY * 3;
+    theApp.surfaceSizeX = theApp.sizeX * 3;
+    theApp.surfaceSizeY = theApp.sizeY * 3;
     break;
   case VIDEO_4X:
-    surfaceSizeX = sizeX * 4;
-    surfaceSizeY = sizeY * 4;
+    theApp.surfaceSizeX = theApp.sizeX * 4;
+    theApp.surfaceSizeY = theApp.sizeY * 4;
     break;
   case VIDEO_320x240:
   case VIDEO_640x480:
@@ -193,94 +143,92 @@ bool OpenGLDisplay::initialize()
   case VIDEO_OTHER:
     {
       RECT r;
-      GetWindowRect(GetDesktopWindow(), &r);
-      fsWidth = r.right - r.left;
-      fsHeight = r.bottom - r.top;
+      ::GetWindowRect(GetDesktopWindow(), &r);
+      theApp.fsWidth = r.right - r.left;
+      theApp.fsHeight = r.bottom - r.top;
 
       /* Need to fix this code later. For now, Fullscreen takes the whole
-	 screen.
-      int scaleX = (fsWidth / sizeX);
-      int scaleY = (fsHeight / sizeY);
-      int min = scaleX < scaleY ? scaleX : scaleY;
-      surfaceSizeX = sizeX * min;
-      surfaceSizeY = sizeY * min;
-      if(fullScreenStretch) {
+         screen.
+         int scaleX = (fsWidth / sizeX);
+         int scaleY = (fsHeight / sizeY);
+         int min = scaleX < scaleY ? scaleX : scaleY;
+         surfaceSizeX = sizeX * min;
+         surfaceSizeY = sizeY * min;
+         if(fullScreenStretch) {
       */
-        surfaceSizeX = fsWidth;
-        surfaceSizeY = fsHeight;
-	//      }
+      theApp.surfaceSizeX = theApp.fsWidth;
+      theApp.surfaceSizeY = theApp.fsHeight;
+      //      }
     }
     break;
   }
   
-  rect.left = 0;
-  rect.top = 0;
-  rect.right = sizeX;
-  rect.bottom = sizeY;
+  theApp.rect.left = 0;
+  theApp.rect.top = 0;
+  theApp.rect.right = theApp.sizeX;
+  theApp.rect.bottom = theApp.sizeY;
 
-  dest.left = 0;
-  dest.top = 0;
-  dest.right = surfaceSizeX;
-  dest.bottom = surfaceSizeY;
+  theApp.dest.left = 0;
+  theApp.dest.top = 0;
+  theApp.dest.right = theApp.surfaceSizeX;
+  theApp.dest.bottom = theApp.surfaceSizeY;
 
   DWORD style = WS_POPUP | WS_VISIBLE;
   DWORD styleEx = 0;
   
-  if(videoOption <= VIDEO_4X)
+  if(theApp.videoOption <= VIDEO_4X)
     style |= WS_OVERLAPPEDWINDOW;
   else
     styleEx = 0;
 
-  if(videoOption <= VIDEO_4X)
-    AdjustWindowRectEx(&dest, style, TRUE, styleEx);
+  if(theApp.videoOption <= VIDEO_4X)
+    AdjustWindowRectEx(&theApp.dest, style, TRUE, styleEx);
   else
-    AdjustWindowRectEx(&dest, style, FALSE, styleEx);    
+    AdjustWindowRectEx(&theApp.dest, style, FALSE, styleEx);    
 
-  int winSizeX = dest.right-dest.left;
-  int winSizeY = dest.bottom-dest.top;
+  int winSizeX = theApp.dest.right-theApp.dest.left;
+  int winSizeY = theApp.dest.bottom-theApp.dest.top;
 
-  if(videoOption > VIDEO_4X) {
-    winSizeX = fsWidth;
-    winSizeY = fsHeight;
+  if(theApp.videoOption > VIDEO_4X) {
+    winSizeX = theApp.fsWidth;
+    winSizeY = theApp.fsHeight;
   }
   
   int x = 0;
   int y = 0;
 
-  if(videoOption <= VIDEO_4X) {
-    x = windowPositionX;
-    y = windowPositionY;
+  if(theApp.videoOption <= VIDEO_4X) {
+    x = theApp.windowPositionX;
+    y = theApp.windowPositionY;
   }
   
   // Create a window
-  hWindow = CreateWindowEx(styleEx,
-                           "GBA",
-                           "VisualBoyAdvance",
-                           style,
-                           x,
-                           y,
-                           winSizeX,
-                           winSizeY,
-                           NULL,
-                           NULL,
-                           hInstance,
-                           NULL);
+  MainWnd *pWnd = new MainWnd;
+  theApp.m_pMainWnd = pWnd;
+
+  pWnd->CreateEx(styleEx,
+                 theApp.wndClass,
+                 "VisualBoyAdvance",
+                 style,
+                 x,y,winSizeX,winSizeY,
+                 NULL,
+                 0);
   
-  if (!hWindow) {
+  if (!(HWND)*pWnd) {
     winlog("Error creating Window %08x\n", GetLastError());
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_FAILED));
     return FALSE;
   }
   
-  updateMenuBar();
+  theApp.updateMenuBar();
   
-  adjustDestRect();
+  theApp.adjustDestRect();
   
-  mode320Available = FALSE;
-  mode640Available = FALSE;
-  mode800Available = FALSE;
+  theApp.mode320Available = FALSE;
+  theApp.mode640Available = FALSE;
+  theApp.mode800Available = FALSE;
 
-  hDC = GetDC(hWindow);
+  CDC *dc = pWnd->GetDC();
+  HDC hDC = dc->GetSafeHdc();
  
   PIXELFORMATDESCRIPTOR pfd = { 
     sizeof(PIXELFORMATDESCRIPTOR),  //  size of this pfd 
@@ -331,19 +279,20 @@ bool OpenGLDisplay::initialize()
     winlog("Failed wglMakeCurrent\n");
     return false;
   }
-
+  pWnd->ReleaseDC(dc);
+  
   // setup 2D gl environment
   glPushAttrib(GL_ENABLE_BIT);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_CULL_FACE);
   glEnable(GL_TEXTURE_2D);
 
-  glViewport(0, 0, surfaceSizeX, surfaceSizeY);
+  glViewport(0, 0, theApp.surfaceSizeX, theApp.surfaceSizeY);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
 
-  glOrtho(0.0, (GLdouble)(surfaceSizeX), (GLdouble)(surfaceSizeY),
+  glOrtho(0.0, (GLdouble)(theApp.surfaceSizeX), (GLdouble)(theApp.surfaceSizeY),
           0.0, 0.0,1.0);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -352,9 +301,17 @@ bool OpenGLDisplay::initialize()
   systemGreenShift = 11;
   systemBlueShift = 19;
   systemColorDepth = 32;
-  fsColorDepth = 32;
+  theApp.fsColorDepth = 32;
   
-  if(ddrawDebug) {
+  Init_2xSaI(32);
+#ifdef MMX
+  if(!theApp.disableMMX)
+    cpu_mmx = theApp.detectMMX();
+  else
+    cpu_mmx = 0;
+#endif
+  
+  if(theApp.ddrawDebug) {
     winlog("R shift: %d\n", systemRedShift);
     winlog("G shift: %d\n", systemGreenShift);
     winlog("B shift: %d\n", systemBlueShift);
@@ -387,13 +344,13 @@ bool OpenGLDisplay::initialize()
     systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
     systemGbPalette[i++] = 0;
   }
-  updateFilter();
-  updateIFB();
+  theApp.updateFilter();
+  theApp.updateIFB();
 
   if(failed)
     return false;
   
-  DragAcceptFiles(hWindow, TRUE);
+  pWnd->DragAcceptFiles(TRUE);
   
   return TRUE;  
 }
@@ -405,7 +362,8 @@ void OpenGLDisplay::clear()
 void OpenGLDisplay::renderMenu()
 {
   checkFullScreen();
-  DrawMenuBar(hWindow);
+  if(theApp.m_pMainWnd)
+    theApp.m_pMainWnd->DrawMenuBar();
 }
 
 void OpenGLDisplay::checkFullScreen()
@@ -416,61 +374,63 @@ void OpenGLDisplay::checkFullScreen()
 
 void OpenGLDisplay::render()
 {
-  int pitch = filterWidth * 4 + 4;
-  u8 *data = pix + (sizeX+1)*4;
+  int pitch = theApp.filterWidth * 4 + 4;
+  u8 *data = pix + (theApp.sizeX+1)*4;
   
-  if(filterFunction) {
+  if(theApp.filterFunction) {
     data = filterData;
-    (*filterFunction)(pix+pitch,
-                      pitch,
-                      (u8*)delta,
-                      (u8*)filterData,
-                      filterWidth*4*2,
-                      filterWidth,
-                      filterHeight);
+    theApp.filterFunction(pix+pitch,
+                          pitch,
+                          (u8*)theApp.delta,
+                          (u8*)filterData,
+                          theApp.filterWidth*4*2,
+                          theApp.filterWidth,
+                          theApp.filterHeight);
   }
   
   // Texturemap complete texture to surface so we have free scaling 
   // and antialiasing
   int mult = 1;
-  if(filterFunction) {
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 2*sizeX);
+  if(theApp.filterFunction) {
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 2*theApp.sizeX);
     mult = 2;
   } else {
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, sizeX+1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, theApp.sizeX+1);
   }
   glTexSubImage2D( GL_TEXTURE_2D,0,
-                   0,0, mult*sizeX,mult*sizeY,
+                   0,0, mult*theApp.sizeX,mult*theApp.sizeY,
                    GL_RGBA,GL_UNSIGNED_BYTE,data);
 
-  if(glType == 0) {
+  if(theApp.glType == 0) {
     glBegin(GL_TRIANGLE_STRIP);
     glTexCoord2f(0.0, 0.0); glVertex3i(0, 0, 0);
-    glTexCoord2f(mult*sizeX/size, 0.0); glVertex3i(surfaceSizeX, 0, 0);
-    glTexCoord2f(0.0, mult*sizeY/size); glVertex3i(0, surfaceSizeY, 0);
-    glTexCoord2f(mult*sizeX/size, mult*sizeY/size); glVertex3i(surfaceSizeX, surfaceSizeY, 0);
+    glTexCoord2f(mult*theApp.sizeX/size, 0.0); glVertex3i(theApp.surfaceSizeX, 0, 0);
+    glTexCoord2f(0.0, mult*theApp.sizeY/size); glVertex3i(0, theApp.surfaceSizeY, 0);
+    glTexCoord2f(mult*theApp.sizeX/size, mult*theApp.sizeY/size); glVertex3i(theApp.surfaceSizeX, theApp.surfaceSizeY, 0);
     glEnd();
   } else {
     glBegin(GL_QUADS);
     glTexCoord2f(0.0, 0.0); glVertex3i(0, 0, 0);
-    glTexCoord2f(mult*sizeX/size, 0.0); glVertex3i(surfaceSizeX, 0, 0);
-    glTexCoord2f(mult*sizeX/size, mult*sizeY/size); glVertex3i(surfaceSizeX, surfaceSizeY, 0);
-    glTexCoord2f(0.0, mult*sizeY/size); glVertex3i(0, surfaceSizeY, 0);
+    glTexCoord2f(mult*theApp.sizeX/size, 0.0); glVertex3i(theApp.surfaceSizeX, 0, 0);
+    glTexCoord2f(mult*theApp.sizeX/size, mult*theApp.sizeY/size); glVertex3i(theApp.surfaceSizeX, theApp.surfaceSizeY, 0);
+    glTexCoord2f(0.0, mult*theApp.sizeY/size); glVertex3i(0, theApp.surfaceSizeY, 0);
     glEnd();
   }
-  if(screenMessage) {
-    if(((GetTickCount() - screenMessageTime) < 3000) &&
-       !disableStatusMessage) {
-      SetTextColor(hDC, RGB(255,0,0));
-      SetBkMode(hDC,TRANSPARENT);
-      TextOut(hDC, 10, surfaceSizeY - 20, screenMessageBuffer,
-              strlen(screenMessageBuffer));
+
+  CDC *dc = theApp.m_pMainWnd->GetDC();
+
+  if(theApp.screenMessage) {
+    if(((GetTickCount() - theApp.screenMessageTime) < 3000) &&
+       !theApp.disableStatusMessage) {
+      dc->SetTextColor(RGB(255,0,0));
+      dc->SetBkMode(TRANSPARENT);
+      dc->TextOut(10, theApp.surfaceSizeY - 20, theApp.screenMessageBuffer);
     } else {
-      screenMessage = false;
+      theApp.screenMessage = false;
     }
   }  
   
-  SwapBuffers(hDC);
+  SwapBuffers(dc->GetSafeHdc());
 }
 
 void OpenGLDisplay::resize(int w, int h)

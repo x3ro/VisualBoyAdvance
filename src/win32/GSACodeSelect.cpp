@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,52 +16,78 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "resource.h"
+// GSACodeSelect.cpp : implementation file
+//
 
-extern void winCenterWindow(HWND);
+#include "stdafx.h"
+#include "vba.h"
+#include "GSACodeSelect.h"
 
-class GSACodeSelect : public Dlg {
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  GSACodeSelect();
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();
+/////////////////////////////////////////////////////////////////////////////
+// GSACodeSelect dialog
 
-  void OnOk();
-  void OnSelChange();
-};
 
-int winGSACodeSelect(HWND hWindow,
-                     LPARAM l)
+GSACodeSelect::GSACodeSelect(FILE *file, CWnd* pParent /*=NULL*/)
+  : CDialog(GSACodeSelect::IDD, pParent)
 {
-  GSACodeSelect dlg;
-  return dlg.DoModal(IDD_CODE_SELECT,
-                     hWindow,
-                     l);
+  //{{AFX_DATA_INIT(GSACodeSelect)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+  m_file = file;
 }
 
-BEGIN_MESSAGE_MAP(GSACodeSelect, Dlg)
-  ON_WM_CLOSE()
+
+void GSACodeSelect::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GSACodeSelect)
+  DDX_Control(pDX, IDC_GAME_LIST, m_games);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(GSACodeSelect, CDialog)
+  //{{AFX_MSG_MAP(GSACodeSelect)
   ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnClose)
-  ON_CONTROL(LBN_SELCHANGE, IDC_GAME_LIST, OnSelChange)
-END_MESSAGE_MAP()
+  ON_LBN_SELCHANGE(IDC_GAME_LIST, OnSelchangeGameList)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-GSACodeSelect::GSACodeSelect()
-  : Dlg()
+  /////////////////////////////////////////////////////////////////////////////
+// GSACodeSelect message handlers
+
+void GSACodeSelect::OnCancel() 
 {
+  EndDialog(-1);
 }
 
-BOOL GSACodeSelect::OnInitDialog(LPARAM lParam)
+void GSACodeSelect::OnOk() 
 {
+  EndDialog(m_games.GetCurSel());
+}
+
+void GSACodeSelect::OnSelchangeGameList() 
+{
+  int item = m_games.GetCurSel();
+  CWnd *ok = GetDlgItem(ID_OK);
+
+  ok->EnableWindow(item != -1);
+}
+
+BOOL GSACodeSelect::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
   char buffer[1024];
   
-  HWND h = GetDlgItem(IDC_GAME_LIST);
-  
-  FILE *f = (FILE *)lParam;
+  FILE *f = m_file;
   int games = 0;
   int len = 0;
   fseek(f, -4, SEEK_CUR);
@@ -70,7 +96,7 @@ BOOL GSACodeSelect::OnInitDialog(LPARAM lParam)
     fread(&len, 1, 4, f);
     fread(buffer, 1, len, f);
     buffer[len] = 0;
-    SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
+    m_games.AddString(buffer);
     int codes = 0;
     fread(&codes, 1, 4, f);
     
@@ -86,33 +112,9 @@ BOOL GSACodeSelect::OnInitDialog(LPARAM lParam)
     }
     games--;
   }
-  EnableWindow(GetDlgItem(ID_OK), FALSE);      
-  winCenterWindow(getHandle());
-  return TRUE;  
-}
-
-void GSACodeSelect::OnClose()
-{
-  EndDialog(-1);
-}
-
-void GSACodeSelect::OnOk()
-{
-  int cur = SendMessage(GetDlgItem(IDC_GAME_LIST),
-                        LB_GETCURSEL,
-                        0,
-                        0);
-  EndDialog(cur);
-}
-
-void GSACodeSelect::OnSelChange()
-{
-  int item = SendMessage(GetDlgItem(IDC_GAME_LIST),
-                         LB_GETCURSEL,
-                         0,
-                         0);
-  if(item != -1)
-    EnableWindow(GetDlgItem(ID_OK), TRUE);
-  else
-    EnableWindow(GetDlgItem(ID_OK), FALSE);
+  GetDlgItem(ID_OK)->EnableWindow(FALSE);
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }

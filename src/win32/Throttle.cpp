@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,77 +16,72 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+// Throttle.cpp : implementation file
+//
+
 #include "stdafx.h"
+#include "vba.h"
+#include "Throttle.h"
 
-#include "Wnd.h"
-#include "../System.h"
-#include "resource.h"
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-extern void winCenterWindow(HWND h);
+/////////////////////////////////////////////////////////////////////////////
+// Throttle dialog
 
-class ThrottleDlg : public Dlg {
-  int throttle;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  ThrottleDlg();
 
-  virtual BOOL OnInitDialog(LPARAM);
+Throttle::Throttle(CWnd* pParent /*=NULL*/)
+  : CDialog(Throttle::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(Throttle)
+  m_throttle = 0;
+  //}}AFX_DATA_INIT
+}
 
-  void OnOk();
-  void OnCancel();
-};
 
-BEGIN_MESSAGE_MAP(ThrottleDlg, Dlg)
-  ON_BN_CLICKED(ID_OK, OnOk)
+void Throttle::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(Throttle)
+  DDX_Text(pDX, IDC_THROTTLE, m_throttle);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(Throttle, CDialog)
+  //{{AFX_MSG_MAP(Throttle)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()  
+  ON_BN_CLICKED(ID_OK, OnOk)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-ThrottleDlg::ThrottleDlg()
-  : Dlg()
+  /////////////////////////////////////////////////////////////////////////////
+// Throttle message handlers
+
+BOOL Throttle::OnInitDialog() 
 {
-  throttle = 0;
-}
-
-BOOL ThrottleDlg::OnInitDialog(LPARAM value)
-{
-  HWND h = GetDlgItem(IDC_THROTTLE);
-
-  ::SendMessage(h, EM_LIMITTEXT, 4, 0);
-
-  if(value != 0) {
-    char buffer[16];
-    sprintf(buffer, "%d", value);
-    ::SetWindowText(h, buffer);
-    throttle = value;
-  }
-  winCenterWindow(hWnd);
+  CDialog::OnInitDialog();
   
-  return TRUE;
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void ThrottleDlg::OnOk()
+void Throttle::OnCancel() 
 {
-  char buffer[16];
+  EndDialog(false);
+}
 
-  ::GetWindowText(GetDlgItem(IDC_THROTTLE), buffer, 16);
-  int v = atoi(buffer);
+void Throttle::OnOk() 
+{
+  UpdateData();
 
-  if(v >= 5 && v <= 1000) {
-    EndDialog(v);
-  } else
+  if(m_throttle < 5 || m_throttle > 1000)
     systemMessage(IDS_INVALID_THROTTLE_VALUE, "Invalid throttle value. Please enter a number between 5 and 1000");
-}
-
-void ThrottleDlg::OnCancel()
-{
-  EndDialog(FALSE);
-}
-
-extern HWND hWindow;
-
-int optionsThrottleOther(int throttle)
-{
-  ThrottleDlg dlg;
-  return dlg.DoModal(IDD_THROTTLE, hWindow, throttle);
+  else
+    EndDialog(m_throttle);
 }

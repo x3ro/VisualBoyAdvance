@@ -20,6 +20,7 @@
 #include <memory.h>
 
 #include "GBA.h"
+#include "bios.h"
 #include "GBAinline.h"
 #include "Globals.h"
 
@@ -58,9 +59,37 @@ s16 sineTable[256] = {
   (s16)0xF384, (s16)0xF50F, (s16)0xF69C, (s16)0xF82B, (s16)0xF9BB, (s16)0xFB4B, (s16)0xFCDD, (s16)0xFE6E
 };
 
+void BIOS_ArcTan()
+{
+#ifdef DEV_VERSION
+  if(systemVerbose & VERBOSE_SWI) {
+    log("ArcTan: %08x (VCOUNT=%2d)\n",
+        reg[0].I,
+        VCOUNT);
+  }
+#endif
+
+  s32 a = -((s32)(reg[0].I * reg[0].I)) >> 14; 
+  s32 b = ((0xA9 * a) >> 14) + 0x390;
+  b = ((b * a) >> 14) + 0x91C;
+  b = ((b * a) >> 14) + 0xFB6;
+  b = ((b * a) >> 14) + 0x16AA;
+  b = ((b * a) >> 14) + 0x2081;
+  b = ((b * a) >> 14) + 0x3651;
+  b = ((b * a) >> 14) + 0xA2F9;
+  reg[0].I = (reg[0].I * b) >> 16;
+
+#ifdef DEV_VERSION
+  if(systemVerbose & VERBOSE_SWI) {
+    log("ArcTan: return=%08x\n",
+        reg[0].I);
+  }
+#endif
+}
+
 void BIOS_ArcTan2()
 {
-#ifdef DEV_VERSION  
+#ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
     log("ArcTan2: %08x,%08x (VCOUNT=%2d)\n",
         reg[0].I,
@@ -69,30 +98,44 @@ void BIOS_ArcTan2()
   }
 #endif
   
-  s32 x = (s32)((s16)reg[0].I);
-  s32 y = (s32)((s16)reg[1].I);
+  s16 x = reg[0].I;
+  s16 y = reg[1].I;
   
-  if(x != 0) {
-    float fx = (float)x;
-    float fy = (float)y;
-
-    float res = (float)atan2(fy,fx) * 3.2767e4f * 3.18309891613572e-1f;
-    
-    reg[0].I = (u16)res;
+  if (y == 0) {
+    reg[0].I = 0x8000 & x;
+    reg[3].I = 0x170;
   } else {
-    if(y < 0)
-      reg[0].I = 0xc000;
-    else
-      reg[0].I = 0x4000;
+    if (x == 0) {
+      reg[0].I = (0x8000 & y) + 0x4000;
+      reg[3].I = 0x170;
+    } else {
+      if (abs(x) > abs(y)) {
+        reg[1].I = x;
+        reg[0].I = y << 14;
+        BIOS_Div();
+        BIOS_ArcTan();
+        if (x < 0)
+          reg[0].I = 0x8000 + reg[0].I;
+        else
+          reg[0].I = ((y & 0x8000) << 1 ) + reg[0].I;
+        reg[3].I = 0x170;
+      } else {
+        reg[0].I = x << 14;
+        BIOS_Div();
+        BIOS_ArcTan();
+        reg[0].I = (0x4000 + (y & 0x8000)) - reg[0].I;
+        reg[3].I = 0x170;
+      }
+    }
   }
-
+  
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
-    log("ArcTan2: return=%08x\n", 
-        reg[0].I);      
+    log("ArcTan2: return=%08x\n",
+        reg[0].I);
   }
 #endif
-}
+} 
 
 void BIOS_BitUnPack()
 {
@@ -450,7 +493,8 @@ void BIOS_Div()
   if(denom != 0) {
     reg[0].I = number / denom;
     reg[1].I = number % denom;
-    reg[3].I = reg[0].I & 0x80000000 ? (reg[0].I ^ 0x80000000) : reg[0].I;
+    s32 temp = (s32)reg[0].I;
+    reg[3].I = temp < 0 ? (u32)-temp : (u32)temp;
   }
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {

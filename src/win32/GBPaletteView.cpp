@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,63 +16,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "ResizeDlg.h"
-#include <stdio.h>
-#include <memory.h>
+// GBPaletteView.cpp : implementation file
+//
+
+#include "stdafx.h"
+#include "vba.h"
+#include "FileDlg.h"
+#include "GBPaletteView.h"
+#include "WinResUtil.h"
+
 #include "../System.h"
 #include "../gb/gbGlobals.h"
-#include "WinResUtil.h"
-#include "resource.h"
-#include "Controls.h"
-#include "CommDlg.h"
-#include "IUpdate.h"
-#include "PaletteView.h"
 
-#define WM_PALINFO WM_APP+1
-
-class GBPaletteViewControl : public PaletteViewControl {
-public:
-  virtual void updatePalette();
-};
-
-class GBPaletteView : public ResizeDlg, IUpdateListener {
-private:
-  GBPaletteViewControl paletteView;
-  GBPaletteViewControl paletteViewOBJ;
-  ColorControl colorControl;
-  bool autoUpdate;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  GBPaletteView();
-  ~GBPaletteView();
-
-  void save(int);
-  
-  virtual LRESULT OnPalInfo(WPARAM, LPARAM);
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnClose();  
-
-  void OnSaveBg();
-  void OnSaveObj();
-  void OnRefresh();
-  void OnAutoUpdate();
-
-  virtual void update();
-};
-
-enum {
-  VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
-};
-
-extern char *winLoadFilter(int);
-extern HINSTANCE hInstance;
-extern HWND hWindow;
-extern int videoOption;
-
-extern void winAddUpdateListener(IUpdateListener *);
-extern void winRemoveUpdateListener(IUpdateListener *);
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 void GBPaletteViewControl::updatePalette()
 {
@@ -81,21 +41,16 @@ void GBPaletteViewControl::updatePalette()
   }
 }
 
-BEGIN_MESSAGE_MAP(GBPaletteView, ResizeDlg)
-  ON_MESSAGE(WM_PALINFO, OnPalInfo)
-  ON_WM_CLOSE()
-  ON_BN_CLICKED(IDC_SAVE_BG, OnSaveBg)
-  ON_BN_CLICKED(IDC_SAVE_OBJ, OnSaveObj)
-  ON_BN_CLICKED(IDC_REFRESH2, OnRefresh)
-  ON_BN_CLICKED(IDC_CLOSE, OnClose)
-  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
-END_MESSAGE_MAP()
+/////////////////////////////////////////////////////////////////////////////
+// GBPaletteView dialog
 
-GBPaletteView::GBPaletteView()
-  : ResizeDlg()
+
+GBPaletteView::GBPaletteView(CWnd* pParent /*=NULL*/)
+  : ResizeDlg(GBPaletteView::IDD, pParent)
 {
-  PaletteViewControl::registerClass();
-  ColorControl::registerClass();
+  //{{AFX_DATA_INIT(GBPaletteView)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
   autoUpdate = false;
 }
 
@@ -103,8 +58,36 @@ GBPaletteView::~GBPaletteView()
 {
 }
 
-BOOL GBPaletteView::OnInitDialog(LPARAM)
+void GBPaletteView::DoDataExchange(CDataExchange* pDX)
 {
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(GBPaletteView)
+  // NOTE: the ClassWizard will add DDX and DDV calls here
+  //}}AFX_DATA_MAP
+  DDX_Control(pDX, IDC_PALETTE_VIEW, paletteView);
+  DDX_Control(pDX, IDC_PALETTE_VIEW_OBJ, paletteViewOBJ);
+  DDX_Control(pDX, IDC_COLOR, colorControl);
+}
+
+
+BEGIN_MESSAGE_MAP(GBPaletteView, CDialog)
+  //{{AFX_MSG_MAP(GBPaletteView)
+  ON_BN_CLICKED(IDC_SAVE_BG, OnSaveBg)
+  ON_BN_CLICKED(IDC_SAVE_OBJ, OnSaveObj)
+  ON_BN_CLICKED(IDC_REFRESH2, OnRefresh2)
+  ON_BN_CLICKED(IDC_AUTO_UPDATE, OnAutoUpdate)
+  ON_BN_CLICKED(IDC_CLOSE, OnClose)
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(WM_PALINFO, OnPalInfo)
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// GBPaletteView message handlers
+
+BOOL GBPaletteView::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
   DIALOG_SIZER_START( sz )
     DIALOG_SIZER_END()
     SetData(sz,
@@ -116,43 +99,40 @@ BOOL GBPaletteView::OnInitDialog(LPARAM)
   paletteView.init(32, 64, 128);
   paletteViewOBJ.init(32, 64, 128);
   
-  paletteView.Attach(GetDlgItem(IDC_PALETTE_VIEW));
-  paletteViewOBJ.Attach(GetDlgItem(IDC_PALETTE_VIEW_OBJ));
-  colorControl.Attach(GetDlgItem(IDC_COLOR));
-
   paletteView.setPaletteAddress(0);
   paletteView.refresh();  
   
   paletteViewOBJ.setPaletteAddress(32);
   paletteViewOBJ.refresh();  
-  return TRUE;
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
 void GBPaletteView::save(int which)
 {
-  char captureBuffer[2048];
+  CString captureBuffer;
 
   if(which == 0)
-    strcpy(captureBuffer, "bg.pal");
+    captureBuffer = "bg.pal";
   else
-    strcpy(captureBuffer, "obj.pal");
+    captureBuffer = "obj.pal";
 
-  char *exts[] = {".pal", ".pal", ".act" };
-
-  FileDlg dlg(getHandle(),
-              (char *)captureBuffer,
-              (int)sizeof(captureBuffer),
-              (char *)winLoadFilter(IDS_FILTER_PAL),
+  LPCTSTR exts[] = {".pal", ".pal", ".act" };
+  
+  CString filter = theApp.winLoadFilter(IDS_FILTER_PAL);
+  CString title = winResLoadString(IDS_SELECT_PALETTE_NAME);
+  FileDlg dlg(this,
+              captureBuffer,
+              filter,
               1,
               "PAL",
-        exts,
-              (char *)NULL, 
-              (char *)winResLoadString(IDS_SELECT_PALETTE_NAME),
-              TRUE);
+              exts,
+              "",
+              title,
+              true);
 
-  BOOL res = dlg.DoModal();  
-  if(res == FALSE) {
-    DWORD res = CommDlgExtendedError();
+  if(dlg.DoModal() == IDCANCEL) {
     return;
   }
 
@@ -177,17 +157,18 @@ void GBPaletteView::save(int which)
   }
 }
 
-void GBPaletteView::OnSaveBg()
+
+void GBPaletteView::OnSaveBg() 
 {
   save(0);
 }
 
-void GBPaletteView::OnSaveObj()
+void GBPaletteView::OnSaveObj() 
 {
   save(1);
 }
 
-void GBPaletteView::OnRefresh()
+void GBPaletteView::OnRefresh2() 
 {
   paletteView.refresh();
   paletteViewOBJ.refresh();  
@@ -195,22 +176,24 @@ void GBPaletteView::OnRefresh()
 
 void GBPaletteView::update()
 {
-  OnRefresh();
+  OnRefresh2();
 }
 
-void GBPaletteView::OnAutoUpdate()
+
+void GBPaletteView::OnAutoUpdate() 
 {
   autoUpdate = !autoUpdate;
   if(autoUpdate) {
-    winAddUpdateListener(this);
+    theApp.winAddUpdateListener(this);
   } else {
-    winRemoveUpdateListener(this);    
+    theApp.winRemoveUpdateListener(this);    
   }  
 }
 
-void GBPaletteView::OnClose()
+
+void GBPaletteView::OnClose() 
 {
-  winRemoveUpdateListener(this);
+  theApp.winRemoveUpdateListener(this);
   
   DestroyWindow();
 }
@@ -219,30 +202,30 @@ LRESULT GBPaletteView::OnPalInfo(WPARAM wParam, LPARAM lParam)
 {
   u16 color = (u16)wParam;
   u32 address = (u32)lParam;
-  char buffer[256];
+  CString buffer;
 
   bool isOBJ = address >= 32;
   address &= 31;
   
-  wsprintf(buffer, "%d", address);
-  ::SetWindowText(GetDlgItem(IDC_ADDRESS), buffer);
+  buffer.Format("%d", address);
+  GetDlgItem(IDC_ADDRESS)->SetWindowText(buffer);
 
   int r = (color & 0x1f);
   int g = (color & 0x3e0) >> 5;
   int b = (color & 0x7c00) >> 10;
 
-  wsprintf(buffer, "%d", r);
-  ::SetWindowText(GetDlgItem(IDC_R), buffer);
+  buffer.Format("%d", r);
+  GetDlgItem(IDC_R)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", g);
-  ::SetWindowText(GetDlgItem(IDC_G), buffer);
+  buffer.Format("%d", g);
+  GetDlgItem(IDC_G)->SetWindowText(buffer);
 
-  wsprintf(buffer, "%d", b);
-  ::SetWindowText(GetDlgItem(IDC_B), buffer);
+  buffer.Format("%d", b);
+  GetDlgItem(IDC_B)->SetWindowText(buffer);
 
 
-  wsprintf(buffer, "0x%04X", color);
-  ::SetWindowText(GetDlgItem(IDC_VALUE), buffer);
+  buffer.Format("0x%04X", color);
+  GetDlgItem(IDC_VALUE)->SetWindowText(buffer);
 
   colorControl.setColor(color);
 
@@ -254,11 +237,7 @@ LRESULT GBPaletteView::OnPalInfo(WPARAM wParam, LPARAM lParam)
   return TRUE;
 }
 
-void toolsGBPaletteView()
+void GBPaletteView::PostNcDestroy() 
 {
-  GBPaletteView *pal = new GBPaletteView();
-  pal->setAutoDelete(true);
-  pal->MakeDialog(hInstance,
-                  IDD_GB_PALETTE_VIEW,
-                  hWindow);
+  delete this;
 }

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,68 +16,82 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "resource.h"
+// LangSelect.cpp : implementation file
+//
 
-extern void winCenterWindow(HWND);
-extern HWND hWindow;
-extern char languageName[4];
+#include "stdafx.h"
+#include "vba.h"
+#include "LangSelect.h"
 
-class LangSelect : public Dlg {
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  LangSelect();
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
-  BOOL OnInitDialog(LPARAM);
-  void OnOk();
-  void OnCancel();
-};
+/////////////////////////////////////////////////////////////////////////////
+// LangSelect dialog
 
-BEGIN_MESSAGE_MAP(LangSelect, Dlg)
-  ON_BN_CLICKED(ID_OK, OnOk)
+
+LangSelect::LangSelect(CWnd* pParent /*=NULL*/)
+  : CDialog(LangSelect::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(LangSelect)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+}
+
+
+void LangSelect::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(LangSelect)
+  DDX_Control(pDX, IDC_LANG_STRING, m_langString);
+  DDX_Control(pDX, IDC_LANG_NAME, m_langName);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(LangSelect, CDialog)
+  //{{AFX_MSG_MAP(LangSelect)
   ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()
+  ON_BN_CLICKED(ID_OK, OnOk)
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
 
-LangSelect::LangSelect()
-  : Dlg()
-{
-}
+  /////////////////////////////////////////////////////////////////////////////
+// LangSelect message handlers
 
-BOOL LangSelect::OnInitDialog(LPARAM)
-{
-  char lbuffer[10];
-  if(GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SABBREVLANGNAME,
-                   lbuffer, 10)) {
-    ::SetWindowText(GetDlgItem(IDC_LANG_NAME), lbuffer);
-  } else {
-    ::SetWindowText(GetDlgItem(IDC_LANG_NAME), "???");
-  }
-  
-  if(languageName[0])
-    ::SetWindowText(GetDlgItem(IDC_LANG_STRING), languageName);
-      
-  SendMessage(GetDlgItem(IDC_LANG_STRING), EM_LIMITTEXT, 3, 0);
-  
-  winCenterWindow(getHandle());
-  
-  return TRUE;
-}
-
-void LangSelect::OnOk()
-{
-  GetWindowText(GetDlgItem(IDC_LANG_STRING), languageName, 4);
-  EndDialog(TRUE);
-}
-
-void LangSelect::OnCancel()
+void LangSelect::OnCancel() 
 {
   EndDialog(FALSE);
 }
 
-int languageSelect()
+void LangSelect::OnOk() 
 {
-  LangSelect lang;
+  m_langString.GetWindowText(theApp.languageName);
+  EndDialog(TRUE);
+}
 
-  return lang.DoModal(IDD_LANG_SELECT, hWindow);
+BOOL LangSelect::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
+  char lbuffer[10];
+  if(GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SABBREVLANGNAME,
+                   lbuffer, 10)) {
+    m_langName.SetWindowText(lbuffer);
+  } else {
+    m_langName.SetWindowText("???");
+  }
+  
+  if(!theApp.languageName.IsEmpty())
+    m_langString.SetWindowText(theApp.languageName);
+      
+  m_langString.LimitText(3);
+  
+  CenterWindow();
+  
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }

@@ -399,7 +399,7 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void systemMessage(int num, char *msg, ...)
+void systemMessage(int num, const char *msg, ...)
 {
   char buffer[2048];
   va_list valist;
@@ -437,7 +437,7 @@ void systemFrame()
 {
 }
 
-void systemSetTitle(char *title)
+void systemSetTitle(const char *title)
 {
 }
 
@@ -518,7 +518,7 @@ void systemGbPrint(u8 *data,int pages,int feed,int palette, int contrast)
 {
 }
 
-void systemScreenMessage(char *msg)
+void systemScreenMessage(const char *msg)
 {
 }
 

@@ -1,6 +1,6 @@
 /*
  * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ * Copyrigh(c) 1999-2003 Forgotten (vb@emuhq.com)
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,164 +16,201 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include "Wnd.h"
-#include "Reg.h"
-#include "resource.h"
+// Joypad.cpp : implementation file
+//
 
-extern void checkKeys();
-extern void checkJoypads();
-extern void checkKeyboard();
-extern void setDeviceFirst();
-extern void winSaveKeys();
-extern void winCenterWindow(HWND);
-extern char *getKeyName(int);
-extern HWND hWindow;
+#include "stdafx.h"
+#include "vba.h"
+#include "Joypad.h"
+#include "Input.h"
+
+#ifdef _DEBUG
+#define new DEBUG_NEW
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#endif
 
 extern USHORT joypad[4][13];
 extern USHORT motion[4];
 
-#define JOYCONFIG_MESSAGE (WM_USER + 1000)
-
-enum {
-  KEY_LEFT, KEY_RIGHT,
-  KEY_UP, KEY_DOWN,
-  KEY_BUTTON_A, KEY_BUTTON_B,
-  KEY_BUTTON_START, KEY_BUTTON_SELECT,
-  KEY_BUTTON_L, KEY_BUTTON_R,
-  KEY_BUTTON_SPEED, KEY_BUTTON_CAPTURE,
-  KEY_BUTTON_GS
-};
-
-class JoypadEditControl : public Wnd {
-  Wnd *parent;
-protected:
-  DECLARE_MESSAGE_MAP()
-    
-public:
-  JoypadEditControl();
-  void setParent(Wnd *);
-
-  virtual LRESULT OnJoyConfig(WPARAM, LPARAM);
-};
-
-class JoypadConfigDlg : public Dlg {
-  JoypadEditControl up;
-  JoypadEditControl down;
-  JoypadEditControl left;
-  JoypadEditControl right;
-  JoypadEditControl buttonL;
-  JoypadEditControl buttonR;
-  JoypadEditControl buttonA;
-  JoypadEditControl buttonB;  
-  JoypadEditControl buttonSelect;
-  JoypadEditControl buttonStart;
-  JoypadEditControl speed;
-  JoypadEditControl capture;
-  JoypadEditControl buttonGS;
-  UINT timerId;
-  int which;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  JoypadConfigDlg(int);
-
-  void assignKey(int, int);
-  void assignKeys();
-  
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnDestroy();
-  virtual void OnTimer(UINT);
-  void OnOk();
-  void OnCancel();
-  LRESULT OnCtlColorStatic(WPARAM, LPARAM);
-};
-
-class MotionConfigDlg : public Dlg {
-  JoypadEditControl left;
-  JoypadEditControl down;
-  JoypadEditControl right;
-  JoypadEditControl up;
-  UINT timerId;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  MotionConfigDlg();
-  
-  void assignKey(int, int);
-  void assignKeys();
-
-  virtual BOOL OnInitDialog(LPARAM);
-  virtual void OnDestroy();
-  virtual void OnTimer(UINT);
-  void OnOk();
-  void OnCancel();
-  LRESULT OnCtlColorStatic(WPARAM, LPARAM);
-};
-
-void configurePad(int which)
-{
-  setDeviceFirst();
-  checkKeys();
-  JoypadConfigDlg dlg(which);
-  dlg.DoModal(IDD_CONFIG,
-              hWindow);
-}
-
-void motionConfigurePad()
-{
-  setDeviceFirst();  
-  checkKeys();
-  MotionConfigDlg dlg;
-
-  dlg.DoModal(IDD_MOTION_CONFIG,
-              hWindow);
-}
-
-BEGIN_MESSAGE_MAP(JoypadEditControl, Wnd)
-  ON_MESSAGE(JOYCONFIG_MESSAGE, OnJoyConfig)
-  ON_WM_CHAR()
-END_MESSAGE_MAP()
+/////////////////////////////////////////////////////////////////////////////
+// JoypadEditControl
 
 JoypadEditControl::JoypadEditControl()
-  : Wnd()
 {
-  parent = NULL;
 }
 
-void JoypadEditControl::setParent(Wnd *p)
+JoypadEditControl::~JoypadEditControl()
 {
-  parent = p;
+}
+
+
+BEGIN_MESSAGE_MAP(JoypadEditControl, CEdit)
+  //{{AFX_MSG_MAP(JoypadEditControl)
+  ON_WM_CHAR()
+  //}}AFX_MSG_MAP
+  ON_MESSAGE(JOYCONFIG_MESSAGE, OnJoyConfig)
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// JoypadEditControl message handlers
+
+void JoypadEditControl::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
 }
 
 LRESULT JoypadEditControl::OnJoyConfig(WPARAM wParam, LPARAM lParam)
 {
-  SetWindowLong(GWL_USERDATA,((wParam<<8)|lParam));
-  SetWindowText(getKeyName((wParam<<8)|lParam));
-  HWND h = GetNextDlgTabItem(parent->getHandle(), getHandle(), FALSE);
-  SetFocus(h);
+  SetWindowLong(GetSafeHwnd(), GWL_USERDATA,((wParam<<8)|lParam));
+  SetWindowText(theApp.input->getKeyName((wParam<<8)|lParam));
+  GetParent()->GetNextDlgTabItem(this, FALSE)->SetFocus();
   return TRUE;
 }
 
-BEGIN_MESSAGE_MAP(JoypadConfigDlg, Dlg)
-  //  ON_MESSAGE(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-  ON_WM_CHAR()
-  ON_WM_DESTROY()
-  ON_WM_TIMER()
-  ON_WM_KEYDOWN()
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()
-
-JoypadConfigDlg::JoypadConfigDlg(int w)
-  : Dlg()
+BOOL JoypadEditControl::PreTranslateMessage(MSG *pMsg)
 {
+  if(pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_ESCAPE || pMsg->wParam == VK_RETURN))
+    return TRUE;
+
+  return CEdit::PreTranslateMessage(pMsg);
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// JoypadConfig dialog
+
+
+JoypadConfig::JoypadConfig(int w, CWnd* pParent /*=NULL*/)
+  : CDialog(JoypadConfig::IDD, pParent)
+{
+  //{{AFX_DATA_INIT(JoypadConfig)
+  //}}AFX_DATA_INIT
   timerId = 0;
   which = w;
   if(which < 0 || which > 3)
     which = 0;
 }
 
-void JoypadConfigDlg::assignKey(int id,int key)
+void JoypadConfig::DoDataExchange(CDataExchange* pDX)
+{
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(JoypadConfig)
+  DDX_Control(pDX, IDC_EDIT_UP, up);
+  DDX_Control(pDX, IDC_EDIT_SPEED, speed);
+  DDX_Control(pDX, IDC_EDIT_RIGHT, right);
+  DDX_Control(pDX, IDC_EDIT_LEFT, left);
+  DDX_Control(pDX, IDC_EDIT_DOWN, down);
+  DDX_Control(pDX, IDC_EDIT_CAPTURE, capture);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_START, buttonStart);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_SELECT, buttonSelect);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_R, buttonR);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_L, buttonL);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_GS, buttonGS);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_B, buttonB);
+  DDX_Control(pDX, IDC_EDIT_BUTTON_A, buttonA);
+  //}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(JoypadConfig, CDialog)
+  //{{AFX_MSG_MAP(JoypadConfig)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_WM_CHAR()
+  ON_WM_DESTROY()
+  ON_WM_TIMER()
+  ON_WM_KEYDOWN()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// JoypadConfig message handlers
+
+void JoypadConfig::OnCancel() 
+{
+  EndDialog(FALSE);
+}
+
+void JoypadConfig::OnOk() 
+{
+  assignKeys();
+  theApp.input->checkKeys();
+  EndDialog(TRUE);
+}
+
+void JoypadConfig::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+}
+
+void JoypadConfig::OnDestroy() 
+{
+  CDialog::OnDestroy();
+  
+  KillTimer(timerId);
+}
+
+void JoypadConfig::OnTimer(UINT nIDEvent) 
+{
+  theApp.input->checkDevices();
+  
+  CDialog::OnTimer(nIDEvent);
+}
+
+void JoypadConfig::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+}
+
+BOOL JoypadConfig::OnInitDialog() 
+{
+  CDialog::OnInitDialog();
+  
+  timerId = SetTimer(0,200,NULL);
+  
+  SetWindowLong(up, GWL_USERDATA,joypad[which][KEY_UP]);
+  up.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_UP]));
+  
+  SetWindowLong(down, GWL_USERDATA,joypad[which][KEY_DOWN]);
+  down.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_DOWN]));
+
+  SetWindowLong(left, GWL_USERDATA,joypad[which][KEY_LEFT]);
+  left.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_LEFT]));
+
+  SetWindowLong(right, GWL_USERDATA,joypad[which][KEY_RIGHT]);
+  right.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_RIGHT]));
+
+  SetWindowLong(buttonA, GWL_USERDATA,joypad[which][KEY_BUTTON_A]);
+  buttonA.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_A]));
+
+  SetWindowLong(buttonB, GWL_USERDATA,joypad[which][KEY_BUTTON_B]);
+  buttonB.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_B]));
+  
+  SetWindowLong(buttonL, GWL_USERDATA,joypad[which][KEY_BUTTON_L]);
+  buttonL.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_L]));
+
+  SetWindowLong(buttonR, GWL_USERDATA,joypad[which][KEY_BUTTON_R]);
+  buttonR.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_R]));
+  
+  SetWindowLong(buttonSelect, GWL_USERDATA,joypad[which][KEY_BUTTON_SELECT]);
+  buttonSelect.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_SELECT]));
+
+  SetWindowLong(buttonStart, GWL_USERDATA,joypad[which][KEY_BUTTON_START]);
+  buttonStart.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_START]));
+
+  SetWindowLong(speed, GWL_USERDATA,joypad[which][KEY_BUTTON_SPEED]);
+  speed.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_SPEED]));
+  
+  SetWindowLong(capture, GWL_USERDATA,joypad[which][KEY_BUTTON_CAPTURE]);
+  capture.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_CAPTURE]));
+
+  SetWindowLong(buttonGS, GWL_USERDATA,joypad[which][KEY_BUTTON_GS]);
+  buttonGS.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_GS]));
+  
+  CenterWindow();
+
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void JoypadConfig::assignKey(int id, int key)
 {
   switch(id) {
   case IDC_EDIT_LEFT:
@@ -218,175 +255,151 @@ void JoypadConfigDlg::assignKey(int id,int key)
   }
 }
 
-void JoypadConfigDlg::assignKeys()
+void JoypadConfig::assignKeys()
 {
   int id;
 
   id = IDC_EDIT_UP;
-  assignKey(id, up.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(up, GWL_USERDATA));
 
   id = IDC_EDIT_DOWN;
-  assignKey(id, down.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(down, GWL_USERDATA));
 
   id = IDC_EDIT_LEFT;
-  assignKey(id, left.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(left, GWL_USERDATA));
 
   id = IDC_EDIT_RIGHT;
-  assignKey(id, right.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(right, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_A;
-  assignKey(id, buttonA.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonA, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_B;
-  assignKey(id, buttonB.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonB, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_L;
-  assignKey(id, buttonL.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonL, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_R;
-  assignKey(id, buttonR.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonR, GWL_USERDATA));
   
   id = IDC_EDIT_BUTTON_SELECT;
-  assignKey(id, buttonSelect.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonSelect, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_START;
-  assignKey(id, buttonStart.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonStart, GWL_USERDATA));
 
   id = IDC_EDIT_SPEED;
-  assignKey(id, speed.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(speed, GWL_USERDATA));
 
   id = IDC_EDIT_CAPTURE;
-  assignKey(id, capture.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(capture, GWL_USERDATA));
 
   id = IDC_EDIT_BUTTON_GS;
-  assignKey(id, buttonGS.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(buttonGS, GWL_USERDATA));
 
-  winSaveKeys();
+  //  winSaveKeys();
 }
 
-BOOL JoypadConfigDlg::OnInitDialog(LPARAM)
+/////////////////////////////////////////////////////////////////////////////
+// MotionConfig dialog
+
+
+MotionConfig::MotionConfig(CWnd* pParent /*=NULL*/)
+  : CDialog(MotionConfig::IDD, pParent)
 {
-  timerId = SetTimer(getHandle(),0,200,NULL);
-  
-  up.SubClassWindow(GetDlgItem(IDC_EDIT_UP));
-  up.SetWindowLong(GWL_USERDATA,joypad[which][KEY_UP]);
-  up.SetWindowText(getKeyName(joypad[which][KEY_UP]));
-  up.setParent(this);
-  
-  down.SubClassWindow(GetDlgItem(IDC_EDIT_DOWN));
-  down.SetWindowLong(GWL_USERDATA,joypad[which][KEY_DOWN]);
-  down.SetWindowText(getKeyName(joypad[which][KEY_DOWN]));
-  down.setParent(this);
-
-  left.SubClassWindow(GetDlgItem(IDC_EDIT_LEFT));
-  left.SetWindowLong(GWL_USERDATA,joypad[which][KEY_LEFT]);
-  left.SetWindowText(getKeyName(joypad[which][KEY_LEFT]));
-  left.setParent(this);
-
-  right.SubClassWindow(GetDlgItem(IDC_EDIT_RIGHT));
-  right.SetWindowLong(GWL_USERDATA,joypad[which][KEY_RIGHT]);
-  right.SetWindowText(getKeyName(joypad[which][KEY_RIGHT]));
-  right.setParent(this);
-
-  buttonA.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_A));
-  buttonA.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_A]);
-  buttonA.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_A]));
-  buttonA.setParent(this);
-
-  buttonB.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_B));
-  buttonB.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_B]);
-  buttonB.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_B]));
-  buttonB.setParent(this);
-  
-  buttonL.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_L));
-  buttonL.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_L]);
-  buttonL.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_L]));
-  buttonL.setParent(this);
-
-  buttonR.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_R));
-  buttonR.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_R]);
-  buttonR.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_R]));
-  buttonR.setParent(this);
-  
-  buttonSelect.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_SELECT));
-  buttonSelect.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_SELECT]);
-  buttonSelect.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_SELECT]));
-  buttonSelect.setParent(this);
-
-  buttonStart.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_START));
-  buttonStart.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_START]);
-  buttonStart.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_START]));
-  buttonStart.setParent(this);
-
-  speed.SubClassWindow(GetDlgItem(IDC_EDIT_SPEED));
-  speed.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_SPEED]);
-  speed.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_SPEED]));
-  speed.setParent(this);
-  
-  capture.SubClassWindow(GetDlgItem(IDC_EDIT_CAPTURE));
-  capture.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_CAPTURE]);
-  capture.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_CAPTURE]));
-  capture.setParent(this);
-
-  buttonGS.SubClassWindow(GetDlgItem(IDC_EDIT_BUTTON_GS));
-  buttonGS.SetWindowLong(GWL_USERDATA,joypad[which][KEY_BUTTON_GS]);
-  buttonGS.SetWindowText(getKeyName(joypad[which][KEY_BUTTON_GS]));
-  buttonGS.setParent(this);
-  
-  winCenterWindow(getHandle());
-
-  return TRUE;
+  //{{AFX_DATA_INIT(MotionConfig)
+  // NOTE: the ClassWizard will add member initialization here
+  //}}AFX_DATA_INIT
+  timerId = 0;
 }
 
-void JoypadConfigDlg::OnOk()
+
+void MotionConfig::DoDataExchange(CDataExchange* pDX)
 {
-  assignKeys();
-  checkKeys();
-  EndDialog(TRUE);
+  CDialog::DoDataExchange(pDX);
+  //{{AFX_DATA_MAP(MotionConfig)
+  DDX_Control(pDX, IDC_EDIT_UP, up);
+  DDX_Control(pDX, IDC_EDIT_RIGHT, right);
+  DDX_Control(pDX, IDC_EDIT_LEFT, left);
+  DDX_Control(pDX, IDC_EDIT_DOWN, down);
+  //}}AFX_DATA_MAP
 }
 
-void JoypadConfigDlg::OnCancel()
+
+BEGIN_MESSAGE_MAP(MotionConfig, CDialog)
+  //{{AFX_MSG_MAP(MotionConfig)
+  ON_BN_CLICKED(ID_CANCEL, OnCancel)
+  ON_BN_CLICKED(ID_OK, OnOk)
+  ON_WM_CHAR()
+  ON_WM_DESTROY()
+  ON_WM_KEYDOWN()
+  ON_WM_TIMER()
+  //}}AFX_MSG_MAP
+  END_MESSAGE_MAP()
+
+  /////////////////////////////////////////////////////////////////////////////
+// MotionConfig message handlers
+
+void MotionConfig::OnCancel() 
 {
   EndDialog(FALSE);
 }
 
-void JoypadConfigDlg::OnDestroy()
+void MotionConfig::OnOk() 
 {
-  KillTimer(hWnd, timerId);
+  assignKeys();
+  theApp.input->checkKeys();
+  EndDialog( TRUE);
 }
 
-void JoypadConfigDlg::OnTimer(UINT)
+void MotionConfig::OnChar(UINT nChar, UINT nRepCnt, UINT nFlags) 
 {
-  checkJoypads();
-  checkKeyboard();
 }
 
-LRESULT JoypadConfigDlg::OnCtlColorStatic(WPARAM wParam, LPARAM lParam)
+void MotionConfig::OnDestroy() 
 {
-  HDC hDC = (HDC)wParam;
-
-  SetBkMode(hDC, 2);
-  SetBkColor(hDC, RGB(192,192,192));
-  return FALSE;
+  CDialog::OnDestroy();
+  
+  KillTimer(timerId);
 }
 
-BEGIN_MESSAGE_MAP(MotionConfigDlg, Dlg)
-  //  ON_MESSAGE(WM_CTLCOLORSTATIC, OnCtlColorStatic)
-  ON_WM_CHAR()
-  ON_WM_DESTROY()
-  ON_WM_TIMER()
-  ON_WM_KEYDOWN()
-  ON_BN_CLICKED(ID_OK, OnOk)
-  ON_BN_CLICKED(ID_CANCEL, OnCancel)
-END_MESSAGE_MAP()
-
-MotionConfigDlg::MotionConfigDlg()
-  : Dlg()
+BOOL MotionConfig::OnInitDialog() 
 {
-  timerId = 0;
+  CDialog::OnInitDialog();
+  
+  timerId = SetTimer(0,200,NULL);
+  
+  SetWindowLong(up, GWL_USERDATA,motion[KEY_UP]);
+  up.SetWindowText(theApp.input->getKeyName(motion[KEY_UP]));
+  
+  SetWindowLong(down, GWL_USERDATA,motion[KEY_DOWN]);
+  down.SetWindowText(theApp.input->getKeyName(motion[KEY_DOWN]));
+
+  SetWindowLong(left, GWL_USERDATA,motion[KEY_LEFT]);
+  left.SetWindowText(theApp.input->getKeyName(motion[KEY_LEFT]));
+
+  SetWindowLong(right, GWL_USERDATA,motion[KEY_RIGHT]);
+  right.SetWindowText(theApp.input->getKeyName(motion[KEY_RIGHT]));
+
+  CenterWindow();
+
+  return TRUE;  // return TRUE unless you set the focus to a control
+                // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void MotionConfigDlg::assignKey(int id,int key)
+void MotionConfig::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags) 
+{
+}
+
+void MotionConfig::OnTimer(UINT nIDEvent) 
+{
+  theApp.input->checkDevices();
+  
+  CDialog::OnTimer(nIDEvent);
+}
+
+void MotionConfig::assignKey(int id, int key)
 {
   switch(id) {
   case IDC_EDIT_LEFT:
@@ -404,89 +417,19 @@ void MotionConfigDlg::assignKey(int id,int key)
   }
 }
 
-void MotionConfigDlg::assignKeys()
+void MotionConfig::assignKeys()
 {
   int id;
 
   id = IDC_EDIT_UP;
-  assignKey(id, up.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(up, GWL_USERDATA));
 
   id = IDC_EDIT_DOWN;
-  assignKey(id, down.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(down, GWL_USERDATA));
 
   id = IDC_EDIT_LEFT;
-  assignKey(id, left.GetWindowLong(GWL_USERDATA));
+  assignKey(id, GetWindowLong(left, GWL_USERDATA));
 
   id = IDC_EDIT_RIGHT;
-  assignKey(id, right.GetWindowLong(GWL_USERDATA));
-
-  regSetDwordValue("Motion_Left",
-                   motion[KEY_LEFT]);
-  regSetDwordValue("Motion_Right",
-                   motion[KEY_RIGHT]);
-  regSetDwordValue("Motion_Up",
-                   motion[KEY_UP]);
-  regSetDwordValue("Motion_Down",
-                   motion[KEY_DOWN]);
+  assignKey(id, GetWindowLong(right, GWL_USERDATA));
 }
-
-BOOL MotionConfigDlg::OnInitDialog(LPARAM)
-{
-  timerId = SetTimer(getHandle(),0,200,NULL);
-  
-  up.SubClassWindow(GetDlgItem(IDC_EDIT_UP));
-  up.SetWindowLong(GWL_USERDATA,motion[KEY_UP]);
-  up.SetWindowText(getKeyName(motion[KEY_UP]));
-  up.setParent(this);
-  
-  down.SubClassWindow(GetDlgItem(IDC_EDIT_DOWN));
-  down.SetWindowLong(GWL_USERDATA,motion[KEY_DOWN]);
-  down.SetWindowText(getKeyName(motion[KEY_DOWN]));
-  down.setParent(this);
-
-  left.SubClassWindow(GetDlgItem(IDC_EDIT_LEFT));
-  left.SetWindowLong(GWL_USERDATA,motion[KEY_LEFT]);
-  left.SetWindowText(getKeyName(motion[KEY_LEFT]));
-  left.setParent(this);
-
-  right.SubClassWindow(GetDlgItem(IDC_EDIT_RIGHT));
-  right.SetWindowLong(GWL_USERDATA,motion[KEY_RIGHT]);
-  right.SetWindowText(getKeyName(motion[KEY_RIGHT]));
-  right.setParent(this);
-
-  winCenterWindow(getHandle());
-
-  return TRUE;
-}
-
-void MotionConfigDlg::OnOk()
-{
-  assignKeys();
-  checkKeys();
-  EndDialog( TRUE);
-}
-
-void MotionConfigDlg::OnCancel()
-{
-  EndDialog(FALSE);
-}
-
-void MotionConfigDlg::OnTimer(UINT)
-{
-  checkJoypads();
-  checkKeyboard();
-}
-
-void MotionConfigDlg::OnDestroy()
-{
-  KillTimer(getHandle(), timerId);
-}
-
-LRESULT MotionConfigDlg::OnCtlColorStatic(WPARAM wParam, LPARAM)
-{
-  HDC hdc = (HDC)wParam;
-  SetBkMode(hdc, 2);
-  SetBkColor(hdc, RGB(192,192,192));
-  return FALSE;
-}
-
