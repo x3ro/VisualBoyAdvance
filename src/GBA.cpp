@@ -1951,7 +1951,7 @@ void CPUCheckDMA(int reason, int dmamask)
         dma0Dest = DM0DAD_L | (DM0DAD_H << 16);
       }
       
-      if(!(DM0CNT_H & 0x0200)) {
+      if(!(DM0CNT_H & 0x0200) || (reason == 0)) {
         DM0CNT_H &= 0x7FFF;
         UPDATE_REG(0xBA, DM0CNT_H);
       }
@@ -2019,7 +2019,7 @@ void CPUCheckDMA(int reason, int dmamask)
         dma1Dest = DM1DAD_L | (DM1DAD_H << 16);
       }
       
-      if(!(DM1CNT_H & 0x0200)) {
+      if(!(DM1CNT_H & 0x0200) || (reason == 0)) {
         DM1CNT_H &= 0x7FFF;
         UPDATE_REG(0xC6, DM1CNT_H);
       }
@@ -2087,7 +2087,7 @@ void CPUCheckDMA(int reason, int dmamask)
         dma2Dest = DM2DAD_L | (DM2DAD_H << 16);
       }
       
-      if(!(DM2CNT_H & 0x0200)) {
+      if(!(DM2CNT_H & 0x0200) || (reason == 0)) {
         DM2CNT_H &= 0x7FFF;
         UPDATE_REG(0xD2, DM2CNT_H);
       }
@@ -2141,7 +2141,7 @@ void CPUCheckDMA(int reason, int dmamask)
         dma3Dest = DM3DAD_L | (DM3DAD_H << 16);
       }
       
-      if(!(DM3CNT_H & 0x0200)) {
+      if(!(DM3CNT_H & 0x0200) || (reason == 0)) {
         DM3CNT_H &= 0x7FFF;
         UPDATE_REG(0xDE, DM3CNT_H);
       }

@@ -1,5 +1,6 @@
 2003-08-09  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/GBA.cpp (CPUCheckDMA): fix minor DMA problem introduced with previous fixes
 	* src/GBA.cpp: fix DMA timings and add DMA hack fix
 	* src/Util.cpp (utilGBAFindSave): change search slightly
 	* src/agbprint.cpp (agbPrintWrite): return true to avoid warning message
