@@ -54,4 +54,5 @@ public:
   virtual LRESULT OnKillFocus(WPARAM, LPARAM);
   virtual LRESULT OnCaptureChanged(WPARAM, LPARAM);
   virtual LRESULT OnRButtonDown(WPARAM, LPARAM);
+  virtual LRESULT OnMouseLeave(WPARAM, LPARAM);
 };

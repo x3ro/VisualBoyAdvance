@@ -33,6 +33,7 @@ BEGIN_MESSAGE_MAP(SkinButton, Wnd)
   ON_MESSAGE(WM_MOUSEMOVE, OnMouseMove)
   ON_MESSAGE(WM_CAPTURECHANGED, OnCaptureChanged)
   ON_MESSAGE(WM_CONTEXTMENU, OnRButtonDown)
+  ON_MESSAGE(WM_MOUSELEAVE, OnMouseLeave)
 END_MESSAGE_MAP()
 
 SkinButton::SkinButton()
@@ -205,14 +206,6 @@ LRESULT SkinButton::OnLButtonDown(WPARAM wParam, LPARAM lParam)
   if(inside) {
     if(buttonMask)
       skinButtons = buttonMask;
-    else if(menu != -1) {
-      HMENU m = GetSubMenu(::menu, menu);
-      pt.x = r.left;
-      pt.y = r.bottom+1;
-      ClientToScreen(getHandle(), &pt);
-      SendMessage(hWindow, WM_INITMENUPOPUP, (WPARAM)m, menu);
-      TrackPopupMenu(m, 0, pt.x, pt.y, 0, hWindow, NULL);
-    }
     return Wnd::Default(WM_LBUTTONDOWN, wParam, lParam);
   }
   return SendMessage(GetParent(getHandle()), WM_LBUTTONDOWN, wParam, lParam);
@@ -233,6 +226,15 @@ LRESULT SkinButton::OnLButtonUp(WPARAM wParam, LPARAM lParam)
       ::SendMessage(::GetParent(getHandle()), WM_COMMAND, idCommand, 0);
     else if(buttonMask)
       skinButtons = 0;
+    else if(menu != -1) {
+      HMENU m = GetSubMenu(::menu, menu);
+      pt.x = r.left;
+      pt.y = r.bottom;
+      ClientToScreen(getHandle(), &pt);
+      SendMessage(hWindow, WM_INITMENUPOPUP, (WPARAM)m, menu);
+      TrackPopupMenu(m, 0, pt.x, pt.y, 0, hWindow, NULL);
+    }
+
     return Wnd::Default(WM_LBUTTONUP, wParam, lParam);
   }
   return SendMessage(::GetParent(getHandle()), WM_LBUTTONUP, wParam, lParam);
@@ -293,4 +295,15 @@ LRESULT SkinButton::OnCaptureChanged(WPARAM wParam, LPARAM lParam)
 LRESULT SkinButton::OnRButtonDown(WPARAM wParam, LPARAM lParam)
 {
   return 0;
+}
+
+LRESULT SkinButton::OnMouseLeave(WPARAM wParam, LPARAM lParam)
+{
+  if(mouseOver) {
+    ReleaseCapture();
+    mouseOver = false;
+    Invalidate();
+  }
+
+  return Wnd::Default(WM_MOUSELEAVE, wParam, lParam);
 }
