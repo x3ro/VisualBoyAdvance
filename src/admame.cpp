@@ -936,7 +936,7 @@ static void internal_scale2x_32_mmx(u32* dst0, u32* dst1, const u32* src0, const
 }
 #endif
 
-void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
+void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
               u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u16 *dst0 = (u16 *)dstPtr;
@@ -988,7 +988,7 @@ void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
 #endif
 }
 
-void AdMame2x32(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
+void AdMame2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u32 *dst0 = (u32 *)dstPtr;

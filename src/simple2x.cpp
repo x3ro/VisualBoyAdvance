@@ -18,7 +18,7 @@
  */
 #include "System.h"
 
-void Simple2x(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
+void Simple2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
               u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
@@ -68,7 +68,7 @@ void Simple2x(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
   while (--height);
 }
 
-void Simple2x32(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
+void Simple2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
