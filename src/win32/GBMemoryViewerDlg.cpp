@@ -340,6 +340,7 @@ void GBMemoryViewerDlg::OnSave()
                  title,
                  true);
     if(file.DoModal() == IDOK) {
+      buffer = file.GetPathName();
       FILE *f = fopen(buffer, "wb");
       
       if(f == NULL) {
@@ -378,6 +379,7 @@ void GBMemoryViewerDlg::OnLoad()
                false);
   
   if(file.DoModal() == IDOK) {
+    buffer = file.GetPathName();
     FILE *f = fopen(buffer, "rb");
     if(f == NULL) {
       systemMessage(IDS_CANNOT_OPEN_FILE,

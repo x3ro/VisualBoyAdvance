@@ -382,6 +382,7 @@ void MemoryViewerDlg::OnLoad()
                false);
   
   if(file.DoModal() == IDOK) {
+    buffer = file.GetPathName();
     FILE *f = fopen(buffer, "rb");
     if(f == NULL) {
       systemMessage(IDS_CANNOT_OPEN_FILE,
