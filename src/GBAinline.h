@@ -231,11 +231,17 @@ inline u32 CPUReadHalfWord(u32 address)
           armNextPC - 4 : armNextPC - 2);
     }
 #endif
-    
-    if(armState) {
-      value = CPUReadHalfWordQuick(reg[15].I + (address & 2));
+    extern bool cpuDmaHack;
+    extern u32 cpuDmaLast;
+    extern int cpuDmaCount;
+    if(cpuDmaHack && cpuDmaCount) {
+      value = (u16)cpuDmaLast;
     } else {
-      value = CPUReadHalfWordQuick(reg[15].I);
+      if(armState) {
+        value = CPUReadHalfWordQuick(reg[15].I + (address & 2));
+      } else {
+        value = CPUReadHalfWordQuick(reg[15].I);
+      }
     }
     //    return value;
     //    if(address & 1)

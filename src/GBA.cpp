@@ -61,6 +61,8 @@ extern int emulating;
 
 int cpuDmaTicksToUpdate = 0;
 int cpuDmaCount = 0;
+bool cpuDmaHack = 0;
+u32 cpuDmaLast = 0;
 int dummyAddress = 0;
 
 int *extCpuLoopTicks = NULL;
@@ -76,6 +78,7 @@ bool cpuSramEnabled = true;
 bool cpuFlashEnabled = true;
 bool cpuEEPROMEnabled = true;
 bool cpuEEPROMSensorEnabled = false;
+bool cpuBreakThumb = false;
 
 #ifdef PROFILING
 int profilingTicks = 0;
@@ -160,24 +163,29 @@ const int gamepakWaitState1[8] = { 4, 4, 4, 4, 1, 1, 1, 1 };
 const int gamepakWaitState2[8] = { 8, 8, 8, 8, 1, 1, 1, 1 };
 
 int memoryWait[16] =
-  { 3, 0, 3, 0, 0, 1, 1, 0, 4, 4, 4, 4, 4, 4, 4, 0 };
+  { 0, 0, 2, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0 };
 int memoryWait32[16] =
-  { 6, 0, 6, 0, 0, 2, 2, 0, 8, 8, 8, 8, 8, 8, 8, 0 };
+  { 0, 0, 6, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 0 };
 int memoryWaitSeq[16] =
-  { 1, 0, 3, 0, 0, 1, 1, 0, 2, 2, 4, 4, 8, 8, 4, 0 };
+  { 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 4, 4, 8, 8, 4, 0 };
 int memoryWaitSeq32[16] =
   { 2, 0, 3, 0, 0, 2, 2, 0, 4, 4, 8, 8, 16, 16, 8, 0 };
 int memoryWaitFetch[16] =
   { 3, 0, 3, 0, 0, 1, 1, 0, 4, 4, 4, 4, 4, 4, 4, 0 };
 int memoryWaitFetch32[16] =
   { 6, 0, 6, 0, 0, 2, 2, 0, 8, 8, 8, 8, 8, 8, 8, 0 };
+
 const int cpuMemoryWait[16] = {
-  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 2, 0, 0, 0, 0, 0,
   2, 2, 2, 2, 2, 2, 0, 0
+};
+const int cpuMemoryWait32[16] = {
+  0, 0, 4, 0, 0, 0, 0, 0,
+  4, 4, 4, 4, 4, 4, 0, 0
 };
   
 const bool memory32[16] =
-  { false, false, false, true, true, false, false, true, false, false, false, false, false, false, false, false};
+  { true, false, false, true, true, false, false, true, false, false, false, false, false, false, true, false};
 
 u8 biosProtected[4];
 
@@ -1597,6 +1605,7 @@ void CPUUndefinedException()
   armIrqEnable = false;
   armNextPC = 0x04;
   reg[15].I += 4;  
+  cpuBreakThumb = true;
 }
 
 void CPUSoftwareInterrupt()
@@ -1610,6 +1619,7 @@ void CPUSoftwareInterrupt()
   armIrqEnable = false;
   armNextPC = 0x08;
   reg[15].I += 4;
+  cpuBreakThumb = true;
 }
 
 void CPUSoftwareInterrupt(int comment)
@@ -1823,8 +1833,8 @@ void CPUCompareVCOUNT()
 
 void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 {
-  //  int sm = s >> 24;
-  //  int dm = d >> 24;
+  int sm = s >> 24;
+  int dm = d >> 24;
 
   int sc = c;
 
@@ -1858,7 +1868,8 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
       }
     } else {
       while(c != 0) {
-        CPUWriteHalfWord(d, CPUReadHalfWord(s));
+        cpuDmaLast = CPUReadHalfWord(s);
+        CPUWriteHalfWord(d, cpuDmaLast);
         d += di;
         s += si;
         c--;
@@ -1868,21 +1879,19 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 
   cpuDmaCount = 0;
   
-  //  int sw = 1+memoryWait[sm & 15];
-  //  int dw = 1+memoryWait[dm & 15];
+  int sw = 1+memoryWaitSeq[sm & 15];
+  int dw = 1+memoryWaitSeq[dm & 15];
 
-  //  int totalTicks = 0;
-  
-  //  if(transfer32) {
-  //    if(!memory32[sm & 15])
-  //      sw <<= 1;
-  //    if(!memory32[dm & 15])
-  //      dw <<= 1;
-  //  }
-  
-  //  totalTicks = (sw+dw)*sc;
+  int totalTicks = 0;
 
-  int totalTicks = (transfer32 ? 3 : 2) * sc;
+  if(transfer32) {
+    if(!memory32[sm & 15])
+      sw <<= 1;
+    if(!memory32[dm & 15])
+      dw <<= 1;
+  }
+  
+  totalTicks = (sw+dw)*sc;
 
   cpuDmaTicksToUpdate += totalTicks;
 
@@ -1893,6 +1902,7 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 
 void CPUCheckDMA(int reason, int dmamask)
 {
+  cpuDmaHack = 0;
   // DMA 0
   if((DM0CNT_H & 0x8000) && (dmamask & 1)) {
     if(((DM0CNT_H >> 12) & 3) == reason) {
@@ -1931,6 +1941,7 @@ void CPUCheckDMA(int reason, int dmamask)
       doDMA(dma0Source, dma0Dest, sourceIncrement, destIncrement,
             DM0CNT_L ? DM0CNT_L : 0x4000,
             DM0CNT_H & 0x0400);
+      cpuDmaHack = 1;
       if(DM0CNT_H & 0x4000) {
         IF |= 0x0100;
         UPDATE_REG(0x202, IF);
@@ -1975,7 +1986,7 @@ void CPUCheckDMA(int reason, int dmamask)
       if(reason == 3) {
 #ifdef DEV_VERSION
         if(systemVerbose & VERBOSE_DMA1) {
-          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", dma1Source, dma1Dest,
+          log("DMA1: s=%08x d=%08x c=%04x count=%08x\n", dma1Source, dma1Dest,
               DM1CNT_H,
               16);
         }
@@ -1988,7 +1999,7 @@ void CPUCheckDMA(int reason, int dmamask)
           int count = (DM1CNT_L ? DM1CNT_L : 0x4000) << 1;
           if(DM1CNT_H & 0x0400)
             count <<= 1;
-          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", dma1Source, dma1Dest,
+          log("DMA1: s=%08x d=%08x c=%04x count=%08x\n", dma1Source, dma1Dest,
               DM1CNT_H,
               count);
         }
@@ -1997,6 +2008,7 @@ void CPUCheckDMA(int reason, int dmamask)
               DM1CNT_L ? DM1CNT_L : 0x4000,
               DM1CNT_H & 0x0400);
       }
+      cpuDmaHack = 1;
         
       if(DM1CNT_H & 0x4000) {
         IF |= 0x0200;
@@ -2043,7 +2055,7 @@ void CPUCheckDMA(int reason, int dmamask)
 #ifdef DEV_VERSION
         if(systemVerbose & VERBOSE_DMA2) {
           int count = (4) << 2;
-          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", dma2Source, dma2Dest,
+          log("DMA2: s=%08x d=%08x c=%04x count=%08x\n", dma2Source, dma2Dest,
               DM2CNT_H,
               count);
         }
@@ -2056,7 +2068,7 @@ void CPUCheckDMA(int reason, int dmamask)
           int count = (DM2CNT_L ? DM2CNT_L : 0x4000) << 1;
           if(DM2CNT_H & 0x0400)
             count <<= 1;
-          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", dma2Source, dma2Dest,
+          log("DMA2: s=%08x d=%08x c=%04x count=%08x\n", dma2Source, dma2Dest,
               DM2CNT_H,
               count);
         }
@@ -2065,6 +2077,7 @@ void CPUCheckDMA(int reason, int dmamask)
               DM2CNT_L ? DM2CNT_L : 0x4000,
               DM2CNT_H & 0x0400);
       }
+      cpuDmaHack = 1;
       if(DM2CNT_H & 0x4000) {
         IF |= 0x0400;
         UPDATE_REG(0x202, IF);
@@ -2111,7 +2124,7 @@ void CPUCheckDMA(int reason, int dmamask)
         int count = (DM3CNT_L ? DM3CNT_L : 0x10000) << 1;
         if(DM3CNT_H & 0x0400)
           count <<= 1;
-        log("DMA3: s=%08x d=%08x c=%04x bytes=%08x\n", dma3Source, dma3Dest,
+        log("DMA3: s=%08x d=%08x c=%04x count=%08x\n", dma3Source, dma3Dest,
             DM3CNT_H,
             count);
       }
@@ -2134,6 +2147,7 @@ void CPUCheckDMA(int reason, int dmamask)
       }
     }
   }
+  cpuDmaHack = 0;
 }
 
 void CPUUpdateRegister(u32 address, u16 value)
@@ -3263,6 +3277,8 @@ void CPUInterrupt()
   armNextPC = reg[15].I;
   reg[15].I += 4;
 
+  cpuBreakThumb = true;
+
   //  if(!holdState)
   biosProtected[0] = 0x02;
   biosProtected[1] = 0xc0;
@@ -3287,6 +3303,8 @@ void log(char *defaultMsg, ...)
   
   va_end(valist);
 }
+#else
+extern void winlog(const char *, ...);
 #endif
 
 void CPULoop(int ticks)
@@ -3321,22 +3339,33 @@ void CPULoop(int ticks)
                  reg[6].I, reg[7].I, reg[8].I, reg[9].I, reg[10].I, reg[11].I,
                  reg[12].I, reg[13].I, reg[14].I, reg[15].I, reg[16].I,
                  reg[17].I);
+#ifdef SDL
         log(buffer);
+#else
+        winlog(buffer);
+#endif
       } else if(!holdState) {
         sprintf(buffer, "PC=%08x\n", armNextPC);
+#ifdef SDL
         log(buffer);
+#else
+        winlog(buffer);
+#endif
       }
     }
 #endif
 
     if(!holdState) {
       if(armState) {
-        clockTicks = 1;
 #include "arm-new.h"
       } else {
+        cpuBreakThumb = false;
+        while(cpuLoopTicks > 0 && !cpuBreakThumb) {
 #include "thumb.h"
+          cpuLoopTicks -= clockTicks;
+        }
+        clockTicks = 0;
       }
-      clockTicks += cpuMemoryWait[(reg[15].I >> 24) & 15];      
     } else {
       clockTicks = lcdTicks;
 

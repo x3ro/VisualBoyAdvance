@@ -763,7 +763,7 @@
 #endif
 
 u32 opcode = CPUReadHalfWordQuick(armNextPC);
-
+clockTicks = thumbCycles[opcode >> 8] + cpuMemoryWait[(armNextPC >> 24) & 15];
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
   armNextPC = armNextPC++;
@@ -772,8 +772,6 @@ if(armNextPC == stop) {
 
 armNextPC = reg[15].I;
 reg[15].I += 2;
-
-clockTicks = thumbCycles[opcode >> 8];
 
 switch(opcode >> 8) {
  case 0x00:
@@ -1381,6 +1379,7 @@ switch(opcode >> 8) {
          reg[15].I += 2;
        } else {
          armState = true;
+         cpuBreakThumb = true;
          reg[15].I &= 0xFFFFFFFC;
          armNextPC = reg[15].I;
          reg[15].I += 4;
@@ -1395,6 +1394,7 @@ switch(opcode >> 8) {
          reg[15].I += 2;
        } else {
          armState = true;
+         cpuBreakThumb = true;
          reg[15].I &= 0xFFFFFFFC;       
          armNextPC = reg[15].I;
          reg[15].I += 4;

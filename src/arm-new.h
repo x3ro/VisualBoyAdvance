@@ -1815,6 +1815,7 @@
     break;
 
   u32 opcode = CPUReadMemoryQuick(armNextPC);
+  clockTicks = 1 + cpuMemoryWait32[(armNextPC >> 24) & 15];
 
 #ifndef FINAL_VERSION
   if(armNextPC == stop) {
