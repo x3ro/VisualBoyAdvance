@@ -67,7 +67,7 @@ u16 rtcRead(u32 address)
     }
   }
   
-  return READ16LE((&rom[address & 0x1FFFFFE]));;
+  return READ16LE((&rom[address & 0x1FFFFFE]));
 }
 
 static u8 toBCD(u8 value)
