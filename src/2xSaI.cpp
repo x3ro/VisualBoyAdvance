@@ -353,7 +353,7 @@ void Super2xSaI (u8 *srcPtr, u32 srcPitch,
         }                       // end of for ( finish= width etc..)
         
         srcPtr   += srcPitch;
-        dstPtr   += dstPitch * 2;
+        dstPtr   += dstPitch << 1;
         deltaPtr += srcPitch;
       }                 // endof: for (; height; height--)
     }
@@ -478,7 +478,7 @@ void Super2xSaI32 (u8 *srcPtr, u32 srcPitch,
     }                       // end of for ( finish= width etc..)
         
     srcPtr   += srcPitch;
-    dstPtr   += dstPitch * 2;
+    dstPtr   += dstPitch << 1;
     //        deltaPtr += srcPitch;
   }                 // endof: for (; height; height--)
 }
@@ -624,7 +624,7 @@ void SuperEagle (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
       }                 // end of for ( finish= width etc..)
       
       srcPtr += srcPitch;
-      dstPtr += dstPitch * 2;
+      dstPtr += dstPitch << 1;
       deltaPtr += srcPitch;
     }                   // endof: for (height; height; height--)
   }
@@ -753,7 +753,7 @@ void SuperEagle32 (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
     }                 // end of for ( finish= width etc..)
       
     srcPtr += srcPitch;
-    dstPtr += dstPitch * 2;
+    dstPtr += dstPitch << 1;
     deltaPtr += srcPitch;
   }                   // endof: for (height; height; height--)
 }
@@ -926,7 +926,7 @@ void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
       }                 // end of for ( finish= width etc..)
       
       srcPtr += srcPitch;
-      dstPtr += dstPitch * 2;
+      dstPtr += dstPitch << 1;
       deltaPtr += srcPitch;
     }                   // endof: for (height; height; height--)
   }
@@ -1080,7 +1080,7 @@ void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     }                 // end of for ( finish= width etc..)
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch * 2;
+    dstPtr += dstPitch << 1;
     //    deltaPtr += srcPitch;
   }                   // endof: for (height; height; height--)
 }

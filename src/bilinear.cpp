@@ -153,7 +153,7 @@ void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     
     // update the pointers for start of next pair of lines
     from = (u16 *)((u8 *)from_orig + srcPitch);
-    to = (u16 *)((u8 *)to_orig + 2*dstPitch);
+    to = (u16 *)((u8 *)to_orig + (dstPitch << 1));
     to_odd = (u16 *)((u8 *)to + dstPitch);
   }
 }
@@ -242,7 +242,7 @@ void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     
     // update the pointers for start of next pair of lines
     from = (u16 *)((u8 *)from_orig + srcPitch);
-    to = (u16 *)((u8 *)to_orig + 2*dstPitch);
+    to = (u16 *)((u8 *)to_orig + (dstPitch << 1));
     to_odd = (u16 *)((u8 *)to + dstPitch);
   }
 }
@@ -322,7 +322,7 @@ void Bilinear32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     
     // update the pointers for start of next pair of lines
     from = (u32 *)((u8 *)from_orig + srcPitch);
-    to = (u32 *)((u8 *)to_orig + 2*dstPitch);
+    to = (u32 *)((u8 *)to_orig + (dstPitch << 1));
     to_odd = (u32 *)((u8 *)to + dstPitch);
   }
 }
@@ -413,7 +413,7 @@ void BilinearPlus32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     
     // update the pointers for start of next pair of lines
     from = (u32 *)((u8 *)from_orig + srcPitch);
-    to = (u32 *)((u8 *)to_orig + 2*dstPitch);
+    to = (u32 *)((u8 *)to_orig + (dstPitch << 1));
     to_odd = (u32 *)((u8 *)to + dstPitch);
   }
 }

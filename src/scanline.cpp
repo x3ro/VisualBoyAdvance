@@ -67,8 +67,8 @@ void Scanlines (u8 *srcPtr, u32 srcPitch, u8 *,
     } while ((u8 *) bP < finish);
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch * 2;
-    nextLine += dstPitch * 2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }
@@ -116,8 +116,8 @@ void Scanlines32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     } while ((u8 *) bP < finish);
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch*2;
-    nextLine += dstPitch*2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }
@@ -174,8 +174,8 @@ void ScanlinesTV(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     } while ((u8 *) bP < finish);
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch*2;
-    nextLine += dstPitch*2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }
@@ -225,8 +225,8 @@ void ScanlinesTV32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     } while ((u8 *) bP < finish);
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch*2;
-    nextLine += dstPitch*2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }

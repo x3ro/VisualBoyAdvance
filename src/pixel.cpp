@@ -90,8 +90,8 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
     
     deltaPtr += srcPitch;
     srcPtr += srcPitch;
-    dstPtr += dstPitch * 2;
-    nextLine += dstPitch * 2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }
@@ -145,8 +145,8 @@ void Pixelate32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     } while ((u8 *) bP < finish);
     
     srcPtr += srcPitch;
-    dstPtr += dstPitch * 2;
-    nextLine += dstPitch * 2;
+    dstPtr += dstPitch << 1;
+    nextLine += dstPitch << 1;
   }
   while (--height);
 }
