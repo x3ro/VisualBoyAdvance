@@ -27,7 +27,7 @@ BEGIN
             VALUE "FileDescription", "VisualBoyAdvance emulator\0"
             VALUE "FileVersion", STRFILEVER
             VALUE "InternalName", "VisualBoyAdvance\0"
-            VALUE "LegalCopyright", "Copyright © 2001,2002 by Forgotten\0"
+            VALUE "LegalCopyright", "Copyright © 2004 Forgotten and the VBA team\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "VisualBoyAdvance.exe\0"
             VALUE "PrivateBuild", "0\0"
