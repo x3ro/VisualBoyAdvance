@@ -157,9 +157,9 @@ void MemoryViewer::OnPaint()
   
   CDC memDC;
   memDC.CreateCompatibleDC(&dc);
-  CBitmap bitmap;
+  CBitmap bitmap, *pOldBitmap;
   bitmap.CreateCompatibleBitmap(&dc, w, rect.bottom - rect.top);
-  memDC.SelectObject(&bitmap);
+  pOldBitmap = memDC.SelectObject(&bitmap);
   
   memDC.FillRect(&rect, CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH)));
   memDC.DrawEdge(&rect, EDGE_ETCHED, BF_RECT);
@@ -262,6 +262,7 @@ void MemoryViewer::OnPaint()
   
   dc.BitBlt(0, 0, w, rect.bottom - rect.top, &memDC, 0, 0, SRCCOPY);
   
+  memDC.SelectObject(pOldBitmap);
   memDC.DeleteDC();
   bitmap.DeleteObject();
 }

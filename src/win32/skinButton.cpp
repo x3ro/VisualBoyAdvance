@@ -98,17 +98,18 @@ void SkinButton::OnPaint()
   HDC hDC = ::BeginPaint(m_hWnd, &ps);
   HDC memDC = ::CreateCompatibleDC(hDC);
   UINT state = ::SendMessage(m_hWnd, BM_GETSTATE, 0, 0);
-  
+  HBITMAP oldBitmap;
   if(state & BST_PUSHED)
-    SelectObject(memDC, downBmp);
+    oldBitmap = (HBITMAP)SelectObject(memDC, downBmp);
   else if(mouseOver && overBmp != NULL)
-    SelectObject(memDC, overBmp);
+    oldBitmap = (HBITMAP)SelectObject(memDC, overBmp);
   else
-    SelectObject(memDC, normalBmp);
+    oldBitmap = (HBITMAP)SelectObject(memDC, normalBmp);
   SelectClipRgn(hDC, region);
   BitBlt(hDC, 0, 0, theApp.rect.right - theApp.rect.left,
          theApp.rect.bottom - theApp.rect.top, memDC, 0, 0, SRCCOPY);
   SelectClipRgn(hDC, NULL);
+  SelectObject(memDC, oldBitmap);
   DeleteDC(memDC);
 
   ::EndPaint(m_hWnd, &ps);

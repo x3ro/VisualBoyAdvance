@@ -88,10 +88,10 @@ void ZoomControl::OnPaint()
   
   CDC memDC ;
   memDC.CreateCompatibleDC(&dc);
-  CBitmap bitmap;
+  CBitmap bitmap, *pOldBitmap;
   bitmap.CreateCompatibleBitmap(&dc, w, h);
 
-  memDC.SelectObject(&bitmap);
+  pOldBitmap = memDC.SelectObject(&bitmap);
   
   int multX = w / 8;
   int multY = h / 8;
@@ -147,6 +147,7 @@ void ZoomControl::OnPaint()
   dc.BitBlt(0,0,w,h,
             &memDC,0,0, SRCCOPY);
 
+  memDC.SelectObject(pOldBitmap);
   bitmap.DeleteObject();
   memDC.DeleteDC();
 }

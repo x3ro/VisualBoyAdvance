@@ -327,9 +327,9 @@ void PaletteViewControl::OnPaint()
   
   CDC memDC;
   memDC.CreateCompatibleDC(&dc);
-  CBitmap bitmap;
+  CBitmap bitmap, *pOldBitmap;
   bitmap.CreateCompatibleBitmap(&dc, w, h);
-  memDC.SelectObject(bitmap);
+  pOldBitmap = memDC.SelectObject(&bitmap);
   
   StretchDIBits(memDC.GetSafeHdc(),
                 0,
@@ -386,6 +386,7 @@ void PaletteViewControl::OnPaint()
   dc.BitBlt(0,0,w,h,
             &memDC,0,0,SRCCOPY);
 
+  memDC.SelectObject(pOldBitmap);
   bitmap.DeleteObject();
   memDC.DeleteDC();
 }
