@@ -281,24 +281,21 @@ void mode5RenderLineAll()
     u8 top = 0x20;
     u8 mask = outMask;
 
-    if(inWindow0) {
-      if(x >= x00 && x < x01) {
-        mask = inWin0Mask;
-      } else {
-        if(inWindow1) {
-          if(x >= x10 && x < x11)
-            mask = inWin1Mask;
-        }
-      }
-    } else if(inWindow1) {
-      if(x >= x10 && x < x11) {
+    if(!(lineOBJWin[x] & 0x80000000)) {
+      mask = WINOUT >> 8;
+    }
+
+    if(inWindow1) {
+      if(gfxInWin1[x])
         mask = inWin1Mask;
+    }
+
+    if(inWindow0) {
+      if(gfxInWin0[x]) {
+        mask = inWin0Mask;
       }
     }
 
-    if(!(lineOBJWin[x] & 0x80000000))
-      mask = WINOUT >> 8;
-    
     if((mask & 4) && (line2[x] < color)) {
       color = line2[x];
       top = 0x04;
