@@ -55,6 +55,7 @@
 #include "IUpdate.h"
 #include "Display.h"
 #include "skin.h"
+#include "../AutoBuild.h"
 #include <list>
 
 static u8 COPYRIGHT[] = {
@@ -3467,6 +3468,8 @@ void winSelectSkin()
 }
 
 extern void helpAbout();
+extern void helpBugReport();
+extern void helpFAQ();
 extern void toolsLogging();
 extern void toolsDisassemble();
 extern void toolsGBDisassemble();
@@ -4759,6 +4762,13 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_HELP_ABOUT:
       winCheckFullscreen();      
       helpAbout();
+      break;
+    case ID_HELP_BUGREPORT:
+      winCheckFullscreen();
+      helpBugReport();
+      break;
+    case ID_HELP_FAQ:
+      helpFAQ();
       break;
     }
     return 0L;
@@ -6982,4 +6992,93 @@ void toolsRewind()
     rewindCount--;
     rewindCounter = 0;
   }
+}
+
+void helpBugReport()
+{
+  OpenClipboard(hWindow);
+
+  EmptyClipboard();
+
+  CStdString report = "";
+  report.AppendFormat("Emu version  : %s\r\n", VERSION);
+  if(emulating) {
+    report.AppendFormat("File         : %s\r\n", szFile);
+
+    char buffer[20];
+    if(cartridgeType == 0) {
+      u32 check = 0;
+      for(int i = 0; i < 0x4000; i += 4) {
+        check += *((u32 *)&bios[i]);
+      }
+      report.AppendFormat("BIOS Checksum: %08X\r\n", check);
+
+      strncpy(buffer, (const char *)&rom[0xa0], 12);
+      buffer[12] = 0;
+      report.AppendFormat("Internal name: %s\r\n", buffer);
+      
+      strncpy(buffer, (const char *)&rom[0xac], 4);
+      buffer[4] = 0;
+      report.AppendFormat("Game code    : %s\r\n", buffer);
+    } else if(cartridgeType == 1) {
+      strncpy(buffer, (const char *)&rom[0x134], 15);
+      buffer[15] = 0;
+      report.AppendFormat("Game title   : %s\r\n", buffer);
+    }
+  }
+  
+  report.AppendFormat("Using BIOS   : %d\r\n", useBiosFile);
+  report.AppendFormat("Skip BIOS    : %d\r\n", skipBiosFile);
+  report.AppendFormat("Disable SFX  : %d\r\n", cpuDisableSfx);
+  report.AppendFormat("Skip intro   : %d\r\n", removeIntros);
+  report.AppendFormat("Throttle     : %d\r\n", throttle);
+  report.AppendFormat("Auto frame   : %d\r\n", autoFrameSkip);
+  report.AppendFormat("Video option : %d\r\n", videoOption);
+  report.AppendFormat("Render type  : %d\r\n", renderMethod);
+  report.AppendFormat("Layer setting: %04X\r\n", layerSettings);
+  report.AppendFormat("Save type    : %d (%d)\r\n", 
+                      winSaveType, cpuSaveType);
+  report.AppendFormat("Flash size   : %08X (%08x)\r\n", 
+                      winFlashSize, flashSize);
+  report.AppendFormat("RTC          : %d (%d)\r\n", winRtcEnable,
+                      rtcIsEnabled());
+  report.AppendFormat("AGBPrint     : %d\r\n", agbPrintIsEnabled());
+  report.AppendFormat("Speed toggle : %d\r\n", speedupToggle);
+  report.AppendFormat("Synchronize  : %d\r\n", synchronize);
+  report.AppendFormat("Sound OFF    : %d\r\n", soundOffFlag);
+  report.AppendFormat("Channels     : %04x\r\n", soundGetEnable() & 0x30f);
+  report.AppendFormat("Old Sync     : %d\r\n", useOldSync);
+  report.AppendFormat("Priority     : %d\r\n", threadPriority);
+  report.AppendFormat("Filters      : %d (%d)\r\n", filterType, ifbType);
+  report.AppendFormat("Cheats       : %d\r\n", cheatsNumber);
+  report.AppendFormat("GB Cheats    : %d\r\n", gbCheatNumber);
+  report.AppendFormat("GB Emu Type  : %d\r\n", gbEmulatorType);
+
+  HGLOBAL hglbCopy = GlobalAlloc(GMEM_MOVEABLE, 
+                                 (report.GetLength() + 1) * sizeof(CHAR)); 
+  if (hglbCopy == NULL) { 
+    CloseClipboard(); 
+    return;
+  } 
+ 
+  // Lock the handle and copy the text to the buffer. 
+ 
+  LPSTR lptstrCopy = (LPSTR)GlobalLock(hglbCopy); 
+  memcpy(lptstrCopy, (const char *)report, 
+         report.GetLength() * sizeof(CHAR)); 
+  lptstrCopy[report.GetLength()] = (TCHAR) 0;    // null character 
+  GlobalUnlock(hglbCopy); 
+ 
+  // Place the handle on the clipboard. 
+  
+  SetClipboardData(CF_TEXT, hglbCopy);   
+  CloseClipboard();
+
+  systemMessage(IDS_BUG_REPORT, "Bug report has been copied to the Clipboard");
+}
+
+void helpFAQ()
+{
+  ::ShellExecute(0, _T("open"), "http://vboy.emuhq.com/faq.shtml", 
+                 0, 0, SW_SHOWNORMAL);
 }
