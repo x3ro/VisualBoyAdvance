@@ -59,7 +59,11 @@ typedef union {
     u16 W1;
 #endif
   } W;
-  u32 I;
+#ifdef WORDS_BIGENDIAN
+  volatile u32 I;
+#else
+	u32 I;
+@endif
 } reg_pair;
 
 #ifndef NO_GBA_MAP
