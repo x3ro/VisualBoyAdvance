@@ -313,6 +313,11 @@ void gbSgbPicture()
     gbPalette[i] = READ16LE(paletteAddr++);
   }
 
+  if(gbBorderAutomatic && !gbBorderOn) {
+    gbBorderOn = 1;
+    systemGbBorderOn();
+  }
+
   if(gbBorderOn) 
     gbSgbRenderBorder();
 
@@ -642,6 +647,11 @@ void gbSgbChrTransfer()
     gbSgbCGBSupport |= 1;
   
   memcpy(&gbSgbBorderChar[address], gbSgbScreenBuffer, 128 * 32);
+
+  if(gbBorderAutomatic && !gbBorderOn) {
+    gbBorderOn = 1;
+    systemGbBorderOn();
+  }
 
   if(gbBorderOn)
     gbSgbRenderBorder();

@@ -30,17 +30,13 @@ extern u16 *gbLineBuffer;
 
 extern u8 *gbMemoryMap[16];
 
-extern int redShift;
-extern int greenShift;
-extern int blueShift;
-extern int colorDepth;
-
 extern int gbFrameSkip;
 extern u16 gbColorFilter[32768];
 extern int gbColorOption;
 extern int gbPaletteOption;
 extern int gbEmulatorType;
 extern int gbBorderOn;
+extern int gbBorderAutomatic;
 extern int gbCgbMode;
 extern int gbSgbMode;
 extern int gbWindowLine;

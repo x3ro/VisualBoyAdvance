@@ -185,6 +185,7 @@ int winFlashSize = 0x10000;
 bool winRtcEnable = false;
 int winSaveType = 0;
 bool autoHideMenu = false;
+int winGbBorderOn = 0;
 
 int frameskipadjust = 0;
 int renderedFrames = 0;
@@ -1796,7 +1797,9 @@ void updateGameboyMenu(HMENU menu)
     return;
   
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_BORDER,
-                CHECKMENUSTATE(gbBorderOn));
+                CHECKMENUSTATE(winGbBorderOn));
+  CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_BORDERAUTOMATIC,
+                CHECKMENUSTATE(gbBorderAutomatic));  
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_PRINTER,
                 CHECKMENUSTATE(gbSerialFunction == gbPrinterSend));
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_AUTOMATIC,
@@ -4336,12 +4339,21 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       soundRecording = FALSE;
       break;
     case ID_OPTIONS_GAMEBOY_BORDER:
-      gbBorderOn = !gbBorderOn;
+      winGbBorderOn = !winGbBorderOn;
+      gbBorderOn = winGbBorderOn;
       if(emulating && cartridgeType == 1 && gbBorderOn) {
         gbSgbRenderBorder();
       }
       updateWindowSize(videoOption);
       regSetDwordValue("borderOn", gbBorderOn);
+      break;
+    case ID_OPTIONS_GAMEBOY_BORDERAUTOMATIC:
+      gbBorderAutomatic = !gbBorderAutomatic;
+      if(emulating && cartridgeType == 1 && gbBorderOn) {
+        gbSgbRenderBorder();
+        updateWindowSize(videoOption);
+      }
+      regSetDwordValue("borderAutomatic", gbBorderAutomatic);
       break;
     case ID_OPTIONS_GAMEBOY_PRINTER:
       winGbPrinterEnabled = !winGbPrinterEnabled;
@@ -5071,7 +5083,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
     recentFiles[i] = strdup(s);
   }
   
-  gbBorderOn = regQueryDwordValue("borderOn", 0);
+  winGbBorderOn = regQueryDwordValue("borderOn", 0);
+  gbBorderAutomatic = regQueryDwordValue("borderAutomatic", 0);
   gbEmulatorType = regQueryDwordValue("emulatorType", 1);
   if(gbEmulatorType < 0 || gbEmulatorType > 5)
     gbEmulatorType = 1;
@@ -5322,6 +5335,7 @@ BOOL fileOpen()
 #else
     emuCount = 1000;
 #endif
+    gbBorderOn = winGbBorderOn;
     if(autoIPS) {
       int size = gbRomSize;
       utilApplyIPS(ipsname, &gbRom, &size);
@@ -6897,4 +6911,11 @@ void winOutput(char *s, u32 addr)
     }
     toolsLog((char *)(LPCSTR)str);
   }  
+}
+
+void systemGbBorderOn()
+{
+  if(emulating && cartridgeType == 1 && gbBorderOn) {
+    updateWindowSize(videoOption);
+  }
 }

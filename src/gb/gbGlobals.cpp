@@ -45,6 +45,7 @@ int gbColorOption = 0;
 int gbPaletteOption = 0;
 int gbEmulatorType = 1;
 int gbBorderOn = 1;
+int gbBorderAutomatic = 0;
 int gbBorderLineSkip = 160;
 int gbBorderRowSkip = 0;
 int gbBorderColumnSkip = 0;

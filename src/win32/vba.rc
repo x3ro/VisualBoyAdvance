@@ -1743,6 +1743,8 @@ BEGIN
 
             MENUITEM "&Printer",                    ID_OPTIONS_GAMEBOY_PRINTER
 
+            MENUITEM "Border Automatic",            ID_OPTIONS_GAMEBOY_BORDERAUTOMATIC
+
             MENUITEM SEPARATOR
             MENUITEM "&Automatic",                  ID_OPTIONS_GAMEBOY_AUTOMATIC
 

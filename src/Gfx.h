@@ -25,11 +25,6 @@
 
 #include "Port.h"
 
-extern int redShift;
-extern int greenShift;
-extern int blueShift;
-extern int colorDepth;
-
 void gfxDrawTextScreen(u16, u16, u16, u32 *);
 void gfxDrawRotScreen(u16,
                       u16, u16,

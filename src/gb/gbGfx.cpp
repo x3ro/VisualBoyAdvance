@@ -58,29 +58,7 @@ u8 gbInvertTab[256] = {
 };
 
 u16 gbLineMix[160];
-/*
-static void gbDraw24Packed(u32 * p, u16 v)
-{
-  if(redShift < blueShift) {
-    // RGB order
-    *p = ((v & 0x001f) << 3) | // R
-      ((v & 0x03e0) << 6) | // G
-      ((v & 0x7c00) << 9);  // B
-  } else {
-    // BGR order
-    *p = ((v & 0x7c00) >> 7)  | // B
-      ((v & 0x03e0) << 6)  | // G
-      ((v & 0x001f) << 19);   // R
-  }
-}
 
-static void gbDraw24(u32 * p, u16 v)
-{
-  *p = ((v & 0x001f) << redShift)|
-    (((v >> 5) & 0x1f) << greenShift)|
-    (((v >> 10) & 0x1f) << blueShift);
-}
-*/
 void gbRenderLine()
 {
   u8 * bank0;
