@@ -2981,13 +2981,14 @@ void elfCleanUp()
     elfFdes = NULL;
     elfFdeCount = 0;
   }
-  ELFcie *cie = elfCies;
 
+  ELFcie *cie = elfCies;
   while(cie) {
     ELFcie *next = cie->next;
     free(cie);
     cie = next;
   }
+  elfCies = NULL;
 
   if(elfFileData) {
     free(elfFileData);
