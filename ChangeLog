@@ -1,3 +1,8 @@
+2003-01-08  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (systemMessage): fixed problem displaying error messages in fullscreen mode
+	* src/win32/Win32.cpp: added support to other resolutions for fullscreen mode
+
 2003-01-05  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (detectMMX): added support for AMD CPUs

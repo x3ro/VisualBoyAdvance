@@ -1,4 +1,4 @@
-Welcome to version 1.3.1 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
+Welcome to version 1.4 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
 emulator for Windows, Linux and BeOS.
 
 Features:
@@ -7,9 +7,10 @@ Features:
 - configurable GB/GBA keys, including joystick support
 - option to use BIOS file
 - directory selection for save state, battery and screen capture
-- fullscreen mode
+- fullscreen mode (selectable resolution)
 - video sizes 1x, 2x, 3x and 4x
-- graphic filters Normal, TV Mode, 2xSaI, Super 2xSaI and Super Eagle
+- graphic filters Normal, TV Mode, 2xSaI, Super 2xSaI and more
+- interframe blending support
 - same emulation core as VisualBoyAdvance: GB and GBA emulation
 - built-in ARM/THUMB assembly debugger
 - 10 save states accesible through keyboard

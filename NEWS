@@ -7,7 +7,10 @@ Core changes:
 
 Windows version:
 - allows AMD CPUs to take advantage of MMX code
+- added support to select video mode for fullscreen mode
+- fixed problem displaying error messages in fullscreen mode
 - fixed tile viewer to display all tiles in 256 mode
+- fixed Visual Studio project files so that they work on other computers
 
 Version 1.3.1:
 
