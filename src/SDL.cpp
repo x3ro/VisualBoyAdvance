@@ -117,6 +117,9 @@ int srcHeight = 0;
 int destWidth = 0;
 int destHeight = 0;
 
+int sensorX = 2047;
+int sensorY = 2047;
+
 int filter = 0;
 u8 *delta = NULL;
 
@@ -140,6 +143,7 @@ char batteryDir[2048];
 
 bool sdlButtons[12] = { false, false, false, false, false, false, 
                         false, false, false, false, false, false };
+bool sdlMotionButtons[4] = { false, false, false, false };
 
 int sdlNumDevices = 0;
 SDL_Joystick **sdlDevices = NULL;
@@ -846,6 +850,10 @@ soundQuality);
       soundReverse = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "removeIntros")) {
       removeIntros = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "saveType")) {
+      saveType = sdlFromHex(value);
+      if(saveType < 0 || saveType > 4)
+        saveType = 0;
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -959,10 +967,17 @@ void sdlReadBattery()
 
 void sdlUpdateKey(int key, bool down)
 {
-  for(int i = 0 ; i < 12; i++) {
+  int i;
+  for(i = 0 ; i < 12; i++) {
     if((joypad[i] & 0xf000) == 0) {
       if(key == joypad[i])
         sdlButtons[i] = down;
+    }
+  }
+  for(i = 0 ; i < 4; i++) {
+    if((motion[i] & 0xf000) == 0) {
+      if(key == motion[i])
+        sdlMotionButtons[i] = down;
     }
   }
 }
@@ -983,6 +998,17 @@ void sdlUpdateJoyButton(int which,
       }
     }
   }
+  for(i = 0; i < 4; i++) {
+    int dev = (motion[i] >> 12);
+    int b = motion[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (b >= 128) && (b == (button+128))) {
+        sdlMotionButtons[i] = pressed;
+      }
+    }
+  }  
 }
 
 void sdlUpdateJoyHat(int which,
@@ -1013,10 +1039,37 @@ void sdlUpdateJoyHat(int which,
           v = value & SDL_HAT_LEFT;
           break;
         }
-  sdlButtons[i] = (v ? true : false);
+        sdlButtons[i] = (v ? true : false);
       }
     }
-  }    
+  }
+  for(i = 0; i < 4; i++) {
+    int dev = (motion[i] >> 12);
+    int a = motion[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (a>=32) && (a < 48) && (((a&15)>>2) == hat)) {
+        int dir = a & 3;
+        int v = 0;
+        switch(dir) {
+        case 0:
+          v = value & SDL_HAT_UP;
+          break;
+        case 1:
+          v = value & SDL_HAT_DOWN;
+          break;
+        case 2:
+          v = value & SDL_HAT_RIGHT;
+          break;
+        case 3:
+          v = value & SDL_HAT_LEFT;
+          break;
+        }
+        sdlMotionButtons[i] = (v ? true : false);
+      }
+    }
+  }      
 }
 
 void sdlUpdateJoyAxis(int which,
@@ -1032,6 +1085,17 @@ void sdlUpdateJoyAxis(int which,
 
       if((dev == which) && (a < 32) && ((a>>1) == axis)) {
         sdlButtons[i] = (a & 1) ? (value > 16384) : (value < -16384);
+      }
+    }
+  }  
+  for(i = 0; i < 4; i++) {
+    int dev = (motion[i] >> 12);
+    int a = motion[i] & 0xfff;
+    if(dev) {
+      dev--;
+
+      if((dev == which) && (a < 32) && ((a>>1) == axis)) {
+        sdlMotionButtons[i] = (a & 1) ? (value > 16384) : (value < -16384);
       }
     }
   }  
@@ -1307,6 +1371,12 @@ void usage(char *cmd)
         printf("    7 - AdvanceMAME Scale2x\n");
         printf("    8 - Simple2x\n");
         printf("  -s<frameskip> Set frame skip (0...9)\n");
+        printf("  -t<type> Set the available save type\n");
+        printf("    0 - Automatic (EEPROM, SRAM, FLASH)\n");
+        printf("    1 - EEPROM\n");
+        printf("    2 - SRAM\n");
+        printf("    3 - FLASH\n");
+        printf("    4 - EEPROM+Sensor\n");
         printf("  -v<verbose> Set verbose logging (trace.log)\n");
         printf("    1   - SWI\n");
         printf("    2   - Unaligned memory access\n");
@@ -1342,7 +1412,7 @@ int main(int argc, char **argv)
 
   sdlReadPreferences();
   
-  while((op = getopt(argc, argv, "FNY::G::D::b::df::s::v::1234")) != -1) {
+  while((op = getopt(argc, argv, "FNY:G:D:b:df:s:t:v:1234")) != -1) {
     switch(op) {
     case 'b':
       useBios = true;
@@ -1438,6 +1508,15 @@ int main(int argc, char **argv)
         frameSkip = 2;
         gbFrameSkip = 0;
       }
+      break;
+    case 't':
+      if(optarg) {
+        int a = atoi(optarg);
+        if(a < 0 || a > 4)
+          a = 0;
+        cpuSaveType = a;
+      }
+      break;
     case 'v':
       if(optarg) {
         systemVerbose = atoi(optarg);
@@ -2153,16 +2232,59 @@ u32 systemGetClock()
 
 void systemUpdateMotionSensor()
 {
+  if(sdlMotionButtons[KEY_LEFT]) {
+    sensorX += 3;
+    if(sensorX > 2197)
+      sensorX = 2197;
+    if(sensorX < 2047)
+      sensorX = 2057;
+  } else if(sdlMotionButtons[KEY_RIGHT]) {
+    sensorX -= 3;
+    if(sensorX < 1897)
+      sensorX = 1897;
+    if(sensorX > 2047)
+      sensorX = 2037;
+  } else if(sensorX > 2047) {
+    sensorX -= 2;
+    if(sensorX < 2047)
+      sensorX = 2047;
+  } else {
+    sensorX += 2;
+    if(sensorX > 2047)
+      sensorX = 2047;
+  }
+
+  if(sdlMotionButtons[KEY_UP]) {
+    sensorY += 3;
+    if(sensorY > 2197)
+      sensorY = 2197;
+    if(sensorY < 2047)
+      sensorY = 2057;
+  } else if(sdlMotionButtons[KEY_DOWN]) {
+    sensorY -= 3;
+    if(sensorY < 1897)
+      sensorY = 1897;
+    if(sensorY > 2047)
+      sensorY = 2037;
+  } else if(sensorY > 2047) {
+    sensorY -= 2;
+    if(sensorY < 2047)
+      sensorY = 2047;
+  } else {
+    sensorY += 2;
+    if(sensorY > 2047)
+      sensorY = 2047;
+  }    
 }
 
 int systemGetSensorX()
 {
-        return 0;
+  return sensorX;
 }
 
 int systemGetSensorY()
 {
-        return 0;
+  return sensorY;
 }
 
 void systemGbPrint(u8 *data,int pages,int feed,int palette, int contrast)

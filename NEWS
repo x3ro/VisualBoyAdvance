@@ -22,6 +22,7 @@ Windows changes:
 - support to export GamesharkAdvance save games
 - fixed bug when changing directories in the Directories... dialog
 SDL version:
+- added emulation for motion sensor
 - fixed crash when printing void * variables
 - fixed crash when -b specified incorrectly
 - fixed warning when reading configuration file about disableMMX if compiled

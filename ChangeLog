@@ -1,3 +1,7 @@
+2002-11-07  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp (systemUpdateMotionSensor): implemented motion sensor for the SDL version
+
 2002-11-06  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/elf.cpp: fix wrong usage of CPUReadMemory

@@ -860,6 +860,8 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   char temp[0x1001c];
   memset(temp, 0, 28);
   memcpy(temp, &rom[0xa0], 16); // copy internal name
+  temp[0x10] = rom[0xbe]; // reserved area (old checksum)
+  temp[0x11] = rom[0xbf]; // reserved area (old checksum)
   temp[0x12] = rom[0xbd]; // complement check
   temp[0x13] = rom[0xb0]; // maker
   temp[0x14] = 1; // 1 save ?
