@@ -45,8 +45,6 @@ extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur32(u8*,u32,u8*,u8*,u32,int,int);
-extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
-extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
@@ -63,6 +61,12 @@ extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines32(u8*,u32,u8*,u8*,u32,int,int);
+extern void ScanlinesTV(u8*,u32,u8*,u8*,u32,int,int);
+extern void ScanlinesTV32(u8*,u32,u8*,u8*,u32,int,int);
+extern void hq2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void hq2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void lq2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void lq2x32(u8*,u32,u8*,u8*,u32,int,int);
 
 extern void SmartIB(u8*,u32,int,int);
 extern void SmartIB32(u8*,u32,int,int);
@@ -224,7 +228,6 @@ VBA::VBA()
   skinEnabled = false;
   skinButtons = 0;
   regEnabled = false;
-  synchronize = true;
   pauseWhenInactive = true;
   speedupToggle = false;
   useOldSync = false;
@@ -260,6 +263,7 @@ VBA::VBA()
   wasPaused = false;
   frameskipadjust = 0;
   autoLoadMostRecent = false;
+  fsMaxScale = 0;
   
   updateCount = 0;
   
@@ -277,8 +281,6 @@ VBA::VBA()
   emuCount = 0;
 
   hAccel = NULL;
-
-  screenSaverState = getScreenSaverEnable();
 }
 
 VBA::~VBA()
@@ -342,9 +344,6 @@ VBA::~VBA()
 
   if(rewindMemory)
     free(rewindMemory);
-
-  if(screenSaverState)
-    setScreenSaverEnable(screenSaverState);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -608,7 +607,7 @@ void VBA::updateFilter()
       filterFunction = NULL;
       break;
     case 1:
-      filterFunction = TVMode;
+      filterFunction = ScanlinesTV;
       break;
     case 2:
       filterFunction = _2xSaI;
@@ -640,6 +639,12 @@ void VBA::updateFilter()
     case 11:
       filterFunction = Scanlines;
       break;
+    case 12:
+      filterFunction = hq2x;
+      break;
+    case 13:
+      filterFunction = lq2x;
+      break;
     }
     
     if(filterType != 0) {
@@ -659,7 +664,7 @@ void VBA::updateFilter()
         filterFunction = NULL;
         break;
       case 1:
-        filterFunction = TVMode32;
+        filterFunction = ScanlinesTV32;
         break;
       case 2:
         filterFunction = _2xSaI32;
@@ -690,6 +695,12 @@ void VBA::updateFilter()
         break;
       case 11:
         filterFunction = Scanlines32;
+        break;
+      case 12:
+        filterFunction = hq2x32;
+        break;
+      case 13:
+        filterFunction = lq2x32;
         break;
       }
       if(filterType != 0) {
@@ -1242,7 +1253,7 @@ void VBA::loadSettings()
     glType = 0;
 
   filterType = regQueryDwordValue("filter", 0);
-  if(filterType < 0 || filterType > 11)
+  if(filterType < 0 || filterType > 13)
     filterType = 0;
 
   disableMMX = regQueryDwordValue("disableMMX", 0) ? true: false;
@@ -1372,6 +1383,10 @@ void VBA::loadSettings()
 
   autoLoadMostRecent = regQueryDwordValue("autoLoadMostRecent", false) ? true :
     false;
+  
+  cheatsEnabled = regQueryDwordValue("cheatsEnabled", true) ? true : false;
+
+  fsMaxScale = regQueryDwordValue("fsMaxScale", 0);
 }
 
 void VBA::updateFrameSkip()
@@ -1572,6 +1587,8 @@ void VBA::updateWindowSize(int value)
       scaleX = (fsWidth / sizeX);
       scaleY = (fsHeight / sizeY);
       int min = scaleX < scaleY ? scaleX : scaleY;
+      if(fsMaxScale)
+        min = min > fsMaxScale ? fsMaxScale : min;
       surfaceSizeX = min * sizeX;
       surfaceSizeY = min * sizeY;
       if((fullScreenStretch && (display != NULL && 
@@ -2127,24 +2144,19 @@ void VBA::saveSettings()
 
   regSetDwordValue("joypadDefault", joypadDefault);
   regSetDwordValue("autoLoadMostRecent", autoLoadMostRecent);
+  regSetDwordValue("cheatsEnabled", cheatsEnabled);
+  regSetDwordValue("fsMaxScale", fsMaxScale);
 }
 
-BOOL VBA::getScreenSaverEnable()
+void VBA::enablePowerManagement()
 {
-  if(SystemParametersInfo(SPI_GETSCREENSAVEACTIVE,
-                          0,
-                          &screenSaverState,
-                          0))
-    return screenSaverState;
-  return FALSE;
+  SetThreadExecutionState(ES_CONTINUOUS);
 }
 
-void VBA::setScreenSaverEnable(BOOL e)
+void VBA::disablePowerManagement()
 {
-  SystemParametersInfo(SPI_SETSCREENSAVEACTIVE,
-                       e,
-                       NULL,
-                       SPIF_SENDWININICHANGE);  
+  SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | 
+                          ES_DISPLAY_REQUIRED);
 }
 
 void winSignal(int, int)
