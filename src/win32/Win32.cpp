@@ -107,7 +107,7 @@ u32 throttleLastTime = 0;
 
 u32 autoFrameSkipLastTime = 0;
 
-BOOL autoFrameSkip = TRUE;
+BOOL autoFrameSkip = FALSE;
 int showSpeed = 1;
 BOOL showSpeedTransparent = TRUE;
 BOOL recentFreeze = FALSE;
@@ -4981,7 +4981,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   if(gbFrameSkip < 0 || gbFrameSkip > 9)
     gbFrameSkip = 0;
 
-  autoFrameSkip = regQueryDwordValue("autoFrameSkip", TRUE) ? TRUE : FALSE;
+  autoFrameSkip = regQueryDwordValue("autoFrameSkip", FALSE) ? TRUE : FALSE;
   
   vsync = regQueryDwordValue("vsync", 0);
   synchronize = regQueryDwordValue("synchronize", 1) ? true : false;
