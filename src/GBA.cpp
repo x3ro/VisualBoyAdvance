@@ -3552,8 +3552,12 @@ void CPULoop(int ticks)
                 lastTime = time;
                 count = 0;
               }
-              
-              P1 = 0x03FF ^ systemReadJoypad();
+              u32 joy = 0;
+              // update joystick information
+              if(systemReadJoypads())
+                // read default joystick
+                joy = systemReadJoypad(-1);
+              P1 = 0x03FF ^ (joy & 0x3FF);
               if(cpuEEPROMSensorEnabled)
                 systemUpdateMotionSensor();              
               UPDATE_REG(0x130, P1);
@@ -3573,7 +3577,7 @@ void CPULoop(int ticks)
                 }
               }
               
-              u32 ext = systemReadJoypadExtended();
+              u32 ext = (joy >> 10);
               cheatsCheckKeys(P1^0x3FF, ext);
               speedup = (ext & 1) ? true : false;
               capture = (ext & 2) ? true : false;

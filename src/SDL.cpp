@@ -175,8 +175,17 @@ char batteryDir[2048];
 
 #define _stricmp strcasecmp
 
-bool sdlButtons[12] = { false, false, false, false, false, false, 
-                        false, false, false, false, false, false };
+bool sdlButtons[4][12] = {
+  { false, false, false, false, false, false, 
+    false, false, false, false, false, false },
+  { false, false, false, false, false, false,
+    false, false, false, false, false, false },
+  { false, false, false, false, false, false,
+    false, false, false, false, false, false },
+  { false, false, false, false, false, false,
+    false, false, false, false, false, false }
+};
+
 bool sdlMotionButtons[4] = { false, false, false, false };
 
 int sdlNumDevices = 0;
@@ -202,6 +211,8 @@ int yuvType = 0;
 bool removeIntros = false;
 int sdlFlashSize = 0;
 int sdlAutoIPS = 1;
+
+int sdlDefaultJoypad = 0;
 
 extern void debuggerSignal(int,int);
 
@@ -240,13 +251,17 @@ enum {
   KEY_BUTTON_SPEED, KEY_BUTTON_CAPTURE
 };
 
-u16 joypad[12] = {
-  SDLK_LEFT,  SDLK_RIGHT,
-  SDLK_UP,    SDLK_DOWN,
-  SDLK_z,     SDLK_x,
-  SDLK_RETURN,SDLK_BACKSPACE,
-  SDLK_a,     SDLK_s,
-  SDLK_SPACE, SDLK_F12
+u16 joypad[4][12] = {
+  { SDLK_LEFT,  SDLK_RIGHT,
+    SDLK_UP,    SDLK_DOWN,
+    SDLK_z,     SDLK_x,
+    SDLK_RETURN,SDLK_BACKSPACE,
+    SDLK_a,     SDLK_s,
+    SDLK_SPACE, SDLK_F12
+  },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 u16 defaultJoypad[12] = {
@@ -930,29 +945,101 @@ void sdlReadPreferences(FILE *f)
     }
 
     if(!strcmp(key,"Joy0_Left")) {
-      joypad[KEY_LEFT] = sdlFromHex(value);
+      joypad[0][KEY_LEFT] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Right")) {
-      joypad[KEY_RIGHT] = sdlFromHex(value);
+      joypad[0][KEY_RIGHT] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Up")) {
-      joypad[KEY_UP] = sdlFromHex(value);
+      joypad[0][KEY_UP] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Down")) {
-      joypad[KEY_DOWN] = sdlFromHex(value);
+      joypad[0][KEY_DOWN] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_A")) {
-      joypad[KEY_BUTTON_A] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_A] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_B")) {
-      joypad[KEY_BUTTON_B] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_B] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_L")) {
-      joypad[KEY_BUTTON_L] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_L] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_R")) {
-      joypad[KEY_BUTTON_R] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_R] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Start")) {
-      joypad[KEY_BUTTON_START] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_START] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Select")) {
-      joypad[KEY_BUTTON_SELECT] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_SELECT] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Speed")) {
-      joypad[KEY_BUTTON_SPEED] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_SPEED] = sdlFromHex(value);
     } else if(!strcmp(key, "Joy0_Capture")) {
-      joypad[KEY_BUTTON_CAPTURE] = sdlFromHex(value);
+      joypad[0][KEY_BUTTON_CAPTURE] = sdlFromHex(value);
+    } else if(!strcmp(key,"Joy1_Left")) {
+      joypad[1][KEY_LEFT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Right")) {
+      joypad[1][KEY_RIGHT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Up")) {
+      joypad[1][KEY_UP] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Down")) {
+      joypad[1][KEY_DOWN] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_A")) {
+      joypad[1][KEY_BUTTON_A] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_B")) {
+      joypad[1][KEY_BUTTON_B] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_L")) {
+      joypad[1][KEY_BUTTON_L] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_R")) {
+      joypad[1][KEY_BUTTON_R] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Start")) {
+      joypad[1][KEY_BUTTON_START] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Select")) {
+      joypad[1][KEY_BUTTON_SELECT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Speed")) {
+      joypad[1][KEY_BUTTON_SPEED] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy1_Capture")) {
+      joypad[1][KEY_BUTTON_CAPTURE] = sdlFromHex(value);
+    } else if(!strcmp(key,"Joy2_Left")) {
+      joypad[2][KEY_LEFT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Right")) {
+      joypad[2][KEY_RIGHT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Up")) {
+      joypad[2][KEY_UP] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Down")) {
+      joypad[2][KEY_DOWN] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_A")) {
+      joypad[2][KEY_BUTTON_A] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_B")) {
+      joypad[2][KEY_BUTTON_B] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_L")) {
+      joypad[2][KEY_BUTTON_L] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_R")) {
+      joypad[2][KEY_BUTTON_R] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Start")) {
+      joypad[2][KEY_BUTTON_START] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Select")) {
+      joypad[2][KEY_BUTTON_SELECT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Speed")) {
+      joypad[2][KEY_BUTTON_SPEED] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy2_Capture")) {
+      joypad[2][KEY_BUTTON_CAPTURE] = sdlFromHex(value);
+    } else if(!strcmp(key,"Joy4_Left")) {
+      joypad[4][KEY_LEFT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Right")) {
+      joypad[4][KEY_RIGHT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Up")) {
+      joypad[4][KEY_UP] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Down")) {
+      joypad[4][KEY_DOWN] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_A")) {
+      joypad[4][KEY_BUTTON_A] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_B")) {
+      joypad[4][KEY_BUTTON_B] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_L")) {
+      joypad[4][KEY_BUTTON_L] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_R")) {
+      joypad[4][KEY_BUTTON_R] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Start")) {
+      joypad[4][KEY_BUTTON_START] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Select")) {
+      joypad[4][KEY_BUTTON_SELECT] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Speed")) {
+      joypad[4][KEY_BUTTON_SPEED] = sdlFromHex(value);
+    } else if(!strcmp(key, "Joy4_Capture")) {
+      joypad[4][KEY_BUTTON_CAPTURE] = sdlFromHex(value);
     } else if(!strcmp(key, "Motion_Left")) {
       motion[KEY_LEFT] = sdlFromHex(value);
     } else if(!strcmp(key, "Motion_Right")) {
@@ -1177,10 +1264,12 @@ void sdlReadBattery()
 void sdlUpdateKey(int key, bool down)
 {
   int i;
-  for(i = 0 ; i < 12; i++) {
-    if((joypad[i] & 0xf000) == 0) {
-      if(key == joypad[i])
-        sdlButtons[i] = down;
+  for(int j = 0; j < 4; j++) {
+    for(i = 0 ; i < 12; i++) {
+      if((joypad[j][i] & 0xf000) == 0) {
+        if(key == joypad[j][i])
+          sdlButtons[j][i] = down;
+      }
     }
   }
   for(i = 0 ; i < 4; i++) {
@@ -1196,14 +1285,16 @@ void sdlUpdateJoyButton(int which,
                         bool pressed)
 {
   int i;
-  for(i = 0; i < 12; i++) {
-    int dev = (joypad[i] >> 12);
-    int b = joypad[i] & 0xfff;
-    if(dev) {
-      dev--;
-
-      if((dev == which) && (b >= 128) && (b == (button+128))) {
-        sdlButtons[i] = pressed;
+  for(int j = 0; j < 4; j++) {
+    for(i = 0; i < 12; i++) {
+      int dev = (joypad[j][i] >> 12);
+      int b = joypad[j][i] & 0xfff;
+      if(dev) {
+        dev--;
+        
+        if((dev == which) && (b >= 128) && (b == (button+128))) {
+          sdlButtons[j][i] = pressed;
+        }
       }
     }
   }
@@ -1225,30 +1316,32 @@ void sdlUpdateJoyHat(int which,
                      int value)
 {
   int i;
-  for(i = 0; i < 12; i++) {
-    int dev = (joypad[i] >> 12);
-    int a = joypad[i] & 0xfff;
-    if(dev) {
-      dev--;
-
-      if((dev == which) && (a>=32) && (a < 48) && (((a&15)>>2) == hat)) {
-        int dir = a & 3;
-        int v = 0;
-        switch(dir) {
-        case 0:
-          v = value & SDL_HAT_UP;
-          break;
-        case 1:
-          v = value & SDL_HAT_DOWN;
-          break;
-        case 2:
-          v = value & SDL_HAT_RIGHT;
-          break;
-        case 3:
-          v = value & SDL_HAT_LEFT;
-          break;
+  for(int j = 0; j < 4; j++) {
+    for(i = 0; i < 12; i++) {
+      int dev = (joypad[j][i] >> 12);
+      int a = joypad[j][i] & 0xfff;
+      if(dev) {
+        dev--;
+        
+        if((dev == which) && (a>=32) && (a < 48) && (((a&15)>>2) == hat)) {
+          int dir = a & 3;
+          int v = 0;
+          switch(dir) {
+          case 0:
+            v = value & SDL_HAT_UP;
+            break;
+          case 1:
+            v = value & SDL_HAT_DOWN;
+            break;
+          case 2:
+            v = value & SDL_HAT_RIGHT;
+            break;
+          case 3:
+            v = value & SDL_HAT_LEFT;
+            break;
+          }
+          sdlButtons[j][i] = (v ? true : false);
         }
-        sdlButtons[i] = (v ? true : false);
       }
     }
   }
@@ -1286,17 +1379,19 @@ void sdlUpdateJoyAxis(int which,
                       int value)
 {
   int i;
-  for(i = 0; i < 12; i++) {
-    int dev = (joypad[i] >> 12);
-    int a = joypad[i] & 0xfff;
-    if(dev) {
-      dev--;
-
-      if((dev == which) && (a < 32) && ((a>>1) == axis)) {
-        sdlButtons[i] = (a & 1) ? (value > 16384) : (value < -16384);
+  for(int j = 0; j < 4; j++) {
+    for(i = 0; i < 12; i++) {
+      int dev = (joypad[j][i] >> 12);
+      int a = joypad[j][i] & 0xfff;
+      if(dev) {
+        dev--;
+        
+        if((dev == which) && (a < 32) && ((a>>1) == axis)) {
+          sdlButtons[j][i] = (a & 1) ? (value > 16384) : (value < -16384);
+        }
       }
     }
-  }  
+  }
   for(i = 0; i < 4; i++) {
     int dev = (motion[i] >> 12);
     int a = motion[i] & 0xfff;
@@ -1348,28 +1443,30 @@ void sdlCheckKeys()
   int i;
 
   bool usesJoy = false;
-  
-  for(i = 0; i < 12; i++) {
-    int dev = joypad[i] >> 12;
-    if(dev) {
-      dev--;
-      bool ok = false;
-      
-      if(sdlDevices) {
-        if(dev < sdlNumDevices) {
-          if(sdlDevices[dev] == NULL) {
-            sdlDevices[dev] = SDL_JoystickOpen(dev);
-          }
 
-          ok = sdlCheckJoyKey(joypad[i]);
-        } else
-          ok = false;
+  for(int j = 0; j < 4; j++) {
+    for(i = 0; i < 12; i++) {
+      int dev = joypad[j][i] >> 12;
+      if(dev) {
+        dev--;
+        bool ok = false;
+        
+        if(sdlDevices) {
+          if(dev < sdlNumDevices) {
+            if(sdlDevices[dev] == NULL) {
+              sdlDevices[dev] = SDL_JoystickOpen(dev);
+            }
+            
+            ok = sdlCheckJoyKey(joypad[j][i]);
+          } else
+            ok = false;
+        }
+        
+        if(!ok)
+          joypad[j][i] = defaultJoypad[i];
+        else
+          usesJoy = true;
       }
-      
-      if(!ok)
-        joypad[i] = defaultJoypad[i];
-      else
-        usesJoy = true;
     }
   }
 
@@ -1385,7 +1482,7 @@ void sdlCheckKeys()
             sdlDevices[dev] = SDL_JoystickOpen(dev);
           }
           
-          ok = sdlCheckJoyKey(joypad[i]);
+          ok = sdlCheckJoyKey(motion[i]);
         } else
           ok = false;
       }
@@ -1951,8 +2048,15 @@ int main(int argc, char **argv)
         emuUpdateCPSR = NULL;
         emuHasDebugger = false;
         emuCount = 70000/4;
-        if(sdlAutoIPS)
-          utilApplyIPS(ipsname, gbRom);
+        if(sdlAutoIPS) {
+          int size = gbRomSize;
+          utilApplyIPS(ipsname, &gbRom, &size);
+          if(size != gbRomSize) {
+            extern bool gbUpdateSizes();
+            gbUpdateSizes();
+            gbReset();
+          }
+        }
       }
     } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
       failed = !CPULoadRom(szFile);
@@ -1977,8 +2081,13 @@ int main(int argc, char **argv)
         
         CPUInit(biosFileName, useBios);
         CPUReset();
-        if(sdlAutoIPS)
-          utilApplyIPS(ipsname, rom);
+        if(sdlAutoIPS) {
+          int size = 0x2000000;
+          utilApplyIPS(ipsname, &rom, &size);
+          if(size != 0x2000000) {
+            CPUReset();
+          }
+        }
       }
 #ifdef GP_EMULATION
     } else if(GPIsGPImage(szFile) || cartridgeType == 2) {
@@ -2474,29 +2583,43 @@ void systemDrawScreen()
   SDL_Flip(surface);
 }
 
-u32 systemReadJoypad()
+bool systemReadJoypads()
 {
+  return true;
+}
+
+u32 systemReadJoypad(int which)
+{
+  if(which < 0 || which > 3)
+    which = sdlDefaultJoypad;
+  
   u32 res = 0;
-  if(sdlButtons[KEY_BUTTON_A])
+  
+  if(sdlButtons[which][KEY_BUTTON_A])
     res |= 1;
-  if(sdlButtons[KEY_BUTTON_B])
+  if(sdlButtons[which][KEY_BUTTON_B])
     res |= 2;
-  if(sdlButtons[KEY_BUTTON_SELECT])
+  if(sdlButtons[which][KEY_BUTTON_SELECT])
     res |= 4;
-  if(sdlButtons[KEY_BUTTON_START])
+  if(sdlButtons[which][KEY_BUTTON_START])
     res |= 8;
-  if(sdlButtons[KEY_RIGHT])
+  if(sdlButtons[which][KEY_RIGHT])
     res |= 16;
-  if(sdlButtons[KEY_LEFT])
+  if(sdlButtons[which][KEY_LEFT])
     res |= 32;
-  if(sdlButtons[KEY_UP])
+  if(sdlButtons[which][KEY_UP])
     res |= 64;
-  if(sdlButtons[KEY_DOWN])
+  if(sdlButtons[which][KEY_DOWN])
     res |= 128;
-  if(sdlButtons[KEY_BUTTON_R])
+  if(sdlButtons[which][KEY_BUTTON_R])
     res |= 256;
-  if(sdlButtons[KEY_BUTTON_L])
+  if(sdlButtons[which][KEY_BUTTON_L])
     res |= 512;
+
+  if(sdlButtons[which][KEY_BUTTON_SPEED])
+    res |= 1024;
+  if(sdlButtons[which][KEY_BUTTON_CAPTURE])
+    res |= 2048;
 
   if(autoFire) {
     res &= (~autoFire);
@@ -2577,18 +2700,6 @@ void systemScreenCapture(int a)
   }
 
   systemScreenMessage("Screen capture");
-}
-
-u32 systemReadJoypadExtended()
-{
-  int res = 0;
-
-  if(sdlButtons[KEY_BUTTON_SPEED])
-    res |= 1;
-  if(sdlButtons[KEY_BUTTON_CAPTURE])
-    res |= 2;
-
-  return res;
 }
 
 void soundCallback(void *,u8 *stream,int len)

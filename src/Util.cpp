@@ -58,6 +58,7 @@
  * Nintendo Co., Limited and its subsidiary companies.
  */
 #include <stdio.h>
+#include <stdlib.h>
 
 extern "C" {
 #include <png.h>
@@ -412,12 +413,15 @@ static int utilReadInt(FILE *f, int nbytes)
   return (v);
 }
 
-void utilApplyIPS(char *ips, u8 *rom)
+void utilApplyIPS(char *ips, u8 **r, int *s)
 {
   char buffer[10];
   
   FILE *patch = NULL;
   int offset = 0;
+
+  u8 *rom = *r;
+  int size = *s;
 
   if(!(patch = fopen (ips, "rb"))) {
     return;
@@ -448,6 +452,11 @@ void utilApplyIPS(char *ips, u8 *rom)
     // if not zero, then it is a patch block
     if (len) {
       while(len--) {
+        if(offset >= size) {
+          rom = (u8 *)realloc(rom, (size<<1));
+          *r = rom;
+          *s = size = (size << 1);
+        }
         c = fgetc(patch);
         if(c == EOF) 
           goto err;
@@ -463,6 +472,12 @@ void utilApplyIPS(char *ips, u8 *rom)
       if(c == EOF) 
         goto err;
 
+      if((offset + len) >= size) {
+        rom = (u8 *)realloc(rom, (size<<1));
+        *r = rom;
+        *s = size = (size << 1);        
+      }
+      
       while(len--) 
         rom[offset++] = (u8)c;
     }

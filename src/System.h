@@ -58,8 +58,10 @@ extern bool systemPauseOnFrame();
 extern void systemGbPrint(u8 *,int,int,int,int);
 extern void systemScreenCapture(int);
 extern void systemDrawScreen();
-extern u32 systemReadJoypad();
-extern u32 systemReadJoypadExtended();
+// updates the joystick data
+extern bool systemReadJoypads();
+// return information about the given joystick, -1 for default joystick
+extern u32 systemReadJoypad(int);
 extern u32 systemGetClock();
 extern void systemMessage(int, char *, ...);
 extern void systemSetTitle(char *);

@@ -20,6 +20,6 @@
 #define VBA_UTIL_H
 bool utilWritePNGFile(char *, int, int, u8 *);
 bool utilWriteBMPFile(char *, int, int, u8 *);
-void utilApplyIPS(char *ips, u8 *rom);
+void utilApplyIPS(char *ips, u8 **rom, int *size);
 void utilWriteBMP(char *, int, int, u8 *);
 #endif

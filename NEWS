@@ -3,16 +3,25 @@ Version 1.4:
 Core changes:
 - added bilinear and bilinear plus filters
 - added interframe blending support
+- added support to show speed in fullscreen mode (transparent or opaque)
+- added detailed speed display
+- added autoframeskip support
+- added support for ELF DW_FORM_strp (used by newer GCC versions)
+- added support to enable/disable GB/GBC video layers
 - fixed crash when loading a second ELF file
-- now able to show speed in fullscreen mode
+- fixed missing EMMS instruction in ADVANCEMAME Scale 2x MMX version
 
 Windows version:
 - allows AMD CPUs to take advantage of MMX code
 - added support to select video mode for fullscreen mode
 - added fullscreen triple buffering support
+- added support for multiple joypad configuration
 - fixed problem displaying error messages in fullscreen mode
 - fixed tile viewer to display all tiles in 256 mode
 - fixed Visual Studio project files so that they work on other computers
+- fixed problem with disable SFX not being read when program starts
+- fixed (minimized) screen corruption problem when filter is active in
+  fullscreen mode and emulator is minimized
 
 Version 1.3.1:
 

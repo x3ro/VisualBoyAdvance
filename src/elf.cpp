@@ -85,6 +85,7 @@
 #define DW_AT_virtuality           0x4c
 #define DW_AT_vtable_elem_location 0x4d
 // DWARF 2.1/3.0 extensions
+#define DW_AT_entry_pc             0x52
 #define DW_AT_ranges               0x55
 // ARM Compiler extensions
 #define DW_AT_proc_body            0x2000
@@ -2505,6 +2506,7 @@ CompileUnit *elfParseCompUnit(u8 *data, u8 *abbrevData)
     case DW_AT_language:
     case DW_AT_producer:
     case DW_AT_macro_info:
+    case DW_AT_entry_pc:
       break;
     default:
       fprintf(stderr, "Unknown attribute %02x\n", attr->name);

@@ -1,3 +1,24 @@
+2003-01-25  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (WindowProc): minimize problem when minimizing emulator in fullscreen mode and filter is active
+	* src/win32/Win32.cpp (updateLayersMenu): added support to enable/disable GB/GBC layers
+
+2003-01-21  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/elf.cpp (elfReadProgram): added support for DW_FORM_strp
+	* src/interframe.cpp: added missing EMMS instructions to GCC inline assembly
+	* src/admame.cpp: added missing EMMS instructions to GCC inline assembly
+
+2003-01-20  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (initApp): fixed disable SFX flag not being read
+
+2003-01-18  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/gb/GB.cpp (gbEmulate): changed interface with emulator for joypad
+	* src/GBA.cpp (CPULoop): changed interface with emulator for joypad
+	* src/win32/Win32.cpp: added support for multiple joypad configuration
+
 2003-01-14  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (initApp): fixed problem when video mode was never selected
