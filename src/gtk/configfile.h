@@ -127,17 +127,17 @@ class File : private std::list<Section>
 {
 public:
   File();
-  File(const std::string & _rsFilename);
+  File(const std::string & _rsFile);
   virtual ~File();
 
   bool bSectionExists(const std::string & _rsName);
   Section * poAddSection(const std::string & _rsName);
   Section * poGetSection(const std::string & _rsName);
   void vRemoveSection(const std::string & _rsName);
-  void vLoad(const std::string & _rsFilename,
+  void vLoad(const std::string & _rsFile,
              bool _bAddSection = true,
              bool _bAddKey = true);
-  void vSave(const std::string & _rsFilename);
+  void vSave(const std::string & _rsFile);
   void vClear();
 
   // read only

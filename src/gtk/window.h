@@ -22,12 +22,12 @@
 
 #include <sys/types.h>
 
+#include <libglademm.h>
+#include <gtkmm.h>
+
 #ifndef GTKMM20
 # include "sigccompat.h"
 #endif // ! GTKMM20
-
-#include <libglademm.h>
-#include <gtkmm.h>
 
 #include <string>
 #include <list>
@@ -134,6 +134,9 @@ protected:
   virtual void vOnSaveGame(int _iSlot);
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
+  virtual void vOnRecentReset();
+  virtual void vOnRecentFreezeToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnRecent(std::string _sFile);
   virtual void vOnFileClose();
   virtual void vOnFileExit();
   virtual void vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue);
@@ -206,6 +209,7 @@ private:
   std::string       m_sUserDataDir;
   std::string       m_sConfigFile;
   Config::File      m_oConfig;
+  Config::Section * m_poHistoryConfig;
   Config::Section * m_poDirConfig;
   Config::Section * m_poCoreConfig;
   Config::Section * m_poDisplayConfig;
@@ -213,6 +217,7 @@ private:
 
   Gtk::FileSelection * m_poFileOpenDialog;
   ScreenArea *         m_poScreenArea;
+  Gtk::Menu *          m_poRecentMenu;
   Gtk::CheckMenuItem * m_poFilePauseItem;
   Gtk::CheckMenuItem * m_poUseBiosItem;
   Gtk::CheckMenuItem * m_poSoundOffItem;
@@ -228,7 +233,11 @@ private:
   Gtk::MenuItem * m_apoSaveGameItem[10];
   SGameSlot       m_astGameSlot[10];
 
+  std::list<std::string> m_listHistory;
+
   std::list<Gtk::Widget *> m_listSensitiveWhenPlaying;
+
+  Gtk::Tooltips m_oTooltips;
 
   SigC::Connection m_oEmuSig;
 
@@ -253,13 +262,18 @@ private:
   void vInitSDL();
   void vInitConfig();
   void vCheckConfig();
-  void vLoadConfig(const std::string & _sFilename);
-  void vSaveConfig(const std::string & _sFilename);
+  void vLoadConfig(const std::string & _rsFile);
+  void vSaveConfig(const std::string & _rsFile);
+  void vLoadHistoryFromConfig();
+  void vSaveHistoryToConfig();
+  void vHistoryAdd(const std::string & _rsFile);
+  void vClearHistoryMenu();
+  void vUpdateHistoryMenu();
   void vLoadKeymap();
   void vUpdateScreen();
   void vDrawDefaultScreen();
   void vSetDefaultTitle();
-  bool bLoadROM(const std::string & _rsFilename);
+  bool bLoadROM(const std::string & _rsFile);
   void vLoadBattery();
   void vSaveBattery();
   void vStartEmu();

@@ -11,6 +11,7 @@ gvba_SOURCES = \
 	input.h			\
 	intl.h			\
 	main.cpp		\
+	menuitem.h		\
 	screenarea.cpp		\
 	screenarea.h		\
 	sigccompat.h		\

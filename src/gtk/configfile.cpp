@@ -97,9 +97,9 @@ File::File()
 {
 }
 
-File::File(const string & _rsFilename)
+File::File(const string & _rsFile)
 {
-  vLoad(_rsFilename);
+  vLoad(_rsFile);
 }
 
 File::~File()
@@ -160,11 +160,11 @@ void File::vRemoveSection(const string & _rsName)
   }
 }
 
-void File::vLoad(const string & _rsFilename,
+void File::vLoad(const string & _rsFile,
                  bool _bAddSection,
                  bool _bAddKey)
 {
-  string sBuffer = Glib::file_get_contents(_rsFilename);
+  string sBuffer = Glib::file_get_contents(_rsFile);
   Section * poSection = NULL;
   char ** lines = g_strsplit(sBuffer.c_str(), "\n", 0);
   char * tmp;
@@ -210,9 +210,9 @@ void File::vLoad(const string & _rsFilename,
   g_strfreev(lines);
 }
 
-void File::vSave(const string & _rsFilename)
+void File::vSave(const string & _rsFile)
 {
-  Glib::RefPtr<IOChannel> poFile = IOChannel::create_from_file(_rsFilename, "w");
+  Glib::RefPtr<IOChannel> poFile = IOChannel::create_from_file(_rsFile, "w");
   poFile->set_encoding("");
 
   for (const_iterator poSection = begin();

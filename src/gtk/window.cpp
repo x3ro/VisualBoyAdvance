@@ -32,6 +32,7 @@
 #include "../Sound.h"
 #include "../Util.h"
 
+#include "menuitem.h"
 #include "tools.h"
 #include "intl.h"
 
@@ -118,6 +119,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     vSaveConfig(m_sConfigFile);
   }
 
+  vLoadHistoryFromConfig();
   vLoadKeymap();
 
   Gtk::MenuItem *      poMI;
@@ -178,6 +180,21 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileExit"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileExit));
+
+  // Recent menu
+  //
+  m_poRecentMenu = dynamic_cast<Gtk::Menu *>(_poXml->get_widget("RecentMenu_menu"));
+  vUpdateHistoryMenu();
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("RecentReset"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnRecentReset));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("RecentFreeze"));
+  poCMI->set_active(m_poHistoryConfig->oGetKey<bool>("freeze"));
+  vOnRecentFreezeToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnRecentFreezeToggled),
+                                    poCMI));
 
   // Frameskip menu
   //
@@ -708,6 +725,7 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 Window::~Window()
 {
   vOnFileClose();
+  vSaveHistoryToConfig();
   vSaveConfig(m_sConfigFile);
 
   if (m_poFileOpenDialog != NULL)
@@ -795,6 +813,21 @@ void Window::vInitSDL()
 void Window::vInitConfig()
 {
   m_oConfig.vClear();
+
+  // History section
+  //
+  m_poHistoryConfig = m_oConfig.poAddSection("History");
+  m_poHistoryConfig->vSetKey("freeze", false );
+  m_poHistoryConfig->vSetKey("0",      ""    );
+  m_poHistoryConfig->vSetKey("1",      ""    );
+  m_poHistoryConfig->vSetKey("2",      ""    );
+  m_poHistoryConfig->vSetKey("3",      ""    );
+  m_poHistoryConfig->vSetKey("4",      ""    );
+  m_poHistoryConfig->vSetKey("5",      ""    );
+  m_poHistoryConfig->vSetKey("6",      ""    );
+  m_poHistoryConfig->vSetKey("7",      ""    );
+  m_poHistoryConfig->vSetKey("8",      ""    );
+  m_poHistoryConfig->vSetKey("9",      ""    );
 
   // Directories section
   //
@@ -998,11 +1031,11 @@ void Window::vCheckConfig()
   }
 }
 
-void Window::vLoadConfig(const std::string & _sFilename)
+void Window::vLoadConfig(const std::string & _rsFile)
 {
   try
   {
-    m_oConfig.vLoad(_sFilename, false, false);
+    m_oConfig.vLoad(_rsFile, false, false);
   }
   catch (const Glib::Error & e)
   {
@@ -1017,11 +1050,11 @@ void Window::vLoadConfig(const std::string & _sFilename)
   }
 }
 
-void Window::vSaveConfig(const std::string & _sFilename)
+void Window::vSaveConfig(const std::string & _rsFile)
 {
   try
   {
-    m_oConfig.vSave(_sFilename);
+    m_oConfig.vSave(_rsFile);
   }
   catch (const Glib::Error & e)
   {
@@ -1033,6 +1066,84 @@ void Window::vSaveConfig(const std::string & _sFilename)
                                Gtk::MESSAGE_ERROR,
                                Gtk::BUTTONS_CLOSE);
     oDialog.run();
+  }
+}
+
+void Window::vLoadHistoryFromConfig()
+{
+  char csKey[] = "0";
+  for (int i = 0; i < 10; i++, csKey[0]++)
+  {
+    std::string sFile = m_poHistoryConfig->sGetKey(csKey);
+    if (sFile == "")
+    {
+      break;
+    }
+    m_listHistory.push_back(sFile);
+  }
+}
+
+void Window::vSaveHistoryToConfig()
+{
+  char csKey[] = "0";
+  for (std::list<std::string>::const_iterator it = m_listHistory.begin();
+       it != m_listHistory.end();
+       it++, csKey[0]++)
+  {
+    m_poHistoryConfig->vSetKey(csKey, *it);
+  }
+}
+
+void Window::vHistoryAdd(const std::string & _rsFile)
+{
+  if (m_poHistoryConfig->oGetKey<bool>("freeze"))
+  {
+    return;
+  }
+
+  m_listHistory.remove(_rsFile);
+  m_listHistory.push_front(_rsFile);
+  if (m_listHistory.size() > 10)
+  {
+    m_listHistory.pop_back();
+  }
+
+  vUpdateHistoryMenu();
+}
+
+void Window::vClearHistoryMenu()
+{
+  Gtk::Menu_Helpers::MenuList::iterator it = m_poRecentMenu->items().begin();
+  for (int i = 0; i < 3; i++, it++)
+    ;
+
+  m_poRecentMenu->items().erase(it, m_poRecentMenu->items().end());
+}
+
+void Window::vUpdateHistoryMenu()
+{
+  vClearHistoryMenu();
+
+  guint uiAccelKey = GDK_F1;
+  for (std::list<std::string>::const_iterator it = m_listHistory.begin();
+       it != m_listHistory.end();
+       it++, uiAccelKey++)
+  {
+    Gtk::Image * poImage = Gtk::manage(new Gtk::Image(Gtk::Stock::OPEN, Gtk::ICON_SIZE_MENU));
+    Glib::ustring sLabel = Glib::path_get_basename(*it);
+    VBA::ImageMenuItem * poIMI = Gtk::manage(new VBA::ImageMenuItem(*poImage, sLabel));
+
+    m_oTooltips.set_tip(*poIMI, *it);
+
+    poIMI->signal_activate().connect(SigC::bind<std::string>(
+                                      SigC::slot(*this, &Window::vOnRecent),
+                                      *it));
+
+    poIMI->set_accel_key(Gtk::AccelKey(uiAccelKey, Gdk::CONTROL_MASK));
+    poIMI->accelerate(*this);
+
+    poIMI->show();
+    m_poRecentMenu->items().push_back(*poIMI);
   }
 }
 
@@ -1213,24 +1324,24 @@ void Window::vComputeFrameskip(int _iRate)
   m_uiThrottleLastTime = uiTime;
 }
 
-bool Window::bLoadROM(const std::string & _rsFilename)
+bool Window::bLoadROM(const std::string & _rsFile)
 {
   vOnFileClose();
 
-  m_sRomFile = _rsFilename;
-  const char * csFilename = _rsFilename.c_str();
+  m_sRomFile = _rsFile;
+  const char * csFile = _rsFile.c_str();
 
-  IMAGE_TYPE eType = utilFindType(csFilename);
+  IMAGE_TYPE eType = utilFindType(csFile);
   if (eType == IMAGE_UNKNOWN)
   {
-    systemMessage(0, _("Unknown file type %s"), csFilename);
+    systemMessage(0, _("Unknown file type %s"), csFile);
     return false;
   }
 
   bool bLoaded = false;
   if (eType == IMAGE_GB)
   {
-    bLoaded = gbLoadRom(csFilename);
+    bLoaded = gbLoadRom(csFile);
     if (bLoaded)
     {
       m_eCartridge = CartridgeGB;
@@ -1239,7 +1350,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
   }
   else if (eType == IMAGE_GBA)
   {
-    int iSize = CPULoadRom(csFilename);
+    int iSize = CPULoadRom(csFile);
     bLoaded = (iSize > 0);
     if (bLoaded)
     {
@@ -1262,7 +1373,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
 
   if (! bLoaded)
   {
-    systemMessage(0, _("Failed to load file %s"), csFilename);
+    systemMessage(0, _("Failed to load file %s"), csFile);
     return false;
   }
 
@@ -1283,6 +1394,7 @@ bool Window::bLoadROM(const std::string & _rsFilename)
   }
 
   vUpdateGameSlots();
+  vHistoryAdd(_rsFile);
 
   for (std::list<Gtk::Widget *>::iterator it = m_listSensitiveWhenPlaying.begin();
        it != m_listSensitiveWhenPlaying.end();

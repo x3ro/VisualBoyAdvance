@@ -168,6 +168,22 @@ void Window::vOnFileReset()
   }
 }
 
+void Window::vOnRecentReset()
+{
+  m_listHistory.clear();
+  vClearHistoryMenu();
+}
+
+void Window::vOnRecentFreezeToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  m_poHistoryConfig->vSetKey("freeze", _poCMI->get_active());
+}
+
+void Window::vOnRecent(std::string _sFile)
+{
+  bLoadROM(_sFile);
+}
+
 void Window::vOnFileClose()
 {
   if (emulating)
