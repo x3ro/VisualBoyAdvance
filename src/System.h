@@ -68,6 +68,10 @@ struct EmulatedSystem {
   bool (*emuWritePNG)(const char *);
   // write BMP file
   bool (*emuWriteBMP)(const char *);
+  // emulator update CPSR (ARM only)
+  void (*emuUpdateCPSR)();
+  // emulator has debugger
+  bool emuHasDebugger;
   // clock ticks to emulate
   int emuCount;
 };

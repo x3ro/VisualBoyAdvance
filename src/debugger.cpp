@@ -29,8 +29,7 @@
 extern bool debugger;
 extern int emulating;
 
-extern void (*emuUpdateCPSR)();
-extern void (*emuMain)(int);
+extern struct EmulatedSystem emulator;
 
 #define debuggerReadMemory(addr) \
   READ32LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
@@ -731,7 +730,7 @@ void debuggerNext(int n, char **args)
       debuggerContinueAfterBreakpoint();
       debuggerEnableBreakpoints(false);
     } else 
-      emuMain(1);
+      emulator.emuMain(1);
   }
   debuggerDisableBreakpoints();
   Function *f = NULL;
@@ -1095,7 +1094,7 @@ void debuggerContinueAfterBreakpoint()
 {
   printf("Continuing after breakpoint\n");
   debuggerEnableBreakpoints(true);
-  emuMain(1);
+  emulator.emuMain(1);
   debuggerAtBreakpoint = false;
 }
 
@@ -1421,7 +1420,8 @@ void debuggerMain()
   char *commands[10];
   int commandCount = 0;
   
-  emuUpdateCPSR();
+  if(emulator.emuUpdateCPSR)
+    emulator.emuUpdateCPSR();
   debuggerRegisters(0, NULL);
   
   while(debugger) {

@@ -3164,6 +3164,10 @@ struct EmulatedSystem GBSystem = {
   gbWritePNGFile,
   // emuWriteBMP
   gbWriteBMPFile,
+  // emuUpdateCPSR
+  NULL,
+  // emuHasDebugger
+  false,
   // emuCount
 #ifdef FINAL_VERSION
   70000/4,

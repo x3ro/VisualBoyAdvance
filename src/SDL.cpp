@@ -117,20 +117,22 @@ extern void CPUUpdateCPSR();
 extern void GPUpdateCPSR();
 #endif
 
-bool (*emuWriteState)(const char *) = NULL;
-bool (*emuWriteMemState)(char *, int) = NULL;
-bool (*emuReadState)(const char *) = NULL;
-bool (*emuReadMemState)(char *, int) = NULL;
-bool (*emuWriteBattery)(const char *) = NULL;
-bool (*emuReadBattery)(const char *) = NULL;
-void (*emuReset)() = NULL;
-void (*emuCleanUp)() = NULL;
-bool (*emuWritePNG)(const char *) = NULL;
-bool (*emuWriteBMP)(const char *) = NULL;
-void (*emuMain)(int) = NULL;
-void (*emuUpdateCPSR)() = NULL;
-int emuCount = 0;
-bool emuHasDebugger = false;
+struct EmulatedSystem emulator = {
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  false,
+  0
+};
 
 static u8 COPYRIGHT[] = {
   0xa9, 0x96, 0x8c, 0x8a, 0x9e, 0x93, 0xbd, 0x90, 0x86, 0xbe, 0x9b, 0x89,
@@ -1361,8 +1363,8 @@ void sdlWriteState(int num)
             num+1);
   else
     sprintf(stateName,"%s%d.sgm", filename, num+1);
-  if(emuWriteState)
-    emuWriteState(stateName);
+  if(emulator.emuWriteState)
+    emulator.emuWriteState(stateName);
   sprintf(stateName, "Wrote state %d", num+1);
   systemScreenMessage(stateName);
 }
@@ -1377,8 +1379,8 @@ void sdlReadState(int num)
   else
     sprintf(stateName,"%s%d.sgm", filename, num+1);
 
-  if(emuReadState)
-    emuReadState(stateName);
+  if(emulator.emuReadState)
+    emulator.emuReadState(stateName);
 
   sprintf(stateName, "Loaded state %d", num+1);
   systemScreenMessage(stateName);
@@ -1393,7 +1395,7 @@ void sdlWriteBattery()
   else  
     sprintf(buffer, "%s.sav", filename);
 
-  emuWriteBattery(buffer);
+  emulator.emuWriteBattery(buffer);
 
   systemScreenMessage("Wrote battery");
 }
@@ -1409,7 +1411,7 @@ void sdlReadBattery()
   
   bool res = false;
 
-  res = emuReadBattery(buffer);
+  res = emulator.emuReadBattery(buffer);
 
   if(res)
     systemScreenMessage("Loaded battery");
@@ -1714,7 +1716,7 @@ void sdlPollEvents()
         if(!(event.key.keysym.mod & MOD_NOCTRL) &&
            (event.key.keysym.mod & KMOD_CTRL)) {
           if(emulating) {
-            emuReset();
+            emulator.emuReset();
 
             systemScreenMessage("Reset");
           }
@@ -1723,9 +1725,11 @@ void sdlPollEvents()
       case SDLK_b:
         if(!(event.key.keysym.mod & MOD_NOCTRL) &&
            (event.key.keysym.mod & KMOD_CTRL)) {
-          if(emulating && emuReadMemState && rewindMemory && rewindCount) {
+          if(emulating && emulator.emuReadMemState && rewindMemory 
+             && rewindCount) {
             rewindPos = --rewindPos & 7;
-            emuReadMemState(&rewindMemory[REWIND_SIZE*rewindPos], REWIND_SIZE);
+            emulator.emuReadMemState(&rewindMemory[REWIND_SIZE*rewindPos], 
+                                     REWIND_SIZE);
             rewindCount--;
             rewindCounter = 0;
             systemScreenMessage("Rewind");
@@ -2204,20 +2208,7 @@ int main(int argc, char **argv)
       failed = !gbLoadRom(szFile);
       if(!failed) {
         cartridgeType = 1;
-        emuWriteState = gbWriteSaveState;
-        emuWriteMemState = gbWriteMemSaveState;
-        emuReadState = gbReadSaveState;
-        emuReadMemState = gbReadMemSaveState;
-        emuWriteBattery = gbWriteBatteryFile;
-        emuReadBattery = gbReadBatteryFile;
-        emuReset = gbReset;
-        emuCleanUp = gbCleanUp;
-        emuWritePNG = gbWritePNGFile;
-        emuWriteBMP = gbWriteBMPFile;
-        emuMain = gbEmulate;
-        emuUpdateCPSR = NULL;
-        emuHasDebugger = false;
-        emuCount = 70000/4;
+        emulator = GBSystem;
         if(sdlAutoIPS) {
           int size = gbRomSize;
           utilApplyIPS(ipsname, &gbRom, &size);
@@ -2239,20 +2230,7 @@ int main(int argc, char **argv)
         sdlApplyPerImagePreferences();
         
         cartridgeType = 0;
-        emuWriteState = CPUWriteState;
-        emuWriteMemState = CPUWriteMemState;
-        emuReadState = CPUReadState;
-        emuReadMemState = CPUReadMemState;
-        emuWriteBattery = CPUWriteBatteryFile;
-        emuReadBattery = CPUReadBatteryFile;
-        emuReset = CPUReset;
-        emuCleanUp = CPUCleanUp;
-        emuWritePNG = CPUWritePNGFile;
-        emuWriteBMP = CPUWriteBMPFile;
-        emuMain = CPULoop;
-        emuUpdateCPSR = CPUUpdateCPSR;
-        emuHasDebugger = true;
-        emuCount = 50000;
+        emulator = GBASystem;
 
         if(removeIntros && rom != NULL) {
           WRITE32LE(&rom[0], 0xea00002e);
@@ -2268,28 +2246,6 @@ int main(int argc, char **argv)
           }
         }
       }
-#ifdef GP_EMULATION
-    } else if(GPIsGPImage(szFile) || cartridgeType == 2) {
-      failed = !GPLoadRom(szFile);
-      if(!failed) {
-        cartridgeType = 2;
-        emuWriteState = GPWriteState;
-        emuReadState = GPReadState;
-        emuWriteBattery = GPWriteBatteryFile;
-        emuReadBattery = GPReadBatteryFile;
-        emuReset = GPReset;
-        emuCleanUp = GPCleanUp;
-        emuWritePNG = GPWritePNGFile;
-        emuWriteBMP = GPWriteBMPFile;
-        emuMain = GPLoop;
-        emuUpdateCPSR = GPUpdateCPSR;
-        emuHasDebugger = true;
-        emuCount = 50000;
-        
-        GPInit();
-        GPReset();
-      }
-#endif
     }
     
     if(failed) {
@@ -2309,18 +2265,7 @@ int main(int argc, char **argv)
     pix = (u8 *)calloc(1, 4 * 240 * 160);
     ioMem = (u8 *)calloc(1, 0x400);
 
-    emuWriteState = CPUWriteState;
-    emuReadState = CPUReadState;
-    emuWriteBattery = CPUWriteBatteryFile;
-    emuReadBattery = CPUReadBatteryFile;
-    emuReset = CPUReset;
-    emuCleanUp = CPUCleanUp;
-    emuWritePNG = CPUWritePNGFile;
-    emuWriteBMP = CPUWriteBMPFile;
-    emuMain = CPULoop;
-    emuUpdateCPSR = CPUUpdateCPSR;
-    emuHasDebugger = true;
-    emuCount = 50000;    
+    emulator = GBASystem;
     
     CPUInit(biosFileName, useBios);
     CPUReset();    
@@ -2612,17 +2557,17 @@ int main(int argc, char **argv)
 
   while(emulating) {
     if(!paused && active) {
-      if(debugger && emuHasDebugger)
+      if(debugger && emulator.emuHasDebugger)
         dbgMain();
       else {
-        emuMain(emuCount);
-        if(rewindSaveNeeded && rewindMemory && emuWriteMemState) {
+        emulator.emuMain(emulator.emuCount);
+        if(rewindSaveNeeded && rewindMemory && emulator.emuWriteMemState) {
           rewindCount++;
           if(rewindCount > 8)
             rewindCount = 8;
-          if(emuWriteMemState &&
-             emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
-                              REWIND_SIZE)) {
+          if(emulator.emuWriteMemState &&
+             emulator.emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
+                                       REWIND_SIZE)) {
             rewindPos = ++rewindPos & 7;
             if(rewindCount == 8)
               rewindTopPos = ++rewindTopPos & 7;
@@ -2649,7 +2594,7 @@ int main(int argc, char **argv)
 
   if(gbRom != NULL || rom != NULL) {
     sdlWriteBattery();
-    emuCleanUp();
+    emulator.emuCleanUp();
   }
 
   if(delta) {
@@ -2948,13 +2893,13 @@ void systemScreenCapture(int a)
     else
       sprintf(buffer, "%s%02d.bmp", filename, a);
 
-    emuWriteBMP(buffer);
+    emulator.emuWriteBMP(buffer);
   } else {
     if(captureDir[0])
       sprintf(buffer, "%s/%s%02d.png", captureDir, sdlGetFilename(filename), a);
     else
       sprintf(buffer, "%s%02d.png", filename, a);
-    emuWritePNG(buffer);
+    emulator.emuWritePNG(buffer);
   }
 
   systemScreenMessage("Screen capture");

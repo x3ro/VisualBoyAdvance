@@ -3917,6 +3917,10 @@ struct EmulatedSystem GBASystem = {
   CPUWritePNGFile,
   // emuWriteBMP
   CPUWriteBMPFile,
+  // emuUpdateCPSR
+  CPUUpdateCPSR,
+  // emuHasDebugger
+  true,
   // emuCount
 #ifdef FINAL_VERSION
   250000
