@@ -1,4 +1,4 @@
-Welcome to version 1.7 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
+Welcome to version 1.7.1 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
 emulator for Windows, Linux and BeOS.
 
 Features:
@@ -72,7 +72,16 @@ Support
 
 Please support VisualBoyAdvance by making a donation. You can donate money
 using PayPal (www.paypal.com). Use the contact form to find how you can
-send donations.
+send donations. Also, it is recommended that you use the VisualBoyAdvance
+forum on www.ngemu.com message board.
+
+FAQ
+---
+
+See online FAQ for more information: http://vba.ngemu.com/faq.shtml
+
+Please don't email about what you think it is problem before consulting
+the FAQ.
 
 System requirements
 -------------------
@@ -450,8 +459,8 @@ there are still people writing about the old VisualBoy which is no longer
 supported. Also remember I am not paid to work on VisualBoyAdvance. This is
 just a hobby.
 
-Forgotten (http://vboy.emuhq.com/contact.shtml)
-http://vboy.emuhq.com
+Forgotten (http://vba.ngemu.com/contact.shtml)
+http://vba.ngemu.com
 
 Special Thanks
 --------------

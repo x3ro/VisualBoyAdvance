@@ -1,4 +1,4 @@
-Welcome to VisualBoyAdvance version 1.7.
+Welcome to VisualBoyAdvance version 1.7.1.
 
 Compiling the sources
 ---------------------
@@ -18,7 +18,8 @@ Support
 
 Please support VisualBoyAdvance by making a donation. You can donate money
 using PayPal (www.paypal.com). Use the contact form to find how you can
-send donations.
+send donations. Also, it is recommended that you use the VisualBoyAdvance
+forum on www.ngemu.com message board.
 
 Default keys (can be edited in the Options menu)
 ------------------------------------------------
@@ -166,7 +167,7 @@ saveType=0
 FAQ
 ---
 
-See online FAQ for more information: http://vboy.emuhq.com/faq.shtml
+See online FAQ for more information: http://vba.ngemu.com/faq.shtml
 
 Please don't email about what you think it is problem before consulting
 the FAQ.
@@ -232,5 +233,5 @@ supported. Also remember I am not paid to work on VisualBoyAdvance.
 
 This is just a hobby.
 
-Forgotten (http://vboy.emuhq.com/contact.shtml)
-http://vboy.emuhq.com
+Forgotten (http://vba.ngemu.com/contact.shtml)
+http://vba.ngemu.com
