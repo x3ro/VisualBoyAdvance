@@ -16,6 +16,11 @@ The following software is needed in order to compile:
 - zlib: http://www.gzip.org/zlib/
 - libSDL: http://www.libsdl.org
 - nasm (optional for x86 MMX support): http://nasm.sourceforge.net/
+- GCC 3.x: in order to compile VBA, you will GCC 3.x or greater because of
+  a really bad bug in GCC 2.95 where it allocates an immense ammount of 
+  memory in order to compile GBA.cpp. If you really want to test it with
+  GCC 2.95, try exporting CXXFLAGS=-g to avoid optimizations (or try 
+  different levels of optimization like -O1 or -O0)
 
 Unpack the sources from the tar.gz file, then run the configure script. The
 following extra options may be used to configure the generated executables:

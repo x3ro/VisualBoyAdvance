@@ -1,3 +1,11 @@
+2002-10-22  Forgotten  <forgotten@usf-cf-x86-linux-2.cf.sourceforge.net>
+
+	* src/TestEmu.cpp (systemPauseOnFrame): Added missing return statement
+
+2002-10-22  Forgotten  <forgotten@users.sourceforge.net>
+
+	* INSTALL: Updated GCC requirements
+
 2002-10-22  Forgotten  <forgotten@users.sourceforge.net>
 
 	* Initial Public Version
