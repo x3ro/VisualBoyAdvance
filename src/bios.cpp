@@ -85,11 +85,13 @@ void BIOS_ArcTan2()
     else
       reg[0].I = 0x4000;
   }
-  
+
+#ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
     log("ArcTan2: return=%08x\n", 
         reg[0].I);      
   }
+#endif
 }
 
 void BIOS_BitUnPack()
@@ -1083,7 +1085,7 @@ void BIOS_MidiKey2Freq()
 {
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
-    log("MidiKey2Freq: WaveData=%08x mk=%08x fp=%08x",
+    log("MidiKey2Freq: WaveData=%08x mk=%08x fp=%08x\n",
         reg[0].I,
         reg[1].I,
         reg[2].I);
@@ -1094,4 +1096,11 @@ void BIOS_MidiKey2Freq()
   tmp = ((double)(180 - reg[1].I)) - ((double)reg[2].I / 256.f);
   tmp = pow(2, tmp / 12.f);
   reg[0].I = (int)((double)freq / tmp);
+
+#ifdef DEV_VERSION
+  if(systemVerbose & VERBOSE_SWI) {
+    log("MidiKey2Freq: return %08x\n",
+        reg[0].I);
+  }
+#endif
 }
