@@ -448,6 +448,10 @@ SOURCE=..\src\win32\vba.rc
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\VideoMode.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\wavwrite.cpp
 # End Source File
 # Begin Source File
