@@ -1338,9 +1338,11 @@ void updateVideoMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY,
                 CHECKMENUSTATE(ddrawUseVideoMemory));
 
-  menu = GetSubMenu(menu, 15);
-  if(menu != NULL)
-    updateLayersMenu(menu);
+  HMENU sub = GetSubMenu(menu, 15);
+  if(sub == NULL)
+    sub= GetSubMenu(menu, 16);
+  if(sub != NULL)
+    updateLayersMenu(sub);
 }
 
 void updateSaveTypeMenu(HMENU menu)
