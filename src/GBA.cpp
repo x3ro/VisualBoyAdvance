@@ -2470,65 +2470,85 @@ void CPUUpdateRegister(u32 address, u16 value)
     CPUCheckDMA(0,8);
     break;
   case 0x100:
-    TM0D = value;
+    //    TM0D = value;
     timer0Reload = value;
-    if(timer0ClockReload == 1)
-      timer0Ticks = 0x10000 - TM0D;
-    UPDATE_REG(0x100, TM0D);
+    //    if(timer0ClockReload == 1)
+    //      timer0Ticks = 0x10000 - TM0D;
+    //    UPDATE_REG(0x100, TM0D);
     break;
   case 0x102:
+    timer0Ticks = timer0ClockReload = TIMER_TICKS[value & 3];        
+    if(!timer0On && (value & 0x80)) {
+      // reload the counter
+      TM0D = timer0Reload;      
+      if(timer0ClockReload == 1)
+        timer0Ticks = 0x10000 - TM0D;
+      UPDATE_REG(0x100, TM0D);
+    }
     timer0On = value & 0x80 ? true : false;
-    timer0Ticks = timer0ClockReload = TIMER_TICKS[value & 3];
-    if(timer0ClockReload == 1)
-      timer0Ticks = 0x10000 - TM0D;
     TM0CNT = value & 0xC7;
     UPDATE_REG(0x102, TM0CNT);
     //    CPUUpdateTicks();
     break;
   case 0x104:
-    TM1D = value;
+    //    TM1D = value;
     timer1Reload = value;
-    if(timer1ClockReload == 1)
-      timer1Ticks = 0x10000 - TM1D;
-    UPDATE_REG(0x104, TM1D);
+    //    if(timer1ClockReload == 1)
+    //      timer1Ticks = 0x10000 - TM1D;
+    //    UPDATE_REG(0x104, TM1D);
     break;
   case 0x106:
+    timer1Ticks = timer1ClockReload = TIMER_TICKS[value & 3];        
+    if(!timer1On && (value & 0x80)) {
+      // reload the counter
+      TM1D = timer1Reload;      
+      if(timer1ClockReload == 1)
+        timer1Ticks = 0x10000 - TM1D;
+      UPDATE_REG(0x104, TM1D);
+    }
     timer1On = value & 0x80 ? true : false;
-    timer1Ticks = timer1ClockReload = TIMER_TICKS[value & 3];
-    if(timer1ClockReload == 1)
-      timer1Ticks = 0x10000 - TM1D;
     TM1CNT = value & 0xC7;
     UPDATE_REG(0x106, TM1CNT);
     //    CPUUpdateTicks();
     break;
   case 0x108:
-    TM2D = value;
+    //    TM2D = value;
     timer2Reload = value;
-    if(timer2ClockReload == 1)
-      timer2Ticks = 0x10000 - TM2D;
-    UPDATE_REG(0x108, TM2D);
+    //    if(timer2ClockReload == 1)
+    //      timer2Ticks = 0x10000 - TM2D;
+    //    UPDATE_REG(0x108, TM2D);
     break;
   case 0x10A:
+    timer2Ticks = timer2ClockReload = TIMER_TICKS[value & 3];        
+    if(!timer2On && (value & 0x80)) {
+      // reload the counter
+      TM2D = timer2Reload;      
+      if(timer2ClockReload == 1)
+        timer2Ticks = 0x10000 - TM1D;
+      UPDATE_REG(0x108, TM1D);
+    }
     timer2On = value & 0x80 ? true : false;
-    timer2Ticks = timer2ClockReload = TIMER_TICKS[value & 3];
-    if(timer2ClockReload == 1)
-      timer2Ticks = 0x10000 - TM2D;
     TM2CNT = value & 0xC7;
     UPDATE_REG(0x10A, TM2CNT);
     //    CPUUpdateTicks();
     break;
   case 0x10C:
-    TM3D = value;
+    //    TM3D = value;
     timer3Reload = value;
-    if(timer3ClockReload == 1)
-      timer3Ticks = 0x10000 - TM3D;
-    UPDATE_REG(0x10C, TM3D);
+    //    if(timer3ClockReload == 1)
+    //      timer3Ticks = 0x10000 - TM3D;
+    //    UPDATE_REG(0x10C, TM3D);
     break;
   case 0x10E:
+    timer3Ticks = timer3ClockReload = TIMER_TICKS[value & 3];        
+    if(!timer3On && (value & 0x80)) {
+      // reload the counter
+      TM3D = timer3Reload;      
+      if(timer3ClockReload == 1)
+        timer3Ticks = 0x10000 - TM1D;
+      UPDATE_REG(0x10C, TM3D);
+    }
     timer3On = value & 0x80 ? true : false;
-    timer3Ticks = timer3ClockReload = TIMER_TICKS[value & 3];
-    if(timer3ClockReload == 1)
-      timer3Ticks = 0x10000 - TM3D;
     TM3CNT = value & 0xC7;
     UPDATE_REG(0x10E, TM3CNT);
     //    CPUUpdateTicks();

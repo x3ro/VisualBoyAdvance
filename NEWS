@@ -8,6 +8,8 @@ Core changes:
 - added big endian support
 - fixed another value for the bios protection
 - fixed sound envelope reload bug (user contribution)
+- fixed timer counter (not changing the value of the counter unless the timer
+  overflows or is restarted)
 - fixed problem on big endian when setting IO memory reable positions
 - fixed reset LCD after disabling forced blank
 - speed up now uses frameskip 9 (6 FPS)
