@@ -47,7 +47,7 @@ void Scanlines (u8 *srcPtr, u32 srcPitch, u8 *,
       colorB = currentPixel & 0xffff;
 #else
       colorA = currentPixel & 0xffff;
-      colorB = (currentPixel & 0xffff0000) >> 16;
+      colorB = currentPixel >> 16;
 #endif
 
       *(dP) = colorA | colorA<<16;
@@ -147,11 +147,11 @@ void ScanlinesTV(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
       u32 colorA, colorB;
 
 #ifdef WORDS_BIGENDIAN
-      colorA = (currentPixel & 0xFFFF0000) >> 16;
+      colorA = currentPixel >> 16;
       colorB = currentPixel & 0xFFFF;
 #else
       colorA = currentPixel & 0xFFFF;
-      colorB = (currentPixel & 0xFFFF0000) >> 16;
+      colorB = currentPixel >> 16;
 #endif
       
       *(dP) = colorA = colorA | ((((colorA & colorMask) >> 1) +

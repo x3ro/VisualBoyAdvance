@@ -53,11 +53,11 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         
         *(xP - 2) = currentPixel;
 #ifdef WORDS_BIGENDIAN
-        colorA = (currentPixel & 0xffff0000) >> 16;
+        colorA = currentPixel >> 16;
         colorB = currentPixel & 0xffff;
 #else
         colorA = currentPixel & 0xffff;
-        colorB = (currentPixel & 0xffff0000) >> 16;
+        colorB = currentPixel >> 16;
 #endif
         product = (((colorA & colorMask) >> 1) & colorMask) >> 1;
         
@@ -70,7 +70,7 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
 #endif
         
 #ifdef WORDS_BIGENDIAN
-        colorA = (nextPixel & 0xffff0000) >> 16;
+        colorA = nextPixel >> 16;
 #else
         colorA = nextPixel & 0xffff;
 #endif

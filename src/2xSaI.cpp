@@ -470,8 +470,8 @@ void Super2xSaI32 (u8 *srcPtr, u32 srcPitch,
           product1a = color5;
       *(dP) = product1a;
       *(dP+1) = product1b;
-      *(dP + dstPitch/4) = product2a;
-      *(dP + dstPitch/4 + 1) = product2b;
+      *(dP + (dstPitch >> 2)) = product2a;
+      *(dP + (dstPitch >> 2) + 1) = product2b;
       
       bP += inc_bP;
       dP += 2;
@@ -743,8 +743,8 @@ void SuperEagle32 (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
       }
       *(dP) = product1a;
       *(dP+1) = product1b;
-      *(dP + dstPitch/4) = product2a;
-      *(dP + dstPitch/4+1) = product2b;
+      *(dP + (dstPitch >> 2)) = product2a;
+      *(dP + (dstPitch >> 2) +1) = product2b;
       *xP = color5;
       
       bP += inc_bP;
@@ -1072,8 +1072,8 @@ void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
       }
       *(dP) = colorA;
       *(dP + 1) = product;
-      *(dP + dstPitch/4) = product1;
-      *(dP + dstPitch/4 + 1) = product2;
+      *(dP + (dstPitch >> 2)) = product1;
+      *(dP + (dstPitch >> 2) + 1) = product2;
       
       bP += inc_bP;
       dP += 2;

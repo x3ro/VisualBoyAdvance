@@ -54,11 +54,11 @@ void MotionBlur(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         
         *(xP - 2) = currentPixel;
 #ifdef WORDS_BIGENDIAN
-        colorA = (currentPixel & 0xffff0000) >> 16;
-        colorB = (currentDelta& 0xffff0000) >> 16;
+        colorA = currentPixel >> 16;
+        colorB = currentDelta >> 16;
 #else
         colorA = currentPixel & 0xffff;
-        colorB = (currentDelta & 0xffff);        
+        colorB = currentDelta & 0xffff;
 #endif
 
         product =   ((((colorA & colorMask) >> 1) +
@@ -86,7 +86,7 @@ void MotionBlur(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
         
         *(xP - 2) = currentPixel;
 #ifdef WORDS_BIGENDIAN
-        colorA = (currentPixel & 0xffff0000) >> 16;
+        colorA = currentPixel >> 16;
 #else
         colorA = currentPixel & 0xffff;
 #endif
