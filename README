@@ -1,8 +1,8 @@
-Welcome to version 1.7.2 of VisualBoyAdvance-SDL. This is a GB/GBC/GBA
-emulator for Windows, Linux and BeOS.
+Welcome to version 1.7.2 of VisualBoyAdvance [SDL].
+This is a GB/GBC/GBA emulator for Windows, Linux, MacOS X and BeOS.
 
-Features:
----------
+Features
+--------
 
 - configurable GB/GBA keys, including joystick support
 - option to use BIOS file
@@ -88,12 +88,12 @@ System requirements
 
 Windows: PIII 500Mhz machine for GBA emulation. GB emulation requires far less.
 
-Linux: minimum requirement should be similar to Windows version. SDL 1.2.2
-       runtime library must be installed prior to running the program. You can
-       download it from http://www.libsdl.org
+Linux, MacOS X, BeOS:
+  SDL (>= 1.2.2) runtime library must be installed prior to running the
+  program. You can download it from http://www.libsdl.org
 
-Key combinations during emulation:
-----------------------------------
+Key combinations during emulation
+---------------------------------
 
 - F1...F10: load save state 1...10
 - Shift+F1...F10: save state 1...10
@@ -107,8 +107,8 @@ Key combinations during emulation:
 - F11: enter built-in debugger
 - ESC: exit emulator
 
-Emulation key settings:
------------------------
+Emulation key settings
+----------------------
 
 - Movement: arrow keys
 - Button A: Z
@@ -194,8 +194,8 @@ Console Output
 
 There are two forms of console output in this version:
 
-- Mappy style dprint: use the following code (from Mappy's documentation) to get
-  output:
+- Mappy style dprint: use the following code (from Mappy's documentation)
+  to get output:
 
 - VBA style: use the following code to get output:
   // THUMB code
@@ -217,8 +217,8 @@ There are two forms of console output in this version:
                  : "r0");
   }
 
-When using GDB, the output will show up in GDB's console. When using the built-in
-debugger, output will go to standard out.
+When using GDB, the output will show up in GDB's console. When using the
+built-in debugger, output will go to standard out.
 
 Built-in debugger enhancements
 ------------------------------
@@ -274,8 +274,8 @@ void moncleanup()
 // r14 contains function that was called
 void mcount()
 
-GCC bugs:
----------
+GCC bugs
+--------
 
 All versions of GCC previous to the working version 3.3 have bugs when
 generating profiling for thumb functions.
@@ -320,85 +320,85 @@ All options are documented in the file supplied with this distribution.
 Command line options (override settings in configuration file)
 --------------------------------------------------------------
 
-  -1 , --video-1x             1x
-  -2 , --video-2x             2x
-  -3 , --video-3x             3x
-  -4 , --video 4x             4x
-  -F , --fullscreen           Full screen
-  -G , --gdb=PROTOCOL         GNU Remote Stub mode:
-                               tcp      - use TCP at port 55555
-                               tcp:PORT - use TCP at port PORT
-                               pipe     - use pipe transport
-  -N , --no-debug             Don't parse debug information
-  -S , --flash-size=SIZE      Set the Flash size
-       --flash-64k             0 -  64K Flash
-       --flash-128k            1 - 128K Flash
-  -T , --throttle=THROTTLE    Set the desired throttle (5...1000)
-  -Y , --yuv=TYPE             Use YUV overlay for drawing:
-                               0 - YV12
-                               1 - UYVY
-                               2 - YVYU
-                               3 - YUY2
-                               4 - IYUV
-  -b , --bios=BIOS            Use given bios file
-  -c,  --config=FILE          Read the given configuration file
-  -d , --debug                Enter debugger
-  -f , --filter=FILTER        Select filter:
-       --filter-normal         0 - normal mode
-       --filter-tv-mode        1 - TV Mode
-       --filter-2xsai          2 - 2xSaI
-       --filter-super-2xsai    3 - Super 2xSaI
-       --filter-super-eagle    4 - Super Eagle
-       --filter-pixelate       5 - Pixelate
-       --filter-motion-blur    6 - Motion Blur
-       --filter-advmame        7 - AdvanceMAME Scale2x
-       --filter-simple2x       8 - Simple2x
-       --filter-bilinear       9 - Bilinear
-       --filter-bilinear+     10 - Bilinear Plus
-       --filter-scanlines     11 - Scanlines
-       --filter-hq2x          12 - hq2x
-       --filter-lq2x          13 - lq2x
-  -h , --help                 Print this help
-  -i , --ips=PATCH            Apply given IPS patch
-  -p , --profile=[HERTZ]      Enable profiling
-  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)
-  -t , --save-type=TYPE       Set the available save type
-       --save-auto             0 - Automatic (EEPROM, SRAM, FLASH)
-       --save-eeprom           1 - EEPROM
-       --save-sram             2 - SRAM
-       --save-flash            3 - FLASH
-       --save-sensor           4 - EEPROM+Sensor
-       --save-none             5 - NONE
-  -v , --verbose=VERBOSE      Set verbose logging (trace.log)
-                                 1 - SWI
-                                 2 - Unaligned memory access
-                                 4 - Illegal memory write
-                                 8 - Illegal memory read
-                                16 - DMA 0
-                                32 - DMA 1
-                                64 - DMA 2
-                               128 - DMA 3
-                               256 - Undefined instruction
-                               512 - AGBPrint messages
+  -1, --video-1x               1x
+  -2, --video-2x               2x
+  -3, --video-3x               3x
+  -4, --video-4x               4x
+  -F, --fullscreen             Full screen
+  -G, --gdb=PROTOCOL           GNU Remote Stub mode:
+                                tcp      - use TCP at port 55555
+                                tcp:PORT - use TCP at port PORT
+                                pipe     - use pipe transport
+  -N, --no-debug               Don't parse debug information
+  -S, --flash-size=SIZE        Set the Flash size
+      --flash-64k               0 -  64K Flash
+      --flash-128k              1 - 128K Flash
+  -T, --throttle=THROTTLE      Set the desired throttle (5...1000)
+  -Y, --yuv=TYPE               Use YUV overlay for drawing:
+                                0 - YV12
+                                1 - UYVY
+                                2 - YVYU
+                                3 - YUY2
+                                4 - IYUV
+  -b, --bios=BIOS              Use given bios file
+  -c, --config=FILE            Read the given configuration file
+  -d, --debug                  Enter debugger
+  -f, --filter=FILTER          Select filter:
+      --filter-normal            0 - normal mode
+      --filter-tv-mode           1 - TV Mode
+      --filter-2xsai             2 - 2xSaI
+      --filter-super-2xsai       3 - Super 2xSaI
+      --filter-super-eagle       4 - Super Eagle
+      --filter-pixelate          5 - Pixelate
+      --filter-motion-blur       6 - Motion Blur
+      --filter-advmame           7 - AdvanceMAME Scale2x
+      --filter-simple2x          8 - Simple2x
+      --filter-bilinear          9 - Bilinear
+      --filter-bilinear+        10 - Bilinear Plus
+      --filter-scanlines        11 - Scanlines
+      --filter-hq2x             12 - hq2x
+      --filter-lq2x             13 - lq2x
+  -h, --help                   Print this help
+  -i, --ips=PATCH              Apply given IPS patch
+  -p, --profile=[HERTZ]        Enable profiling
+  -s, --frameskip=FRAMESKIP    Set frame skip (0...9)
+  -t, --save-type=TYPE         Set the available save type
+      --save-auto               0 - Automatic (EEPROM, SRAM, FLASH)
+      --save-eeprom             1 - EEPROM
+      --save-sram               2 - SRAM
+      --save-flash              3 - FLASH
+      --save-sensor             4 - EEPROM+Sensor
+      --save-none               5 - NONE
+  -v, --verbose=VERBOSE        Set verbose logging (trace.log)
+                                  1 - SWI
+                                  2 - Unaligned memory access
+                                  4 - Illegal memory write
+                                  8 - Illegal memory read
+                                 16 - DMA 0
+                                 32 - DMA 1
+                                 64 - DMA 2
+                                128 - DMA 3
+                                256 - Undefined instruction
+                                512 - AGBPrint messages
 
 Long options only:
-       --agb-print              Enable AGBPrint support
-       --auto-frameskip         Enable auto frameskipping
-       --ifb-none               No interframe blending
-       --ifb-motion-blur        Interframe motion blur
-       --ifb-smart              Smart interframe blending
-       --no-agb-print           Disable AGBPrint support
-       --no-auto-frameskip      Disable auto frameskipping
-       --no-ips                 Do not apply IPS patch
-       --no-mmx                 Disable MMX support
-       --no-pause-when-inactive Don't pause when inactive
-       --no-rtc                 Disable RTC support
-       --no-show-speed          Don't show emulation speed
-       --no-throttle            Disable thrrotle
-       --pause-when-inactive    Pause when inactive
-       --rtc                    Enable RTC support
-       --show-speed-normal      Show emulation speed
-       --show-speed-detailed    Show detailed speed data
+      --agb-print              Enable AGBPrint support
+      --auto-frameskip         Enable auto frameskipping
+      --ifb-none               No interframe blending
+      --ifb-motion-blur        Interframe motion blur
+      --ifb-smart              Smart interframe blending
+      --no-agb-print           Disable AGBPrint support
+      --no-auto-frameskip      Disable auto frameskipping
+      --no-ips                 Do not apply IPS patch
+      --no-mmx                 Disable MMX support
+      --no-pause-when-inactive Don't pause when inactive
+      --no-rtc                 Disable RTC support
+      --no-show-speed          Don't show emulation speed
+      --no-throttle            Disable thrrotle
+      --pause-when-inactive    Pause when inactive
+      --rtc                    Enable RTC support
+      --show-speed-normal      Show emulation speed
+      --show-speed-detailed    Show detailed speed data
 
 Known bugs
 ----------
@@ -455,13 +455,18 @@ Contact
 Please don't email unless you found some bug. Requests will be ignored and
 deleted. Also, be descriptive when emailing. You have to tell me what version
 of the emulator you are writing about and a good description of the problem.
-Remember, thre is a SDL version, a Windows version and a Linux version. Also,
-there are still people writing about the old VisualBoy which is no longer
+Remember, there are several interfaces (Windows, SDL and GTK+) and
+several systems (Windows, Linux, MacOS X and BeOS).
+
+Also, there are still people writing about the old VisualBoy which is no longer
 supported. Also remember I am not paid to work on VisualBoyAdvance. This is
 just a hobby.
 
 Forgotten (http://vba.ngemu.com/contact.shtml)
+kxu <kxu@users.sourceforge.net>
+
 http://vba.ngemu.com
+http://sourceforge.net/projects/vba
 
 Special Thanks
 --------------
@@ -469,6 +474,6 @@ Special Thanks
 PokemonHacker for all his help improving the emulator.
 Costis for his help fixing some of the graphics bugs.
 Snes9x developers for the great emulator and source code.
-Kreed for his great graphic filters
-SDL team for this amazing library
+Kreed for his great graphic filters.
+SDL team for this amazing library.
 And all users who kindly reported problems.

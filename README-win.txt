@@ -218,7 +218,7 @@ PokemonHacker for all his help improving the emulator.
 Costis for his help fixing some of the graphics bugs.
 Snes9x developers for the great emulator and source code.
 Gollum for some help and tips.
-Kreed for his great graphic filters
+Kreed for his great graphic filters.
 And all users who kindly reported problems.
 
 Contact
@@ -227,12 +227,16 @@ Contact
 Please don't email unless you found some bug. Requests will be ignored and
 deleted. Also, be descriptive when emailing. You have to tell me what version
 of the emulator you are writing about and a good description of the problem.
-Remember, there is a SDL version, a Windows version, a Linux version and a
-BeOS version.
+Remember, there are several interfaces (Windows, SDL and GTK+) and
+several systems (Windows, Linux, MacOS X and BeOS).
+
 Also, there are still people writing about the old VisualBoy which is no longer
 supported. Also remember I am not paid to work on VisualBoyAdvance.
 
 This is just a hobby.
 
 Forgotten (http://vba.ngemu.com/contact.shtml)
+kxu <kxu@users.sourceforge.net>
+
 http://vba.ngemu.com
+http://sourceforge.net/projects/vba

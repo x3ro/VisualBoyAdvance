@@ -20,29 +20,47 @@ The following software is needed in order to compile:
 - libSDL: http://www.libsdl.org
 - nasm (optional for x86 MMX support): http://nasm.sourceforge.net/
 - GCC 3.x: in order to compile VBA, you will GCC 3.x or greater because of
-  a really bad bug in GCC 2.95 where it allocates an immense ammount of 
+  a really bad bug in GCC 2.95 where it allocates an immense amount of
   memory in order to compile GBA.cpp. If you really want to test it with
-  GCC 2.95, try exporting CXXFLAGS=-g to avoid optimizations (or try 
+  GCC 2.95, try exporting CXXFLAGS=-g to avoid optimizations (or try
   different levels of optimization like -O1 or -O0)
 
-Unpack the sources from the tar.gz file, then run the configure script. The
-following extra options may be used to configure the generated executables:
+Extra software needed to compile the GTK+ GUI:
 
---enable-c-core (--disable-c-core): enables the C core instead of x86 core
---enable-dev (--disable-dev): enables the development features (slower)
---enable-gp (--disable-gp): enables GP32 emulation
---with-mmx (--without-mmx): enables MMX support
+- gtkmm (>= 2.0): http://www.gtkmm.org/
+- libglademm (>= 2.1): http://www.gtkmm.org/
+
+Unpack the sources from the tar.gz file, then run the configure script.
+The following extra options may be used to configure the generated executables:
+
+  --enable-c-core         enable C core (default is no on x86 targets)
+  --enable-profiling      enable profiling (default is yes)
+  --enable-dev            enable development features (default is yes)
+  --with-mmx              use MMX (default is yes on x86 targets)
+
+GUI selection options:
+
+  --enable-sdl            build the SDL interface (default is yes)
+  --enable-gtk            build the GTK+ interface (default is no)
+  --enable-gtk=2.4        build the GTK+ interface with gtkmm 2.4
+
+More options:
+
+  --help                  display all options
 
 After configure completes, just issue the make command. If it all goes well,
 you will have the emulator compiled in the src directory. Issuing the
 make install command will install the executables into the /usr/local/bin
 directory (subject to change).
 
-The emulator code should work in both big and little endian computers, but
-it has not been tested yet in big endian machines enough.
+The emulator code should work in both big and little endian computers.
 
 See the section after the Windows one for more information on the configure
 script.
+
+The binaries are called this way:
+- the SDL interface: VisualBoyAdvance
+- the GTK+ interface: gvba
 
 2. Windows
 ----------
@@ -52,9 +70,12 @@ Needed software:
 - Microsoft Visual C++ 6.0 or greater: to compile
 
 The win32 directory contains Microsoft Visual Studio workspace files needed
-to compile the project with Microsoft Visual C++ 6.0 or greater. The gba.dsp
-workspace compiles the full Windows version and gba_sdl.dsp compiles the
-Windows SDL version.
+to compile the project with Microsoft Visual C++ 6.0 or greater.
+
+The gba.dsp workspace compiles the full Windows version and gba_sdl.dsp
+compiles the Windows SDL version.
+
+Solutions for Visual C++ .NET are also available: gba.sln and gba_sdl.sln
 
 The Windows version contains three possible configurations:
 - Debug: full debugging of the emulator is possible
