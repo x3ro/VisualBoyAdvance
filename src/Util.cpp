@@ -1072,7 +1072,7 @@ void utilGBAFindSave(const u8 *data, const int size)
         }
       } else if(memcmp(p, "FLASH", 5) == 0) {
         if(saveType == 0) {
-          saveType == 3;
+          saveType = 3;
           flashSize = 0x10000;
         }
       }
@@ -1082,7 +1082,7 @@ void utilGBAFindSave(const u8 *data, const int size)
     }
     p++;
   } 
-  // if not matches found, then set it to NONE
+  // if no matches found, then set it to NONE
   if(saveType == 0) {
     saveType = 5;
   }

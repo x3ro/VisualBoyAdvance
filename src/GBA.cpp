@@ -3439,7 +3439,10 @@ void CPULoop(int ticks)
                 systemUpdateMotionSensor();              
               UPDATE_REG(0x130, P1);
               u16 P1CNT = READ16LE(((u16 *)&ioMem[0x132]));
-              if(P1CNT & 0x4000) {
+              // this seems wrong, but there are cases where the game
+              // can enter the stop state without requesting an IRQ from
+              // the joypad.
+              if((P1CNT & 0x4000) || stopState) {
                 u16 p1 = (0x3FF ^ P1) & 0x3FF;
                 if(P1CNT & 0x8000) {
                   if(p1 == (P1CNT & 0x3FF)) {
@@ -3780,14 +3783,16 @@ void CPULoop(int ticks)
             }
           }
         }
-        
-        soundTicks -= clockTicks;
-        if(soundTicks <= 0) {
-          soundTick();
-          soundTicks += SOUND_CLOCK_TICKS;
-        }
-        timerOverflow = 0;
       }
+      // we shouldn't be doing sound in stop state, but we lose synchronization
+      // if sound is disabled, so in stop state, soundTick will just produce
+      // mute sound
+      soundTicks -= clockTicks;
+      if(soundTicks <= 0) {
+        soundTick();
+        soundTicks += SOUND_CLOCK_TICKS;
+      }
+      timerOverflow = 0;
 
 #ifdef PROFILING
       profilingTicks -= clockTicks;

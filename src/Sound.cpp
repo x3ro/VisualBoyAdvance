@@ -28,6 +28,8 @@
 #define SOUND_MAGIC_2 0x30000000
 #define NOISE_MAGIC 5
 
+extern bool stopState;
+
 u8 soundWavePattern[4][32] = {
   {0x01,0x01,0x01,0x01,
    0xff,0xff,0xff,0xff,
@@ -303,7 +305,7 @@ void soundEvent(u32 address, u8 data)
   case NR12:
     sound1EnvelopeUpDown = data & 0x08;
     sound1EnvelopeATLReload = 689 * (data & 7);
-    if((data & 0xF0) == 0)
+    if((data & 0xF8) == 0)
       sound1EnvelopeVolume = 0;
     ioMem[address] = data;    
     break;
@@ -351,7 +353,7 @@ void soundEvent(u32 address, u8 data)
   case NR22:
     sound2EnvelopeUpDown = data & 0x08;
     sound2EnvelopeATLReload = 689 * (data & 7);
-    if((data & 0xF0) == 0)
+    if((data & 0xF8) == 0)
       sound2EnvelopeVolume = 0;
     ioMem[address] = data;    
     break;
@@ -443,7 +445,7 @@ void soundEvent(u32 address, u8 data)
   case NR42:
     sound4EnvelopeUpDown = data & 0x08;
     sound4EnvelopeATLReload = 689 * (data & 7);
-    if((data & 0xF0) == 0)
+    if((data & 0xF8) == 0)
       sound4EnvelopeVolume = 0;
     ioMem[address] = data;    
     break;
@@ -1077,7 +1079,7 @@ void soundMix()
 void soundTick()
 {
   if(systemSoundOn) {
-    if(soundMasterOn) {
+    if(soundMasterOn && !stopState) {
       soundChannel1();
       soundChannel2();
       soundChannel3();
