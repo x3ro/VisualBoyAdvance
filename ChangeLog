@@ -1,3 +1,9 @@
+2002-11-23  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp: added support for long options
+	* src/Flash.cpp: added support for 128K Flash (thanks DesktopMan)
+	* src/GBA.cpp: added support for 128K Flash 	
+
 2002-11-21  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/gb/gbSGB.cpp: fixed big endian problems

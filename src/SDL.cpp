@@ -27,6 +27,7 @@
 
 #include "SDL.h"
 #include "GBA.h"
+#include "Flash.h"
 #include "Port.h"
 #include "Font.h"
 #include "debugger.h"
@@ -45,6 +46,12 @@
 #else
 #include <direct.h>
 #define GETCWD _getcwd
+#endif
+
+#ifndef __GNUC__
+#define HAVE_DECL_GETOPT 0
+#define __STDC__ 1
+#include "getopt.h"
 #endif
 
 #ifdef MMX
@@ -156,11 +163,12 @@ bool paused = false;
 bool pauseNextFrame = false;
 bool debugger = false;
 bool debuggerStub = false;
-bool fullscreen = false;
+int fullscreen = 0;
 bool systemSoundOn = false;
 bool yuv = false;
 int yuvType = 0;
 bool removeIntros = false;
+int sdlFlashSize = 0;
 
 extern void debuggerSignal(int,int);
 
@@ -223,6 +231,42 @@ u16 motion[4] = {
 
 u16 defaultMotion[4] = {
   SDLK_KP4, SDLK_KP6, SDLK_KP8, SDLK_KP2
+};
+
+struct option sdlOptions[] = {
+  { "bios", required_argument, 0, 'b' },
+  { "debug", no_argument, 0, 'd' },
+  { "filter", required_argument, 0, 'f' },
+  { "filter-normal", no_argument, &filter, 0 },
+  { "filter-tv-mode", no_argument, &filter, 1 },
+  { "filter-2xsai", no_argument, &filter, 2 },
+  { "filter_super-2xsai", no_argument, &filter, 3 },
+  { "filter_super-eagle", no_argument, &filter, 4 },
+  { "filter_pixelate", no_argument, &filter, 5 },
+  { "filter_motion-blur", no_argument, &filter, 6 },
+  { "filter_advmame", no_argument, &filter, 7 },
+  { "filter_simple2x", no_argument, &filter, 8 },
+  { "flash-size", required_argument, 0, 'S' },
+  { "flash-64k", no_argument, &sdlFlashSize, 0 },
+  { "flash-128k", no_argument, &sdlFlashSize, 1 },
+  { "frameskip", required_argument, 0, 's' },
+  { "fullscreen", no_argument, &fullscreen, 1 },
+  { "gdb", required_argument, 0, 'G' },
+  { "no-debug", no_argument, 0, 'N' },
+  { "profile", optional_argument, 0, 'p' },
+  { "save-type", required_argument, 0, 't' },
+  { "save-auto", no_argument, &cpuSaveType, 0 },
+  { "save-eeprom", no_argument, &cpuSaveType, 1 },
+  { "save-sram", no_argument, &cpuSaveType, 2 },
+  { "save-flash", no_argument, &cpuSaveType, 3 },
+  { "save-sensor", no_argument, &cpuSaveType, 4 },
+  { "verbose", required_argument, 0, 'v' },  
+  { "video-1x", no_argument, &sizeOption, 0 },
+  { "video-2x", no_argument, &sizeOption, 1 },
+  { "video-3x", no_argument, &sizeOption, 2 },
+  { "video-4x", no_argument, &sizeOption, 3 },
+  { "yuv", required_argument, 0, 'Y' },
+  { NULL, no_argument, NULL, 0 }
 };
 
 extern bool CPUIsGBAImage(char *);
@@ -882,7 +926,7 @@ void sdlReadPreferences(FILE *f)
       if(sizeOption < 0 || sizeOption > 3)
         sizeOption = 1;
     } else if(!strcmp(key, "fullScreen")) {
-      fullscreen = sdlFromHex(value) ? true : false;
+      fullscreen = sdlFromHex(value) ? 1 : 0;
     } else if(!strcmp(key, "useBios")) {
       useBios = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "biosFile")) {
@@ -937,6 +981,10 @@ soundQuality);
       cpuSaveType = sdlFromHex(value);
       if(cpuSaveType < 0 || cpuSaveType > 4)
         cpuSaveType = 0;
+    } else if(!strcmp(key, "flashSize")) {
+      sdlFlashSize = sdlFromHex(value);
+      if(sdlFlashSize != 0 && sdlFlashSize != 1)
+        sdlFlashSize = 0;
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1431,59 +1479,58 @@ void sdlPollEvents()
   }
 }
 
-extern "C" int getopt(int argc, char *const *argv, const char *opts);
-extern "C" char *optarg;
-extern "C" int optind;
-
 void usage(char *cmd)
 {
         printf("%s [options] file-name\n",cmd);
         printf("  options:\n");
-        printf("  -1 1x\n");
-        printf("  -2 2x\n");
-        printf("  -3 3x\n");
-        printf("  -4 4x\n");        
-        printf("  -F Full screen\n");
-        printf("  -G<protocol> GNU Remote Stub mode:\n");
-        printf("    tcp        - use TCP at port 55555\n");
-        printf("    tcp:<port> - use TCP at port <port>\n");
-        printf("    pipe       - use pipe transport\n");
-        printf("  -N Don't parse debug information\n");
-        printf("  -Y<type> Use YUV overlay for drawing:\n");
-        printf("    0 - YV12\n");
-        printf("    1 - UYVY\n");
-        printf("    2 - YVYU\n");
-        printf("    3 - YUY2\n");
-        printf("    4 - IYUV\n");
-        printf("  -b<bios file> Use given bios file\n");
-        printf("  -d Enter debugger\n");        
-        printf("  -f<filter> Select filter:\n");
-        printf("    0 - normal mode\n");
-        printf("    1 - TV Mode\n");
-        printf("    2 - 2xSaI\n");
-        printf("    3 - Super 2xSaI\n");
-        printf("    4 - Super Eagle\n");
-        printf("    5 - Pixelate\n");
-        printf("    6 - Motion Blur\n");
-        printf("    7 - AdvanceMAME Scale2x\n");
-        printf("    8 - Simple2x\n");
-        printf("  -p Enable profiling\n");
-        printf("  -s<frameskip> Set frame skip (0...9)\n");
-        printf("  -t<type> Set the available save type\n");
-        printf("    0 - Automatic (EEPROM, SRAM, FLASH)\n");
-        printf("    1 - EEPROM\n");
-        printf("    2 - SRAM\n");
-        printf("    3 - FLASH\n");
-        printf("    4 - EEPROM+Sensor\n");
-        printf("  -v<verbose> Set verbose logging (trace.log)\n");
-        printf("    1   - SWI\n");
-        printf("    2   - Unaligned memory access\n");
-        printf("    4   - Illegal memory write\n");
-        printf("    8   - Illegal memory read\n");
-        printf("    16  - DMA 0\n");
-        printf("    32  - DMA 1\n");
-        printf("    64  - DMA 2\n");
-        printf("    128 - DMA 3\n");
+        printf("  -1 , --video-1x             1x\n");
+        printf("  -2 , --video-2x             2x\n");
+        printf("  -3 , --video-3x             3x\n");
+        printf("  -4 , --video 4x             4x\n");        
+        printf("  -F , --fullscreen           Full screen\n");
+        printf("  -G , --gdb==PROTOCOL        GNU Remote Stub mode:\n");
+        printf("                               tcp      - use TCP at port 55555\n");
+        printf("                               tcp:PORT - use TCP at port PORT\n");
+        printf("                               pipe     - use pipe transport\n");
+        printf("  -N , --no-debug             Don't parse debug information\n");
+        printf("  -S , --flash-size=SIZE      Set the Flash size\n");
+        printf("       --flash-64k             0 -  64K Flash\n");
+        printf("       --flash-128k            1 - 128K Flash\n");
+        printf("  -Y , --yuv=TYPE             Use YUV overlay for drawing:\n");
+        printf("                               0 - YV12\n");
+        printf("                               1 - UYVY\n");
+        printf("                               2 - YVYU\n");
+        printf("                               3 - YUY2\n");
+        printf("                               4 - IYUV\n");
+        printf("  -b , --bios=BIOS            Use given bios file\n");
+        printf("  -d , --debug                Enter debugger\n");        
+        printf("  -f , --filter=FILTER        Select filter:\n");
+        printf("       --filter-normal         0 - normal mode\n");
+        printf("       --filter-tv-mode        1 - TV Mode\n");
+        printf("       --filter-2xsai          2 - 2xSaI\n");
+        printf("       --filter-super-2xsai    3 - Super 2xSaI\n");
+        printf("       --filter-super-eagle    4 - Super Eagle\n");
+        printf("       --filter-pixelate       5 - Pixelate\n");
+        printf("       --filter-motion-blur    6 - Motion Blur\n");
+        printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
+        printf("       --filter-simple2x       8 - Simple2x\n");
+        printf("  -p , --profile=[HERTZ]      Enable profiling\n");
+        printf("  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)\n");
+        printf("  -t , --save-type=TYPE       Set the available save type\n");
+        printf("       --save-auto             0 - Automatic (EEPROM, SRAM, FLASH)\n");
+        printf("       --save-eeprom           1 - EEPROM\n");
+        printf("       --save-sram             2 - SRAM\n");
+        printf("       --save-flash            3 - FLASH\n");
+        printf("       --save-sensor           4 - EEPROM+Sensor\n");
+        printf("  -v , --verbose=VERBOSE      Set verbose logging (trace.log)\n");
+        printf("                                 1 - SWI\n");
+        printf("                                 2 - Unaligned memory access\n");
+        printf("                                 4 - Illegal memory write\n");
+        printf("                                 8 - Illegal memory read\n");
+        printf("                                16 - DMA 0\n");
+        printf("                                32 - DMA 1\n");
+        printf("                                64 - DMA 2\n");
+        printf("                               128 - DMA 3\n");
 }
 
 int main(int argc, char **argv)
@@ -1511,8 +1558,12 @@ int main(int argc, char **argv)
 
   sdlReadPreferences();
   
-  while((op = getopt(argc, argv, "FNY:G:D:b:df:p::s:t:v:1234")) != -1) {
+  while((op = getopt_long(argc, argv, "FNY:G:D:b:df:p::s:t:v:1234",
+                          sdlOptions, NULL)) != -1) {
     switch(op) {
+    case 0:
+      // long option already processed by getopt_long
+      break;
     case 'b':
       useBios = true;
       if(optarg == NULL) {
@@ -1586,7 +1637,7 @@ int main(int argc, char **argv)
       }
       break;
     case 'F':
-      fullscreen = true;
+      fullscreen = 1;
       mouseCounter = 120;
       break;
     case 'f':
@@ -1603,6 +1654,11 @@ int main(int argc, char **argv)
       } else
         cpuEnableProfiling(100);
 #endif
+      break;
+    case 'S':
+      sdlFlashSize = atoi(optarg);
+      if(sdlFlashSize < 0 || sdlFlashSize > 1)
+        sdlFlashSize = 0;
       break;
     case 's':
       if(optarg) {
@@ -1642,9 +1698,18 @@ int main(int argc, char **argv)
     case '4':
       sizeOption = 3;
       break;
+    case '?':
+      usage(argv[0]);
+      exit(-1);
+      break;
     }
   }
 
+  if(sdlFlashSize == 0)
+    flashSetSize(0x10000);
+  else
+    flashSetSize(0x20000);
+  
   if(!debuggerStub) {
     if(optind >= argc) {
       systemMessage(0,"Missing image name");

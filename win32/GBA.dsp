@@ -80,7 +80,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /nodefaultlib:"LIBC" /out:"Debug/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBC" /out:"Debug/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# SUBTRACT LINK32 /profile
 
 !ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
 
@@ -107,7 +108,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"ReleaseNoDev/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /map /machine:I386 /out:"ReleaseNoDev/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
+# SUBTRACT LINK32 /profile /debug
 
 !ENDIF 
 

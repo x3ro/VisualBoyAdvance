@@ -133,6 +133,7 @@ RECT dest;
 
 int emulating = 0;
 bool debugger = false;
+int winFlashSize = 0x10000;
 
 bool systemSoundOn = false;
 u32 systemColorMap32[0x10000];
@@ -1360,6 +1361,10 @@ void updateSaveTypeMenu(HMENU menu)
                 CHECKMENUSTATE(cpuSaveType == 3));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR,
                 CHECKMENUSTATE(cpuSaveType == 4));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K,
+                CHECKMENUSTATE(flashSize == 0x10000));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M,
+                CHECKMENUSTATE(flashSize == 0x20000));
 }
 
 void updateEmulatorMenu(HMENU menu)
@@ -3580,6 +3585,16 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       cpuSaveType = 4;
       regSetDwordValue("saveType", 4);
       break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K:
+      flashSetSize(0x10000);
+      winFlashSize = 0x10000;
+      regSetDwordValue("flashSize", winFlashSize);
+      break;
+    case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M:
+      flashSetSize(0x20000);
+      winFlashSize = 0x20000;
+      regSetDwordValue("flashSize", winFlashSize);
+      break;
     case ID_OPTIONS_SOUND_OFF:
       soundOffFlag = true;
       soundShutdown();
@@ -4475,6 +4490,10 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   if(cpuSaveType < 0 || cpuSaveType > 4)
     cpuSaveType = 0;
 
+  winFlashSize = regQueryDwordValue("flashSize", 0x10000);
+  if(winFlashSize != 0x10000 && winFlashSize != 0x20000)
+    winFlashSize = 0x10000;
+
   if(!initDirectDraw()) {
     if(videoOption >= VIDEO_320x240)
       regSetDwordValue("video", VIDEO_1X);    
@@ -4828,6 +4847,7 @@ BOOL fileOpen()
   } else {
     if(!CPULoadRom(szFile))
       return FALSE;
+    flashSetSize(winFlashSize);
     
     emuWriteState = CPUWriteState;
     emuReadState = CPUReadState;

@@ -277,6 +277,10 @@ SOURCE=..\src\getopt.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\getopt1.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\prof\prof.cpp
 # End Source File
 # Begin Source File

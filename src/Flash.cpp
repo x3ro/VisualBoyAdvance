@@ -33,14 +33,25 @@
 #define FLASH_ERASE_COMPLETE     7
 #define FLASH_PROGRAM            8
 
-u8 flashSaveMemory[0x10000];
+u8 flashSaveMemory[0x20000];
 int flashState = FLASH_READ_ARRAY;
 int flashReadState = FLASH_READ_ARRAY;
+int flashSize = 0x10000;
+int flashDeviceID = 0x1b;
+int flashManufacturerID = 0x32;
 
 variable_desc flashSaveData[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSaveMemory[0], 0x10000 },
+  { NULL, 0 }
+};
+
+variable_desc flashSaveData2[] = {
+  { &flashState, sizeof(int) },
+  { &flashReadState, sizeof(int) },
+  { &flashSize, sizeof(int) },  
+  { &flashSaveMemory[0], 0x20000 },
   { NULL, 0 }
 };
 
@@ -52,19 +63,37 @@ void flashReset()
 
 void flashSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, flashSaveData);
+  CPUWriteData(gzFile, flashSaveData2);
 }
 
-void flashReadGame(gzFile gzFile)
+void flashReadGame(gzFile gzFile, int version)
 {
-  CPUReadData(gzFile, flashSaveData);
+  if(version < SAVE_GAME_VERSION_5)
+    CPUReadData(gzFile, flashSaveData);
+  else
+    CPUReadData(gzFile, flashSaveData2);
+}
+
+void flashSetSize(int size)
+{
+  flashSize = size;
+  if(size == 0x10000) {
+    flashDeviceID = 0x32;
+    flashManufacturerID = 0x1b;
+  } else {
+    flashDeviceID = 0x09;
+    flashManufacturerID = 0xc2;
+  }
 }
 
 u8 flashRead(u32 address)
 {
   //  printf("Reading %08x from %08x\n", address, reg[15].I);
   //  printf("Current read state is %d\n", flashReadState);
-  address &= 0xFFFF;
+  if(flashSize == 0x10000)
+    address &= 0xFFFF;
+  else
+    address &= 0x1FFFF;
 
   switch(flashReadState) {
   case FLASH_READ_ARRAY:
@@ -73,12 +102,10 @@ u8 flashRead(u32 address)
     switch(address & 0xFF) {
     case 0:
       // manufacturer ID
-      return 0x32;
-      //      return 0x01;
+      return flashManufacturerID;
     case 1:
       // device ID
-      return 0x1b;
-      //      return 0x20;
+      return flashDeviceID;
     }
     break;
   case FLASH_ERASE_COMPLETE:
@@ -106,7 +133,10 @@ void flashWrite(u32 address, u8 byte)
 {
   //  printf("Writing %02x at %08x\n", byte, address);
   //  printf("Current state is %d\n", flashState);
-  address = address & 0xFFFF;
+  if(flashSize == 0x10000)
+    address &= 0xFFFF;
+  else
+    address = address & 0x1FFFF;
   switch(flashState) {
   case FLASH_READ_ARRAY:
     if(address == 0x5555 && byte == 0xAA)

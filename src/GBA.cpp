@@ -691,7 +691,7 @@ bool CPUReadState(char * file)
   gzread(gzFile, ioMem, 0x400);
 
   eepromReadGame(gzFile, version);
-  flashReadGame(gzFile);
+  flashReadGame(gzFile, version);
   soundReadGame(gzFile, version);
 
   // set pointers!
@@ -778,9 +778,16 @@ bool CPUWriteBatteryFile(char *fileName)
     
     // only save if Flash/Sram in use or EEprom in use
     if(gbaSaveType != 3) {
-      if(fwrite(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
-        fclose(file);
-        return false;
+      if(gbaSaveType == 2) {
+        if(fwrite(flashSaveMemory, 1, flashSize, file) != (size_t)flashSize) {
+          fclose(file);
+          return false;
+        }
+      } else {
+        if(fwrite(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
+          fclose(file);
+          return false;
+        }
       }
     } else {
       if(fwrite(eepromData, 1, eepromSize, file) != (size_t)eepromSize) {
@@ -817,7 +824,9 @@ bool CPUReadGSASnapshot(char *fileName)
   fseek(file, i, SEEK_CUR); // skip desc
   fread(&i, 1, 4, file); // notes length
   fseek(file, i, SEEK_CUR); // skip notes
-  fseek(file, 4, SEEK_CUR); // skip flags;
+  int saveSize;
+  fread(&saveSize, 1, 4, file); // read length
+  saveSize -= 0x1c; // remove header size
   char buffer[17];
   char buffer2[17];
   fread(buffer, 1, 16, file);
@@ -839,8 +848,8 @@ bool CPUReadGSASnapshot(char *fileName)
     return false;
   }
   fseek(file, 12, SEEK_CUR); // skip some flags
-  if(size > 65536) {
-    if(fread(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
+  if(saveSize >= 65536) {
+    if(fread(flashSaveMemory, 1, saveSize, file) != (size_t)saveSize) {
       fclose(file);
       return false;
     }
@@ -889,11 +898,15 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   CPUWriteInt(buffer, strlen(notes));
   fwrite(buffer, 1, 4, file); // notes length
   fwrite(notes, 1, strlen(notes), file);
+  int saveSize = 0x10000;
+  if(gbaSaveType == 2)
+    saveSize = flashSize;
+  int totalSize = saveSize + 0x1c;
 
-  CPUWriteInt(buffer, 0x0001001c); // length of remainder of save - CRC
+  CPUWriteInt(buffer, totalSize); // length of remainder of save - CRC
   fwrite(buffer, 1, 4, file);
 
-  char temp[0x1001c];
+  char temp[0x2001c];
   memset(temp, 0, 28);
   memcpy(temp, &rom[0xa0], 16); // copy internal name
   temp[0x10] = rom[0xbe]; // reserved area (old checksum)
@@ -901,10 +914,11 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
   temp[0x12] = rom[0xbd]; // complement check
   temp[0x13] = rom[0xb0]; // maker
   temp[0x14] = 1; // 1 save ?
-  memcpy(&temp[0x1c], flashSaveMemory, 0x10000); // copy save
-  fwrite(temp, 1, 0x1001c, file); // write save + header
+  memcpy(&temp[0x1c], flashSaveMemory, saveSize); // copy save
+  fwrite(temp, 1, totalSize, file); // write save + header
   u32 crc = 0;
-  for(int i = 0; i < 0x1001c; i++) {
+  
+  for(int i = 0; i < totalSize; i++) {
     crc += ((u32)temp[i] << (crc % 0x18));
   }
   
@@ -975,9 +989,18 @@ bool CPUReadBatteryFile(char *fileName)
       return false;
     }
   } else {
-    if(fread(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
-      fclose(file);
-      return false;
+    if(size == 0x20000) {
+      if(fread(flashSaveMemory, 1, 0x20000, file) != 0x20000) {
+        fclose(file);
+        return false;
+      }
+      flashSetSize(0x20000);
+    } else {
+      if(fread(flashSaveMemory, 1, 0x10000, file) != 0x10000) {
+        fclose(file);
+        return false;
+      }
+      flashSetSize(0x10000);
     }
   }
   fclose(file);

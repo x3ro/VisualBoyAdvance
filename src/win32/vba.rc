@@ -1260,6 +1260,11 @@ BEGIN
 
                 MENUITEM "EEPROM+Sensor",               ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR
 
+                MENUITEM SEPARATOR
+                MENUITEM "Flash 64K",                   ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K
+
+                MENUITEM "Flash 128K",                  ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M
+
             END
             MENUITEM SEPARATOR
             MENUITEM "&Use BIOS file",              ID_OPTIONS_EMULATOR_USEBIOSFILE

@@ -284,49 +284,54 @@ All options are documented in the file supplied with this distribution.
 Command line options (override settings in configuration file)
 --------------------------------------------------------------
 
-  -1 1x
-  -2 2x
-  -3 3x
-  -4 4x
-  -F Full screen
-  -G<protocol> GNU Remote Stub mode:
-    tcp        - use TCP at port 55555
-    tcp:<port> - use TCP at port <port>
-    pipe       - use pipe transport
-  -N Don't parse debug information
-  -Y<type> Use YUV overlay for drawing:
-    0 - YV12
-    1 - UYVY
-    2 - YVYU
-    3 - YUY2
-    4 - IYUV
-  -b<bios file> Use given bios file
-  -d Enter debugger
-  -f<filter> Select filter:
-    0 - normal mode
-    1 - TV Mode
-    2 - 2xSaI
-    3 - Super 2xSaI
-    4 - Super Eagle
-    5 - Pixelate (experimental)
-    6 - Motion Blur (experimental)
-  -p<herz> Enable profiling and set frequency (default is 100 Hz)
-  -s<frameskip> Set frame skip (0...9)
-  -t<type> Set the available save type
-   0 - Automatic (EEPROM, SRAM, FLASH)\n");
-    1 - EEPROM
-    2 - SRAM
-    3 - FLASH
-    4 - EEPROM+Sensor
-  -v<verbose> Set verbose level (add flags values for multiple):
-      1 - SWI
-      2 - Unaliagned memory access
-      4 - Illegal memory write
-      8 - Illegal memory read
-     16 - DMA 0
-     32 - DMA 1
-     64 - DMA 2
-    128 - DMA 3
+  -1 , --video-1x             1x
+  -2 , --video-2x             2x
+  -3 , --video-3x             3x
+  -4 , --video 4x             4x
+  -F , --fullscreen           Full screen
+  -G , --gdb==PROTOCOL        GNU Remote Stub mode:
+                               tcp      - use TCP at port 55555
+                               tcp:PORT - use TCP at port PORT
+                               pipe     - use pipe transport
+  -N , --no-debug             Don't parse debug information
+  -S , --flash-size=SIZE      Set the Flash size
+       --flash-64k             0 -  64K Flash
+       --flash-128k            1 - 128K Flash
+  -Y , --yuv=TYPE             Use YUV overlay for drawing:
+                               0 - YV12
+                               1 - UYVY
+                               2 - YVYU
+                               3 - YUY2
+                               4 - IYUV
+  -b , --bios=BIOS            Use given bios file
+  -d , --debug                Enter debugger
+  -f , --filter=FILTER        Select filter:
+       --filter-normal         0 - normal mode
+       --filter-tv-mode        1 - TV Mode
+       --filter-2xsai          2 - 2xSaI
+       --filter-super-2xsai    3 - Super 2xSaI
+       --filter-super-eagle    4 - Super Eagle
+       --filter-pixelate       5 - Pixelate
+       --filter-motion-blur    6 - Motion Blur
+       --filter-advmame        7 - AdvanceMAME Scale2x
+       --filter-simple2x       8 - Simple2x
+  -p , --profile=[HERTZ]      Enable profiling
+  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)
+  -t , --save-type=TYPE       Set the available save type
+       --save-auto             0 - Automatic (EEPROM, SRAM, FLASH)
+       --save-eeprom           1 - EEPROM
+       --save-sram             2 - SRAM
+       --save-flash            3 - FLASH
+       --save-sensor           4 - EEPROM+Sensor
+  -v , --verbose=VERBOSE      Set verbose logging (trace.log)
+                                 1 - SWI
+                                 2 - Unaligned memory access
+                                 4 - Illegal memory write
+                                 8 - Illegal memory read
+                                16 - DMA 0
+                                32 - DMA 1
+                                64 - DMA 2
+                               128 - DMA 3
 
 Known bugs
 ----------
