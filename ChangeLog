@@ -1,3 +1,7 @@
+2003-06-02  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp: changed pause when inactive default to false
+
 2003-04-24  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/AcceleratorManager.cpp (Load): allow user to delete the default accelerators
