@@ -702,7 +702,8 @@ void BIOS_LZ77UnCompVram()
     if(d) {
       for(int i = 0; i < 8; i++) {
         if(d & 0x80) {
-          u16 data = (CPUReadByte(source++)<<8) | CPUReadByte(source++);
+          u16 data = CPUReadByte(source++) << 8;
+          data |= CPUReadByte(source++);
           int length = (data >> 12) + 3;
           int offset = (data & 0x0FFF);
           u32 windowOffset = dest + byteCount - offset - 1;
@@ -786,7 +787,8 @@ void BIOS_LZ77UnCompWram()
     if(d) {
       for(int i = 0; i < 8; i++) {
         if(d & 0x80) {
-          u16 data = (CPUReadByte(source++)<<8) | CPUReadByte(source++);
+          u16 data = CPUReadByte(source++) << 8;
+          data |= CPUReadByte(source++);
           int length = (data >> 12) + 3;
           int offset = (data & 0x0FFF);
           u32 windowOffset = dest - offset - 1;
