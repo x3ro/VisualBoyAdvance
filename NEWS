@@ -1,15 +1,15 @@
 Version 1.2 (in progress):
 
 Core changes:
-- added MidiKey2Freq bios call (user contribution)
+- added MidiKey2Freq bios call (thanks Chris Moeller)
 - added AdvanceMAME Scale2x and Simple 2x filters
 - added support for higher frameskip (up to 9)
 - added C core for portability
 - added big endian support
-- added support for movement sensor
+- added support for movement sensor (thanks Parasyte)
 - added support for selecting save type available
 - fixed another value for the bios protection
-- fixed sound envelope reload bug (user contribution)
+- fixed sound envelope reload bug (thanks jaymzj)
 - fixed timer counter (not changing the value of the counter unless the timer
   overflows or is restarted)
 - fixed problem on big endian when setting IO memory reable positions

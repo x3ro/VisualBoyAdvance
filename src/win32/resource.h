@@ -331,6 +331,7 @@
 #define IDS_ERROR_CREATING_SOCKET       1120
 #define IDS_ACK_NOT_RECEIVED            1121
 #define IDS_ERROR_NOT_GBA_IMAGE         1122
+#define IDS_EEPROM_NOT_SUPPORTED        1123
 #define IDC_MAP_VIEW                    1124
 #define IDC_PALETTE_VIEW                1125
 #define IDC_PALETTE_VIEW_OBJ            1126

@@ -3071,6 +3071,11 @@ void fileExportBatteryFile()
 
 void fileExportGSASnapshot()
 {
+  if(eepromInUse) {
+    systemMessage(IDS_EEPROM_NOT_SUPPORTED, "EEPROM saves cannot be exported");
+    return;
+  }
+  
   char *p = strrchr(filename,'\\');
   if(p)
     p++;

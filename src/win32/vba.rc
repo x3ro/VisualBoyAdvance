@@ -1685,6 +1685,7 @@ BEGIN
     IDS_ERROR_CREATING_SOCKET "Error creating socket."
     IDS_ACK_NOT_RECEIVED    "ACK not received from GDB."
     IDS_ERROR_NOT_GBA_IMAGE "Error: not a GBA image."
+    IDS_EEPROM_NOT_SUPPORTED "EEPROM saves cannot be exported."
 END
 
 #endif    // English (U.S.) resources
