@@ -2738,6 +2738,9 @@ void gbEmulate(int ticksToStop)
       
       // our counter is off, see what we need to do
       while(gbLcdTicks <= 0) {
+        int framesToSkip = gbFrameSkip;
+        if(speedup)
+          framesToSkip = 9; // try 6 FPS during speedup
         switch(gbLcdMode) {
         case 0:
           // H-Blank
@@ -2797,8 +2800,7 @@ void gbEmulate(int ticksToStop)
             }
             gbCapturePrevious = gbCapture;
             
-            if((!speedup && gbFrameSkipCount >= gbFrameSkip) ||
-               (speedup && gbFrameSkipCount >= 5)) {
+            if(gbFrameSkipCount >= framesToSkip) {
               systemDrawScreen();
               gbFrameSkipCount = 0;
             } else
@@ -2829,8 +2831,7 @@ void gbEmulate(int ticksToStop)
           gbLcdMode = 3;
           if(register_LY < 144) {
             if(!gbSgbMask) {
-              if((!speedup && gbFrameSkipCount >= gbFrameSkip) ||
-                 (speedup && gbFrameSkipCount >= 5)) {
+              if(gbFrameSkipCount >= framesToSkip) {
                 gbRenderLine();
                 gbDrawSprites();
                 

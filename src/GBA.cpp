@@ -3279,6 +3279,10 @@ void CPULoop(int ticks)
             CPUCompareVCOUNT();
           }
         } else {
+          int framesToSkip = frameSkip;
+          if(speedup)
+            framesToSkip = 9; // try 6 FPS during speedup
+          
           if(DISPSTAT & 2) {
             // if in H-Blank, leave it and move to drawing mode
             VCOUNT++;
@@ -3337,8 +3341,7 @@ void CPULoop(int ticks)
                 UPDATE_REG(0x202, IF);
               }
               CPUCheckDMA(1, 0x0f);
-              if((speedup && frameCount >= 5) ||
-                 (!speedup && frameCount >= frameSkip)) {
+              if(frameCount >= framesToSkip) {
                 systemDrawScreen();
                 frameCount = 0;
               } else 
@@ -3351,8 +3354,7 @@ void CPULoop(int ticks)
             
             CPUCompareVCOUNT(); 
           } else {
-            if((speedup && frameCount >= 5) ||
-               (!speedup && frameCount >= frameSkip)) {
+            if(frameCount >= framesToSkip) {
               (*renderLine)();
               
               switch(systemColorDepth) {

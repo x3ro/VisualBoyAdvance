@@ -1,5 +1,18 @@
 Welcome to VisualBoyAdvance version 1.2 (in progress).
 
+Compiling the sources
+---------------------
+
+See the INSTALL file for compiling instructions. Please note the following
+requisites to compile:
+
+- GCC must be 3.x or greater in order to compile GBA.cpp with -O2. Earlier
+  versions have a problem during optimization that requires an absurd
+  ammount of memory and usually ends up crashing the compiler/computer
+- On Windows, Microsoft Visual C++ 6 or later is needed. Please note that
+  some of the source code will not compile with the shipped header files.
+  You will need to install the most recent Platform SDK from Microsoft.
+
 Support
 -------
 
@@ -69,10 +82,25 @@ that needs to be sent to me (usually in c:\Documents and Settings\All Users\
 Documents\DrWatson). Depending on your system configuration, you may be asked
 if you want to generate a log file. If so, please click on yes.
 
-Warranty
---------
+LICENSE
+-------
 
-VisualBoyAdvance comes with no warranty. Use it at your own risk.
+    VisualBoyAdvance - a Gameboy and GameboyAdvance emulator
+    Copyright (C) 1999-2002 by Forgotten
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Special Thanks
 --------------
