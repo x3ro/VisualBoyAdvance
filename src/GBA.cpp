@@ -489,6 +489,7 @@ variable_desc saveGameStruct[] = {
 
 //int cpuLoopTicks = 0;
 int cpuSavedTicks = 0;
+static int romSize = 0x2000000;
 
 #ifdef PROFILING
 void cpuProfil(char *buf, int size, u32 lowPC, int scale)
@@ -1261,8 +1262,7 @@ void CPUCleanUp()
 
 int CPULoadRom(const char *szFile)
 {
-  int size = 0x2000000;
-  
+  romSize = 0x2000000;
   if(rom != NULL) {
     CPUCleanUp();
   }
@@ -1297,8 +1297,8 @@ int CPULoadRom(const char *szFile)
       workRAM = NULL;
       return 0;
     }
-    bool res = elfRead(szFile, size, f);
-    if(!res || size == 0) {
+    bool res = elfRead(szFile, romSize, f);
+    if(!res || romSize == 0) {
       free(rom);
       rom = NULL;
       free(workRAM);
@@ -1309,7 +1309,7 @@ int CPULoadRom(const char *szFile)
   } else if(!utilLoad(szFile,
                       utilIsGBAImage,
                       whereToLoad,
-                      size)) {
+                      romSize)) {
     free(rom);
     rom = NULL;
     free(workRAM);
@@ -1317,9 +1317,9 @@ int CPULoadRom(const char *szFile)
     return 0;
   }
 
-  u16 *temp = (u16 *)(rom+((size+1)&~1));
+  u16 *temp = (u16 *)(rom+((romSize+1)&~1));
   int i;
-  for(i = (size+1)&~1; i < 0x2000000; i+=2) {
+  for(i = (romSize+1)&~1; i < 0x2000000; i+=2) {
     WRITE16LE(temp, (i >> 1) & 0xFFFF);
     temp++;
   }
@@ -1376,7 +1376,7 @@ int CPULoadRom(const char *szFile)
 
   CPUUpdateRenderBuffers(true);
 
-  return size;
+  return romSize;
 }
 
 void CPUUpdateRender()
@@ -3008,8 +3008,12 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
   for(i = 0x304; i < 0x400; i++)
     ioReadable[i] = false;
 
-  *((u16 *)&rom[0x1fe209c]) = 0xdffa; // SWI 0xFA
-  *((u16 *)&rom[0x1fe209e]) = 0x4770; // BX LR
+  if(romSize < 0x1fe2000) {
+    *((u16 *)&rom[0x1fe209c]) = 0xdffa; // SWI 0xFA
+    *((u16 *)&rom[0x1fe209e]) = 0x4770; // BX LR
+  } else {
+    agbPrintEnable(false);
+  }
 }
 
 void CPUReset()
