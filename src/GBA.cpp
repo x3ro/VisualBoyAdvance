@@ -36,6 +36,7 @@
 #include "NLS.h"
 #include "elf.h"
 #include "Util.h"
+#include "Port.h"
 #ifdef PROFILING
 #include "prof/prof.h"
 #endif
@@ -178,6 +179,10 @@ const bool memory32[16] =
   { false, false, false, true, true, false, false, true, false, false, false, false, false, false, false, false};
 
 u8 biosProtected[4];
+
+#ifdef WORDS_BIGENDIAN
+bool cpuBiosSwapped = false;
+#endif
 
 u32 myROM[] = {
 0xEA000006,
@@ -2977,6 +2982,14 @@ u8 cpuLowestBitSet[256];
 
 void CPUInit(char *biosFileName, bool useBiosFile)
 {
+#ifdef WORDS_BIGENDIAN
+  if(!cpuBiosSwapped) {
+    for(int i = 0; i < sizeof(myROM)/4; i++) {
+      myROM[i] = TO32LE(myROM[i]);
+    }
+    cpuBiosSwapped = true;
+  }
+#endif
   gbaSaveType = 0;
   eepromInUse = 0;
   saveType = 0;

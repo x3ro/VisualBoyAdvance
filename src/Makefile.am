@@ -1,5 +1,5 @@
-SUBDIRS = gb prof @VBA_EXTRA@
-EXTRA_SUBDIRS = gp i386
+SUBDIRS = gb @VBA_EXTRA@
+EXTRA_SUBDIRS = gp i386 prof
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
@@ -14,7 +14,7 @@ VisualBoyAdvance_SOURCES = \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
 	thumb.h
 
-VisualBoyAdvance_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
+VisualBoyAdvance_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
 
 TestEmu_SOURCES = \
@@ -29,11 +29,11 @@ TestEmu_SOURCES = \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h arm-new.h \
 	thumb.h
 
-TestEmu_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
+TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
-	gp i386 win32 VisualBoyAdvance.cfg \
+	gp i386 win32 prof VisualBoyAdvance.cfg \
 	expr.l expr.y getopt.c getopt1.c getopt.h qt
 
 dist-hook:
@@ -41,4 +41,4 @@ dist-hook:
 	rm -rf `find $(distdir)/i386 -name CVS`
 	rm -rf `find $(distdir)/win32 -name CVS`
 	rm -rf `find $(distdir)/qt -name CVS`
-
+	rm -rf `find $(distdir)/prof -name CVS`

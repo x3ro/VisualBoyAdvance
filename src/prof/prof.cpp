@@ -125,11 +125,15 @@ void profControl(int mode)
 {
   if (mode) {
     /* start */
+#ifdef PROFILING
     cpuProfil(sbuf, ssiz, (u32)s_lowpc, s_scale);
+#endif
     profiling = 0;
   } else {
     /* stop */
+#ifdef PROFILING
     cpuProfil(NULL, 0, 0, 0);
+#endif
     profiling = 3;
   }
 }

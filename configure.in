@@ -36,6 +36,11 @@ AC_ARG_WITH(mmx,
 ac_cv_use_mmx=$withval, ac_cv_use_mmx=$VBA_USE_MMX)
 AC_CACHE_CHECK(whether to use mmx, ac_cv_use_mmx, ac_cv_use_mmx=$VBA_USE_MMX)
 
+AC_ARG_WITH(profiling,
+[  --with-profiling        enable profiling (default is YES)],
+ac_cv_use_prof=$withval, ac_cv_use_prof=yes)
+AC_CACHE_CHECK(whether to enable profiling, ac_cv_use_prof, ac_cv_use_prof=yes)
+
 PACKAGE=VisualBoyAdvance
 VERSION=1.4
 CCC="gcc  c++ g++ CC cxx cc++ cl"
@@ -89,6 +94,7 @@ AC_C_BIGENDIAN
 AC_SUBST(VBA_MMX)
 AC_SUBST(VBA_EXTRA)
 AC_SUBST(VBA_GP)
+AC_SUBST(VBA_PROF)
 
 CXXFLAGS="$CXXFLAGS -DSDL -DPROFILING -DBKPT_SUPPORT -fno-exceptions"
 
@@ -108,8 +114,14 @@ if test "${ac_cv_use_mmx}" = "yes"; then
   VBA_EXTRA="$VBA_EXTRA i386"
 fi
 
+if test "${ac_cv_use_prof}" = "yes"; then
+   CXXFLAGS="$CXXFLAGS -DPROFILING"
+   VBA_EXTRA="$VBA_EXTRA prof"
+fi
+
 if test "${ac_cv_use_dev}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DDEV_VERSION"
+  VBA_PROF=prof/libprof.a
 fi
 
 dnl Checks for library functions.

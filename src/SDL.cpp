@@ -48,7 +48,7 @@
 #define GETCWD _getcwd
 #endif
 
-#ifndef __GNUC__
+#ifdef __GNUC__
 #define HAVE_DECL_GETOPT 0
 #define __STDC__ 1
 #include "getopt.h"
@@ -1765,8 +1765,7 @@ int main(int argc, char **argv)
 
   sdlPrintUsage = 0;
   
-  while((op = getopt_long(argc, argv, "FNT:Y:G:D:b:c:df:hi:p::s:t:v:1234",
-                          sdlOptions, NULL)) != -1) {
+  while((op = getopt(argc, argv, "FNT:Y:G:D:b:c:df:hi:p::s:t:v:1234")) != -1) {
     switch(op) {
     case 0:
       // long option already processed by getopt_long

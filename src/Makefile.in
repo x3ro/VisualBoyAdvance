@@ -80,11 +80,12 @@ SMPEG_LIBS = @SMPEG_LIBS@
 VBA_EXTRA = @VBA_EXTRA@
 VBA_GP = @VBA_GP@
 VBA_MMX = @VBA_MMX@
+VBA_PROF = @VBA_PROF@
 VERSION = @VERSION@
 YACC = @YACC@
 
-SUBDIRS = gb prof @VBA_EXTRA@
-EXTRA_SUBDIRS = gp i386
+SUBDIRS = gb @VBA_EXTRA@
+EXTRA_SUBDIRS = gp i386 prof
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
@@ -100,7 +101,7 @@ VisualBoyAdvance_SOURCES = \
 	thumb.h
 
 
-VisualBoyAdvance_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
+VisualBoyAdvance_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
 
 TestEmu_SOURCES = \
@@ -116,11 +117,11 @@ TestEmu_SOURCES = \
 	thumb.h
 
 
-TestEmu_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
+TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
-	gp i386 win32 VisualBoyAdvance.cfg \
+	gp i386 win32 prof VisualBoyAdvance.cfg \
 	expr.l expr.y getopt.c getopt1.c getopt.h qt
 
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -137,13 +138,13 @@ admame.o simple2x.o bilinear.o interframe.o Font.o unzip.o Cheats.o \
 EEprom.o Flash.o GBA.o Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o \
 Mode4.o Mode5.o Sound.o Sram.o Util.o armdis.o bios.o elf.o expr.o \
 expr-lex.o exprNode.o debugger.o remote.o
-VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a prof/libprof.a
+VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a
 TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
 Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
 Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
 debugger.o remote.o
-TestEmu_DEPENDENCIES =  gb/libgb.a prof/libprof.a
+TestEmu_DEPENDENCIES =  gb/libgb.a
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)
@@ -488,6 +489,7 @@ dist-hook:
 	rm -rf `find $(distdir)/i386 -name CVS`
 	rm -rf `find $(distdir)/win32 -name CVS`
 	rm -rf `find $(distdir)/qt -name CVS`
+	rm -rf `find $(distdir)/prof -name CVS`
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
