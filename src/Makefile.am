@@ -1,5 +1,6 @@
 SUBDIRS = gb @VBA_EXTRA@
 EXTRA_SUBDIRS = gp i386 prof
+DIST_SUBDIRS = $(SUBDIRS) $(EXTRA_SUBDIRS)
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
 VisualBoyAdvance_SOURCES = \
@@ -37,7 +38,7 @@ TestEmu_LDADD = gb/libgb.a @VBA_PROF@ @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
-	gp i386 win32 prof VisualBoyAdvance.cfg \
+	win32 VisualBoyAdvance.cfg \
 	expr.l expr.y qt \
 	CheatSearch.cpp CheatSearch.h
 
