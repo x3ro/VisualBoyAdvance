@@ -578,8 +578,12 @@ case 0x38:
      PC.W--;
      IFF |= 0x80;
    } else {
-     if(register_IE && register_IF > 0)
+     if((register_IE & register_IF) > 0)
        IFF |= 0x100;
+     else {
+       PC.W--;
+       IFF |= 0x81;
+     }
    }
    break;
  case 0x77:
