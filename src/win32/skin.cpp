@@ -18,6 +18,8 @@
 
 #include "StdString.h"
 
+#include "../System.h"
+
 // ----------------------------------------------------------------------------
 // constructor 1 - use it when you have not already created the app window.
 // this one will not subclass automatically, you must call Hook() and Enable()
@@ -39,6 +41,8 @@ CSkin::CSkin()
   m_dOldStyle = 0;
 
   m_oldRect = m_rect;
+  m_nButtons = 0;
+  m_buttons = NULL;
 }
 
 // ----------------------------------------------------------------------------
@@ -55,7 +59,10 @@ CSkin::~CSkin()
 bool CSkin::Initialize(const char *skinFile)
 {
   // try to retrieve the skin data from resource.
-  return GetSkinData(skinFile);
+  bool res = GetSkinData(skinFile);
+  if(!res) 
+    systemMessage(0, (char *)((const char *)m_error));
+  return res;
 }  
 
 // ----------------------------------------------------------------------------
@@ -63,6 +70,11 @@ bool CSkin::Initialize(const char *skinFile)
 // ----------------------------------------------------------------------------
 void CSkin::Destroy()
 {
+  if (m_buttons) {
+    delete[] m_buttons;
+    m_buttons = NULL;
+  }
+
   // unhook the window
   UnHook();
 
@@ -72,6 +84,7 @@ void CSkin::Destroy()
 
   // free skin region
   if (m_rgnSkin) { DeleteObject(m_rgnSkin); m_rgnSkin = NULL; }
+  
 }
 
 
@@ -154,6 +167,12 @@ bool CSkin::Hook(HWND hWnd)
   // update flag
   m_bHooked = ( m_OldWndProc ? true : false );
 
+  for(int i = 0; i < m_nButtons; i++) {
+    RECT r;
+    m_buttons[i].GetRect(r);
+    m_buttons[i].Create("", WS_VISIBLE, r, hWnd, 0);
+  }
+  
   // force window repainting
   RedrawWindow(NULL,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);  
 
@@ -248,7 +267,66 @@ HDC CSkin::HDC()
   return m_dcSkin;
 }
 
+bool CSkin::ParseRect(char *buffer, RECT& rect)
+{
+  char *token = strtok(buffer, ",");
 
+  if(token == NULL)
+    return false;
+  rect.left = atoi(token);
+
+  token = strtok(NULL, ",");
+  if(token == NULL)
+    return false;
+  rect.top = atoi(token);
+
+  token = strtok(NULL, ",");
+  if(token == NULL)
+    return false;
+  rect.right = rect.left + atoi(token);
+
+  token = strtok(NULL, ",");
+  if(token == NULL)
+    return false;
+  rect.bottom = rect.top + atoi(token);
+
+  token = strtok(NULL, ",");
+  if(token != NULL)
+    return false;
+
+  return true;
+}
+
+HRGN CSkin::LoadRegion(const char *rgn)
+{
+  // -------------------------------------------------
+  // then, we retrieve the skin region from resource.
+  // -------------------------------------------------
+  FILE *f = fopen(rgn, "rb");
+  if(!f) return NULL;
+  
+  fseek(f, 0, SEEK_END);
+  int size = ftell(f);
+  LPRGNDATA pSkinData = (LPRGNDATA)malloc(size);
+  if(!pSkinData) {
+    fclose(f);
+    return NULL;
+  }
+
+  fseek(f, 0, SEEK_SET);
+  
+  fread(pSkinData, 1, size, f);
+  
+  fclose(f);
+  
+  // create the region using the binary data.
+  HRGN r = ExtCreateRegion(NULL, size, pSkinData);
+  
+  // free the allocated resource
+  free(pSkinData);
+  
+  return r;
+}
 
 // ----------------------------------------------------------------------------
 // skin retrieval helper
@@ -261,40 +339,36 @@ bool CSkin::GetSkinData(const char *skinFile)
 
   char buffer[2048];
 
-  if(!GetPrivateProfileString("skin", "image", "", buffer, 2048, skinFile))
+  if(!GetPrivateProfileString("skin", "image", "", buffer, 2048, skinFile)) {
+    m_error = "Missing skin bitmap";
     return false;
+  }
   CStdString bmpName = buffer;
-  if(!GetPrivateProfileString("skin", "region", "", buffer, 2048, skinFile))
+  if(!GetPrivateProfileString("skin", "region", "", buffer, 2048, skinFile)) {
+    m_error = "Missing skin region";
     return false;
+  }
   CStdString rgn = buffer;
 
-  if(!GetPrivateProfileString("skin", "draw", "", buffer, 2048, skinFile))
+  if(!GetPrivateProfileString("skin", "draw", "", buffer, 2048, skinFile)) {
+    m_error = "Missing draw rectangle";
     return false;
-
-  char *token = strtok(buffer, ",");
-
-  if(token == NULL)
+  }
+  
+  if(!ParseRect(buffer, m_rect)) {
+    m_error = "Invalid draw rectangle";
     return false;
-  m_rect.left = atoi(token);
+  }
 
-  token = strtok(NULL, ",");
-  if(token == NULL)
-    return false;
-  m_rect.top = atoi(token);
+  m_nButtons = GetPrivateProfileInt("skin", "buttons", 0, skinFile);
 
-  token = strtok(NULL, ",");
-  if(token == NULL)
-    return false;
-  m_rect.right = m_rect.left + atoi(token);
-
-  token = strtok(NULL, ",");
-  if(token == NULL)
-    return false;
-  m_rect.bottom = m_rect.top + atoi(token);
-
-  token = strtok(NULL, ",");
-  if(token != NULL)
-    return false;
+  if(m_nButtons) {
+    m_buttons = new SkinButton[m_nButtons];
+    for(int i = 0; i < m_nButtons; i++) {
+      if(!ReadButton(skinFile, i))
+	return false;
+    }
+  }
   
   CStdString path = skinFile;
   int index = path.ReverseFind('\\');
@@ -306,7 +380,10 @@ bool CSkin::GetSkinData(const char *skinFile)
   rgn = path + rgn;
   
   m_hBmp = (HBITMAP)LoadImage(NULL, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE|LR_CREATEDIBSECTION);
-  if (!m_hBmp) return false;
+  if (!m_hBmp) {
+    m_error = "Error loading skin bitmap " + bmpName;
+    return false;
+  }
 
   // get skin info
   BITMAP bmp;
@@ -316,31 +393,13 @@ bool CSkin::GetSkinData(const char *skinFile)
   m_iWidth = bmp.bmWidth;
   m_iHeight = bmp.bmHeight;
 
-
-  // -------------------------------------------------
-  // then, we retrieve the skin region from resource.
-  // -------------------------------------------------
-  FILE *f = fopen(rgn, "rb");
-  if(!f) return false;
-
-  fseek(f, 0, SEEK_END);
-  int size = ftell(f);
-  LPRGNDATA pSkinData = (LPRGNDATA)malloc(size);
-  if(!pSkinData) return false;
-  fseek(f, 0, SEEK_SET);
-
-  fread(pSkinData, 1, size, f);
-
-  fclose(f);
+  m_rgnSkin = LoadRegion(rgn);
   
-  // create the region using the binary data.
-  m_rgnSkin = ExtCreateRegion(NULL, size, pSkinData);
-
-  // free the allocated resource
-  free(pSkinData);
-
   // check if we have the skin at hand.
-  if (!m_rgnSkin) return false;
+  if (!m_rgnSkin) {
+    m_error = "Error loading skin region " + rgn;
+    return false;
+  }
 
 
   // -------------------------------------------------
@@ -363,7 +422,103 @@ bool CSkin::GetSkinData(const char *skinFile)
   return true;
 }
 
+bool CSkin::ReadButton(const char *skinFile, int num)
+{
+  char buffer[2048];
 
+  CStdString path = skinFile;
+  int index = path.ReverseFind('\\');
+  if(index != -1) {
+    path = path.Left(index+1);
+  }
+  sprintf(buffer, "button-%d", num);
+  CStdString name = buffer;
+  
+  if(!GetPrivateProfileString(name, "normal", "", buffer, 2048, skinFile)) {
+    m_error = "Missing button bitmap for " + name;
+    return false;
+  }
+  
+  CStdString normalBmp = path + buffer;
+
+  HBITMAP bmp = (HBITMAP)LoadImage(NULL,
+				   normalBmp,
+				   IMAGE_BITMAP,
+				   0,
+				   0,
+				   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+  if (!bmp) {
+    m_error = "Error loading button bitmap " + normalBmp;
+    return false;
+  }
+  m_buttons[num].SetNormalBitmap(bmp);
+
+  if(!GetPrivateProfileString(name, "down", "", buffer, 2048, skinFile)) {
+    m_error = "Missing button down bitmap " + name;
+    return false;
+  }
+  
+  CStdString downBmp = path + buffer;
+
+  bmp = (HBITMAP)LoadImage(NULL,
+			   downBmp,
+			   IMAGE_BITMAP,
+			   0,
+			   0,
+			   LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+  if (!bmp) {
+    m_error = "Error loading button down bitmap " + downBmp;
+    return false;
+  }
+  m_buttons[num].SetDownBitmap(bmp);
+
+  if(GetPrivateProfileString(name, "over", "", buffer, 2048, skinFile)) {
+    CStdString overBmp = path + buffer;
+
+    bmp = (HBITMAP)LoadImage(NULL,
+			     overBmp,
+			     IMAGE_BITMAP,
+			     0,
+			     0,
+			     LR_LOADFROMFILE|LR_CREATEDIBSECTION);
+    if (!bmp) {
+      m_error = "Error loading button over bitmap " + overBmp;
+      return false;
+    }
+    m_buttons[num].SetOverBitmap(bmp);
+  }
+
+  if(GetPrivateProfileString(name, "region", "", buffer, 2048, skinFile)) {
+    CStdString region = path + buffer;
+    
+    HRGN rgn = LoadRegion(region);
+    if(!rgn) {
+      m_error = "Error loading button region " + region;
+      return false;
+    }
+    m_buttons[num].SetRegion(rgn);
+  }
+
+  if(!GetPrivateProfileString(name, "id", "", buffer, 2048, skinFile)) {
+    "Missing button ID for " + name;
+    return false;
+  }
+  m_buttons[num].SetId(buffer);
+
+  if(!GetPrivateProfileString(name, "rect", "", buffer, 2048, skinFile)) {
+    m_error = "Missing button rectangle for " + name;
+    return false;
+  }
+  
+  RECT r;
+  if(!ParseRect(buffer, r)) {
+    m_error = "Invalid button rectangle for " + name;
+    return false;
+  }
+  m_buttons[num].SetRect(r);
+
+  return true;
+}
 
 // ------------------------------------------------------------------------
 // Default skin window procedure.

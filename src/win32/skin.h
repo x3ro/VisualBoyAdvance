@@ -16,7 +16,8 @@
 
   #define _SKIN_H_
 
-  #include <windows.h>
+  #include "skinButton.h"
+
 
 
   // --------------------------------------------------------------------------
@@ -68,6 +69,9 @@
 
       DWORD     m_dOldStyle;
       RECT      m_oldRect;
+      int       m_nButtons;
+      SkinButton *m_buttons;
+      CStdString m_error;
 
     public:
 
@@ -148,6 +152,10 @@
 
       HDC     HDC();
 
+  private:
+      bool ReadButton(const char *, int);
+      static bool ParseRect(char *, RECT &);
+      static HRGN LoadRegion(const char *);
   };
 
 #endif
