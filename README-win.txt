@@ -1,4 +1,4 @@
-Welcome to VisualBoyAdvance version 1.6a.
+Welcome to VisualBoyAdvance version 1.7.
 
 Compiling the sources
 ---------------------
