@@ -207,7 +207,7 @@ void ScreenArea::vStartCursorTimeout()
   m_oCursorSig.disconnect();
   m_oCursorSig = Glib::signal_timeout().connect(
     SigC::slot(*this, &ScreenArea::bOnCursorTimeout),
-    3000);
+    2000);
 }
 
 void ScreenArea::vStopCursorTimeout()
