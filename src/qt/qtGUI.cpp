@@ -958,12 +958,12 @@ void qtGUI::doIdle()
 
 void qtGUI::drawScreen()
 {
-  u32 *p = (u32 *)pix;
+  u32 *p = (u32 *)pix + 241;
   QPainter painter(this);  
 
   if(filterFunction) {
-    (*filterFunction)(pix,
-                      240*4,
+    (*filterFunction)(pix+241*4,
+                      241*4,
                       (u8 *)delta,
                       filterImage.bits(),
                       filterImage.bytesPerLine(),
@@ -977,6 +977,7 @@ void qtGUI::drawScreen()
       for(int x = 0; x < 240; x++) {
         *line++ = *p++;
       }
+      p++;
     }
 
     painter.drawImage(destRect, image);
