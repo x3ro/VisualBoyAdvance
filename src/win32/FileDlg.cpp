@@ -36,10 +36,10 @@ static char THIS_FILE[] = __FILE__;
 
 static FileDlg *instance = NULL;
 
-UINT_PTR CALLBACK HookFunc(HWND hwnd,
-                           UINT msg,
-                           WPARAM wParam,
-                           LPARAM lParam)
+static UINT_PTR CALLBACK HookFunc(HWND hwnd,
+                                  UINT msg,
+                                  WPARAM wParam,
+                                  LPARAM lParam)
 {
   if(instance) {
     if(msg == WM_NOTIFY) {
@@ -55,6 +55,25 @@ UINT_PTR CALLBACK HookFunc(HWND hwnd,
   return 0;
 }
 
+static UINT_PTR CALLBACK HookFuncOldStyle(HWND hwnd,
+                                          UINT msg,
+                                          WPARAM wParam,
+                                          LPARAM lParam)
+{
+  if(instance) {
+    if(msg == WM_COMMAND) {
+      if(HIWORD(wParam) == CBN_SELCHANGE) {
+        if(LOWORD(wParam) == cmb1) {
+          // call method with combobox handle to keep 
+          // behaviour there
+          instance->OnTypeChange((HWND)lParam);
+          return 1;
+        }
+      }
+    }
+  }
+  return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // FileDlg
@@ -104,7 +123,9 @@ FileDlg::FileDlg(CWnd *parent, LPCTSTR file, LPCTSTR filter,
 
   if(theApp.videoOption == VIDEO_320x240) {
     m_ofn.lpTemplateName = MAKEINTRESOURCE(IDD_OPENDLG);
+    m_ofn.lpfnHook = HookFuncOldStyle;
     m_ofn.Flags |= OFN_ENABLETEMPLATE;
+    m_ofn.Flags &= ~OFN_EXPLORER;
   }
 
   isSave = save;
