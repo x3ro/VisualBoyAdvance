@@ -24,6 +24,7 @@
 #include "FileDlg.h"
 #include "GBColorDlg.h"
 #include "Joypad.h"
+#include "MaxScale.h"
 #include "ModeConfirm.h"
 #include "Reg.h"
 #include "RewindInterval.h"
@@ -157,9 +158,9 @@ BOOL MainWnd::OnOptionsFrameskip(UINT nID)
   case ID_OPTIONS_VIDEO_FRAMESKIP_8:
   case ID_OPTIONS_VIDEO_FRAMESKIP_9:
     if(theApp.cartridgeType == 0) {
-      frameSkip = 6 + nID - ID_OPTIONS_VIDEO_FRAMESKIP_0;
+      frameSkip = 6 + nID - ID_OPTIONS_VIDEO_FRAMESKIP_6;
     } else {
-      gbFrameSkip = 6 + nID - ID_OPTIONS_VIDEO_FRAMESKIP_0;
+      gbFrameSkip = 6 + nID - ID_OPTIONS_VIDEO_FRAMESKIP_6;
     }
     if(emulating)
       theApp.updateFrameSkip();
@@ -540,7 +541,7 @@ void MainWnd::OnOptionsVideoRenderoptionsSelectskin()
               exts,
               "", 
               title,
-              true);
+              false);
 
   if(dlg.DoModal() == IDCANCEL) {
     return;
@@ -608,12 +609,12 @@ void MainWnd::OnUpdateOptionsEmulatorDisablestatusmessages(CCmdUI* pCmdUI)
 
 void MainWnd::OnOptionsEmulatorSynchronize() 
 {
-  theApp.synchronize = !theApp.synchronize;
+  synchronize = !synchronize;
 }
 
 void MainWnd::OnUpdateOptionsEmulatorSynchronize(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(theApp.synchronize);
+  pCmdUI->SetCheck(synchronize);
 }
 
 void MainWnd::OnOptionsEmulatorPausewheninactive() 
@@ -867,9 +868,9 @@ void MainWnd::OnOptionsEmulatorSelectbiosfile()
               exts,
               "", 
               title,
-              true);
+              false);
   
-  if(dlg.DoModal()) {
+  if(dlg.DoModal() == IDOK) {
     theApp.biosFileName = dlg.GetPathName();
   }
 }
@@ -1356,6 +1357,12 @@ BOOL MainWnd::OnOptionsFilter(UINT nID)
   case ID_OPTIONS_FILTER_SCANLINES:
     theApp.filterType = 11;
     break;
+  case ID_OPTIONS_FILTER_HQ2X:
+    theApp.filterType = 12;
+    break;
+  case ID_OPTIONS_FILTER_LQ2X:
+    theApp.filterType = 13;
+    break;
   default:
     return FALSE;
   }
@@ -1402,6 +1409,12 @@ void MainWnd::OnUpdateOptionsFilter(CCmdUI *pCmdUI)
     break;
   case ID_OPTIONS_FILTER_SCANLINES:
     pCmdUI->SetCheck(theApp.filterType == 11);
+    break;
+  case ID_OPTIONS_FILTER_HQ2X:
+    pCmdUI->SetCheck(theApp.filterType == 12);
+    break;
+  case ID_OPTIONS_FILTER_LQ2X:
+    pCmdUI->SetCheck(theApp.filterType == 13);
     break;
   }
 }
@@ -1645,4 +1658,13 @@ void MainWnd::winConfirmMode()
     }
   }
   theApp.winAccelMgr.UpdateMenu(theApp.menu);
+}
+
+void MainWnd::OnOptionsVideoFullscreenmaxscale() 
+{
+  MaxScale dlg;
+
+  theApp.winCheckFullscreen();
+
+  dlg.DoModal();
 }
