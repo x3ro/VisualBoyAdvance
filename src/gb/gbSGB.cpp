@@ -129,7 +129,7 @@ void gbSgbFillScreen(u16 color)
   case 16:
     {
       for(int y = 0; y < 144; y++) {
-        int yLine = (y+gbBorderRowSkip+1)*(gbBorderLineSkip+1) +
+        int yLine = (y+gbBorderRowSkip+1)*(gbBorderLineSkip+2) +
           gbBorderColumnSkip;
         u16 *dest = (u16*)pix + yLine;
         for(register int x = 0; x < 160; x++)
@@ -203,7 +203,7 @@ void gbSgbRenderScreenToBuffer()
 
 void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
 {
-  u16 *dest = (u16*)pix + ((y+1) * (256+1)) + x;
+  u16 *dest = (u16*)pix + ((y+1) * (256+2)) + x;
   u8 *dest8 = (u8*)pix + ((y*256)+x)*3;
   u32 *dest32 = (u32*)pix + ((y+1)*257) + x;
   
@@ -269,7 +269,7 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
         u16 c = gbPalette[palette + color];
         switch(systemColorDepth) {
         case 16:
-          gbSgbDraw16Bit(dest + yyy*(256+1) + xxx, c);
+          gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
           break;
         case 24:
           gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
@@ -316,7 +316,7 @@ void gbSgbPicture()
   u16 *paletteAddr = (u16 *)&gbSgbScreenBuffer[2048];
   
   for(int i = 64; i < 128; i++) {
-    gbPalette[i] = FROM16LE(*paletteAddr++);
+    gbPalette[i] = READ16LE(paletteAddr++);
   }
 
   if(gbBorderOn) 
@@ -334,16 +334,16 @@ void gbSgbPicture()
 
 void gbSgbSetPalette(int a,int b,u16 *p)
 {
-  u16 bit00 = FROM16LE(*p++);
+  u16 bit00 = READ16LE(p++);
   int i;
   
   for(i = 1; i < 4; i++) {
-    gbPalette[a*4+i] = FROM16LE(*p++);
+    gbPalette[a*4+i] = READ16LE(p++);
   }
   gbPalette[a*4] = bit00;
   
   for(i = 1; i < 4; i++) {
-    gbPalette[b*4+i] = FROM16LE(*p++);
+    gbPalette[b*4+i] = READ16LE(p++);
   }
   gbPalette[b*4] = bit00;
 }
@@ -355,7 +355,7 @@ void gbSgbScpPalette()
   u16 *fromAddress = (u16 *)gbSgbScreenBuffer;
   
   for(int i = 0; i < 512*4; i++) {
-    gbSgbSCPPalette[i] = FROM16LE(*fromAddress++);
+    gbSgbSCPPalette[i] = READ16LE(fromAddress++);
   }
 }
 
@@ -373,16 +373,16 @@ void gbSgbSetATF(int n)
 
 void gbSgbSetPalette()
 {
-  u16 pal = FROM16LE((*((u16 *)&gbSgbPacket[1])))&511;
+  u16 pal = READ16LE((((u16 *)&gbSgbPacket[1])))&511;
   memcpy(&gbPalette[0], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = FROM16LE((*((u16 *)&gbSgbPacket[3])))&511;
+  pal = READ16LE((((u16 *)&gbSgbPacket[3])))&511;
   memcpy(&gbPalette[4], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = FROM16LE((*((u16 *)&gbSgbPacket[5])))&511;
+  pal = READ16LE((((u16 *)&gbSgbPacket[5])))&511;
   memcpy(&gbPalette[8], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
-  pal = FROM16LE((*((u16 *)&gbSgbPacket[7])))&511;
+  pal = READ16LE((((u16 *)&gbSgbPacket[7])))&511;
   memcpy(&gbPalette[12], &gbSgbSCPPalette[pal*4], 4 * sizeof(u16));
 
   u8 atf = gbSgbPacket[9];
@@ -539,7 +539,7 @@ void gbSgbAttributeCharacter()
 {
   u8 startH = gbSgbPacket[1] & 0x1f;
   u8 startV = gbSgbPacket[2] & 0x1f;
-  int nDataSet = FROM16LE(*((u16 *)&gbSgbPacket[3]));
+  int nDataSet = READ16LE(((u16 *)&gbSgbPacket[3]));
   int style = gbSgbPacket[5] & 1;
   if(startH > 19)
     startH = 19;

@@ -95,7 +95,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,55,71,50,14
     ICON            IDI_ICON,IDC_STATIC,5,12,20,20
-    CTEXT           "VisualBoyAdvance version 1.4",IDC_STATIC,13,7,134,8
+    CTEXT           "VisualBoyAdvance version 1.5",IDC_STATIC,13,7,134,8
     CTEXT           "Copyright (c) 2001-03 by Forgotten",IDC_STATIC,31,35,
                     110,8
     CTEXT           "http://vboy.emuhq.com",IDC_URL,42,55,76,8
@@ -662,7 +662,7 @@ BEGIN
     CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,149,79,10
     PUSHBUTTON      "Refresh",IDC_REFRESH,7,245,50,14,WS_GROUP
-    PUSHBUTTON      "Save...",IDC_SAVE,85,245,50,14
+    PUSHBUTTON      "Save...",IDC_SAVE,138,245,50,14
     PUSHBUTTON      "Close",IDC_CLOSE,269,245,50,14
     CONTROL         "Custom1",IDC_TILE_VIEW,"VbaBitmapControl",WS_GROUP | 
                     WS_TABSTOP,191,7,128,128
@@ -826,12 +826,16 @@ BEGIN
                     WS_TABSTOP,10,95,87,10
     CONTROL         "DMA 3",IDC_VERBOSE_DMA3,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,10,108,87,10
+    CONTROL         "Undefined instruction",IDC_VERBOSE_UNDEFINED,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,10,121,87,10
+    CONTROL         "AGBPrint",IDC_VERBOSE_AGBPRINT,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,10,134,87,10
     EDITTEXT        IDC_LOG,107,7,252,183,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
     PUSHBUTTON      "Save...",IDC_SAVE,75,197,50,14
     PUSHBUTTON      "Clear",IDC_CLEAR,137,197,50,14
     DEFPUSHBUTTON   "OK",ID_OK,197,197,50,14
-    GROUPBOX        "Verbose",IDC_STATIC,7,7,93,117
+    GROUPBOX        "Verbose",IDC_STATIC,7,7,93,142
 END
 
 IDD_EXPORT_SPS DIALOG DISCARDABLE  0, 0, 248, 148
@@ -897,6 +901,215 @@ BEGIN
     PUSHBUTTON      "Cancel",ID_CANCEL,99,42,50,14
     LTEXT           "Enter desired throttle (5%...1000%):",IDC_STATIC,7,7,
                     172,8
+END
+
+IDD_GB_DISASSEMBLE DIALOG DISCARDABLE  0, 0, 344, 225
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "GB Disassemble"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_ADDRESS,7,7,65,14,ES_UPPERCASE | ES_AUTOHSCROLL | 
+                    WS_GROUP
+    PUSHBUTTON      "Go",IDC_GO,81,7,50,14
+    LISTBOX         IDC_DISASSEMBLE,7,25,222,161,LBS_SORT | 
+                    LBS_NOINTEGRALHEIGHT | WS_TABSTOP
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,191,71,10
+    PUSHBUTTON      "Refresh",IDC_REFRESH,100,204,50,14
+    PUSHBUTTON      "Next",IDC_NEXT,193,204,50,14
+    DEFPUSHBUTTON   "Close",IDC_CLOSE,287,204,50,14
+    LTEXT           "AF:",IDC_STATIC,250,25,18,8
+    LTEXT           "BC:",IDC_STATIC,250,35,18,8
+    LTEXT           "DE:",IDC_STATIC,250,45,18,8
+    LTEXT           "HL:",IDC_STATIC,250,55,18,8
+    LTEXT           "IFF:",IDC_STATIC,250,85,18,8
+    LTEXT           "",IDC_R0,285,25,52,8
+    LTEXT           "",IDC_R1,285,35,52,8
+    LTEXT           "",IDC_R2,285,45,52,8
+    LTEXT           "",IDC_R3,285,55,52,8
+    LTEXT           "",IDC_R6,285,85,52,8
+    CONTROL         "N",IDC_N,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,250,109,21,10
+    CONTROL         "Z",IDC_Z,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,250,97,21,10
+    CONTROL         "C",IDC_C,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,250,133,21,10
+    CONTROL         "H",IDC_H,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
+                    WS_TABSTOP,250,121,21,10
+    SCROLLBAR       IDC_VSCROLL,229,25,10,161,SBS_VERT
+    PUSHBUTTON      "Goto PC",IDC_GOPC,7,204,50,14
+    LTEXT           "SP:",IDC_STATIC,250,65,18,8
+    LTEXT           "",IDC_R4,285,65,52,8
+    LTEXT           "PC:",IDC_STATIC,250,75,18,8
+    LTEXT           "",IDC_R5,285,75,52,8
+END
+
+IDD_GB_OAM_VIEW DIALOG DISCARDABLE  0, 0, 234, 185
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "GB Oam Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_SPRITE,7,19,76,14,ES_RIGHT | ES_AUTOHSCROLL | 
+                    ES_NUMBER
+    SCROLLBAR       IDC_SCROLLBAR,7,33,76,11
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,138,79,10
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,7,164,50,14,WS_GROUP
+    PUSHBUTTON      "&Save...",IDC_SAVE,91,164,50,14,WS_GROUP
+    PUSHBUTTON      "&Close",IDC_CLOSE,177,164,50,14
+    CONTROL         "MapView",IDC_OAM_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,87,7,64,64
+    CONTROL         "Zoom",IDC_OAM_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,163,7,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,87,79,48,
+                    47
+    LTEXT           "",IDC_POS,31,47,50,8
+    LTEXT           "",IDC_PALETTE,31,87,50,8
+    LTEXT           "",IDC_TILE,31,57,50,8
+    LTEXT           "",IDC_PRIO,31,67,50,8
+    LTEXT           "",IDC_OAP,31,77,50,8
+    LTEXT           "",IDC_FLAGS,31,97,50,8
+    LTEXT           "",IDC_R,145,88,50,8
+    LTEXT           "",IDC_G,145,100,50,8
+    LTEXT           "",IDC_B,145,112,50,8
+    LTEXT           "Pos:",IDC_STATIC,7,47,24,8
+    LTEXT           "Pal:",IDC_STATIC,7,87,24,8
+    LTEXT           "Tile:",IDC_STATIC,7,57,24,8
+    LTEXT           "Prio:",IDC_STATIC,7,67,24,8
+    LTEXT           "OAP:",IDC_STATIC,7,77,24,8
+    LTEXT           "Sprite:",IDC_STATIC,7,7,50,8
+    LTEXT           "Flags:",IDC_STATIC,7,97,24,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,150,71,10
+    LTEXT           "",IDC_BANK,31,107,50,8
+    LTEXT           "Bank:",IDC_STATIC,7,107,24,8
+END
+
+IDD_GB_TILE_VIEWER DIALOG DISCARDABLE  0, 0, 326, 238
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "GB Tile Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "0",IDC_BANK_0,"Button",BS_AUTORADIOBUTTON | WS_GROUP,13,
+                    20,20,10
+    CONTROL         "1",IDC_BANK_1,"Button",BS_AUTORADIOBUTTON,13,30,20,10
+    CONTROL         "0x8000",IDC_CHARBASE_0,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,57,39,10
+    CONTROL         "0x8800",IDC_CHARBASE_1,"Button",BS_AUTORADIOBUTTON,13,
+                    67,39,10
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,122,79,10
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,217,50,14,WS_GROUP
+    PUSHBUTTON      "Save...",IDC_SAVE,138,217,50,14
+    PUSHBUTTON      "Close",IDC_CLOSE,269,217,50,14
+    CONTROL         "Custom1",IDC_TILE_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,191,7,128,128
+    GROUPBOX        "VRAM Bank",IDC_STATIC,7,7,66,38
+    GROUPBOX        "Char Base",IDC_STATIC,7,46,65,35
+    CONTROL         "Zoom",IDC_MAP_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,7,147,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,98,156,48,
+                    47
+    LTEXT           "",IDC_R,156,164,50,8
+    LTEXT           "",IDC_G,156,176,50,8
+    LTEXT           "",IDC_B,156,188,50,8
+    LTEXT           "Palette:",IDC_STATIC,7,86,65,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,133,71,10
+    LTEXT           "Tile:",IDC_STATIC,79,14,41,8
+    LTEXT           "Address:",IDC_STATIC,79,26,41,8
+    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8
+    LTEXT           "",IDC_ADDRESS,135,26,50,8
+    CONTROL         "Slider1",IDC_PALETTE_SLIDER,"msctls_trackbar32",
+                    TBS_AUTOTICKS | WS_GROUP | WS_TABSTOP,1,98,76,22
+END
+
+IDD_GB_MAP_VIEW DIALOG DISCARDABLE  0, 0, 322, 238
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "GB Map Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "0x8000",IDC_BANK_0,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,13,22,39,10
+    CONTROL         "0x8800",IDC_BANK_1,"Button",BS_AUTORADIOBUTTON,13,36,39,
+                    10
+    CONTROL         "0x9800",IDC_BG0,"Button",BS_AUTORADIOBUTTON | WS_GROUP,
+                    13,63,39,10
+    CONTROL         "0x9C00",IDC_BG1,"Button",BS_AUTORADIOBUTTON,13,77,40,10
+    CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,122,68,10
+    PUSHBUTTON      "&Refresh",IDC_REFRESH,25,217,50,14,WS_GROUP
+    PUSHBUTTON      "&Save...",IDC_SAVE,88,217,50,14,WS_GROUP
+    PUSHBUTTON      "&Close",IDC_CLOSE,155,217,50,14
+    CONTROL         "MapView",IDC_MAP_VIEW,"VbaBitmapControl",WS_GROUP | 
+                    WS_TABSTOP,187,15,128,128
+    CONTROL         "Zoom",IDC_MAP_VIEW_ZOOM,"VbaZoomControl",WS_GROUP | 
+                    WS_TABSTOP,7,148,64,64
+    CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,187,164,
+                    48,47
+    LTEXT           "",IDC_R,245,173,50,8
+    LTEXT           "",IDC_G,245,185,50,8
+    LTEXT           "",IDC_B,245,197,50,8
+    GROUPBOX        "Char Base",IDC_STATIC,7,11,63,37
+    GROUPBOX        "Map Base",IDC_STATIC,7,52,63,41
+    CONTROL         "Auto update",IDC_AUTO_UPDATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,134,55,10
+    LTEXT           "",IDC_XY,129,18,53,8
+    LTEXT           "Priority:",IDC_STATIC,80,68,37,8
+    LTEXT           "",IDC_PRIORITY,130,68,53,8
+    LTEXT           "Address:",IDC_STATIC,80,28,37,8
+    LTEXT           "",IDC_ADDRESS,130,28,53,8
+    LTEXT           "Tile:",IDC_STATIC,80,38,37,8
+    LTEXT           "",IDC_TILE_NUM,130,38,53,8
+    LTEXT           "Flip:",IDC_STATIC,80,48,37,8
+    LTEXT           "",IDC_FLIP,130,48,53,8
+    LTEXT           "Palette:",IDC_STATIC,80,58,37,8
+    LTEXT           "",IDC_PALETTE_NUM,130,58,53,8
+END
+
+IDD_GB_PALETTE_VIEW DIALOG DISCARDABLE  0, 0, 196, 234
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "GB Palette Viewer"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Save BG...",IDC_SAVE_BG,7,191,50,14
+    PUSHBUTTON      "Save OBJ...",IDC_SAVE_OBJ,73,191,50,14
+    PUSHBUTTON      "&Refresh",IDC_REFRESH2,139,191,50,14
+    PUSHBUTTON      "&Close",IDC_CLOSE,73,213,50,14
+    LTEXT           "",IDC_ADDRESS,53,117,50,8
+    LTEXT           "",IDC_R,53,129,50,8
+    LTEXT           "",IDC_G,53,141,50,8
+    LTEXT           "",IDC_B,53,153,50,8
+    LTEXT           "",IDC_VALUE,53,165,50,8
+    CONTROL         "Custom1",IDC_COLOR,"VbaColorControl",WS_TABSTOP,119,117,
+                    50,50
+    CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW,"VbaPaletteViewControl",
+                    WS_TABSTOP,11,30,64,64
+    CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW_OBJ,
+                    "VbaPaletteViewControl",WS_TABSTOP,120,30,64,64
+    GROUPBOX        "BG",IDC_STATIC,6,20,74,81
+    GROUPBOX        "Sprite",IDC_STATIC,115,20,74,81
+    LTEXT           "Index:",IDC_STATIC,7,117,38,8
+    LTEXT           "R:",IDC_STATIC,7,129,41,8
+    LTEXT           "G:",IDC_STATIC,7,141,43,8
+    LTEXT           "B:",IDC_STATIC,7,153,38,8
+    LTEXT           "Value:",IDC_STATIC,7,165,38,8
+    LTEXT           "Click on a color for more information",IDC_STATIC,7,7,
+                    182,8
+    CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,178,71,10
+END
+
+IDD_MODE_CONFIRM DIALOG DISCARDABLE  0, 0, 186, 57
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirm mode"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",ID_OK,31,36,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,103,36,50,14
+    CTEXT           "Do you want to keep the current mode?",IDC_STATIC,7,7,
+                    172,8
+    CTEXT           "",IDC_TIMER,7,19,172,8
 END
 
 
@@ -1160,6 +1373,54 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 56
     END
+
+    IDD_GB_DISASSEMBLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 337
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 218
+    END
+
+    IDD_GB_OAM_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 227
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+
+    IDD_GB_TILE_VIEWER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 319
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 231
+    END
+
+    IDD_GB_MAP_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 315
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 231
+    END
+
+    IDD_GB_PALETTE_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 189
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 227
+    END
+
+    IDD_MODE_CONFIRM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 50
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1173,40 +1434,40 @@ IDR_MENU MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Open...",                    ID_FILE_OPEN
         MENUITEM "Open Gameboy...",             ID_FILE_OPENGAMEBOY
         MENUITEM SEPARATOR
-        MENUITEM "&Load...\tCtrl+L",            ID_FILE_LOAD
-        MENUITEM "&Save...\tCtrl+S",            ID_FILE_SAVE
+        MENUITEM "&Load...",                    ID_FILE_LOAD
+        MENUITEM "&Save...",                    ID_FILE_SAVE
         POPUP "Loa&d Game"
         BEGIN
-            MENUITEM "Slot #1\tF1",                 ID_FILE_LOADGAME_SLOT1
-            MENUITEM "Slot #2\tF2",                 ID_FILE_LOADGAME_SLOT2
-            MENUITEM "Slot #3\tF3",                 ID_FILE_LOADGAME_SLOT3
-            MENUITEM "Slot #4\tF4",                 ID_FILE_LOADGAME_SLOT4
-            MENUITEM "Slot #5\tF5",                 ID_FILE_LOADGAME_SLOT5
-            MENUITEM "Slot #6\tF6",                 ID_FILE_LOADGAME_SLOT6
-            MENUITEM "Slot #7\tF7",                 ID_FILE_LOADGAME_SLOT7
-            MENUITEM "Slot #8\tF8",                 ID_FILE_LOADGAME_SLOT8
-            MENUITEM "Slot #9\tF9",                 ID_FILE_LOADGAME_SLOT9
-            MENUITEM "Slot #10\tF10",               ID_FILE_LOADGAME_SLOT10
+            MENUITEM "Slot #1",                     ID_FILE_LOADGAME_SLOT1
+            MENUITEM "Slot #2",                     ID_FILE_LOADGAME_SLOT2
+            MENUITEM "Slot #3",                     ID_FILE_LOADGAME_SLOT3
+            MENUITEM "Slot #4",                     ID_FILE_LOADGAME_SLOT4
+            MENUITEM "Slot #5",                     ID_FILE_LOADGAME_SLOT5
+            MENUITEM "Slot #6",                     ID_FILE_LOADGAME_SLOT6
+            MENUITEM "Slot #7",                     ID_FILE_LOADGAME_SLOT7
+            MENUITEM "Slot #8",                     ID_FILE_LOADGAME_SLOT8
+            MENUITEM "Slot #9",                     ID_FILE_LOADGAME_SLOT9
+            MENUITEM "Slot #10",                    ID_FILE_LOADGAME_SLOT10
         END
         POPUP "S&ave Game"
         BEGIN
-            MENUITEM "Slot #1\tShift+F1",           ID_FILE_SAVEGAME_SLOT1
-            MENUITEM "Slot #2\tShift+F2",           ID_FILE_SAVEGAME_SLOT2
-            MENUITEM "Slot #3\tShift+F3",           ID_FILE_SAVEGAME_SLOT3
-            MENUITEM "Slot #4\tShift+F4",           ID_FILE_SAVEGAME_SLOT4
-            MENUITEM "Slot #5\tShift+F5",           ID_FILE_SAVEGAME_SLOT5
-            MENUITEM "Slot #6\tShift+F6",           ID_FILE_SAVEGAME_SLOT6
-            MENUITEM "Slot #7\tShift+F7",           ID_FILE_SAVEGAME_SLOT7
-            MENUITEM "Slot #8\tShift+F8",           ID_FILE_SAVEGAME_SLOT8
-            MENUITEM "Slot #9\tShift+F9",           ID_FILE_SAVEGAME_SLOT9
-            MENUITEM "Slot #10\tShift+F10",         ID_FILE_SAVEGAME_SLOT10
+            MENUITEM "Slot #1",                     ID_FILE_SAVEGAME_SLOT1
+            MENUITEM "Slot #2",                     ID_FILE_SAVEGAME_SLOT2
+            MENUITEM "Slot #3",                     ID_FILE_SAVEGAME_SLOT3
+            MENUITEM "Slot #4",                     ID_FILE_SAVEGAME_SLOT4
+            MENUITEM "Slot #5",                     ID_FILE_SAVEGAME_SLOT5
+            MENUITEM "Slot #6",                     ID_FILE_SAVEGAME_SLOT6
+            MENUITEM "Slot #7",                     ID_FILE_SAVEGAME_SLOT7
+            MENUITEM "Slot #8",                     ID_FILE_SAVEGAME_SLOT8
+            MENUITEM "Slot #9",                     ID_FILE_SAVEGAME_SLOT9
+            MENUITEM "Slot #10",                    ID_FILE_SAVEGAME_SLOT10
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Pause\tCtrl+P",              ID_FILE_PAUSE
-        MENUITEM "&Reset\tCtrl+R",              ID_FILE_RESET
+        MENUITEM "&Pause",                      ID_FILE_PAUSE
+        MENUITEM "&Reset",                      ID_FILE_RESET
         MENUITEM SEPARATOR
         POPUP "Re&cent"
         BEGIN
@@ -1239,7 +1500,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Close",                      ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "&Exit\tCtrl+X",               ID_FILE_EXIT
+        MENUITEM "&Exit",                       ID_FILE_EXIT
     END
     POPUP "&Options"
     BEGIN
@@ -1289,6 +1550,43 @@ BEGIN
         POPUP "&Video"
         BEGIN
             MENUITEM "&Vsync",                      ID_OPTIONS_VIDEO_VSYNC
+            POPUP "Render Method"
+            BEGIN
+                MENUITEM "GDI",                         ID_OPTIONS_VIDEO_RENDERMETHOD_GDI
+
+                MENUITEM "DirectDraw",                  ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECTDRAW
+
+                MENUITEM "Direct3D",                    ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECT3D
+
+                MENUITEM "OpenGL",                      ID_OPTIONS_VIDEO_RENDERMETHOD_OPENGL
+
+                MENUITEM SEPARATOR
+                MENUITEM "DDraw &Emulation Only",       ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY
+
+                MENUITEM "DDraw Use &Video Memory",     ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY
+
+                MENUITEM "DDraw Triple Buffering",      ID_OPTIONS_VIDEO_TRIPLEBUFFERING
+
+                MENUITEM SEPARATOR
+                MENUITEM "D3D Nearest",                 ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DNOFILTER
+
+                MENUITEM "D3D Bilinear",                ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DBILINEAR
+
+                MENUITEM SEPARATOR
+                MENUITEM "GL Nearest",                  ID_OPTIONS_VIDEO_RENDEROPTIONS_GLNEAREST
+
+                MENUITEM "GL Bilinear",                 ID_OPTIONS_VIDEO_RENDEROPTIONS_GLBILINEAR
+
+                MENUITEM "GL Triangle",                 ID_OPTIONS_VIDEO_RENDEROPTIONS_GLTRIANGLE
+
+                MENUITEM "GL Quads",                    ID_OPTIONS_VIDEO_RENDEROPTIONS_GLQUADS
+
+                MENUITEM SEPARATOR
+                MENUITEM "Select skin...",              ID_OPTIONS_VIDEO_RENDEROPTIONS_SELECTSKIN
+
+                MENUITEM "Skin",                        ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN
+
+            END
             MENUITEM SEPARATOR
             MENUITEM "x&1",                         ID_OPTIONS_VIDEO_X1
             MENUITEM "x&2",                         ID_OPTIONS_VIDEO_X2
@@ -1308,30 +1606,23 @@ BEGIN
             MENUITEM "Fullscreen stretch to &fit",  ID_OPTIONS_VIDEO_FULLSCREENSTRETCHTOFIT
 
             MENUITEM SEPARATOR
-            MENUITEM "DDraw &Emulation Only",       ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY
-
-            MENUITEM "DDraw Use &Video Memory",     ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY
-
-            MENUITEM "Triple Buffering",            ID_OPTIONS_VIDEO_TRIPLEBUFFERING
-
-            MENUITEM SEPARATOR
             POPUP "&Layers"
             BEGIN
-                MENUITEM "BG 0\tCtrl+1",                ID_OPTIONS_VIDEO_LAYERS_BG0
+                MENUITEM "BG 0",                        ID_OPTIONS_VIDEO_LAYERS_BG0
 
-                MENUITEM "BG 1\tCtrl+2",                ID_OPTIONS_VIDEO_LAYERS_BG1
+                MENUITEM "BG 1",                        ID_OPTIONS_VIDEO_LAYERS_BG1
 
-                MENUITEM "BG 2\tCtrl+3",                ID_OPTIONS_VIDEO_LAYERS_BG2
+                MENUITEM "BG 2",                        ID_OPTIONS_VIDEO_LAYERS_BG2
 
-                MENUITEM "BG 3\tCtrl+4",                ID_OPTIONS_VIDEO_LAYERS_BG3
+                MENUITEM "BG 3",                        ID_OPTIONS_VIDEO_LAYERS_BG3
 
-                MENUITEM "OBJ\tCtrl+5",                 ID_OPTIONS_VIDEO_LAYERS_OBJ
+                MENUITEM "OBJ",                         ID_OPTIONS_VIDEO_LAYERS_OBJ
 
-                MENUITEM "WIN 0\tCtrl+6",               ID_OPTIONS_VIDEO_LAYERS_WIN0
+                MENUITEM "WIN 0",                       ID_OPTIONS_VIDEO_LAYERS_WIN0
 
-                MENUITEM "WIN 1\tCtrl+7",               ID_OPTIONS_VIDEO_LAYERS_WIN1
+                MENUITEM "WIN 1",                       ID_OPTIONS_VIDEO_LAYERS_WIN1
 
-                MENUITEM "OBJ WIN\tCtrl+8",             ID_OPTIONS_VIDEO_LAYERS_OBJWIN
+                MENUITEM "OBJ WIN",                     ID_OPTIONS_VIDEO_LAYERS_OBJWIN
 
             END
         END
@@ -1354,6 +1645,10 @@ BEGIN
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
 
             MENUITEM "Store settings in Registry",  ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY
+
+            MENUITEM "AGB Print",                   ID_OPTIONS_EMULATOR_AGBPRINT
+
+            MENUITEM "Real Time Clock",             ID_OPTIONS_EMULATOR_REALTIMECLOCK
 
             POPUP "Show speed"
             BEGIN
@@ -1452,6 +1747,7 @@ BEGIN
             MENUITEM "&GBA",                        ID_OPTIONS_GAMEBOY_GBA
             MENUITEM "&CGB/GBC",                    ID_OPTIONS_GAMEBOY_CGB
             MENUITEM "&SGB",                        ID_OPTIONS_GAMEBOY_SGB
+            MENUITEM "SGB&2",                       ID_OPTIONS_GAMEBOY_SGB2
             MENUITEM "G&B",                         ID_OPTIONS_GAMEBOY_GB
             MENUITEM SEPARATOR
             MENUITEM "&Real Colors",                ID_OPTIONS_GAMEBOY_REALCOLORS
@@ -1504,6 +1800,8 @@ BEGIN
 
             MENUITEM "Bilinear Plus",               ID_OPTIONS_FILTER_BILINEARPLUS
 
+            MENUITEM "Scanlines",                   ID_OPTIONS_FILTER_SCANLINES
+
             MENUITEM SEPARATOR
             MENUITEM "&Disable MMX",                ID_OPTIONS_FILTER_DISABLEMMX
 
@@ -1537,13 +1835,13 @@ BEGIN
             MENUITEM SEPARATOR
             POPUP "&Autofire"
             BEGIN
-                MENUITEM "&A\tAlt+1",                   ID_OPTIONS_JOYPAD_AUTOFIRE_A
+                MENUITEM "&A",                          ID_OPTIONS_JOYPAD_AUTOFIRE_A
 
-                MENUITEM "&B\tAlt+2",                   ID_OPTIONS_JOYPAD_AUTOFIRE_B
+                MENUITEM "&B",                          ID_OPTIONS_JOYPAD_AUTOFIRE_B
 
-                MENUITEM "&L\tAlt+3",                   ID_OPTIONS_JOYPAD_AUTOFIRE_L
+                MENUITEM "&L",                          ID_OPTIONS_JOYPAD_AUTOFIRE_L
 
-                MENUITEM "&R\tAlt+4",                   ID_OPTIONS_JOYPAD_AUTOFIRE_R
+                MENUITEM "&R",                          ID_OPTIONS_JOYPAD_AUTOFIRE_R
 
             END
         END
@@ -1559,7 +1857,7 @@ BEGIN
     END
     POPUP "&Cheats"
     BEGIN
-        MENUITEM "&Search for cheats...\tCtrl+C", ID_CHEATS_SEARCHFORCHEATS
+        MENUITEM "&Search for cheats...",       ID_CHEATS_SEARCHFORCHEATS
         MENUITEM "&Cheat list...",              ID_CHEATS_CHEATLIST
         MENUITEM SEPARATOR
         MENUITEM "&Automatic save/load cheats", ID_CHEATS_AUTOMATICSAVELOADCHEATS
@@ -1577,7 +1875,7 @@ BEGIN
         MENUITEM "&Palette Viewer...",          ID_TOOLS_PALETTEVIEW
         MENUITEM "Tile Viewer...",              ID_TOOLS_TILEVIEWER
         MENUITEM SEPARATOR
-        MENUITEM "&Next frame\tCtrl+N",         ID_DEBUG_NEXTFRAME
+        MENUITEM "&Next frame",                 ID_DEBUG_NEXTFRAME
         POPUP "GDB"
         BEGIN
             MENUITEM "Wait for connection...",      ID_TOOLS_DEBUG_GDB
@@ -1810,8 +2108,8 @@ BEGIN
     IDS_FAILED_TO_LOAD_LIBRARY "Failed to load library %s"
     IDS_FAILED_TO_GET_LOCINFO "Failed to get locale information"
     IDS_SELECT_CHEAT_LIST_NAME "Select cheat list name"
-    IDS_FILTER_BIOS         "Gameboy Advance_*.BIN;*.AGB;*.GBA;*.BIOS__"
-    IDS_FILTER_ROM          "All Gameboy Advance_*.BIN;*.AGB;*.GBA;*.GB;*.SGB;*.CGB;*.GBC;*.ZIP;*.ELF;*.MB_Gameboy Advance_*.BIN;*.AGB;*.GBA;*.ZIP_Gameboy_*.GB;*.SGB;*.CGB;*.GBC;*.ZIP__"
+    IDS_FILTER_BIOS         "Gameboy Advance_*.BIN;*.AGB;*.GBA;*.BIOS;*.ZIP;*.Z;*.GZ__"
+    IDS_FILTER_ROM          "All Gameboy Advance_*.BIN;*.AGB;*.GBA;*.MB;*.ELF;*.GB;*.SGB;*.CGB;*.GBC;*.ZIP;*.Z;*.GZ_Gameboy Advance_*.BIN;*.AGB;*.GBA_Gameboy_*.GB;*.SGB;*.CGB;*.GBC__"
     IDS_FILTER_SGM          "VisualBoyAdvance Save Game_*.SGM__"
     IDS_FILTER_CHEAT_LIST   "VisualBoyAdvance Cheat List_*.CLT__"
     IDS_FILTER_PNG          "PNG Image_*.PNG_BMP Image_*.BMP__"
@@ -1851,7 +2149,7 @@ BEGIN
     IDS_ADD_CBA_CODE        "Add CodeBreakerAdvance code"
     IDS_FILTER_WAV          "Wave file_*.WAV__"
     IDS_SELECT_WAV_NAME     "Select wave file name"
-    IDS_FILTER_GBROM        "All Gameboy_*.GB;*.SGB;*.CGB;*.GBC;*.ZIP_Gameboy_*.GB_Super Gameboy_*.SGB_Color Gameboy_*.CGB;*.GBC__"
+    IDS_FILTER_GBROM        "All Gameboy_*.GB;*.SGB;*.CGB;*.GBC;*.ZIP;*.Z;*.GZ_Gameboy_*.GB_Super Gameboy_*.SGB_Color Gameboy_*.CGB;*.GBC__"
     IDS_FILTER_PAL          "Windows Palette (*.PAL)_*.PAL_PaintShop Palette (*.PAL)_*.PAL_Adobe Color Table (*.ACT)_*.ACT__"
     IDS_SELECT_PALETTE_NAME "Select palette name:"
     IDS_SEARCH_PRODUCED_NO_RESULTS "Search produced no results."
@@ -1871,6 +2169,8 @@ BEGIN
     IDS_SELECT_AVI_NAME     "Select AVI file name"
     IDS_INVALID_THROTTLE_VALUE 
                             "Invalid throttle value. Please enter a number between 5 and 1000."
+    IDS_FILTER_INI          "Skin INI File_*.INI__"
+    IDS_SELECT_SKIN_FILE    "Select the skin file name"
 END
 
 #endif    // English (U.S.) resources

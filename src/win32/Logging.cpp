@@ -47,6 +47,8 @@ public:
   void OnDma1();
   void OnDma2();
   void OnDma3();
+  void OnUndefined();
+  void OnAgbPrint();
 
   void OnErrSpace();
   void OnMaxText();
@@ -65,7 +67,9 @@ BEGIN_MESSAGE_MAP(Logging, ResizeDlg)
   ON_BN_CLICKED(IDC_VERBOSE_DMA0, OnDma0)
   ON_BN_CLICKED(IDC_VERBOSE_DMA1, OnDma1)
   ON_BN_CLICKED(IDC_VERBOSE_DMA2, OnDma2)
-  ON_BN_CLICKED(IDC_VERBOSE_DMA3, OnDma3)  
+  ON_BN_CLICKED(IDC_VERBOSE_DMA3, OnDma3)
+  ON_BN_CLICKED(IDC_VERBOSE_UNDEFINED, OnUndefined)
+  ON_BN_CLICKED(IDC_VERBOSE_AGBPRINT, OnAgbPrint)
   ON_BN_CLICKED(IDC_SAVE, OnSave)
   ON_CONTROL(EN_ERRSPACE, IDC_LOG, OnErrSpace)
   ON_CONTROL(EN_MAXTEXT, IDC_LOG, OnMaxText)
@@ -107,6 +111,10 @@ BOOL Logging::OnInitDialog(LPARAM)
   DoCheckbox(false, IDC_VERBOSE_DMA2, value);
   value = (systemVerbose & 128) >> 7;
   DoCheckbox(false, IDC_VERBOSE_DMA3, value);
+  value = (systemVerbose & 256) >> 8;
+  DoCheckbox(false, IDC_VERBOSE_UNDEFINED, value);
+  value = (systemVerbose & 256) >> 9;
+  DoCheckbox(false, IDC_VERBOSE_AGBPRINT, value);
 
   ::SendMessage(GetDlgItem(IDC_LOG), EM_SETLIMITTEXT, (WPARAM)-1, (LPARAM)-1);
   
@@ -209,6 +217,16 @@ void Logging::OnDma2()
 void Logging::OnDma3()
 {
   systemVerbose ^= 128;
+}
+
+void Logging::OnUndefined()
+{
+  systemVerbose ^= 256;
+}
+
+void Logging::OnAgbPrint()
+{
+  systemVerbose ^= 512;
 }
 
 void Logging::OnErrSpace()

@@ -16,7 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#define DIRECTDRAW_VERSION 0x0700
 #define DIRECTINPUT_VERSION 0x0500
 #define DIRECTSOUND_VERSION 0x0500
 #define JOYCONFIG_MESSAGE (WM_USER + 1000)
@@ -34,10 +33,12 @@
 
 #include "Reg.h"
 #include "../GBA.h"
+#include "../agbprint.h"
 #include "../NLS.h"
 #include "../Font.h"
 #include "../Globals.h"
 #include "WinResUtil.h"
+#include "../RTC.h"
 #include "../Sound.h"
 #include "../unzip.h"
 #include "../Util.h"
@@ -52,6 +53,8 @@
 #include "ExportGSASnapshot.h"
 #include "AcceleratorManager.h"
 #include "IUpdate.h"
+#include "Display.h"
+#include "skin.h"
 #include <list>
 
 static u8 COPYRIGHT[] = {
@@ -65,14 +68,17 @@ static u8 COPYRIGHT[] = {
 int ddrawDebug = 0;
 int joyDebug = 0;
 
-HINSTANCE            ddrawDLL     = NULL;
+IDisplay *display = NULL;
+DISPLAY_TYPE renderMethod = DIRECT_DRAW;
+int d3dFilter = 0;
+int glFilter = 0;
+int glType = 0;
+
+CSkin *skin = NULL;
+CStdString skinName = "";
+bool skinEnabled = false;
 HINSTANCE            dinputDLL    = NULL;
 HINSTANCE            dsoundDLL    = NULL;
-LPDIRECTDRAW7        pDirectDraw  = NULL;
-LPDIRECTDRAWSURFACE7 ddsPrimary   = NULL;
-LPDIRECTDRAWSURFACE7 ddsOffscreen = NULL;
-LPDIRECTDRAWSURFACE7 ddsFlip      = NULL;
-LPDIRECTDRAWCLIPPER  ddsClipper   = NULL;
 LPDIRECTSOUND        pDirectSound = NULL;
 LPDIRECTSOUNDBUFFER  dsbPrimary   = NULL;
 LPDIRECTSOUNDBUFFER  dsbSecondary = NULL;
@@ -83,6 +89,7 @@ HWND hWindow;
 HWND hJoyConfig = NULL;
 HINSTANCE hInstance = NULL;
 HMENU menu;
+HMENU popup;
 HWND regDialog = NULL;
 HACCEL hAccel = NULL;
 
@@ -96,11 +103,12 @@ BOOL screenSaverDisabled = FALSE;
 BOOL useOldSync = FALSE;
 
 BOOL soundRecording = FALSE;
-char soundRecordName[2048];
+CStdString soundRecordName;
 CWaveSoundWrite *soundRecorder = NULL;
 BOOL aviRecording = FALSE;
 CAVIFile *aviRecorder = NULL;
-char aviRecordName[2048];
+CStdString aviRecordName;
+int aviFrameNumber = 0;
 
 int throttle = 0;
 u32 throttleLastTime = 0;
@@ -161,9 +169,12 @@ DWORD screenMessageTime = 0;
 RECT rect;
 RECT dest;
 
+bool painting = false;
 int emulating = 0;
 bool debugger = false;
 int winFlashSize = 0x10000;
+bool winRtcEnable = false;
+int winSaveType = 0;
 
 int frameskipadjust = 0;
 int renderedFrames = 0;
@@ -225,6 +236,10 @@ bool (*emuWriteBMP)(char *) = NULL;
 void (*emuMain)(int) = NULL;
 int emuCount = 0;
 
+extern IDisplay *newDirectDrawDisplay();
+extern IDisplay *newGDIDisplay();
+extern IDisplay *newDirect3DDisplay();
+extern IDisplay *newOpenGLDisplay();
 extern void remoteStubSignal(int, int);
 extern void remoteOutput(char *, u32);
 extern void remoteStubMain();
@@ -348,10 +363,12 @@ void writeSaveGame();
 void writeSaveGame(int);
 void writeBatteryFile();
 void readBatteryFile();
-BOOL initDirectDraw();
+BOOL initDisplay();
 BOOL initDirectInput();
 void winCenterWindow(HWND);
 void winlog(const char *,...);
+void updateMenuBar();
+void updateWindowSize(int value);
 
 extern int Init_2xSaI(u32);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
@@ -374,10 +391,13 @@ extern void Bilinear(u8*,u32,u8*,u8*,u32,int,int);
 extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Scanlines(u8*,u32,u8*,u8*,u32,int,int);
+extern void Scanlines32(u8*,u32,u8*,u8*,u32,int,int);
 
 extern void SmartIB(u8*,u32,int,int);
 extern void SmartIB32(u8*,u32,int,int);
 extern void MotionBlurIB(u8*,u32,int,int);
+extern void InterlaceIB(u8*,u32,int,int);
 extern void MotionBlurIB32(u8*,u32,int,int);
 
 extern void winGBARomInfo(u8*);
@@ -390,7 +410,6 @@ extern void winGbCheatsListDialog();
 extern void configurePad(int);
 extern void motionConfigurePad();
 extern int winGSACodeSelect(HWND, LPARAM);
-extern int winVideoModeSelect(HWND, GUID **);
 extern void fileExportSPSSnapshot(char *, char *);
 
 #ifdef MMX
@@ -499,36 +518,12 @@ void shutdownDirectInput()
   }
 }
 
-void shutdownDirectDraw()
+void shutdownDisplay()
 {
-  if(pDirectDraw != NULL) {
-    if(ddsClipper != NULL) {
-      ddsClipper->Release();
-      ddsClipper = NULL;
-    }
-
-    if(ddsFlip != NULL) {
-      ddsFlip->Release();
-      ddsFlip = NULL;
-    }
-
-    if(ddsOffscreen != NULL) {
-      ddsOffscreen->Release();
-      ddsOffscreen = NULL;
-    }
-    
-    if(ddsPrimary != NULL) {
-      ddsPrimary->Release();
-      ddsPrimary = NULL;
-    }
-    
-    pDirectDraw->Release();
-    pDirectDraw = NULL;
-  }
-
-  if(ddrawDLL != NULL) {
-    FreeLibrary(ddrawDLL);
-    ddrawDLL = NULL;
+  if(display != NULL) {
+    display->cleanup();
+    delete display;
+    display = NULL;
   }
 }
 
@@ -538,7 +533,7 @@ void releaseAllObjects()
   
   shutdownDirectInput();
   
-  shutdownDirectDraw();
+  shutdownDisplay();
 
   soundShutdown();
 
@@ -1116,14 +1111,133 @@ void updatePriority()
   }
 }
 
+void winUpdateSkin()
+{
+  if(skin) {
+    delete skin;
+    skin = NULL;
+  }
+  
+  if(!skinName.IsEmpty() && skinEnabled && display->isSkinSupported()) {
+    skin = new CSkin();
+    if(skin->Initialize(skinName)) {
+      skin->Hook(hWindow);
+      skin->Enable(true);
+    } else {
+      delete skin;
+      skin = NULL;
+    }
+  }
+
+  if(!skin) {
+    adjustDestRect();
+    updateMenuBar();
+  }
+}
+
+bool updateRenderMethod0(bool force)
+{
+  bool initInput = false;
+  
+  if(display) {
+    if(display->getType() != renderMethod || force) {
+      if(skin) {
+        delete skin;
+        skin = NULL;
+      }
+      initInput = true;
+      changingVideoSize = TRUE;
+      shutdownDisplay();
+      shutdownDirectInput();
+      DragAcceptFiles(hWindow, FALSE);
+      DestroyWindow(hWindow);
+      hWindow = NULL;
+      
+      display = NULL;
+      regSetDwordValue("renderMethod", renderMethod);      
+    }
+  }
+  if(display == NULL) {
+    switch(renderMethod) {
+    case GDI:
+      display = newGDIDisplay();
+      break;
+    case DIRECT_DRAW:
+      display = newDirectDrawDisplay();
+      break;
+    case DIRECT_3D:
+      display = newDirect3DDisplay();
+      break;
+    case OPENGL:
+      display = newOpenGLDisplay();
+      break;
+    }
+    
+    if(display->initialize()) {
+      winUpdateSkin();
+      if(initInput) {
+        if(!initDirectInput()) {
+          changingVideoSize = FALSE;
+          fileExit();
+          return false;
+        }
+        checkKeys();
+        updateMenuBar();
+        changingVideoSize = FALSE;
+        updateWindowSize(videoOption);
+
+        ShowWindow(hWindow, nCmdShow);
+        UpdateWindow(hWindow);
+        SetFocus(hWindow);
+        
+        return true;
+      } else {
+        changingVideoSize = FALSE;
+        return true;
+      }
+    }
+    changingVideoSize = FALSE;
+  }
+  return false;
+}
+
+bool updateRenderMethod(bool force)
+{
+  bool res = updateRenderMethod0(force);
+  
+  while(!res && renderMethod > 0) {
+    if(renderMethod == OPENGL)
+      renderMethod = DIRECT_3D;
+    else if(renderMethod == DIRECT_3D)
+      renderMethod = DIRECT_DRAW;
+    else if(renderMethod == DIRECT_DRAW) {
+      if(videoOption > VIDEO_4X) {
+        videoOption = VIDEO_2X;
+        force = true;
+      } else
+        renderMethod = GDI;
+    }
+                                    
+    res = updateRenderMethod(force);
+  }
+  return res;  
+}
+
 void updateMenuBar()
 {
   if(menu != NULL)
     DestroyMenu(menu);
+  if(popup != NULL) {
+    // force popup recreation if language changed
+    DestroyMenu(popup);
+    popup = NULL;
+  }
   
   menu = winResLoadMenu(MAKEINTRESOURCE(IDR_MENU));     
-  
-  SetMenu(hWindow,menu);
+
+  // don't set a menu if skin is active
+  if(skin == NULL)
+    SetMenu(hWindow,menu);
 }
 
 HINSTANCE winLoadLanguage(char *name)
@@ -1271,12 +1385,9 @@ void updateRecentMenu(HMENU menu)
     if(l != NULL)
       p = l + 1;
 
-    char buffer[2048];
-
-    sprintf(buffer, "%s\tCtrl+F%d", p, i+1);
-    
-    AppendMenu(menu, MF_STRING, ID_FILE_MRU_FILE1+i, buffer);
+    AppendMenu(menu, MF_STRING, ID_FILE_MRU_FILE1+i, p);
   }
+  winAccelMgr.UpdateMenu(menu);
 }
 
 void updateFileMenu(HMENU menu)
@@ -1436,30 +1547,41 @@ void updateVideoMenu(HMENU menu)
                 CHECKMENUSTATE(vsync == 1));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_X1,
                 CHECKMENUSTATE(videoOption == VIDEO_1X));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_X1,
+                 ENABLEMENU(skin == NULL));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_X2,
                 CHECKMENUSTATE(videoOption == VIDEO_2X));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_X2,
+                 ENABLEMENU(skin == NULL));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_X3,
                 CHECKMENUSTATE(videoOption == VIDEO_3X));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_X3,
+                 ENABLEMENU(skin == NULL));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_X4,
                 CHECKMENUSTATE(videoOption == VIDEO_4X));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_X4,
+                 ENABLEMENU(skin == NULL));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN320X240,
                 CHECKMENUSTATE((videoOption == VIDEO_320x240)));
   EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN320X240,
-                 ENABLEMENU(mode320Available));
+                 ENABLEMENU(mode320Available && skin == NULL));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN640X480,
                 CHECKMENUSTATE((videoOption == VIDEO_640x480)));
   EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN640X480,
-                 ENABLEMENU(mode640Available));  
+                 ENABLEMENU(mode640Available && skin == NULL));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
                 CHECKMENUSTATE((videoOption == VIDEO_800x600)));
   EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
-                 ENABLEMENU(mode800Available));
+                 ENABLEMENU(mode800Available && skin == NULL));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN,
                 CHECKMENUSTATE(videoOption == VIDEO_OTHER));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN,
+                 ENABLEMENU(skin == NULL));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DISABLESFX,
                 CHECKMENUSTATE(cpuDisableSfx));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREENSTRETCHTOFIT,
                 CHECKMENUSTATE(fullScreenStretch));
+  // left for old translations
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY,
                 CHECKMENUSTATE(ddrawEmulationOnly));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY,
@@ -1467,11 +1589,55 @@ void updateVideoMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_TRIPLEBUFFERING,
                 CHECKMENUSTATE(tripleBuffering));
 
-  HMENU sub = GetSubMenu(menu, 15);
+  // version 1.5
+  HMENU sub = GetSubMenu(menu, 1);
+  if(sub != NULL) {
+    CheckMenuItem(sub, ID_OPTIONS_VIDEO_RENDERMETHOD_GDI,
+                  CHECKMENUSTATE(renderMethod == GDI));
+    CheckMenuItem(sub, ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECTDRAW,
+                  CHECKMENUSTATE(renderMethod == DIRECT_DRAW));
+    CheckMenuItem(sub, ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECT3D,
+                  CHECKMENUSTATE(renderMethod == DIRECT_3D));
+    CheckMenuItem(sub, ID_OPTIONS_VIDEO_RENDERMETHOD_OPENGL,
+                  CHECKMENUSTATE(renderMethod == OPENGL));
+      // DirectDraw options
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY,
+                  CHECKMENUSTATE(ddrawEmulationOnly));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_DDRAWUSEVIDEOMEMORY,
+                  CHECKMENUSTATE(ddrawUseVideoMemory));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_TRIPLEBUFFERING,
+                  CHECKMENUSTATE(tripleBuffering));
+    // Direct3D options
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DNOFILTER,
+                  CHECKMENUSTATE(d3dFilter == 0));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DBILINEAR,
+                  CHECKMENUSTATE(d3dFilter == 1));
+    // OpenGL options
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_GLNEAREST,
+                  CHECKMENUSTATE(glFilter == 0));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_GLBILINEAR,
+                  CHECKMENUSTATE(glFilter == 1));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_GLTRIANGLE,
+                  CHECKMENUSTATE(glType == 0));
+    CheckMenuItem(menu, ID_OPTIONS_VIDEO_RENDEROPTIONS_GLQUADS,
+                  CHECKMENUSTATE(glType == 1));      
+
+    EnableMenuItem(sub, ID_OPTIONS_VIDEO_RENDEROPTIONS_SELECTSKIN,
+                   ENABLEMENU(display && display->isSkinSupported() &&
+                              videoOption <= VIDEO_4X));
+    CheckMenuItem(sub, ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN,
+                  CHECKMENUSTATE(skinEnabled));
+    EnableMenuItem(sub, ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN,
+                   ENABLEMENU(display && display->isSkinSupported() &&
+                              videoOption <= VIDEO_4X));    
+  }
+  
+  sub = GetSubMenu(menu, 15);
   if(sub == NULL)
     sub= GetSubMenu(menu, 16);
   if(sub == NULL)
     sub = GetSubMenu(menu, 18);
+  // version 1.5 is back at 16
   if(sub != NULL)
     updateLayersMenu(sub);
 }
@@ -1482,15 +1648,15 @@ void updateSaveTypeMenu(HMENU menu)
     return;
 
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC,
-                CHECKMENUSTATE(cpuSaveType == 0));
+                CHECKMENUSTATE(winSaveType == 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROM,
-                CHECKMENUSTATE(cpuSaveType == 1));
+                CHECKMENUSTATE(winSaveType == 1));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_SRAM,
-                CHECKMENUSTATE(cpuSaveType == 2));
+                CHECKMENUSTATE(winSaveType == 2));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH,
-                CHECKMENUSTATE(cpuSaveType == 3));
+                CHECKMENUSTATE(winSaveType == 3));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR,
-                CHECKMENUSTATE(cpuSaveType == 4));
+                CHECKMENUSTATE(winSaveType == 4));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K,
                 CHECKMENUSTATE(flashSize == 0x10000));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M,
@@ -1530,27 +1696,21 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(captureFormat != 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY,
                 CHECKMENUSTATE(regEnabled));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_AGBPRINT,
+                CHECKMENUSTATE(agbPrintIsEnabled()));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_REALTIMECLOCK,
+                CHECKMENUSTATE(winRtcEnable));
 
-  HMENU sub = GetSubMenu(menu, 9);
-  if(sub != NULL) {
-    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_NONE,
-                  CHECKMENUSTATE(showSpeed == 0));
-    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE,
-                  CHECKMENUSTATE(showSpeed == 1));
-    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED,
-                  CHECKMENUSTATE(showSpeed == 2));
-    CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT,
-                  CHECKMENUSTATE(showSpeedTransparent));
-  }
-
-  if(sub == NULL) {
-    sub = GetSubMenu(menu, 7);
-    if(sub == NULL)
-      sub = GetSubMenu(menu, 8);
-  } else
-    sub = GetSubMenu(menu, 10);
-
-  updateSaveTypeMenu(sub);
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_NONE,
+                CHECKMENUSTATE(showSpeed == 0));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE,
+                CHECKMENUSTATE(showSpeed == 1));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_DETAILED,
+                CHECKMENUSTATE(showSpeed == 2));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_TRANSPARENT,
+                CHECKMENUSTATE(showSpeedTransparent));
+  
+  updateSaveTypeMenu(menu);
 }
 
 void updateSoundMenu(HMENU menu)
@@ -1631,6 +1791,8 @@ void updateGameboyMenu(HMENU menu)
                 CHECKMENUSTATE(gbEmulatorType == 2));
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_GB,
                 CHECKMENUSTATE(gbEmulatorType == 3));
+  CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_SGB2,
+                CHECKMENUSTATE(gbEmulatorType == 5));  
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_REALCOLORS,
                 CHECKMENUSTATE(gbColorOption == 0));
   CheckMenuItem(menu, ID_OPTIONS_GAMEBOY_GAMEBOYCOLORS,
@@ -1660,51 +1822,57 @@ void updateFilterMenu(HMENU menu)
 
   if(menu == NULL)
     return;
+
+  BOOL filterEnable = (systemColorDepth == 16 || systemColorDepth == 32);
   
   CheckMenuItem(menu, ID_OPTIONS_FILTER_NORMAL,
                 CHECKMENUSTATE(filterType == 0));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_NORMAL,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_TVMODE,
                 CHECKMENUSTATE(filterType == 1));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_TVMODE,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
                 CHECKMENUSTATE(filterType == 2));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_SUPER2XSAI,
                 CHECKMENUSTATE(filterType == 3));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_SUPER2XSAI,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_SUPEREAGLE,
                 CHECKMENUSTATE(filterType == 4));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_SUPEREAGLE,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
                 CHECKMENUSTATE(filterType == 5));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL,
                 CHECKMENUSTATE(filterType == 6));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X,
                 CHECKMENUSTATE(filterType == 7));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_SIMPLE2X,
                 CHECKMENUSTATE(filterType == 8));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_SIMPLE2X,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_BILINEAR,
                 CHECKMENUSTATE(filterType == 9));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_BILINEAR,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_BILINEARPLUS,
                 CHECKMENUSTATE(filterType == 10));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_BILINEARPLUS,
-                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+                 ENABLEMENU(filterEnable));
+  CheckMenuItem(menu, ID_OPTIONS_FILTER_SCANLINES,
+                CHECKMENUSTATE(filterType == 11));
+  EnableMenuItem(menu, ID_OPTIONS_FILTER_SCANLINES,
+                 ENABLEMENU(filterEnable));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_DISABLEMMX,
                 CHECKMENUSTATE(disableMMX));
 
@@ -2235,30 +2403,9 @@ u32 systemReadJoypad(int which)
   return res;
 }
 
-void winClearFlipSurfaces()
-{
-  if(videoOption <= VIDEO_4X || !tripleBuffering || ddsFlip == NULL)
-    return;
-
-  DDBLTFX fx;
-  ZeroMemory(&fx, sizeof(fx));
-  fx.dwSize = sizeof(fx);
-  fx.dwFillColor = 0;
-  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
-  ddsPrimary->Flip(NULL, 0);
-  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
-  ddsPrimary->Flip(NULL, 0);
-  ddsFlip->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &fx);
-  ddsPrimary->Flip(NULL, 0);    
-}
-
 void systemDrawScreen()
 {
-  HRESULT hret;
-
-  if(pDirectDraw == NULL ||
-     ddsOffscreen == NULL ||
-     ddsPrimary == NULL)
+  if(display == NULL)
     return;
 
   renderedFrames++;
@@ -2272,7 +2419,7 @@ void systemDrawScreen()
     }
   }
 
-  if(aviRecording) {
+  if(aviRecording && !painting) {
     int width = 240;
     int height = 160;
     switch(cartridgeType) {
@@ -2293,12 +2440,9 @@ void systemDrawScreen()
     
     if(aviRecorder == NULL) {
       aviRecorder = new CAVIFile();
+      aviFrameNumber = 0;
       
-      if(cartridgeType == 0) {
-        aviRecorder->SetRate(60/(frameSkip+1));
-      } else { 
-        aviRecorder->SetRate(60/(gbFrameSkip+1));
-      }
+      aviRecorder->SetRate(60);
       
       BITMAPINFOHEADER bi;
       memset(&bi, 0, sizeof(bi));      
@@ -2315,242 +2459,37 @@ void systemDrawScreen()
     char *bmp = new char[width*height*3];
     
     utilWriteBMP(bmp, width, height, pix);
-    aviRecorder->AddFrame(bmp);
+    aviRecorder->AddFrame(aviFrameNumber, bmp);
     
     delete bmp;
   }
   
   if(ifbFunction) {
     if(systemColorDepth == 16)
-      ifbFunction(pix+filterWidth*2+2, filterWidth*2+2,
+      ifbFunction(pix+filterWidth*2+4, filterWidth*2+4,
                   filterWidth, filterHeight);
     else
       ifbFunction(pix+filterWidth*4+4, filterWidth*4+4,
                   filterWidth, filterHeight);
   }
-  
-  if(vsync && !speedup) {
-    hret = pDirectDraw->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-  }
-  
-  DDSURFACEDESC2 ddsDesc;
-  
-  ZeroMemory(&ddsDesc, sizeof(ddsDesc));
 
-  ddsDesc.dwSize = sizeof(ddsDesc);
-
-  hret = ddsOffscreen->Lock(NULL,
-                            &ddsDesc,
-                            DDLOCK_WRITEONLY|
-#ifndef FINAL_VERSION
-                            DDLOCK_NOSYSLOCK|
-#endif
-                            DDLOCK_SURFACEMEMORYPTR,
-                            NULL);
-
-  if(hret == DDERR_SURFACELOST) {
-    hret = ddsPrimary->Restore();
-    if(hret == DD_OK) {
-      hret = ddsOffscreen->Restore();
-      
-      if(hret == DD_OK) {
-        hret = ddsOffscreen->Lock(NULL,
-                                  &ddsDesc,
-                                  DDLOCK_WRITEONLY|
-#ifndef FINAL_VERSION
-                                  DDLOCK_NOSYSLOCK|
-#endif
-                                  DDLOCK_SURFACEMEMORYPTR,
-                                  NULL);
-        
-      }
-    }
-  }
-    
-  if(hret == DD_OK) {
-    if(filterFunction) {
-      if(systemColorDepth == 16)
-        (*filterFunction)(pix+filterWidth*2+2,
-                          filterWidth*2+2,
-                          (u8*)delta,
-                          (u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          filterWidth,
-                          filterHeight);
-      else
-        (*filterFunction)(pix+filterWidth*4+4,
-                          filterWidth*4+4,
-                          (u8*)delta,
-                          (u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          filterWidth,
-                          filterHeight);
-        
-    } else {
-      int copyX = 240;
-      int copyY = 160;
-      
-      if(cartridgeType == 1) {
-        if(gbBorderOn) {
-          copyX = 256;
-          copyY = 224;
-        } else {
-          copyX = 160;
-          copyY = 144;
-        }
-      }
-      // MMX doesn't seem to be faster to copy the data
-      __asm {
-        mov eax, copyX;
-        mov ebx, copyY;
-        
-        mov esi, pix;
-        mov edi, ddsDesc.lpSurface;
-        mov edx, ddsDesc.lPitch;
-        cmp systemColorDepth, 16;
-        jnz gbaOtherColor;
-        sub edx, eax;
-        sub edx, eax;
-        lea esi,[esi+2*eax+2];
-        shr eax, 1;
-      gbaLoop16bit:
-        mov ecx, eax;
-        repz movsd;
-        inc esi;
-        inc esi;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop16bit;
-        jmp gbaLoopEnd;
-      gbaOtherColor:
-        cmp systemColorDepth, 32;
-        jnz gbaOtherColor2;
-        
-        sub edx, eax;
-        sub edx, eax;
-        sub edx, eax;
-        sub edx, eax;
-        lea esi, [esi+4*eax+4];
-      gbaLoop32bit:
-        mov ecx, eax;
-        repz movsd;
-        add esi, 4;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop32bit;
-        jmp gbaLoopEnd;
-      gbaOtherColor2:
-        lea eax, [eax+2*eax];
-        sub edx, eax;
-      gbaLoop24bit:
-        mov ecx, eax;
-        shr ecx, 2;
-        repz movsd;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop24bit;
-      gbaLoopEnd:
-      }
-    }
-    if(videoOption > VIDEO_4X && showSpeed) {
-      char buffer[30];
-      if(showSpeed == 1)
-        sprintf(buffer, "%3d%%", systemSpeed);
-      else
-        sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed,
-                systemFrameSkip,
-                showRenderedFrames);
-      if(showSpeedTransparent)
-        fontDisplayStringTransp((u8*)ddsDesc.lpSurface,
-                                ddsDesc.lPitch,
-                                rect.left+10,
-                                rect.bottom-10,
-                                buffer);
-      else
-        fontDisplayString((u8*)ddsDesc.lpSurface,
-                          ddsDesc.lPitch,
-                          rect.left+10,
-                          rect.bottom-10,
-                          buffer);        
-    }
-  } else if(ddrawDebug)
-    winlog("Error during lock: %08x\n", hret);
-
-  hret = ddsOffscreen->Unlock(NULL);
-  
-  if(hret == DD_OK) {
-    ddsOffscreen->PageLock(0);
-    if(tripleBuffering && videoOption > VIDEO_4X) {
-      hret = ddsFlip->Blt(&dest, ddsOffscreen, &rect, DDBLT_WAIT, NULL);
-      if(hret == DD_OK) {
-        if(menuToggle || !active) {
-          pDirectDraw->FlipToGDISurface();
-          ddsPrimary->SetClipper(ddsClipper);
-          hret = ddsPrimary->Blt(&dest, ddsFlip, &dest, DDBLT_ASYNC, NULL);
-          // if using emulation only, then we have to redraw the menu
-          // everytime. It seems like a bug in DirectDraw to me as we not
-          // overwritting the menu area at all.
-          if(ddrawUsingEmulationOnly)
-            DrawMenuBar(hWindow);
-        } else
-          hret = ddsPrimary->Flip(NULL, 0);
-      }
-    } else {
-      hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect,DDBLT_ASYNC,NULL);
-      
-      if(hret == DDERR_SURFACELOST) {
-        hret = ddsPrimary->Restore();
-        
-        if(hret == DD_OK) {
-          hret = ddsPrimary->Blt(&dest, ddsOffscreen, &rect, DDBLT_ASYNC, NULL);
-        }
-      }
-    }
-    ddsOffscreen->PageUnlock(0);
-  } else if(ddrawDebug)
-    winlog("Error during unlock: %08x\n", hret);
-
-  if(screenMessage) {
-    if(((GetTickCount() - screenMessageTime) < 3000) &&
-       !disableStatusMessage) {
-      ddsPrimary->SetClipper(ddsClipper);
-      HDC hdc;
-      ddsPrimary->GetDC(&hdc);
-      SetTextColor(hdc, RGB(255,0,0));
-      SetBkMode(hdc,TRANSPARENT);      
-      TextOut(hdc, dest.left+10, dest.bottom - 20, screenMessageBuffer,
-              strlen(screenMessageBuffer));
-      ddsPrimary->ReleaseDC(hdc);
-    } else {
-      screenMessage = false;
-    }
-  }
-  
-  if(hret != DD_OK) {
-    if(ddrawDebug)
-      winlog("Error on update screen: %08xl\n", hret);
-  }
-}
-
-int ffs (UINT mask)
-{
-  int m = 0;
-  if (mask) {
-    while (!(mask & (1 << m)))
-      m++;
-    
-    return (m);
-  }
-  
-  return (0);
+  display->render();
 }
 
 void adjustDestRect()
 {
   POINT point;
-
+  RECT skinRect;
+  if(skin)
+    skinRect = skin->GetBlitRect();
+  
   point.x = 0;
   point.y = 0;
+
+  if(skin) {
+    point.x = skinRect.left;
+    point.y = skinRect.top;
+  }
 
   if(ClientToScreen(hWindow, &point)) {
     dest.top = point.y;
@@ -2560,11 +2499,18 @@ void adjustDestRect()
   point.x = surfaceSizeX;
   point.y = surfaceSizeY;
 
+  if(skin) {
+    point.x = skinRect.right;
+    point.y = skinRect.bottom;
+  }
+
   if(ClientToScreen(hWindow, &point)) {
     dest.bottom = point.y;
     dest.right = point.x;
   }
-
+  if(skin)
+    return;
+  
   int menuSkip = 0;
   
   if(videoOption >= VIDEO_320x240 && menuToggle) {
@@ -2586,7 +2532,7 @@ void adjustDestRect()
       dest.right = fsWidth;
       dest.bottom = fsHeight;
     }          
-  }    
+  }
 }
 
 void updateIFB()
@@ -2663,6 +2609,9 @@ void updateFilter()
     case 10:
       filterFunction = BilinearPlus;
       break;
+    case 11:
+      filterFunction = Scanlines;
+      break;
     }
     
     if(filterType != 0) {
@@ -2711,6 +2660,9 @@ void updateFilter()
       case 10:
         filterFunction = BilinearPlus32;
         break;
+      case 11:
+        filterFunction = Scanlines32;
+        break;
       }
       if(filterType != 0) {
         rect.right = sizeX*2;
@@ -2723,6 +2675,9 @@ void updateFilter()
     } else
       filterFunction = NULL;
   }
+
+  if(display)
+    display->changeRenderSize(rect.right, rect.bottom);  
 }
 
 typedef BOOL (WINAPI *GETMENUBARINFO)(HWND, LONG, LONG, PMENUBARINFO);
@@ -2778,13 +2733,13 @@ void updateWindowSize(int value)
      fsForceChange) {
     fsForceChange = false;
     changingVideoSize = TRUE;
-    shutdownDirectDraw();
+    shutdownDisplay();
     shutdownDirectInput();
     DragAcceptFiles(hWindow, FALSE);
     DestroyWindow(hWindow);
     hWindow = NULL;
     videoOption = value;
-    if(!initDirectDraw()) {
+    if(!initDisplay()) {
       if(videoOption == VIDEO_320x240 ||
          videoOption == VIDEO_640x480 ||
          videoOption == VIDEO_800x600 ||
@@ -2891,22 +2846,24 @@ void updateWindowSize(int value)
     
     winSizeX = dest.right-dest.left;
     winSizeY = dest.bottom-dest.top;
-    
-    SetWindowPos(hWindow,
-                 0, //HWND_TOPMOST,
-                 windowPositionX,
-                 windowPositionY,
-                 winSizeX,
-                 winSizeY,
-                 SWP_NOMOVE | SWP_SHOWWINDOW);
 
-    winCheckMenuBarInfo(winSizeX, winSizeY);
+    if(skin == NULL) {
+      SetWindowPos(hWindow,
+                   0, //HWND_TOPMOST,
+                   windowPositionX,
+                   windowPositionY,
+                   winSizeX,
+                   winSizeY,
+                   SWP_NOMOVE | SWP_SHOWWINDOW);
+
+      winCheckMenuBarInfo(winSizeX, winSizeY);
+    }
   }
 
   adjustDestRect();
 
+  updateIFB();  
   updateFilter();
-  updateIFB();
   
   RedrawWindow(hWindow,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);  
 }
@@ -3372,24 +3329,85 @@ void fileExportGSASnapshot()
   fileExportSPSSnapshot(szFile, buffer);
 }
 
+void winSelectSkin()
+{
+  char buffer[2048];
+  
+  strcpy(buffer, skinName);
+
+  char *exts[] = {".ini" };
+
+  FileDlg dlg(hWindow,
+              (char *)buffer,
+              (int)sizeof(buffer),
+              (char *)winLoadFilter(IDS_FILTER_INI),
+              0,
+              "INI",
+              exts,
+              (char *)NULL, 
+              (char *)winResLoadString(IDS_SELECT_SKIN_FILE),
+              TRUE);
+
+  BOOL res = dlg.DoModal();  
+  if(res == FALSE) {
+    DWORD res = CommDlgExtendedError();
+    return;
+  }
+
+  bool result = false;
+  if(!skinEnabled) {
+    skinEnabled = !skinEnabled;    
+    regSetDwordValue("skinEnabled", skinEnabled);
+  }
+
+  if(skin && skinEnabled) {
+    delete skin;
+    skin = NULL;
+  }
+
+  skinName = buffer;
+
+  regSetStringValue("skinName", buffer);
+
+  winUpdateSkin();
+}
+
 extern void helpAbout();
 extern void toolsLogging();
 extern void toolsDisassemble();
+extern void toolsGBDisassemble();
 extern void toolsMapView();
+extern void toolsGBMapView();
 extern void toolsMemoryViewer();
+extern void toolsGBMemoryViewer();
 extern void toolsPaletteView();
+extern void toolsGBPaletteView();
 extern void toolsOamViewer();
+extern void toolsGBOamViewer();
 extern void toolsTileViewer();
+extern void toolsGBTileViewer();
 extern void toolsCustomize();
 extern void toolsDebugGDB();
 extern void toolsDebugGDBLoad();
 extern void optionsGameboyColors();
 extern int optionsThrottleOther(int);
+extern bool winDisplayConfirmMode();
 
 void winCheckFullscreen()
 {
   if(videoOption > VIDEO_4X && tripleBuffering) {
-    pDirectDraw->FlipToGDISurface();
+    if(display)
+      display->checkFullScreen();
+  }
+}
+
+void winConfirmMode()
+{
+  if(renderMethod == DIRECT_DRAW && videoOption > VIDEO_4X) {
+    winCheckFullscreen();
+    if(!winDisplayConfirmMode()) {
+      updateVideoSize(ID_OPTIONS_VIDEO_X2);
+    }
   }
 }
 
@@ -3434,7 +3452,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_ACTIVATEAPP:
     if(tripleBuffering && videoOption > VIDEO_4X) {
       if(wParam) {
-        winClearFlipSurfaces();
+        if(display)
+          display->clear();
       }
     }
     break;
@@ -3449,9 +3468,12 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       PAINTSTRUCT ps;
       BeginPaint(hWnd, &ps);
       if(emulating) {
+        painting = true;
         systemDrawScreen();
+        painting = false;
         renderedFrames--;
       }
+        
       EndPaint(hWnd, &ps);
     }
     return TRUE;
@@ -3488,6 +3510,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               surfaceSizeX = LOWORD(lParam);
               surfaceSizeY = HIWORD(lParam);
               adjustDestRect();
+              if(display)
+                display->resize(dest.right-dest.left, dest.bottom-dest.top);
             }
           } else {
             if(emulating) {
@@ -3577,6 +3601,29 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
   case WM_RBUTTONUP:
     winMouseOn();
+    break;
+  case WM_CONTEXTMENU:
+    winMouseOn();
+    if(skin) {
+      if(popup == NULL) {
+        popup = CreatePopupMenu();
+        if(menu != NULL) {
+          int count = GetMenuItemCount(menu);
+          for(int i = 0; i < count; i++) {
+            wchar_t buffer[256];
+            MENUITEMINFOW info;
+            ZeroMemory(&info, sizeof(info));
+            info.cbSize = sizeof(info);
+            info.fMask = MIIM_STRING | MIIM_SUBMENU;
+            info.dwTypeData = buffer;
+            info.cch = 256;
+            GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info);
+            AppendMenuW(popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer);
+          }
+        }
+      }
+      TrackPopupMenu(popup, 0, LOWORD(lParam), HIWORD(lParam), 0, hWindow, NULL);
+    }
     break;
   case WM_MBUTTONDOWN:
     winMouseOn();
@@ -3794,6 +3841,66 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       vsync = !vsync;
       regSetDwordValue("vsync", vsync);
       break;
+    case ID_OPTIONS_VIDEO_RENDERMETHOD_GDI:
+      renderMethod = GDI;
+      updateRenderMethod(false);
+      break;
+    case ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECTDRAW:
+      renderMethod = DIRECT_DRAW;
+      updateRenderMethod(false);
+      break;
+    case ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECT3D:
+      renderMethod = DIRECT_3D;
+      updateRenderMethod(false);
+      break;
+    case ID_OPTIONS_VIDEO_RENDERMETHOD_OPENGL:
+      renderMethod = OPENGL;
+      updateRenderMethod(false);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DNOFILTER:
+      d3dFilter = 0;
+      regSetDwordValue("d3dFilter", d3dFilter);
+      if(display)
+        display->setOption("d3dFilter", d3dFilter);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DBILINEAR:
+      d3dFilter = 1;
+      regSetDwordValue("d3dFilter", d3dFilter);
+      if(display)
+        display->setOption("d3dFilter", d3dFilter);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_GLNEAREST:
+      glFilter = 0;
+      regSetDwordValue("glFilter", glFilter);
+      if(display)
+        display->setOption("glFilter", glFilter);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_GLBILINEAR:
+      glFilter = 1;
+      regSetDwordValue("glFilter", glFilter);
+      if(display)
+        display->setOption("glFilter", glFilter);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_GLTRIANGLE:
+      glType = 0;
+      regSetDwordValue("glType", glType);
+      if(display)
+        display->setOption("glType", glType);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_GLQUADS:
+      glType = 1;
+      regSetDwordValue("glType", glType);
+      if(display)
+        display->setOption("glType", glType);
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_SELECTSKIN:
+      winSelectSkin();
+      break;
+    case ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN:
+      skinEnabled = !skinEnabled;
+      regSetDwordValue("skinEnabled", skinEnabled);
+      updateRenderMethod(true);
+      break;
     case ID_OPTIONS_VIDEO_LAYERS_BG0:
     case ID_OPTIONS_VIDEO_LAYERS_BG1:
     case ID_OPTIONS_VIDEO_LAYERS_BG2:
@@ -3814,12 +3921,13 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_VIDEO_FULLSCREEN640X480:
     case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
       updateVideoSize(wParam&0xffff);
+      winConfirmMode();
       break;
     case ID_OPTIONS_VIDEO_FULLSCREEN:
       {
         winCheckFullscreen();        
         GUID *pGUID = NULL;
-        int size = winVideoModeSelect(hWindow, &pGUID);
+        int size = display->selectFullScreenMode(&pGUID);
         if(size != -1) {
           int width = (size >> 12) & 4095;
           int height = (size & 4095);
@@ -3827,7 +3935,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           if(width != fsWidth ||
              height != fsHeight ||
              colorDepth != fsColorDepth ||
-             pGUID != pVideoDriverGUID) {
+             pGUID != pVideoDriverGUID ||
+             videoOption != VIDEO_OTHER) {
             fsForceChange = true;
             fsWidth = width;
             fsHeight = height;
@@ -3842,6 +3951,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               regSetDwordValue("defaultVideoDriver", TRUE);
             }
             updateVideoSize(wParam & 0xffff);
+            winConfirmMode();            
           }
         }
       }
@@ -3856,7 +3966,8 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       fullScreenStretch = !fullScreenStretch;
       regSetDwordValue("stretch", fullScreenStretch);
       updateWindowSize(videoOption);
-      winClearFlipSurfaces();
+      if(display)
+        display->clear();
       break;
     case ID_OPTIONS_VIDEO_DDRAWEMULATIONONLY:
       ddrawEmulationOnly = !ddrawEmulationOnly;
@@ -3942,6 +4053,15 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regEnabled = !regEnabled;
       regSetDwordValue("regEnabled", regEnabled, true);
       break;
+    case ID_OPTIONS_EMULATOR_AGBPRINT:
+      agbPrintEnable(!agbPrintIsEnabled());
+      regSetDwordValue("agbPrint", agbPrintIsEnabled());
+      break;
+    case ID_OPTIONS_EMULATOR_REALTIMECLOCK:
+      winRtcEnable = !winRtcEnable;
+      rtcEnable(winRtcEnable);
+      regSetDwordValue("rtcEnabled", winRtcEnable);
+      break;
     case ID_OPTIONS_EMULATOR_SHOWSPEED_NONE:
       showSpeed = 0;
       systemSetTitle("VisualBoyAdvance");
@@ -3960,23 +4080,23 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("showSpeedTransparent", showSpeedTransparent);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_AUTOMATIC:
-      cpuSaveType = 0;
+      winSaveType = 0;
       regSetDwordValue("saveType", 0);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_EEPROM:
-      cpuSaveType = 1;
+      winSaveType = 1;
       regSetDwordValue("saveType", 1);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_SRAM:
-      cpuSaveType = 2;
+      winSaveType = 2;
       regSetDwordValue("saveType", 2);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH:
-      cpuSaveType = 3;
+      winSaveType = 3;
       regSetDwordValue("saveType", 3);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR:
-      cpuSaveType = 4;
+      winSaveType = 4;
       regSetDwordValue("saveType", 4);
       break;
     case ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K:
@@ -4130,6 +4250,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       gbEmulatorType = 3;
       regSetDwordValue("emulatorType", gbEmulatorType);            
       break;
+    case ID_OPTIONS_GAMEBOY_SGB2:
+      gbEmulatorType = 5;
+      regSetDwordValue("emulatorType", gbEmulatorType);            
+      break;
     case ID_OPTIONS_GAMEBOY_REALCOLORS:
       gbColorOption = 0;
       regSetDwordValue("colorOption", 0);
@@ -4214,6 +4338,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_OPTIONS_FILTER_BILINEARPLUS:
       filterType = 10;
+      regSetDwordValue("filter", filterType);
+      updateFilter();
+      break;
+    case ID_OPTIONS_FILTER_SCANLINES:
+      filterType = 11;
       regSetDwordValue("filter", filterType);
       updateFilter();
       break;
@@ -4354,8 +4483,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       winSaveCheatList();
       break;
     case ID_TOOLS_DISASSEMBLE:
-      winCheckFullscreen();      
-      toolsDisassemble();
+      winCheckFullscreen();
+      if(cartridgeType == 0)
+        toolsDisassemble();
+      else
+        toolsGBDisassemble();
       break;
     case ID_TOOLS_LOGGING:
       winCheckFullscreen();      
@@ -4363,23 +4495,38 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_TOOLS_MAPVIEW:
       winCheckFullscreen();
-      toolsMapView();
+      if(cartridgeType == 0)
+        toolsMapView();
+      else
+        toolsGBMapView();
       break;
     case ID_TOOLS_MEMORYVIEWER:
-      winCheckFullscreen();      
-      toolsMemoryViewer();
+      winCheckFullscreen();
+      if(cartridgeType == 0)
+        toolsMemoryViewer();
+      else
+        toolsGBMemoryViewer();
       break;
     case ID_TOOLS_PALETTEVIEW:
-      winCheckFullscreen();      
-      toolsPaletteView();
+      winCheckFullscreen();
+      if(cartridgeType == 0)
+        toolsPaletteView();
+      else
+        toolsGBPaletteView();
       break;
     case ID_TOOLS_OAMVIEWER:
       winCheckFullscreen();
-      toolsOamViewer();
+      if(cartridgeType == 0)
+        toolsOamViewer();
+      else
+        toolsGBOamViewer();
       break;
     case ID_TOOLS_TILEVIEWER:
       winCheckFullscreen();
-      toolsTileViewer();
+      if(cartridgeType == 0)
+        toolsTileViewer();
+      else
+        toolsGBTileViewer();
       break;
     case ID_TOOLS_CUSTOMIZE:
       winCheckFullscreen();
@@ -4393,6 +4540,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if(aviRecorder != NULL) {
         delete aviRecorder;
         aviRecorder = NULL;
+        aviFrameNumber = 0;
       }
       aviRecording = FALSE;
       break;
@@ -4428,442 +4576,9 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-HRESULT WINAPI checkModesAvailable(LPDDSURFACEDESC2 surf, LPVOID lpContext)
+BOOL initDisplay()
 {
-  if(surf->dwWidth == 320 &&
-     surf->dwHeight == 240 &&
-     surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode320Available = TRUE;
-  }
-  if(surf->dwWidth == 640 &&
-     surf->dwHeight == 480 &&
-     surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode640Available = TRUE;
-  }
-  if(surf->dwWidth == 800 &&
-     surf->dwHeight == 600 &&
-     surf->ddpfPixelFormat.dwRGBBitCount == 16) {
-    mode800Available = TRUE;
-  }
-  return DDENUMRET_OK;
-}
-
-BOOL initDirectDraw()
-{
-  sizeX = 240;
-  sizeY = 160;
-
-  switch(videoOption) {
-  case VIDEO_1X:
-    surfaceSizeX = sizeX;
-    surfaceSizeY = sizeY;
-    break;
-  case VIDEO_2X:
-    surfaceSizeX = sizeX * 2;
-    surfaceSizeY = sizeY * 2;
-    break;
-  case VIDEO_3X:
-    surfaceSizeX = sizeX * 3;
-    surfaceSizeY = sizeY * 3;
-    break;
-  case VIDEO_4X:
-    surfaceSizeX = sizeX * 4;
-    surfaceSizeY = sizeY * 4;
-    break;
-  case VIDEO_320x240:
-  case VIDEO_640x480:
-  case VIDEO_800x600:
-  case VIDEO_OTHER:
-    {
-      int scaleX = (fsWidth / sizeX);
-      int scaleY = (fsHeight / sizeY);
-      int min = scaleX < scaleY ? scaleX : scaleY;
-      surfaceSizeX = sizeX * min;
-      surfaceSizeY = sizeY * min;
-      if(fullScreenStretch) {
-        surfaceSizeX = fsWidth;
-        surfaceSizeY = fsHeight;
-      }
-    }
-    break;
-  }
-  
-  rect.left = 0;
-  rect.top = 0;
-  rect.right = sizeX;
-  rect.bottom = sizeY;
-
-  dest.left = 0;
-  dest.top = 0;
-  dest.right = surfaceSizeX;
-  dest.bottom = surfaceSizeY;
-
-  DWORD style = WS_POPUP | WS_VISIBLE;
-  DWORD styleEx = 0;
-  
-  if(videoOption <= VIDEO_4X)
-    style |= WS_OVERLAPPEDWINDOW;
-  else
-    styleEx = WS_EX_TOPMOST;
-
-  if(videoOption <= VIDEO_4X)
-    AdjustWindowRectEx(&dest, style, TRUE, styleEx);
-  else
-    AdjustWindowRectEx(&dest, style, FALSE, styleEx);    
-
-  int winSizeX = dest.right-dest.left;
-  int winSizeY = dest.bottom-dest.top;
-
-  int x = 0;
-  int y = 0;
-
-  if(videoOption <= VIDEO_4X) {
-    x = windowPositionX;
-    y = windowPositionY;
-  }
-  
-  // Create a window
-  hWindow = CreateWindowEx(styleEx,
-                           "GBA",
-                           "VisualBoyAdvance",
-                           style,
-                           x,
-                           y,
-                           winSizeX,
-                           winSizeY,
-                           NULL,
-                           NULL,
-                           hInstance,
-                           NULL);
-  
-  if (!hWindow) {
-    winlog("Error creating Window %08x\n", GetLastError());
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_FAILED));
-    return FALSE;
-  }
-  
-  ShowWindow(hWindow, nCmdShow);
-  UpdateWindow(hWindow);
-  SetFocus(hWindow);
-
-  updateMenuBar();
-  
-  adjustDestRect();
-  
-  GUID *guid = NULL;
-  if(ddrawEmulationOnly)
-    guid = (GUID *)DDCREATE_EMULATIONONLY;
-
-  if(pVideoDriverGUID)
-    guid = pVideoDriverGUID;
-
-  ddrawDLL = LoadLibrary("DDRAW.DLL");
-  HRESULT (WINAPI *DDrawCreateEx)(GUID *,LPVOID *,REFIID,IUnknown *);  
-  if(ddrawDLL != NULL) {    
-    DDrawCreateEx = (HRESULT (WINAPI *)(GUID *,LPVOID *,REFIID,IUnknown *))
-      GetProcAddress(ddrawDLL, "DirectDrawCreateEx");
-
-    if(DDrawCreateEx == NULL) {
-      directXMessage("DirectDrawCreateEx");
-      return FALSE;
-    }
-  } else {
-    directXMessage("DDRAW.DLL");
-    return FALSE;
-  }
-
-  ddrawUsingEmulationOnly = ddrawEmulationOnly;
-  
-  HRESULT hret = DDrawCreateEx(guid,
-                               (void **)&pDirectDraw,
-                               IID_IDirectDraw7,
-                               NULL);
-    
-  if(hret != DD_OK) {
-    winlog("Error creating DirectDraw object %08x\n", hret);
-    if(ddrawEmulationOnly) {
-      // disable emulation only setting in case of failure
-      regSetDwordValue("ddrawEmulationOnly", 0);
-    }
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWCREATE), hret);
-    return FALSE;
-  }
-
-  if(ddrawDebug) {
-    DDCAPS driver;
-    DDCAPS hel;
-    ZeroMemory(&driver, sizeof(driver));
-    ZeroMemory(&hel, sizeof(hel));
-    driver.dwSize = sizeof(driver);
-    hel.dwSize = sizeof(hel);
-    pDirectDraw->GetCaps(&driver, &hel);
-    int i;
-    DWORD *p = (DWORD *)&driver;
-    for(i = 0; i < driver.dwSize; i+=4)
-      winlog("Driver CAPS %2d: %08x\n", i>>2, *p++);
-    p = (DWORD *)&hel;
-    for(i = 0; i < hel.dwSize; i+=4)
-      winlog("HEL CAPS %2d: %08x\n", i>>2, *p++);
-  }
-  
-  mode320Available = FALSE;
-  mode640Available = FALSE;
-  mode800Available = FALSE;
-  // check for available fullscreen modes
-  pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, NULL,
-                                checkModesAvailable);
-  
-  DWORD flags = DDSCL_NORMAL;
-
-  if(videoOption >= VIDEO_320x240)
-    flags = DDSCL_ALLOWMODEX |
-      DDSCL_ALLOWREBOOT |
-      DDSCL_EXCLUSIVE |
-      DDSCL_FULLSCREEN;
-  
-  hret = pDirectDraw->SetCooperativeLevel(hWindow,  
-                                          flags);
-
-  if(hret != DD_OK) {
-    winlog("Error SetCooperativeLevel %08x\n", hret);    
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWLEVEL), hret);
-    return FALSE;
-  }
-  
-  if(videoOption > VIDEO_4X) {
-    hret = pDirectDraw->SetDisplayMode(fsWidth,
-                                       fsHeight,
-                                       fsColorDepth,
-                                       0,
-                                       0);
-    if(hret != DD_OK) {
-      winlog("Error SetDisplayMode %08x\n", hret);
-      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
-      return FALSE;
-    }
-  }
-  
-  DDSURFACEDESC2 ddsd;
-  ZeroMemory(&ddsd,sizeof(ddsd));
-  ddsd.dwSize = sizeof(ddsd);
-  ddsd.dwFlags = DDSD_CAPS;
-  ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-  if(videoOption > VIDEO_4X) {
-    if(tripleBuffering) {
-      // setup triple buffering
-      ddsd.dwFlags |= DDSD_BACKBUFFERCOUNT;
-      ddsd.ddsCaps.dwCaps |= DDSCAPS_COMPLEX | DDSCAPS_FLIP;
-      ddsd.dwBackBufferCount = 2;
-    }
-  }
-  
-  hret = pDirectDraw->CreateSurface(&ddsd, &ddsPrimary, NULL);
-  if(hret != DD_OK) {
-    winlog("Error primary CreateSurface %08x\n", hret);    
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSURFACE), hret);
-    return FALSE;
-  }
-
-  if(ddrawDebug) {
-    DDSCAPS2 caps;
-    ZeroMemory(&caps, sizeof(caps));
-    ddsPrimary->GetCaps(&caps);
-
-    winlog("Primary CAPS 1: %08x\n", caps.dwCaps);
-    winlog("Primary CAPS 2: %08x\n", caps.dwCaps2);
-    winlog("Primary CAPS 3: %08x\n", caps.dwCaps3);
-    winlog("Primary CAPS 4: %08x\n", caps.dwCaps4);
-  }
-
-  if(videoOption > VIDEO_4X && tripleBuffering) {
-    DDSCAPS2 caps;
-    ZeroMemory(&caps, sizeof(caps));
-    // this gets the third surface. The front one is the primary,
-    // the second is the backbuffer and the third is the flip
-    // surface
-    caps.dwCaps = DDSCAPS_BACKBUFFER;
-    
-    hret = ddsPrimary->GetAttachedSurface(&caps, &ddsFlip);
-    if(hret != DD_OK) {
-      winlog("Failed to get attached surface %08x", hret);
-      return FALSE;
-    }
-    winClearFlipSurfaces();
-  }
-
-  // create clipper in all modes to avoid paint problems
-  //  if(videoOption <= VIDEO_4X) {
-    hret = pDirectDraw->CreateClipper(0, &ddsClipper, NULL);
-    if(hret == DD_OK) {
-      ddsClipper->SetHWnd(0, hWindow);
-      if(videoOption > VIDEO_4X) {
-        if(tripleBuffering)
-          ddsFlip->SetClipper(ddsClipper);
-        else
-          ddsPrimary->SetClipper(ddsClipper);
-      } else
-        ddsPrimary->SetClipper(ddsClipper);
-    }
-    //  }
-
-  ZeroMemory(&ddsd, sizeof(ddsd));
-  ddsd.dwSize = sizeof(ddsd);
-  ddsd.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;
-  ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-  if(ddrawUseVideoMemory)
-    ddsd.ddsCaps.dwCaps |= (DDSCAPS_LOCALVIDMEM|DDSCAPS_VIDEOMEMORY);
-  if(videoOption == VIDEO_320x240) {
-    ddsd.dwWidth = 320;
-    ddsd.dwHeight = 240;
-  } else {
-    ddsd.dwWidth = 256*2; //240;  
-    ddsd.dwHeight = 240*2; //160;
-  }
-
-  hret = pDirectDraw->CreateSurface(&ddsd, &ddsOffscreen, NULL);
-
-  if(hret != DD_OK) {
-    winlog("Error offscreen CreateSurface %08x\n", hret);    
-    if(ddrawUseVideoMemory) {
-      regSetDwordValue("ddrawUseVideoMemory", 0);
-    }    
-    //    errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSURFACE2), hret);
-    return FALSE;
-  }
-
-  if(ddrawDebug) {
-    DDSCAPS2 caps;
-    ZeroMemory(&caps, sizeof(caps));
-    ddsOffscreen->GetCaps(&caps);
-
-    winlog("Offscreen CAPS 1: %08x\n", caps.dwCaps);
-    winlog("Offscreen CAPS 2: %08x\n", caps.dwCaps2);
-    winlog("Offscreen CAPS 3: %08x\n", caps.dwCaps3);
-    winlog("Offscreen CAPS 4: %08x\n", caps.dwCaps4);
-  }
-  
-  DDPIXELFORMAT px;
-
-  px.dwSize = sizeof(px);
-
-  hret = ddsOffscreen->GetPixelFormat(&px);
-
-  if(ddrawDebug) {
-    DWORD *pdword = (DWORD *)&px;
-    for(int ii = 0; ii < 8; ii++) {
-      winlog("Pixel format %d %08x\n", ii, pdword[ii]);
-    }
-  }
-  
-  switch(px.dwRGBBitCount) {
-  case 15:
-  case 16:
-    systemColorDepth = 16;
-    break;
-  case 24:
-    systemColorDepth = 24;
-    filterFunction = NULL;
-    break;
-  case 32:
-    systemColorDepth = 32;
-    break;
-  default:
-    systemMessage(IDS_ERROR_DISP_COLOR, "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode.",px.dwRGBBitCount);
-    return FALSE;
-  }
-  if(ddrawDebug) {
-    winlog("R Mask: %08x\n", px.dwRBitMask);
-    winlog("G Mask: %08x\n", px.dwGBitMask);
-    winlog("B Mask: %08x\n", px.dwBBitMask);
-  }
-  
-  systemRedShift = ffs(px.dwRBitMask);
-  systemGreenShift = ffs(px.dwGBitMask);
-  systemBlueShift = ffs(px.dwBBitMask);
-
-#ifdef MMX
-  if(!disableMMX)
-    cpu_mmx = detectMMX();
-  else
-    cpu_mmx = 0;
-#endif
-  
-  if((px.dwFlags&DDPF_RGB) != 0 &&
-     px.dwRBitMask == 0xF800 &&
-     px.dwGBitMask == 0x07E0 &&
-     px.dwBBitMask == 0x001F) {
-    systemGreenShift++;
-    Init_2xSaI(565);
-    RGB_LOW_BITS_MASK=0x821;
-  } else if((px.dwFlags&DDPF_RGB) != 0 &&
-            px.dwRBitMask == 0x7C00 &&
-            px.dwGBitMask == 0x03E0 &&
-            px.dwBBitMask == 0x001F) {
-    Init_2xSaI(555);
-    RGB_LOW_BITS_MASK=0x421;
-  } else if((px.dwFlags&DDPF_RGB) != 0 &&
-            px.dwRBitMask == 0x001F &&
-            px.dwGBitMask == 0x07E0 &&
-            px.dwBBitMask == 0xF800) {
-    systemGreenShift++;
-    Init_2xSaI(565);
-    RGB_LOW_BITS_MASK=0x821;
-  } else if((px.dwFlags&DDPF_RGB) != 0 &&
-            px.dwRBitMask == 0x001F &&
-            px.dwGBitMask == 0x03E0 &&
-            px.dwBBitMask == 0x7C00) {
-    Init_2xSaI(555);
-    RGB_LOW_BITS_MASK=0x421;
-  } else {
-    // 32-bit or 24-bit
-    if(systemColorDepth == 32 || systemColorDepth == 24) {
-      systemRedShift += 3;
-      systemGreenShift += 3;
-      systemBlueShift += 3;
-      if(systemColorDepth == 32)
-        Init_2xSaI(32);
-    }
-  }
-
-  if(ddrawDebug) {
-    winlog("R shift: %d\n", systemRedShift);
-    winlog("G shift: %d\n", systemGreenShift);
-    winlog("B shift: %d\n", systemBlueShift);
-  }
-  
-  switch(systemColorDepth) {
-  case 16:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }
-    }
-    break;
-  case 24:
-  case 32:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }      
-    }
-    break;
-  }
-  for(int i = 0; i < 24;) {
-    systemGbPalette[i++] = (0x1f) | (0x1f << 5) | (0x1f << 10);
-    systemGbPalette[i++] = (0x15) | (0x15 << 5) | (0x15 << 10);
-    systemGbPalette[i++] = (0x0c) | (0x0c << 5) | (0x0c << 10);
-    systemGbPalette[i++] = 0;
-  }
-  updateFilter();
-  updateIFB();
-  
-  DragAcceptFiles(hWindow, TRUE);
-  
-  return TRUE;
+  return updateRenderMethod(false);
 }
 
 #define PACKVERSION(major,minor) MAKELONG(minor,major)
@@ -4916,6 +4631,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
     systemMessage(0, "Error: COMCTL32.DLL needs to be at least version 4.71");
     return FALSE;
   }
+
   memset(delta,255, 257*244*2);
   systemVerbose = GetPrivateProfileInt("config",
                                        "verbose",
@@ -4954,8 +4670,13 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   ::nCmdShow = nCmdShow;
 
   arrow = LoadCursor(NULL, IDC_ARROW);
+
+  GetModuleFileName(NULL, winBuffer, 2048);
+  char *p = strrchr(winBuffer, '\\');
+  if(p)
+    *p = 0;
   
-  regInit();
+  regInit(winBuffer);
 
   regEnabled = regQueryDwordValue("regEnabled", 1, true) ?
     true : false;
@@ -5016,6 +4737,11 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
       videoOption = 0;
   }
 
+  renderMethod = (DISPLAY_TYPE)regQueryDwordValue("renderMethod", DIRECT_DRAW);
+
+  if(renderMethod < GDI || renderMethod > OPENGL)
+    renderMethod = DIRECT_DRAW;
+  
   windowPositionX = regQueryDwordValue("windowX", 0);
   if(windowPositionX < 0)
     windowPositionX = 0;
@@ -5054,8 +4780,18 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", 0);
   tripleBuffering = regQueryDwordValue("tripleBuffering", TRUE) ? TRUE : FALSE;
 
+  d3dFilter = regQueryDwordValue("d3dFilter", 0);
+  if(d3dFilter < 0 || d3dFilter > 1)
+    d3dFilter = 0;
+  glFilter = regQueryDwordValue("glFilter", 0);
+  if(glFilter < 0 || glFilter > 1)
+    glFilter = 0;
+  glType = regQueryDwordValue("glType", 0);
+  if(glType < 0 || glType > 1)
+    glType = 0;
+
   filterType = regQueryDwordValue("filter", 0);
-  if(filterType < 0 || filterType > 10)
+  if(filterType < 0 || filterType > 11)
     filterType = 0;
 
   disableMMX = regQueryDwordValue("disableMMX", 0) ? true: false;
@@ -5087,9 +4823,9 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   cpuDisableSfx = regQueryDwordValue("disableSfx", 0) ? true : false;
   
-  cpuSaveType = regQueryDwordValue("saveType", 0);
-  if(cpuSaveType < 0 || cpuSaveType > 4)
-    cpuSaveType = 0;
+  winSaveType = regQueryDwordValue("saveType", 0);
+  if(winSaveType < 0 || winSaveType > 4)
+    winSaveType = 0;
 
   ifbType = regQueryDwordValue("ifbType", 0);
   if(ifbType < 0 || ifbType > 2)
@@ -5098,6 +4834,15 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   winFlashSize = regQueryDwordValue("flashSize", 0x10000);
   if(winFlashSize != 0x10000 && winFlashSize != 0x20000)
     winFlashSize = 0x10000;
+
+  agbPrintEnable(regQueryDwordValue("agbPrint", 0) ? true : false);
+
+  winRtcEnable = regQueryDwordValue("rtcEnabled", 0) ? true : false;
+  rtcEnable(winRtcEnable);
+
+  skinEnabled = regQueryDwordValue("skinEnabled", 0) ? true : false;
+
+  skinName = regQueryStringValue("skinName", "");
 
   switch(videoOption) {
   case VIDEO_320x240:
@@ -5116,8 +4861,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
     fsColorDepth = 16;
     break;
   }
-
-  if(!initDirectDraw()) {
+  
+  if(!initDisplay()) {
     if(videoOption >= VIDEO_320x240) {
       regSetDwordValue("video", VIDEO_1X);
       if(pVideoDriverGUID)
@@ -5133,7 +4878,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   if(regQueryDwordValue("joyVersion", 0) == 0) {
     convertKeys();
   }
-  
+
   checkKeys();
 
   joypadDefault = regQueryDwordValue("joypadDefault", 0);
@@ -5168,7 +4913,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   
   gbBorderOn = regQueryDwordValue("borderOn", 0);
   gbEmulatorType = regQueryDwordValue("emulatorType", 1);
-  if(gbEmulatorType < 0 || gbEmulatorType > 4)
+  if(gbEmulatorType < 0 || gbEmulatorType > 5)
     gbEmulatorType = 1;
   gbColorOption = regQueryDwordValue("colorOption", 0);
 
@@ -5204,7 +4949,8 @@ void fileToggleMenu()
   if(menuToggle) {
     updateMenuBar();
     if(tripleBuffering) {
-      pDirectDraw->FlipToGDISurface();
+      if(display)
+        display->checkFullScreen();
       DrawMenuBar(hWindow);
     }    
   } else {
@@ -5361,8 +5107,6 @@ BOOL fileOpenSelectGB()
 
 BOOL fileOpen()
 {
-  char buffer[2048];
-
   // save battery file before we change the filename...
   if(rom != NULL || gbRom != NULL) {
     if(autoSaveLoadCheatList)
@@ -5371,8 +5115,11 @@ BOOL fileOpen()
     emuCleanUp();
     remoteCleanUp();    
   }
-
-  _fullpath(filename, szFile, 1024);
+  char tempName[2048];
+  
+  utilGetBaseName(szFile, tempName);
+  
+  _fullpath(filename, tempName, 1024);
 
   char *p = strrchr(filename, '.');
 
@@ -5388,79 +5135,17 @@ BOOL fileOpen()
       dir[p-filename] = 0;
     }
   }
-  
-  if(CPUIsZipFile(szFile)) {
-    unzFile unz = unzOpen(szFile);
 
-    if(unz == NULL) {
-      systemMessage(IDS_FAILED_TO_OPEN_FILE, "Failed to open file %s", szFile);
-      return FALSE;
-    }
+  IMAGE_TYPE type = utilFindType(szFile);
 
-    int r = unzGoToFirstFile(unz);
-
-    if(r != UNZ_OK) {
-      unzClose(unz);
-      systemMessage(IDS_FAILED_TO_READ_ZIP_DIR,
-                    "Failed to read zip directory for file %s", szFile);
-      return FALSE;
-    }
-
-    bool found = false;
-
-    unz_file_info info;
-    
-    while(1) {
-      r = unzGetCurrentFileInfo(unz,
-                                &info,
-                                buffer,
-                                sizeof(buffer),
-                                NULL,
-                                0,
-                                NULL,
-                                0);
-      if(r != UNZ_OK) {
-        unzClose(unz);
-        systemMessage(IDS_FAILED_TO_READ_ZIP_DIR,
-                      "Failed to read zip directory for file %s", szFile);
-        return false;
-      }
-
-      if(gbIsGameboyRom(buffer)) {
-        cartridgeType = 1;
-        found = true;
-        break;
-      }
-      if(CPUIsGBAImage(buffer)) {
-        cartridgeType = 0;
-        found = true;
-        break;
-      }
-
-      r = unzGoToNextFile(unz);
-
-      if(r != UNZ_OK)
-        break;
-    }
-
-    unzClose(unz);
-    
-    if(!found) {
-      systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                    "No image to found on ZIP file %s", szFile);
-      return FALSE;
-    }
-  } else if(gbIsGameboyRom(szFile)) {
-    cartridgeType = 1;
-  } else if(CPUIsGBAImage(szFile)) {
-    cartridgeType = 0;
-  } else {
+  if(type == IMAGE_UNKNOWN) {
     systemMessage(IDS_UNSUPPORTED_FILE_TYPE,
                   "Unsupported file type: %s", szFile);
     return FALSE;
   }
 
-  if(cartridgeType == 1) {
+  cartridgeType = (int)type;
+  if(type == IMAGE_GB) {
     if(!gbLoadRom(szFile))
       return FALSE;
     emuWriteState = gbWriteSaveState;
@@ -5489,7 +5174,43 @@ BOOL fileOpen()
   } else {
     if(!CPULoadRom(szFile))
       return FALSE;
+    
     flashSetSize(winFlashSize);
+    rtcEnable(winRtcEnable);
+    cpuSaveType = winSaveType;
+
+    GetModuleFileName(NULL, winBuffer, 2048);
+
+    char *p = strrchr(winBuffer, '\\');
+    if(p)
+      *p = 0;
+    
+    char buffer[5];
+    strncpy(buffer, (const char *)&rom[0xac], 4);
+    buffer[4] = 0;
+
+    strcat(winBuffer, "\\vba-games.ini");
+    
+    UINT i = GetPrivateProfileInt(buffer,
+                                  "rtcEnabled",
+                                  -1,
+                                  winBuffer);
+    if(i != (UINT)-1)
+      rtcEnable(i == 0 ? false : true);
+
+    i = GetPrivateProfileInt(buffer,
+                             "flashSize",
+                             -1,
+                             winBuffer);
+    if(i != (UINT)-1 && (i == 0x10000 || i == 0x20000))
+      flashSetSize((int)i);
+
+    i = GetPrivateProfileInt(buffer,
+                             "saveType",
+                             -1,
+                             winBuffer);
+    if(i != (UINT)-1 && (i < 5))
+      cpuSaveType = (int)i;
     
     emuWriteState = CPUWriteState;
     emuReadState = CPUReadState;
@@ -5528,7 +5249,7 @@ BOOL fileOpen()
     soundInitialized = TRUE;
   }
 
-  if(cartridgeType == 0) {
+  if(type == IMAGE_GBA) {
     CPUInit(biosFileName, useBiosFile ? true : false);
     CPUReset();
   }
@@ -5810,6 +5531,58 @@ void RunMessageLoop()
   }
 }
 
+// code from SDL_main.c for Windows
+/* Parse a command line buffer into arguments */
+static int ParseCommandLine(char *cmdline, char **argv)
+{
+  char *bufp;
+  int argc;
+  
+  argc = 0;
+  for ( bufp = cmdline; *bufp; ) {
+    /* Skip leading whitespace */
+    while ( isspace(*bufp) ) {
+      ++bufp;
+    }
+    /* Skip over argument */
+    if ( *bufp == '"' ) {
+      ++bufp;
+      if ( *bufp ) {
+        if ( argv ) {
+          argv[argc] = bufp;
+        }
+        ++argc;
+      }
+      /* Skip over word */
+      while ( *bufp && (*bufp != '"') ) {
+        ++bufp;
+      }
+    } else {
+      if ( *bufp ) {
+        if ( argv ) {
+          argv[argc] = bufp;
+        }
+        ++argc;
+      }
+      /* Skip over word */
+      while ( *bufp && ! isspace(*bufp) ) {
+        ++bufp;
+      }
+    }
+    if ( *bufp ) {
+      if ( argv ) {
+        *bufp = '\0';
+      }
+      ++bufp;
+    }
+	}
+  if ( argv ) {
+    argv[argc] = NULL;
+  }
+  return(argc);
+}
+
+
 BOOL PASCAL
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
@@ -5824,24 +5597,14 @@ WinMain(HINSTANCE hInstance,
 
   if(lpCmdLine != NULL) {
     if(strlen(lpCmdLine) > 0) {
-      char *p = lpCmdLine;
-      int i = 0;
-      char c;
-      while((c = *p++)) {
-        switch(c) {
-        case '"':
-          while(*p && (*p != '"')) {
-            szFile[i++] = *p++;
-          }
-          break;
-        default:
-          szFile[i++] = c;
-          break;
-        }
+      int argc = ParseCommandLine(lpCmdLine, NULL);
+      char **argv = (char **)malloc((argc+1)*sizeof(char *));
+      ParseCommandLine(lpCmdLine, argv);
+      if(argc > 0) {
+        strcpy(szFile, argv[0]);
+        strcpy(filename, szFile);
       }
-      szFile[i] = 0;
-      strcpy(filename, szFile);
-      p = strrchr(filename, '.');
+      char *p = strrchr(filename, '.');
       if(p)
         *p = NULL;
       
@@ -5849,6 +5612,7 @@ WinMain(HINSTANCE hInstance,
         emulating = TRUE;
       else
         emulating = FALSE;
+      free(argv);
     }
   }
 
@@ -6072,7 +5836,7 @@ void fileSoundRecord()
     return;
   }
 
-  strcpy(soundRecordName, captureBuffer);
+  soundRecordName =  captureBuffer;
   soundRecording = TRUE;
   
   if(ofn.nFileOffset > 0) {
@@ -6119,7 +5883,7 @@ void fileAVIRecord()
     return;
   }
   
-  strcpy(aviRecordName, captureBuffer);
+  aviRecordName = captureBuffer;
   aviRecording = TRUE;
   
   if(ofn.nFileOffset > 0) {
@@ -6225,7 +5989,7 @@ void systemScreenCapture(int captureNumber)
 
 u32 systemGetClock()
 {
-  return GetTickCount();
+  return timeGetTime();
 }
 
 void systemMessage(int number, char *defaultMsg, ...)
@@ -6269,6 +6033,12 @@ void systemShowSpeed(int speed)
 
     systemSetTitle(buffer);
   }
+}
+
+void systemFrame()
+{
+  if(aviRecording)
+    aviFrameNumber++;
 }
 
 void system10Frames(int rate)
@@ -6529,6 +6299,7 @@ void systemSoundShutdown()
   if(aviRecorder != NULL) {
     delete aviRecorder;
     aviRecorder = NULL;
+    aviFrameNumber = 0;
   }
   if(soundRecording) {
     if(soundRecorder != NULL) {
@@ -6613,7 +6384,7 @@ void systemWriteDataToSoundBuffer()
         soundRecorder = new CWaveSoundWrite;
         WAVEFORMATEX format;
         dsbSecondary->GetFormat(&format, sizeof(format), NULL);
-        soundRecorder->Open(soundRecordName, &format);
+        soundRecorder->Open((char *)((const char *)soundRecordName), &format);
       }
     }
       
@@ -6624,15 +6395,17 @@ void systemWriteDataToSoundBuffer()
   }
 
   if(aviRecording) {
-    if(dsbSecondary) {
-      if(!aviRecorder->IsSoundAdded()) {
-        WAVEFORMATEX format;
-        dsbSecondary->GetFormat(&format, sizeof(format), NULL);
-        aviRecorder->SetSoundFormat(&format);
+    if(aviRecorder) {
+      if(dsbSecondary) {
+        if(!aviRecorder->IsSoundAdded()) {
+          WAVEFORMATEX format;
+          dsbSecondary->GetFormat(&format, sizeof(format), NULL);
+          aviRecorder->SetSoundFormat(&format);
+        }
       }
+      
+      aviRecorder->AddSound(aviFrameNumber, (const char *)soundFinalWave, len);
     }
-
-    aviRecorder->AddSound((const char *)soundFinalWave, len);
   }
   
   HRESULT hr;

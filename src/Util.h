@@ -18,8 +18,28 @@
  */
 #ifndef VBA_UTIL_H
 #define VBA_UTIL_H
-bool utilWritePNGFile(char *, int, int, u8 *);
-bool utilWriteBMPFile(char *, int, int, u8 *);
-void utilApplyIPS(char *ips, u8 **rom, int *size);
-void utilWriteBMP(char *, int, int, u8 *);
+enum IMAGE_TYPE {
+  IMAGE_UNKNOWN = -1,
+  IMAGE_GBA     = 0,
+  IMAGE_GB      = 1
+};
+
+extern bool utilWritePNGFile(char *, int, int, u8 *);
+extern bool utilWriteBMPFile(char *, int, int, u8 *);
+extern void utilApplyIPS(char *ips, u8 **rom, int *size);
+extern void utilWriteBMP(char *, int, int, u8 *);
+extern bool utilIsGBAImage(const char *);
+extern bool utilIsGBImage(const char *);
+extern bool utilIsZipFile(const char *);
+extern bool utilIsGzipFile(const char *);
+extern bool utilIsRarFile(const char *);
+extern void utilGetBaseName(const char *, char *);
+extern IMAGE_TYPE utilFindType(const char *);
+extern u8 *utilLoad(const char *,
+                    bool (*)(const char*),
+                    u8 *,
+                    int &);
+
+extern void utilPutDword(u8 *, u32);
+extern void utilPutWord(u8 *, u16);
 #endif

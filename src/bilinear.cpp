@@ -87,8 +87,6 @@ void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   u16 *to_odd = (u16 *)(dstPtr + dstPitch);
 
   int from_width = width;
-  if(width+1 < from_width)
-    from_width = width+1;
   u16 *from = (u16 *)srcPtr;
   fill_rgb_row_16(from, from_width, rgb_row_cur, width+1);
 
@@ -97,7 +95,7 @@ void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     u16 *to_orig = to;
     
     if (y+1 < height)
-      fill_rgb_row_16(from+width+1, from_width, rgb_row_next, 
+      fill_rgb_row_16(from+width+2, from_width, rgb_row_next, 
                    width+1);
     else
       fill_rgb_row_16(from, from_width, rgb_row_next, width+1);
@@ -167,8 +165,6 @@ void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   u16 *to_odd = (u16 *)(dstPtr + dstPitch);
 
   int from_width = width;
-  if(width+1 < from_width)
-    from_width = width+1;
   u16 *from = (u16 *)srcPtr;
   fill_rgb_row_16(from, from_width, rgb_row_cur, width+1);
 
@@ -177,7 +173,7 @@ void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     u16 *to_orig = to;
     
     if (y+1 < height)
-      fill_rgb_row_16(from+width+1, from_width, rgb_row_next, 
+      fill_rgb_row_16(from+width+2, from_width, rgb_row_next, 
                    width+1);
     else
       fill_rgb_row_16(from, from_width, rgb_row_next, width+1);

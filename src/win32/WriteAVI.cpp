@@ -29,7 +29,7 @@
 #include "WriteAVI.h"
 
 CAVIFile::CAVIFile()
-  : bOK(true), nFrames(0)
+  : bOK(true), nFrames(0), sFrames(0)
 {
   soundAdded = false;
   pfile = NULL;
@@ -79,6 +79,10 @@ void CAVIFile::SetSoundFormat(WAVEFORMATEX *f)
   
   soundhdr.fccType                = streamtypeAUDIO;// stream type
   soundhdr.dwQuality              = (DWORD)-1;
+  soundhdr.dwScale                = f->nBlockAlign;
+  soundhdr.dwInitialFrames        = 1;
+  soundhdr.dwRate                 = f->nSamplesPerSec*f->nChannels*
+    f->nBlockAlign;
   soundhdr.dwSampleSize           = f->nBlockAlign;
 
   HRESULT hr = AVIFileCreateStream(pfile, &psound, &soundhdr);
@@ -97,8 +101,9 @@ void CAVIFile::SetSoundFormat(WAVEFORMATEX *f)
     bOK = false;
     return;
   }
-  */
+
   soundAdded = true;
+  */
 }
 
 extern HWND hWindow;
@@ -160,12 +165,11 @@ bool CAVIFile::Open(const char *filename)
   return true;
 }
 
-bool CAVIFile::AddSound(const char *sound, int len)
+bool CAVIFile::AddSound(const int frame, const char *sound, int len)
 {
-  /*
   if(!bOK)
     return false;
-
+  /*
   int samples = len / soundFormat.nBlockAlign;
   ULONG nTotalBytesWritten = 0;
   HRESULT hr = S_OK;
@@ -174,24 +178,26 @@ bool CAVIFile::AddSound(const char *sound, int len)
     LONG nSamplesWritten = 0;
     
     hr = AVIStreamWrite(psound,
-                        -1,
+                        sFrames,
                         samples,
                         (LPVOID)sound,
                         len,
-                        AVIIF_KEYFRAME,
+                        0,
                         &nSamplesWritten,
                         &nBytesWritten);
     nTotalBytesWritten += nBytesWritten;
+    sFrames += nSamplesWritten;
   }
   if(hr != AVIERR_OK) {
     bOK = false;
     return false;
   }
   */
+
   return true;
 }
 
-bool CAVIFile::AddFrame(const char *bmp)
+bool CAVIFile::AddFrame(const int frame, const char *bmp)
 {
   HRESULT hr;
   
@@ -199,7 +205,7 @@ bool CAVIFile::AddFrame(const char *bmp)
     return false;
   
   hr = AVIStreamWrite(psCompressed,	// stream pointer
-                      nFrames,				// time of this frame
+                      frame,				// time of this frame
                       1,				// number to write
                       (LPVOID)bmp,
                       bitmap.biSizeImage,	// size of this frame

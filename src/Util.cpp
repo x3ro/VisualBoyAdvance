@@ -64,8 +64,17 @@ extern "C" {
 #include <png.h>
 }
 
+#if 0
+#include "unrarlib.h"
+#endif
+
 #include "System.h"
 #include "NLS.h"
+#include "Util.h"
+
+#ifdef __GNUC__
+#define _stricmp strcasecmp
+#endif
 
 bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
 {
@@ -123,7 +132,7 @@ bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
   switch(systemColorDepth) {
   case 16:
     {
-      u16 *p = (u16 *)(pix+(w+1)*2); // skip first black line
+      u16 *p = (u16 *)(pix+(w+2)*2); // skip first black line
       for(int y = 0; y < sizeY; y++) {
          for(int x = 0; x < sizeX; x++) {
           u16 v = *p++;
@@ -132,6 +141,7 @@ bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
           *b++ = ((v >> systemGreenShift) & 0x001f) << 3; // G 
           *b++ = ((v >> systemBlueShift) & 0x01f) << 3; // B
         }
+        p++; // skip black pixel for filters
         p++; // skip black pixel for filters
         png_write_row(png_ptr,writeBuffer);
         
@@ -218,7 +228,7 @@ void utilWriteBMP(char *buf, int w, int h, u8 *pix)
   switch(systemColorDepth) {
   case 16:
     {
-      u16 *p = (u16 *)(pix+(w+1)*(h)*2); // skip first black line
+      u16 *p = (u16 *)(pix+(w+2)*(h)*2); // skip first black line
       for(int y = 0; y < sizeY; y++) {
         for(int x = 0; x < sizeX; x++) {
           u16 v = *p++;
@@ -228,7 +238,8 @@ void utilWriteBMP(char *buf, int w, int h, u8 *pix)
           *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
         }
         p++; // skip black pixel for filters
-        p -= 2*(w+1);
+        p++; // skip black pixel for filters
+        p -= 2*(w+2);
       }
     }
     break;
@@ -328,7 +339,7 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
   switch(systemColorDepth) {
   case 16:
     {
-      u16 *p = (u16 *)(pix+(w+1)*(h)*2); // skip first black line
+      u16 *p = (u16 *)(pix+(w+2)*(h)*2); // skip first black line
       for(int y = 0; y < sizeY; y++) {
         for(int x = 0; x < sizeX; x++) {
           u16 v = *p++;
@@ -338,7 +349,8 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
           *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
         }
         p++; // skip black pixel for filters
-        p -= 2*(w+1);
+        p++; // skip black pixel for filters
+        p -= 2*(w+2);
         fwrite(writeBuffer, 1, 3*w, fp);
         
         b = writeBuffer;
@@ -486,4 +498,464 @@ void utilApplyIPS(char *ips, u8 **r, int *s)
  err:
   if(patch)
     fclose(patch);
+}
+
+extern bool cpuIsMultiBoot;
+
+bool utilIsGBAImage(const char * file)
+{
+  cpuIsMultiBoot = false;
+  if(strlen(file) > 4) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".gba") == 0)
+        return true;
+      if(_stricmp(p, ".agb") == 0)
+        return true;
+      if(_stricmp(p, ".bin") == 0)
+        return true;
+      if(_stricmp(p, ".elf") == 0)
+        return true;
+      if(_stricmp(p, ".mb") == 0) {
+        cpuIsMultiBoot = true;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+bool utilIsGBImage(const char * file)
+{
+  if(strlen(file) > 4) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".gb") == 0)
+        return true;
+      if(_stricmp(p, ".gbc") == 0)
+        return true;
+      if(_stricmp(p, ".cgb") == 0)
+        return true;
+      if(_stricmp(p, ".sgb") == 0)
+        return true;      
+    }
+  }
+
+  return false;
+}
+
+bool utilIsZipFile(const char *file)
+{
+  if(strlen(file) > 4) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".zip") == 0)
+        return true;
+    }
+  }
+
+  return false;  
+}
+
+#if 0
+bool utilIsRarFile(const char *file)
+{
+  if(strlen(file) > 4) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".rar") == 0)
+        return true;
+    }
+  }
+
+  return false;  
+}
+#endif
+
+bool utilIsGzipFile(const char *file)
+{
+  if(strlen(file) > 3) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".gz") == 0)
+        return true;
+      if(_stricmp(p, ".z") == 0)
+        return true;
+    }
+  }
+
+  return false;  
+}
+
+void utilGetBaseName(const char *file, char *buffer)
+{
+  strcpy(buffer, file);
+
+  if(utilIsGzipFile(file)) {
+    char *p = strrchr(buffer, '.');
+
+    if(p)
+      *p = 0;
+  }
+}
+
+IMAGE_TYPE utilFindType(const char *file)
+{
+  char buffer[2048];
+  
+  if(utilIsZipFile(file)) {
+    unzFile unz = unzOpen(file);
+    
+    if(unz == NULL) {
+      systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", file);
+      return IMAGE_UNKNOWN;
+    }
+    
+    int r = unzGoToFirstFile(unz);
+    
+    if(r != UNZ_OK) {
+      unzClose(unz);
+      systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", file);
+      return IMAGE_UNKNOWN;
+    }
+    
+    IMAGE_TYPE found = IMAGE_UNKNOWN;
+    
+    unz_file_info info;
+    
+    while(true) {
+      r = unzGetCurrentFileInfo(unz,
+                                &info,
+                                buffer,
+                                sizeof(buffer),
+                                NULL,
+                                0,
+                                NULL,
+                                0);
+      
+      if(r != UNZ_OK) {
+        unzClose(unz);
+        systemMessage(MSG_BAD_ZIP_FILE,"Bad ZIP file %s", file);
+        return IMAGE_UNKNOWN;
+      }
+      
+      if(utilIsGBAImage(buffer)) {
+        found = IMAGE_GBA;
+        break;
+      }
+
+      if(utilIsGBImage(buffer)) {
+        found = IMAGE_GB;
+        break;
+      }
+        
+      r = unzGoToNextFile(unz);
+      
+      if(r != UNZ_OK)
+        break;
+    }
+    unzClose(unz);
+    
+    if(found == IMAGE_UNKNOWN) {
+      systemMessage(MSG_NO_IMAGE_ON_ZIP,
+                    "No image found on ZIP file %s", file);
+      return found;
+    }
+    return found;
+#if 0
+  } else if(utilIsRarFile(file)) {
+    IMAGE_TYPE found = IMAGE_UNKNOWN;
+    
+    ArchiveList_struct *rarList = NULL;
+    if(urarlib_list((void *)file, (ArchiveList_struct *)&rarList)) {
+      ArchiveList_struct *p = rarList;
+
+      while(p) {
+        if(utilIsGBAImage(p->item.Name)) {
+          found = IMAGE_GBA;
+          break;
+        }
+
+        if(utilIsGBImage(p->item.Name)) {
+          found = IMAGE_GB;
+          break;
+        }
+        p = p->next;
+      }
+      
+      urarlib_freelist(rarList);
+    }
+    return found;
+#endif
+  } else {
+    if(utilIsGzipFile(file))
+      utilGetBaseName(file, buffer);
+    else
+      strcpy(buffer, file);
+    
+    if(utilIsGBAImage(buffer))
+      return IMAGE_GBA;
+    if(utilIsGBImage(buffer))
+      return IMAGE_GB;
+  }
+  return IMAGE_UNKNOWN;  
+}
+
+static u8 *utilLoadFromZip(const char *file,
+                           bool (*accept)(const char *),
+                           u8 *data,
+                           int &size)
+{
+  char buffer[2048];
+  
+  unzFile unz = unzOpen(file);
+    
+  if(unz == NULL) {
+    systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", file);
+    return NULL;
+  }
+  int r = unzGoToFirstFile(unz);
+    
+  if(r != UNZ_OK) {
+    unzClose(unz);
+    systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", file);
+    return NULL;
+  }
+    
+  bool found = false;
+    
+  unz_file_info info;
+  
+  while(true) {
+    r = unzGetCurrentFileInfo(unz,
+                              &info,
+                              buffer,
+                              sizeof(buffer),
+                              NULL,
+                              0,
+                              NULL,
+                              0);
+      
+    if(r != UNZ_OK) {
+      unzClose(unz);
+      systemMessage(MSG_BAD_ZIP_FILE,"Bad ZIP file %s", file);
+      return NULL;
+    }
+
+    if(accept(buffer)) {
+      found = true;
+      break;
+    }
+    
+    r = unzGoToNextFile(unz);
+      
+    if(r != UNZ_OK)
+      break;
+  }
+
+  if(!found) {
+    unzClose(unz);
+    systemMessage(MSG_NO_IMAGE_ON_ZIP,
+                  "No image found on ZIP file %s", file);
+    return NULL;
+  }
+  
+  size = info.uncompressed_size;
+    
+  r = unzOpenCurrentFile(unz);
+
+  if(r != UNZ_OK) {
+    unzClose(unz);
+    systemMessage(MSG_ERROR_OPENING_IMAGE,"Error opening image %s", buffer);
+    return NULL;
+  }
+
+  u8 *image = data;
+  
+  if(image == NULL) {
+    image = (u8 *)malloc(size);
+    if(image == NULL) {
+      unzCloseCurrentFile(unz);
+      unzClose(unz);
+      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+                    "data");
+      return NULL;
+    }
+  }
+  
+  r = unzReadCurrentFile(unz,
+                         image,
+                         size);
+
+  unzCloseCurrentFile(unz);
+  unzClose(unz);
+  
+  if(r != (int)size) {
+    systemMessage(MSG_ERROR_READING_IMAGE,
+                  "Error reading image %s", buffer);
+    if(data == NULL)
+      free(image);
+    return NULL;
+  }
+
+  return image;
+}
+
+static u8 *utilLoadGzipFile(const char *file,
+                            bool (*accept)(const char *),
+                            u8 *data,
+                            int &size)
+{
+  FILE *f = fopen(file, "rb");
+
+  if(f == NULL) {
+    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    return NULL;
+  }
+
+  fseek(f, -4, SEEK_END);
+  size = fgetc(f) | (fgetc(f) << 8) | (fgetc(f) << 16) | (fgetc(f) << 24);
+  fclose(f);
+
+  gzFile gz = gzopen(file, "rb");
+
+  if(gz == NULL) {
+    // should not happen, but who knows?
+    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    return NULL;
+  }
+
+  u8 *image = data;
+
+  if(image == NULL) {
+    image = (u8 *)malloc(size);
+    if(image == NULL) {
+      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+                    "data");
+      fclose(f);
+      return NULL;
+    }
+  }
+
+  int r = gzread(gz, image, size);
+  gzclose(gz);
+
+  if(r != (int)size) {
+    systemMessage(MSG_ERROR_READING_IMAGE,
+                  "Error reading image %s", file);
+    if(data == NULL)
+      free(image);
+    return NULL;
+  }  
+
+  return image;  
+}
+
+#if 0
+static u8 *utilLoadRarFile(const char *file,
+                           bool (*accept)(const char *),
+                           u8 *data,
+                           int &size)
+{
+  char buffer[2048];
+
+  ArchiveList_struct *rarList = NULL;
+  if(urarlib_list((void *)file, (ArchiveList_struct *)&rarList)) {
+    ArchiveList_struct *p = rarList;
+    
+    bool found = false;
+    while(p) {
+      if(accept(p->item.Name)) {
+        strcpy(buffer, p->item.Name);
+        found = true;
+        break;
+      }
+      p = p->next;
+    }
+    if(found) {
+      void *memory = NULL;
+      unsigned long lsize = 0;
+      size = p->item.UnpSize;
+      int r = urarlib_get((void *)&memory, &lsize, buffer, (void *)file, "");
+      if(!r) {
+        systemMessage(MSG_ERROR_READING_IMAGE,
+                      "Error reading image %s", buffer);
+        urarlib_freelist(rarList);
+        return NULL;
+      }
+      u8 *image = (u8 *)memory;
+      if(data != NULL) {
+        memcpy(image, data, size);
+      }
+      urarlib_freelist(rarList);
+      return image;
+    }
+    systemMessage(MSG_NO_IMAGE_ON_ZIP,
+                  "No image found on RAR file %s", file);
+    urarlib_freelist(rarList);
+    return NULL;
+  }
+  // nothing found
+  return NULL;
+}
+#endif
+
+u8 *utilLoad(const char *file,
+             bool (*accept)(const char *),
+             u8 *data,
+             int &size)
+{
+  if(utilIsZipFile(file)) {
+    return utilLoadFromZip(file, accept, data, size);
+  }
+  if(utilIsGzipFile(file)) {
+    return utilLoadGzipFile(file, accept, data, size);
+  }
+#if 0
+  if(utilIsRarFile(file)) {
+    return utilLoadRarFile(file, accept, data, size);
+  }
+#endif
+  
+  u8 *image = data;
+
+  FILE *f = fopen(file, "rb");
+
+  if(!f) {
+    systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", file);
+    return NULL;
+  }
+
+  fseek(f,0,SEEK_END);
+  size = ftell(f);
+  fseek(f,0,SEEK_SET);
+
+  if(image == NULL) {
+    image = (u8 *)malloc(size);
+    if(image == NULL) {
+      systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
+                    "data");
+      fclose(f);
+      return NULL;
+    }
+  }
+
+  int r = fread(image, 1, size, f);
+  fclose(f);
+
+  if(r != (int)size) {
+    systemMessage(MSG_ERROR_READING_IMAGE,
+                  "Error reading image %s", file);
+    if(data == NULL)
+      free(image);
+    return NULL;
+  }  
+
+  return image;
 }

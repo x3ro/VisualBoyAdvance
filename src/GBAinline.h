@@ -21,6 +21,7 @@
 
 #include "System.h"
 #include "Port.h"
+#include "RTC.h"
 
 extern bool cpuSramEnabled;
 extern bool cpuFlashEnabled;
@@ -31,10 +32,10 @@ extern bool cpuEEPROMSensorEnabled;
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
 
 #define CPUReadHalfWordQuick(addr) \
-  FROM16LE((*(u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ16LE(((u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define CPUReadMemoryQuick(addr) \
-  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 inline u32 CPUReadMemory(u32 address)
 {
@@ -60,41 +61,41 @@ inline u32 CPUReadMemory(u32 address)
         }
 #endif
         
-        value = FROM32LE(*((u32 *)&biosProtected));
+        value = READ32LE(((u32 *)&biosProtected));
       }
       else goto unreadable;
     } else
-      value = FROM32LE(*((u32 *)&bios[address & 0x3FFC]));
+      value = READ32LE(((u32 *)&bios[address & 0x3FFC]));
     break;
   case 2:
-    value = FROM32LE(*((u32 *)&workRAM[address & 0x3FFFC]));
+    value = READ32LE(((u32 *)&workRAM[address & 0x3FFFC]));
     break;
   case 3:
-    value = FROM32LE(*((u32 *)&internalRAM[address & 0x7ffC]));
+    value = READ32LE(((u32 *)&internalRAM[address & 0x7ffC]));
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fc]) {
       if(ioReadable[(address & 0x3fc) + 2])
-        value = FROM32LE(*((u32 *)&ioMem[address & 0x3fC]));
+        value = READ32LE(((u32 *)&ioMem[address & 0x3fC]));
       else
-        value = FROM16LE(*((u16 *)&ioMem[address & 0x3fc]));
+        value = READ16LE(((u16 *)&ioMem[address & 0x3fc]));
     } else goto unreadable;
     break;
   case 5:
-    value = FROM32LE(*((u32 *)&paletteRAM[address & 0x3fC]));
+    value = READ32LE(((u32 *)&paletteRAM[address & 0x3fC]));
     break;
   case 6:
-    value = FROM32LE(*((u32 *)&vram[address & 0x1fffc]));
+    value = READ32LE(((u32 *)&vram[address & 0x1fffc]));
     break;
   case 7:
-    value = FROM32LE(*((u32 *)&oam[address & 0x3FC]));
+    value = READ32LE(((u32 *)&oam[address & 0x3FC]));
     break;
   case 8:
   case 9:
   case 10:
   case 11:
   case 12:
-    value = FROM32LE(*((u32 *)&rom[address&0x1FFFFFC]));
+    value = READ32LE(((u32 *)&rom[address&0x1FFFFFC]));
     break;    
   case 13:
     if(cpuEEPROMEnabled)
@@ -177,37 +178,40 @@ inline u32 CPUReadHalfWord(u32 address)
               armNextPC - 4 : armNextPC - 2);
         }
 #endif
-        value = FROM16LE((((u16 *)&biosProtected)[(address>>1)&1]));
+        value = READ16LE(((u16 *)&biosProtected[address&2]));
       } else goto unreadable;
     } else
-      value = FROM16LE(*((u16 *)&bios[address & 0x3FFE]));
+      value = READ16LE(((u16 *)&bios[address & 0x3FFE]));
     break;
   case 2:
-    value = FROM16LE(*((u16 *)&workRAM[address & 0x3FFFE]));
+    value = READ16LE(((u16 *)&workRAM[address & 0x3FFFE]));
     break;
   case 3:
-    value = FROM16LE(*((u16 *)&internalRAM[address & 0x7ffe]));
+    value = READ16LE(((u16 *)&internalRAM[address & 0x7ffe]));
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fe])
-      value =  FROM16LE(*((u16 *)&ioMem[address & 0x3fe]));
+      value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
     else goto unreadable;
     break;
   case 5:
-    value = FROM16LE(*((u16 *)&paletteRAM[address & 0x3fe]));
+    value = READ16LE(((u16 *)&paletteRAM[address & 0x3fe]));
     break;
   case 6:
-    value = FROM16LE(*((u16 *)&vram[address & 0x1fffe]));
+    value = READ16LE(((u16 *)&vram[address & 0x1fffe]));
     break;
   case 7:
-    value = FROM16LE(*((u16 *)&oam[address & 0x3fe]));
+    value = READ16LE(((u16 *)&oam[address & 0x3fe]));
     break;
   case 8:
   case 9:
   case 10:
   case 11:
   case 12:
-    value = FROM16LE(*((u16 *)&rom[address & 0x1FFFFFE]));
+    if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8)
+      value = rtcRead(address);
+    else
+      value = READ16LE(((u16 *)&rom[address & 0x1FFFFFE]));
     break;    
   case 13:
     if(cpuEEPROMEnabled)
@@ -352,7 +356,7 @@ inline void CPUWriteMemory(u32 address, u32 value)
                         *((u32 *)&freezeWorkRAM[address & 0x3FFFC]));
     else
 #endif
-      *((u32 *)&workRAM[address & 0x3FFFC]) = TO32LE(value);
+      WRITE32LE(((u32 *)&workRAM[address & 0x3FFFC]), value);
     break;
   case 0x03:
 #ifdef SDL
@@ -362,23 +366,23 @@ inline void CPUWriteMemory(u32 address, u32 value)
                         *((u32 *)&freezeInternalRAM[address & 0x7ffc]));
     else
 #endif
-      *((u32 *)&internalRAM[address & 0x7ffC]) = TO32LE(value);
+      WRITE32LE(((u32 *)&internalRAM[address & 0x7ffC]), value);
     break;
   case 0x04:
     CPUUpdateRegister((address & 0x3FC), value & 0xFFFF);
     CPUUpdateRegister((address & 0x3FC) + 2, (value >> 16));
     break;
   case 0x05:
-    *((u32 *)&paletteRAM[address & 0x3FC]) = TO32LE(value);
+    WRITE32LE(((u32 *)&paletteRAM[address & 0x3FC]), value);
     break;
   case 0x06:
     if(address & 0x10000)
-      *((u32 *)&vram[address & 0x17ffc]) = TO32LE(value);
+      WRITE32LE(((u32 *)&vram[address & 0x17ffc]), value);
     else
-      *((u32 *)&vram[address & 0x1fffc]) = TO32LE(value);
+      WRITE32LE(((u32 *)&vram[address & 0x1fffc]), value);
     break;
   case 0x07:
-    *((u32 *)&oam[address & 0x3fc]) = TO32LE(value);
+    WRITE32LE(((u32 *)&oam[address & 0x3fc]), value);
     break;
   case 0x0D:
     if(cpuEEPROMEnabled) {

@@ -17,16 +17,17 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <windows.h>
+#include <stdio.h>
 
 static char buffer[2048];
 static HKEY vbKey = NULL;
+static char regVbaPath[2048];
 
-#define VBA_INI "vba.ini"
 #define VBA_PREF "preferences"
 
 bool regEnabled = true;
 
-void regInit()
+void regInit(const char *path)
 {
   DWORD disp = 0;
   LONG res = RegCreateKeyEx(HKEY_CURRENT_USER,
@@ -38,6 +39,7 @@ void regInit()
                             NULL,
                             &vbKey,
                             &disp);
+  sprintf(regVbaPath, "%s\\vba.ini", path);
 }
 
 void regShutdown()
@@ -69,7 +71,7 @@ char *regQueryStringValue(char * key, char *def)
                                       def,
                                       (LPTSTR)buffer,
                                       2048,
-                                      VBA_INI);
+                                      regVbaPath);
 
   if(res)
     return buffer;
@@ -100,7 +102,7 @@ DWORD regQueryDwordValue(char * key, DWORD def, bool force)
   return GetPrivateProfileInt(VBA_PREF,
                               key,
                               def,
-                              VBA_INI);
+                              regVbaPath);
 }
 
 BOOL regQueryBinaryValue(char * key, char *value, int count)
@@ -128,7 +130,7 @@ BOOL regQueryBinaryValue(char * key, char *value, int count)
                                  key,
                                  value,
                                  count,
-                                 VBA_INI);
+                                 regVbaPath);
 }
 
 void regSetStringValue(char * key, char * value)
@@ -144,7 +146,7 @@ void regSetStringValue(char * key, char * value)
     WritePrivateProfileString(VBA_PREF,
                               key,
                               value,
-                              VBA_INI);
+                              regVbaPath);
   }
 }
 
@@ -162,7 +164,7 @@ void regSetDwordValue(char * key, DWORD value, bool force)
     WritePrivateProfileString(VBA_PREF,
                               key,
                               buffer,
-                              VBA_INI);
+                              regVbaPath);
   }
 }
 
@@ -180,7 +182,7 @@ void regSetBinaryValue(char *key, char *value, int count)
                               key,
                               value,
                               count,
-                              VBA_INI);
+                              regVbaPath);
   }
 }
 
@@ -193,7 +195,7 @@ void regDeleteValue(char *key)
     WritePrivateProfileString(VBA_PREF,
                               key,
                               NULL,
-                              VBA_INI);
+                              regVbaPath);
   }
 }
 
@@ -298,21 +300,21 @@ void regExportSettingsToINI()
             WritePrivateProfileString(VBA_PREF,
                                       valueName,
                                       temp,
-                                      VBA_INI);
+                                      regVbaPath);
           }
           break;
         case REG_SZ:
           WritePrivateProfileString(VBA_PREF,
                                     valueName,
                                     buffer,
-                                    VBA_INI);
+                                    regVbaPath);
           break;
         case REG_BINARY:
           WritePrivateProfileStruct(VBA_PREF,
                                     valueName,
                                     buffer,
                                     size,
-                                    VBA_INI);
+                                    regVbaPath);
           break;
         }
         index++;

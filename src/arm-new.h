@@ -6211,18 +6211,13 @@ if(cond_res) {
     break;    
 #endif
   default:
-#ifdef BKPT_SUPPORT
-    extern void (*dbgSignal)(int,int);
-    reg[15].I -= 4;
-    armNextPC -= 4;    
-    dbgSignal(4, 0);
-    return;
-#else
-    systemMessage(MSG_UNKNOWN_ARM_OPCODE,
-                  "Unimplemented opcode %08x from %08x", opcode,
-                  armNextPC);
-    break;
+#ifdef DEV_VERSION
+    if(systemVerbose & VERBOSE_UNDEFINED)
+      log("Undefined ARM instruction %08x at %08x\n", opcode,
+          armNextPC-4);
 #endif
+    CPUUndefinedException();
+    break;
     // END
   }
 }

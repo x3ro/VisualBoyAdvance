@@ -26,7 +26,7 @@
 #include "NLS.h"
 
 #define elfReadMemory(addr) \
-  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ32LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define DW_TAG_array_type             0x01
 #define DW_TAG_enumeration_type       0x04
@@ -851,14 +851,14 @@ u32 elfReadLEB128(u8 *data, int *bytesRead)
 
 u8 *elfReadSection(u8 *data, ELFSectionHeader *sh)
 {
-  return data + FROM32LE(sh->offset);
+  return data + READ32LE(&sh->offset);
 }
 
 ELFSectionHeader *elfGetSectionByName(char *name)
 {
   for(int i = 0; i < elfSectionHeadersCount; i++) {
     if(strcmp(name,
-              &elfSectionHeadersStringTable[FROM32LE(elfSectionHeaders[i]->
+              &elfSectionHeadersStringTable[READ32LE(&elfSectionHeaders[i]->
                                                      name)]) == 0) {
       return elfSectionHeaders[i];
     }
@@ -1055,7 +1055,7 @@ void elfParseCFA(u8 *top)
 
   u8 *topOffset = data;
 
-  u8 *end = data + FROM32LE(h->size);
+  u8 *end = data + READ32LE(&h->size);
 
   ELFcie *cies = NULL;
   
@@ -2529,7 +2529,7 @@ void elfParseAranges(u8 *data)
   }
 
   data = elfReadSection(data, sh);
-  u8 *end = data + FROM32LE(sh->size);
+  u8 *end = data + READ32LE(&sh->size);
 
   int max = 4;
   ARanges *ranges = (ARanges *)calloc(sizeof(ARanges), 4);
@@ -2575,13 +2575,13 @@ void elfParseAranges(u8 *data)
 void elfReadSymtab(u8 *data)
 {
   ELFSectionHeader *sh = elfGetSectionByName(".symtab");
-  int table = FROM32LE(sh->link);
+  int table = READ32LE(&sh->link);
 
   char *strtable = (char *)elfReadSection(data, elfGetSectionByNumber(table));
   
   ELFSymbol *symtab = (ELFSymbol *)elfReadSection(data, sh);
 
-  int count = FROM32LE(sh->size) / sizeof(ELFSymbol);
+  int count = READ32LE(&sh->size) / sizeof(ELFSymbol);
   elfSymbolsCount = 0;
 
   elfSymbols = (Symbol *)malloc(sizeof(Symbol)*count);
@@ -2595,11 +2595,11 @@ void elfReadSymtab(u8 *data)
 
     if(binding) {
       Symbol *sym = &elfSymbols[elfSymbolsCount];
-      sym->name = &strtable[FROM32LE(s->name)];
+      sym->name = &strtable[READ32LE(&s->name)];
       sym->binding = binding;
       sym->type = type;
-      sym->value = FROM32LE(s->value);
-      sym->size = FROM32LE(s->size);
+      sym->value = READ32LE(&s->value);
+      sym->size = READ32LE(&s->size);
       elfSymbolsCount++;
     }
   }
@@ -2610,11 +2610,11 @@ void elfReadSymtab(u8 *data)
 
     if(!bind) {
       Symbol *sym = &elfSymbols[elfSymbolsCount];
-      sym->name = &strtable[FROM32LE(s->name)];
+      sym->name = &strtable[READ32LE(&s->name)];
       sym->binding = (s->info >> 4);
       sym->type = type;
-      sym->value = FROM32LE(s->value);
-      sym->size = FROM32LE(s->size);
+      sym->value = READ32LE(&s->value);
+      sym->size = READ32LE(&s->size);
       elfSymbolsCount++;
     }
   }  
@@ -2624,38 +2624,38 @@ void elfReadSymtab(u8 *data)
 
 bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
 {
-  int count = FROM16LE(eh->e_phnum);
+  int count = READ16LE(&eh->e_phnum);
   int i;
   
-  if(FROM32LE(eh->e_entry) == 0x2000000)
+  if(READ32LE(&eh->e_entry) == 0x2000000)
     cpuIsMultiBoot = true;
 
   // read program headers... should probably move this code down
-  u8 *p = data + FROM32LE(eh->e_phoff);
+  u8 *p = data + READ32LE(&eh->e_phoff);
   
   for(i = 0; i < count; i++) {
     ELFProgramHeader *ph = (ELFProgramHeader *)p;
     p += sizeof(ELFProgramHeader);
-    if(FROM16LE(eh->e_phentsize) != sizeof(ELFProgramHeader)) {
-      p += FROM16LE(eh->e_phentsize) - sizeof(ELFProgramHeader);
+    if(READ16LE(&eh->e_phentsize) != sizeof(ELFProgramHeader)) {
+      p += READ16LE(&eh->e_phentsize) - sizeof(ELFProgramHeader);
     }
 
     //    printf("PH %d %08x %08x %08x %08x %08x %08x %08x %08x\n",
     //     i, ph->type, ph->offset, ph->vaddr, ph->paddr,
     //     ph->filesz, ph->memsz, ph->flags, ph->align);
     if(cpuIsMultiBoot) {
-      if(FROM32LE(ph->paddr) >= 0x2000000 &&
-         FROM32LE(ph->paddr) <= 0x203ffff) {
-        memcpy(&workRAM[FROM32LE(ph->paddr) & 0x3ffff],
-               data + FROM32LE(ph->offset),
-               FROM32LE(ph->filesz));
+      if(READ32LE(&ph->paddr) >= 0x2000000 &&
+         READ32LE(&ph->paddr) <= 0x203ffff) {
+        memcpy(&workRAM[READ32LE(&ph->paddr) & 0x3ffff],
+               data + READ32LE(&ph->offset),
+               READ32LE(&ph->filesz));
       }      
     } else {
-      if(FROM32LE(ph->paddr) >= 0x8000000 &&
-         FROM32LE(ph->paddr) <= 0x9ffffff) {
-        memcpy(&rom[FROM32LE(ph->paddr) & 0x1ffffff],
-               data + FROM32LE(ph->offset),
-               FROM32LE(ph->filesz));
+      if(READ32LE(&ph->paddr) >= 0x8000000 &&
+         READ32LE(&ph->paddr) <= 0x9ffffff) {
+        memcpy(&rom[READ32LE(&ph->paddr) & 0x1ffffff],
+               data + READ32LE(&ph->offset),
+               READ32LE(&ph->filesz));
       }
     }
   }
@@ -2663,8 +2663,8 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
   char *stringTable = NULL;
 
   // read section headers
-  p = data + FROM32LE(eh->e_shoff);
-  count = FROM16LE(eh->e_shnum);
+  p = data + READ32LE(&eh->e_shoff);
+  count = READ16LE(&eh->e_shnum);
 
   ELFSectionHeader **sh = (ELFSectionHeader **)
     malloc(sizeof(ELFSectionHeader *) * count);
@@ -2672,13 +2672,13 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
   for(i = 0; i < count; i++) {
     sh[i] = (ELFSectionHeader *)p;
     p += sizeof(ELFSectionHeader);
-    if(FROM16LE(eh->e_shentsize) != sizeof(ELFSectionHeader))
-      p += FROM16LE(eh->e_shentsize) - sizeof(ELFSectionHeader);
+    if(READ16LE(&eh->e_shentsize) != sizeof(ELFSectionHeader))
+      p += READ16LE(&eh->e_shentsize) - sizeof(ELFSectionHeader);
   }
 
-  if(FROM16LE(eh->e_shstrndx) != 0) {
+  if(READ16LE(&eh->e_shstrndx) != 0) {
     stringTable = (char *)elfReadSection(data,
-                                         sh[FROM16LE(eh->e_shstrndx)]);
+                                         sh[READ16LE(&eh->e_shstrndx)]);
   }
   
   elfSectionHeaders = sh;
@@ -2690,20 +2690,20 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
     //   i, &stringTable[sh[i]->name], sh[i]->name, sh[i]->type,
     //   sh[i]->flags, sh[i]->addr, sh[i]->offset, sh[i]->size,
     //   sh[i]->link, sh[i]->info);
-    if(FROM32LE(sh[i]->flags) & 2) { // load section
+    if(READ32LE(&sh[i]->flags) & 2) { // load section
       if(cpuIsMultiBoot) {
-        if(FROM32LE(sh[i]->addr) >= 0x2000000 &&
-           FROM32LE(sh[i]->addr) <= 0x203ffff) {
-          memcpy(&workRAM[FROM32LE(sh[i]->addr) & 0x3ffff], data +
-                 FROM32LE(sh[i]->offset),
-                 FROM32LE(sh[i]->size));
+        if(READ32LE(&sh[i]->addr) >= 0x2000000 &&
+           READ32LE(&sh[i]->addr) <= 0x203ffff) {
+          memcpy(&workRAM[READ32LE(&sh[i]->addr) & 0x3ffff], data +
+                 READ32LE(&sh[i]->offset),
+                 READ32LE(&sh[i]->size));
         }      
       } else {
-        if(FROM32LE(sh[i]->addr) >= 0x8000000 &&
-           FROM32LE(sh[i]->addr) <= 0x9ffffff) {
-          memcpy(&rom[FROM32LE(sh[i]->addr) & 0x1ffffff],
-                 data + FROM32LE(sh[i]->offset),
-                 FROM32LE(sh[i]->size));
+        if(READ32LE(&sh[i]->addr) >= 0x8000000 &&
+           READ32LE(&sh[i]->addr) <= 0x9ffffff) {
+          memcpy(&rom[READ32LE(&sh[i]->addr) & 0x1ffffff],
+                 data + READ32LE(&sh[i]->offset),
+                 READ32LE(&sh[i]->size));
         }
       }      
     }
@@ -2739,7 +2739,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
     elfDebugInfo->debugdata = data;
     elfDebugInfo->infodata = debugdata;
     
-    u32 total = FROM32LE(dbgHeader->size);
+    u32 total = READ32LE(&dbgHeader->size);
     u8 *end = debugdata + total;
     u8 *ddata = debugdata;
     
@@ -2796,8 +2796,8 @@ bool elfRead(char *name, FILE *f)
   
   ELFHeader *header = (ELFHeader *)filedata;
   
-  if(FROM32LE(header->magic) != 0x464C457F ||
-     FROM16LE(header->e_machine) != 40 ||
+  if(READ32LE(&header->magic) != 0x464C457F ||
+     READ16LE(&header->e_machine) != 40 ||
      header->clazz != 1) {
     systemMessage(0, "Not a valid ELF file %s", name);
     free(filedata);
@@ -2956,7 +2956,8 @@ void elfCleanUp()
       free(elfDebugInfo->ranges[i].ranges);
     }
     free(elfDebugInfo->ranges);
-    free(elfDebugInfo);    
+    free(elfDebugInfo);
+    elfDebugInfo = NULL;
   }
 
   if(elfFdes) {

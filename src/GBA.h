@@ -27,7 +27,8 @@
 #define SAVE_GAME_VERSION_4 4
 #define SAVE_GAME_VERSION_5 5
 #define SAVE_GAME_VERSION_6 6
-#define SAVE_GAME_VERSION  SAVE_GAME_VERSION_6
+#define SAVE_GAME_VERSION_7 7
+#define SAVE_GAME_VERSION  SAVE_GAME_VERSION_7
 
 typedef struct {
   u8 *address;

@@ -28,7 +28,7 @@
 extern char *yytext;
 
 #define debuggerReadMemory(addr) \
-  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ32LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 void *exprNodeCleanUpList[100];
 int exprNodeCleanUpCount = 0;

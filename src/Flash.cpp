@@ -32,6 +32,7 @@
 #define FLASH_CMD_5              6
 #define FLASH_ERASE_COMPLETE     7
 #define FLASH_PROGRAM            8
+#define FLASH_SETBANK            9
 
 u8 flashSaveMemory[0x20000];
 int flashState = FLASH_READ_ARRAY;
@@ -39,18 +40,28 @@ int flashReadState = FLASH_READ_ARRAY;
 int flashSize = 0x10000;
 int flashDeviceID = 0x1b;
 int flashManufacturerID = 0x32;
+int flashBank = 0;
 
-variable_desc flashSaveData[] = {
+static variable_desc flashSaveData[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSaveMemory[0], 0x10000 },
   { NULL, 0 }
 };
 
-variable_desc flashSaveData2[] = {
+static variable_desc flashSaveData2[] = {
   { &flashState, sizeof(int) },
   { &flashReadState, sizeof(int) },
   { &flashSize, sizeof(int) },  
+  { &flashSaveMemory[0], 0x20000 },
+  { NULL, 0 }
+};
+
+static variable_desc flashSaveData3[] = {
+  { &flashState, sizeof(int) },
+  { &flashReadState, sizeof(int) },
+  { &flashSize, sizeof(int) },
+  { &flashBank, sizeof(int) },
   { &flashSaveMemory[0], 0x20000 },
   { NULL, 0 }
 };
@@ -59,45 +70,49 @@ void flashReset()
 {
   flashState = FLASH_READ_ARRAY;
   flashReadState = FLASH_READ_ARRAY;
+  flashBank = 0;
 }
 
 void flashSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, flashSaveData2);
+  CPUWriteData(gzFile, flashSaveData3);
 }
 
 void flashReadGame(gzFile gzFile, int version)
 {
   if(version < SAVE_GAME_VERSION_5)
     CPUReadData(gzFile, flashSaveData);
-  else
+  else if(version < SAVE_GAME_VERSION_7) {
     CPUReadData(gzFile, flashSaveData2);
+    flashBank = 0;
+    flashSetSize(flashSize);
+  } else {
+    CPUReadData(gzFile, flashSaveData3);
+  }
 }
 
 void flashSetSize(int size)
 {
+  //  log("Setting flash size to %d\n", size);
   flashSize = size;
   if(size == 0x10000) {
     flashDeviceID = 0x1b;
     flashManufacturerID = 0x32;
   } else {
-    flashDeviceID = 0x09;
-    flashManufacturerID = 0xc2;
+    flashDeviceID = 0x13; //0x09;
+    flashManufacturerID = 0x62; //0xc2;
   }
 }
 
 u8 flashRead(u32 address)
 {
-  //  printf("Reading %08x from %08x\n", address, reg[15].I);
-  //  printf("Current read state is %d\n", flashReadState);
-  if(flashSize == 0x10000)
-    address &= 0xFFFF;
-  else
-    address &= 0x1FFFF;
+  //  log("Reading %08x from %08x\n", address, reg[15].I);
+  //  log("Current read state is %d\n", flashReadState);
+  address &= 0xFFFF;
 
   switch(flashReadState) {
   case FLASH_READ_ARRAY:
-    return flashSaveMemory[address];
+    return flashSaveMemory[(flashBank << 16) + address];
   case FLASH_AUTOSELECT:
     switch(address & 0xFF) {
     case 0:
@@ -118,6 +133,7 @@ u8 flashRead(u32 address)
 
 void flashSaveDecide(u32 address, u8 byte)
 {
+  //  log("Deciding save type %08x\n", address);
   if(address == 0x0e005555) {
     saveType = 2;
     cpuSaveGameFunc = flashWrite;
@@ -131,12 +147,9 @@ void flashSaveDecide(u32 address, u8 byte)
 
 void flashWrite(u32 address, u8 byte)
 {
-  //  printf("Writing %02x at %08x\n", byte, address);
-  //  printf("Current state is %d\n", flashState);
-  if(flashSize == 0x10000)
-    address &= 0xFFFF;
-  else
-    address = address & 0x1FFFF;
+  //  log("Writing %02x at %08x\n", byte, address);
+  //  log("Current state is %d\n", flashState);
+  address &= 0xFFFF;
   switch(flashState) {
   case FLASH_READ_ARRAY:
     if(address == 0x5555 && byte == 0xAA)
@@ -160,6 +173,8 @@ void flashWrite(u32 address, u8 byte)
         flashReadState = FLASH_READ_ARRAY;
       } else if(byte == 0xA0) {
         flashState = FLASH_PROGRAM;
+      } else if(byte == 0xB0 && flashSize == 0x20000) {
+        flashState = FLASH_SETBANK;
       } else {
         flashState = FLASH_READ_ARRAY;
         flashReadState = FLASH_READ_ARRAY;
@@ -188,11 +203,13 @@ void flashWrite(u32 address, u8 byte)
   case FLASH_CMD_5:
     if(byte == 0x30) {
       // SECTOR ERASE
-      memset(&flashSaveMemory[address & 0xF000], 0, 0x1000);
+      memset(&flashSaveMemory[(flashBank << 16) + (address & 0xF000)],
+             0,
+             0x1000);
       flashReadState = FLASH_ERASE_COMPLETE;
     } else if(byte == 0x10) {
       // CHIP ERASE
-      memset(flashSaveMemory, 0, 0x10000);
+      memset(flashSaveMemory, 0, flashSize);
       flashReadState = FLASH_ERASE_COMPLETE;
     } else {
       flashState = FLASH_READ_ARRAY;
@@ -211,7 +228,14 @@ void flashWrite(u32 address, u8 byte)
     }
     break;
   case FLASH_PROGRAM:
-    flashSaveMemory[address] = byte;
+    flashSaveMemory[(flashBank<<16)+address] = byte;
+    flashState = FLASH_READ_ARRAY;
+    flashReadState = FLASH_READ_ARRAY;
+    break;
+  case FLASH_SETBANK:
+    if(address == 0) {
+      flashBank = (byte & 1);
+    }
     flashState = FLASH_READ_ARRAY;
     flashReadState = FLASH_READ_ARRAY;
     break;

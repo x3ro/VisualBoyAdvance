@@ -33,19 +33,19 @@ extern void (*emuUpdateCPSR)();
 extern void (*emuMain)(int);
 
 #define debuggerReadMemory(addr) \
-  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ32LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define debuggerReadHalfWord(addr) \
-  FROM16LE((*(u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ16LE((&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define debuggerReadByte(addr) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
 
 #define debuggerWriteMemory(addr, value) \
-  *(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask] = TO32LE((value))
+  WRITE32LE(&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask], value)
 
 #define debuggerWriteHalfWord(addr, value) \
-  *(u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask] = TO16LE((value))
+  WRITE16LE(&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask], value)
 
 #define debuggerWriteByte(addr, value) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask] = (value)

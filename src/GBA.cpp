@@ -37,11 +37,12 @@
 #include "elf.h"
 #include "Util.h"
 #include "Port.h"
+#include "agbprint.h"
 #ifdef PROFILING
 #include "prof/prof.h"
 #endif
 
-#define UPDATE_REG(address, value) *((u16 *)&ioMem[address]) = TO16LE(value)
+#define UPDATE_REG(address, value) WRITE16LE(((u16 *)&ioMem[address]),value)
 
 #ifdef __GNUC__
 #define _stricmp strcasecmp
@@ -186,7 +187,7 @@ bool cpuBiosSwapped = false;
 
 u32 myROM[] = {
 0xEA000006,
-0x00000000,
+0xEA000093,
 0xEA000006,
 0x00000000,
 0x00000000,
@@ -334,7 +335,30 @@ u32 myROM[] = {
 0xE1A0E00F,
 0xE510F004,
 0xE8BD500F,
-0xE25EF004
+0xE25EF004,
+0xE59FD044,
+0xE92D5000,
+0xE14FC000,
+0xE10FE000,
+0xE92D5000,
+0xE3A0C302,
+0xE5DCE09C,
+0xE35E00A5,
+0x1A000004,
+0x05DCE0B4,
+0x021EE080,
+0xE28FE004,
+0x159FF018,
+0x059FF018,
+0xE59FD018,
+0xE8BD5000,
+0xE169F00C,
+0xE8BD5000,
+0xE25EF004,
+0x03007FF0,
+0x09FE2000,
+0x09FFC000,
+0x03007FE0
 };
 
 variable_desc saveGameStruct[] = {
@@ -623,6 +647,9 @@ bool CPUWriteState(char *file)
   soundSaveGame(gzFile);
 
   cheatsSaveGame(gzFile);
+
+  // version 1.5
+  rtcSaveGame(gzFile);
   
   gzclose(gzFile);
   
@@ -729,6 +756,9 @@ bool CPUReadState(char * file)
   
   if(version > SAVE_GAME_VERSION_1) {
     cheatsReadGame(gzFile);
+  }
+  if(version > SAVE_GAME_VERSION_6) {
+    rtcReadGame(gzFile);
   }
   gzclose(gzFile);
 
@@ -1066,6 +1096,26 @@ bool CPUIsGBAImage(char * file)
   return false;
 }
 
+bool CPUIsGBABios(const char * file)
+{
+  if(strlen(file) > 4) {
+    char * p = strrchr(file,'.');
+
+    if(p != NULL) {
+      if(_stricmp(p, ".gba") == 0)
+        return true;
+      if(_stricmp(p, ".agb") == 0)
+        return true;
+      if(_stricmp(p, ".bin") == 0)
+        return true;
+      if(_stricmp(p, ".bios") == 0)
+        return true;
+    }
+  }
+  
+  return false;
+}
+
 bool CPUIsELF(char *file)
 {
   if(strlen(file) > 4) {
@@ -1141,9 +1191,7 @@ void CPUCleanUp()
 
 bool CPULoadRom(char *szFile)
 {
-  FILE * f = NULL;
-  char buffer[2048];
-  long size = 0;  
+  int size = 0;  
   
   if(rom != NULL) {
     CPUCleanUp();
@@ -1158,151 +1206,46 @@ bool CPULoadRom(char *szFile)
   u16 *temp = (u16 *)rom;
   int i;
   for(i = 0; i < 0x2000000; i+=2) {
-    *temp++ = TO16LE((i >> 1) & 0xFFFF);
+    WRITE16LE(temp, (i >> 1) & 0xFFFF);
+    temp++;
   }
   workRAM = (u8 *)calloc(1, 0x40000);
   if(workRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "WRAM");
     return false;
-  }  
-  if(CPUIsZipFile(szFile)) {
-    unzFile unz = unzOpen(szFile);
-    
-    if(unz == NULL) {
-      systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", szFile);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
-      return false;
-    }
-    int r = unzGoToFirstFile(unz);
-    
-    if(r != UNZ_OK) {
-      unzClose(unz);
-      systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", szFile);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
-      return false;
-    }
-    
-    bool found = false;
-    
-    unz_file_info info;
-    
-    while(true) {
-      r = unzGetCurrentFileInfo(unz,
-                                &info,
-                                buffer,
-                                sizeof(buffer),
-                                NULL,
-                                0,
-                                NULL,
-                                0);
-      
-      if(r != UNZ_OK) {
-        unzClose(unz);
-        systemMessage(MSG_BAD_ZIP_FILE,"Bad ZIP file %s", szFile);
-        free(rom);
-        rom = NULL;
-        free(workRAM);
-        workRAM = NULL;
-        return false;
-      }
-      
-      if(CPUIsGBAImage(buffer)) {
-        found = true;
-        break;
-      }
-        
-      r = unzGoToNextFile(unz);
-      
-      if(r != UNZ_OK)
-        break;
-    }
+  }
+  u8 *whereToLoad = rom;
+  if(cpuIsMultiBoot)
+    whereToLoad = workRAM;
 
-    if(!found) {
-      unzClose(unz);
-      systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                    "No image found on ZIP file %s", szFile);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
-      return false;
-    }
-    
-    size = info.uncompressed_size;
-    
-    r = unzOpenCurrentFile(unz);
-
-    if(r != UNZ_OK) {
-      unzClose(unz);
-      systemMessage(MSG_ERROR_OPENING_IMAGE,"Error opening image %s", buffer);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
-      return false;
-    }
-
-    if(cpuIsMultiBoot)
-      r = unzReadCurrentFile(unz,
-                             workRAM,
-                             size);
-    else
-      r = unzReadCurrentFile(unz,
-                             rom,
-                             size);
-
-    if(r != (int)size) {
-      unzCloseCurrentFile(unz);
-      unzClose(unz);
-      systemMessage(MSG_ERROR_READING_IMAGE,
-                    "Error reading image %s", buffer);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
-      return false;
-    }
-    
-    unzCloseCurrentFile(unz);
-    unzClose(unz);
-  } else {
-    f = fopen(szFile,
-              "rb");
+  if(CPUIsELF(szFile)) {
+    FILE *f = fopen(szFile, "rb");
     if(!f) {
-      systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", szFile);
+      systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s",
+                    szFile);
       free(rom);
       rom = NULL;
       free(workRAM);
       workRAM = NULL;
       return false;
     }
-    
-    if(CPUIsELF(szFile)) {
-      if(!elfRead(szFile, f)) {
-        free(rom);
-        rom = NULL;
-        free(workRAM);
-        workRAM = NULL;
-        return false;
-      }
-    } else {
-      fseek(f,0,SEEK_END);
-      size = ftell(f);
-      fseek(f,0,SEEK_SET);
-
-      if(cpuIsMultiBoot)
-        fread(workRAM, 1, size, f);
-      else
-        fread(rom,1,size,f);
-      fclose(f);
+    if(!elfRead(szFile, f)) {
+      free(rom);
+      rom = NULL;
+      free(workRAM);
+      workRAM = NULL;
+      return false;
     }
+  } else if(!utilLoad(szFile,
+                      utilIsGBAImage,
+                      whereToLoad,
+                      size)) {
+    free(rom);
+    rom = NULL;
+    free(workRAM);
+    workRAM = NULL;
+    return false;
   }
 
   bios = (u8 *)calloc(1,0x4000);
@@ -1460,11 +1403,11 @@ void CPUUpdateFlags()
   CPUUpdateFlags(true);
 }
 
-void CPUSwap(u32& a, u32& b)
+static void CPUSwap(u32 *a, u32 *b)
 {
-  u32 c = b;
-  b = a;
-  a = c;
+  u32 c = *b;
+  *b = *a;
+  *a = c;
 }
 
 void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
@@ -1482,11 +1425,11 @@ void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
     reg[17].I = reg[16].I;
     break;
   case 0x11:
-    CPUSwap(reg[R8_FIQ].I, reg[8].I);
-    CPUSwap(reg[R9_FIQ].I, reg[9].I);
-    CPUSwap(reg[R10_FIQ].I, reg[10].I);
-    CPUSwap(reg[R11_FIQ].I, reg[11].I);
-    CPUSwap(reg[R12_FIQ].I, reg[12].I);
+    CPUSwap(&reg[R8_FIQ].I, &reg[8].I);
+    CPUSwap(&reg[R9_FIQ].I, &reg[9].I);
+    CPUSwap(&reg[R10_FIQ].I, &reg[10].I);
+    CPUSwap(&reg[R11_FIQ].I, &reg[11].I);
+    CPUSwap(&reg[R12_FIQ].I, &reg[12].I);
     reg[R13_FIQ].I = reg[13].I;
     reg[R14_FIQ].I = reg[14].I;
     reg[SPSR_FIQ].I = reg[17].I;
@@ -1524,11 +1467,11 @@ void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
     reg[16].I = SPSR;
     break;
   case 0x11:
-    CPUSwap(reg[8].I, reg[R8_FIQ].I);
-    CPUSwap(reg[9].I, reg[R9_FIQ].I);
-    CPUSwap(reg[10].I, reg[R10_FIQ].I);
-    CPUSwap(reg[11].I, reg[R11_FIQ].I);
-    CPUSwap(reg[12].I, reg[R12_FIQ].I);
+    CPUSwap(&reg[8].I, &reg[R8_FIQ].I);
+    CPUSwap(&reg[9].I, &reg[R9_FIQ].I);
+    CPUSwap(&reg[10].I, &reg[R10_FIQ].I);
+    CPUSwap(&reg[11].I, &reg[R11_FIQ].I);
+    CPUSwap(&reg[12].I, &reg[R12_FIQ].I);
     reg[13].I = reg[R13_FIQ].I;
     reg[14].I = reg[R14_FIQ].I;
     if(saveState)
@@ -1586,6 +1529,19 @@ void CPUSwitchMode(int mode, bool saveState)
   CPUSwitchMode(mode, saveState, true);
 }
 
+void CPUUndefinedException()
+{
+  u32 PC = reg[15].I;
+  bool savedArmState = armState;
+  CPUSwitchMode(0x1b, true, false);
+  reg[14].I = PC - (savedArmState ? 4 : 2);
+  reg[15].I = 0x04;
+  armState = true;
+  armIrqEnable = false;
+  armNextPC = 0x04;
+  reg[15].I += 4;  
+}
+
 void CPUSoftwareInterrupt()
 {
   u32 PC = reg[15].I;
@@ -1602,31 +1558,36 @@ void CPUSoftwareInterrupt()
 void CPUSoftwareInterrupt(int comment)
 {
   static bool disableMessage = false;
+  if(armState) comment >>= 16;
 #ifdef BKPT_SUPPORT
-  if(comment == 0xff || comment == 0x00ff0000) {
+  if(comment == 0xff) {
     extern void (*dbgOutput)(char *, u32);
     dbgOutput(NULL, reg[0].I);
     return;
   }
 #endif
 #ifdef PROFILING
-  if(comment == 0xfe || comment == 0x00fe0000) {
+  if(comment == 0xfe) {
     profStartup(reg[0].I, reg[1].I);
     return;
   }
-  if(comment == 0xfd || comment == 0x00fd0000) {
+  if(comment == 0xfd) {
     profControl(reg[0].I);
     return;
   }
-  if(comment == 0xfc || comment == 0x00fc0000) {
+  if(comment == 0xfc) {
     profCleanup();
     return;
   }
-  if(comment == 0xfb || comment == 0x00fb0000) {
+  if(comment == 0xfb) {
     profCount();
     return;
   }
 #endif
+  if(comment == 0xfa) {
+    agbPrintFlush();
+    return;
+  }
   if(useBios) {
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_SWI) {
@@ -1646,8 +1607,6 @@ void CPUSoftwareInterrupt(int comment)
   //    biosProtected = 0xe3a02004;
   //  }
      
-  if(comment > 0xffff)
-    comment >>= 16;
   switch(comment) {
   case 0x00:
     BIOS_SoftReset();
@@ -2800,7 +2759,7 @@ void CPUWriteHalfWord(u32 address, u16 value)
                           *((u16 *)&freezeWorkRAM[address & 0x3FFFE]));
     else
 #endif
-      *((u16 *)&workRAM[address & 0x3FFFE]) = TO16LE(value);
+      WRITE16LE(((u16 *)&workRAM[address & 0x3FFFE]),value);
     break;
   case 3:
 #ifdef SDL
@@ -2810,22 +2769,29 @@ void CPUWriteHalfWord(u32 address, u16 value)
                           *((u16 *)&freezeInternalRAM[address & 0x7ffe]));
     else
 #endif
-      *((u16 *)&internalRAM[address & 0x7ffe]) = TO16LE(value);
+      WRITE16LE(((u16 *)&internalRAM[address & 0x7ffe]), value);
     break;    
   case 4:
     CPUUpdateRegister(address & 0x3fe, value);
     break;
   case 5:
-    *((u16 *)&paletteRAM[address & 0x3fe]) = TO16LE(value);
+    WRITE16LE(((u16 *)&paletteRAM[address & 0x3fe]), value);
     break;
   case 6:
     if(address & 0x10000)
-      *((u16 *)&vram[address & 0x17ffe]) = TO16LE(value);
+      WRITE16LE(((u16 *)&vram[address & 0x17ffe]), value);
     else
-      *((u16 *)&vram[address & 0x1fffe]) = TO16LE(value);
+      WRITE16LE(((u16 *)&vram[address & 0x1fffe]), value);
     break;
   case 7:
-    *((u16 *)&oam[address & 0x3fe]) = TO16LE(value);
+    WRITE16LE(((u16 *)&oam[address & 0x3fe]), value);
+    break;
+  case 8:
+  case 9:
+    if(address == 0x80000c4 || address == 0x80000c6 || address == 0x80000c8) {
+      if(!rtcWrite(address, value))
+        goto unwritable;
+    } else if(!agbPrintWrite(address, value)) goto unwritable;
     break;
   case 13:
     if(cpuEEPROMEnabled) {
@@ -2928,12 +2894,12 @@ void CPUWriteByte(u32 address, u8 b)
       //      } else
       if(address & 1)
         CPUUpdateRegister(address & 0x3fe,
-                          ((FROM16LE(*((u16 *)&ioMem[address & 0x3fe])))
+                          ((READ16LE(((u16 *)&ioMem[address & 0x3fe])))
                            & 0x00FF) |
                           b<<8);
       else
         CPUUpdateRegister(address & 0x3fe,
-                          ((FROM16LE(*((u16 *)&ioMem[address & 0x3fe])) & 0xFF00) | b));
+                          ((READ16LE(((u16 *)&ioMem[address & 0x3fe])) & 0xFF00) | b));
     }
     break;
   case 5:
@@ -2985,7 +2951,7 @@ void CPUInit(char *biosFileName, bool useBiosFile)
 #ifdef WORDS_BIGENDIAN
   if(!cpuBiosSwapped) {
     for(int i = 0; i < sizeof(myROM)/4; i++) {
-      myROM[i] = TO32LE(myROM[i]);
+      WRITE32LE(&myROM[i], myROM[i]);
     }
     cpuBiosSwapped = true;
   }
@@ -2996,16 +2962,15 @@ void CPUInit(char *biosFileName, bool useBiosFile)
   useBios = false;
   
   if(useBiosFile) {
-    FILE *f = fopen(biosFileName, "rb");
-
-    if(f != NULL) {
-      size_t s = fread(bios, 1, 0x4000, f);
-      if(s == 0x4000)
+    int size = 0x4000;
+    if(utilLoad(biosFileName,
+                CPUIsGBABios,
+                bios,
+                size)) {
+      if(size == 0x4000)
         useBios = true;
       else
         systemMessage(MSG_INVALID_BIOS_FILE_SIZE, "Invalid BIOS file size");
-      
-      fclose(f);
     }
   }
   
@@ -3068,6 +3033,9 @@ void CPUInit(char *biosFileName, bool useBiosFile)
     ioReadable[i] = false;
   for(i = 0x304; i < 0x400; i++)
     ioReadable[i] = false;
+
+  *((u16 *)&rom[0x1fe209c]) = 0xdffa; // SWI 0xFA
+  *((u16 *)&rom[0x1fe209e]) = 0x4770; // BX LR
 }
 
 void CPUReset()
@@ -3085,6 +3053,7 @@ void CPUReset()
         break;
       }
   }
+  rtcReset();
   // clen registers
   memset(&reg[0], 0, sizeof(reg));
   // clean OAM
@@ -3280,6 +3249,8 @@ void CPUReset()
   map[7].mask = 0x3FF;
   map[8].address = rom;
   map[8].mask = 0x1FFFFFF;
+  map[9].address = rom;
+  map[9].mask = 0x1FFFFFF;  
   map[10].address = rom;
   map[10].mask = 0x1FFFFFF;
   map[12].address = rom;
@@ -3514,6 +3485,8 @@ void CPULoop(int ticks)
             DISPSTAT &= 0xFFFD;
             if(VCOUNT == 160) {
               count++;
+              systemFrame();
+              
               if((count % 10) == 0) {
                 system10Frames(60);
               }
@@ -3536,7 +3509,7 @@ void CPULoop(int ticks)
               if(cpuEEPROMSensorEnabled)
                 systemUpdateMotionSensor();              
               UPDATE_REG(0x130, P1);
-              u16 P1CNT = FROM16LE(*((u16 *)&ioMem[0x132]));
+              u16 P1CNT = READ16LE(((u16 *)&ioMem[0x132]));
               if(P1CNT & 0x4000) {
                 u16 p1 = (0x3FF ^ P1) & 0x3FF;
                 if(P1CNT & 0x8000) {
@@ -3590,7 +3563,7 @@ void CPULoop(int ticks)
               switch(systemColorDepth) {
               case 16:
                 {
-                  u16 *dest = (u16 *)pix + 241 * (VCOUNT+1);
+                  u16 *dest = (u16 *)pix + 242 * (VCOUNT+1);
                   for(int x = 0; x < 240;) {
                     *dest++ = systemColorMap16[lineMix[x++]&0xFFFF];
                     *dest++ = systemColorMap16[lineMix[x++]&0xFFFF];

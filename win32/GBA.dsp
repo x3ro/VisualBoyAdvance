@@ -26,7 +26,7 @@ CFG=GBA - Win32 Debug
 # PROP AllowPerConfigDependencies 1
 # PROP Scc_ProjName ""
 # PROP Scc_LocalPath ""
-CPP=xicl6.exe
+CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
@@ -52,9 +52,9 @@ RSC=rc.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink6.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
+# ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
 
 !ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
 
@@ -78,10 +78,10 @@ LINK32=xilink6.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink6.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBC" /out:"Debug/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
-# SUBTRACT LINK32 /profile
+# ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /map /debug /machine:I386 /nodefaultlib:"LIBC" /nodefaultlib:"libm" /out:"Debug/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# SUBTRACT LINK32 /verbose /profile
 
 !ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
 
@@ -106,10 +106,10 @@ LINK32=xilink6.exe
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
-LINK32=xilink6.exe
+LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib /nologo /subsystem:windows /profile /map /debug /machine:I386 /out:"Release/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib /nologo /subsystem:windows /map /machine:I386 /out:"ReleaseNoDev/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
-# SUBTRACT LINK32 /profile /debug
+# ADD LINK32 d3dx8.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib dxguid.lib dinput.lib winmm.lib comctl32.lib wsock32.lib vfw32.lib opengl32.lib /nologo /subsystem:windows /map /machine:I386 /nodefaultlib:"libm" /out:"ReleaseNoDev/VisualBoyAdvance.exe" /MAPINFO:EXPORTS /MAPINFO:LINES /OPT:ref
+# SUBTRACT LINK32 /verbose /pdb:none
 
 !ENDIF 
 
@@ -131,6 +131,10 @@ SOURCE=..\src\2xSaI.cpp
 # Begin Source File
 
 SOURCE=..\src\admame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\agbprint.cpp
 # End Source File
 # Begin Source File
 
@@ -229,6 +233,14 @@ SOURCE=..\src\remote.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\RTC.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\scanline.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\simple2x.cpp
 # End Source File
 # Begin Source File
@@ -265,6 +277,10 @@ SOURCE=..\src\gb\gbCheats.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\gb\gbDis.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\gb\gbGfx.cpp
 # End Source File
 # Begin Source File
@@ -291,6 +307,129 @@ SOURCE=..\src\gb\gbSound.cpp
 # Begin Group "Windows"
 
 # PROP Default_Filter ""
+# Begin Group "Gameboy"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\win32\GBCheatsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBColorDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBDisassemble.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBMapView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBMemoryViewer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBOamView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBPaletteView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBPrinterDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBTileViewer.cpp
+# End Source File
+# End Group
+# Begin Group "GameboyAdvance"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\win32\Disassemble.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\ExportGSASnapshot.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GBACheats.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GDBConnection.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GSACodeSelect.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\Logging.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\MapView.cpp
+
+!IF  "$(CFG)" == "GBA - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
+
+# ADD CPP /Gm /Gi
+
+!ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\MemoryViewer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\OamView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\PaletteView.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\TileViewer.cpp
+# End Source File
+# End Group
+# Begin Group "Display"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\src\win32\Direct3D.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\DirectDraw.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GDIDisplay.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\OpenGL.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\skin.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\src\win32\AboutDlg.cpp
@@ -329,35 +468,7 @@ SOURCE=..\src\win32\DirectoriesDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\win32\Disassemble.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\ExportGSASnapshot.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GBACheats.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GBCheatsDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GBColorDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GBPrinterDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GDBConnection.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\GSACodeSelect.cpp
+SOURCE=..\src\win32\Display.cpp
 # End Source File
 # Begin Source File
 
@@ -370,37 +481,6 @@ SOURCE=..\src\win32\KeyboardEdit.cpp
 # Begin Source File
 
 SOURCE=..\src\win32\LangSelect.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\Logging.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\MapView.cpp
-
-!IF  "$(CFG)" == "GBA - Win32 Release"
-
-!ELSEIF  "$(CFG)" == "GBA - Win32 Debug"
-
-# ADD CPP /Gm /Gi
-
-!ELSEIF  "$(CFG)" == "GBA - Win32 ReleaseNoDev"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\MemoryViewer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\OamView.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\PaletteView.cpp
 # End Source File
 # Begin Source File
 
@@ -436,10 +516,6 @@ SOURCE=..\src\win32\stdafx.cpp
 # Begin Source File
 
 SOURCE=..\src\win32\Throttle.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\win32\TileViewer.cpp
 # End Source File
 # Begin Source File
 

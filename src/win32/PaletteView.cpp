@@ -26,43 +26,20 @@
 #include "Controls.h"
 #include "CommDlg.h"
 #include "IUpdate.h"
+#include "PaletteView.h"
+#include "../Util.h"
 
 #define WM_PALINFO WM_APP+1
 
-class PaletteViewControl : public Wnd {
-  int w;
-  int h;
-  u8 *data;
-  BITMAPINFO bmpInfo;
-  static bool isRegistered;
-  u16 palette[256];
-  int paletteAddress;
-  int selected;
-protected:
-  DECLARE_MESSAGE_MAP()
+class GBAPaletteViewControl : public PaletteViewControl {
 public:
-  PaletteViewControl();
-  ~PaletteViewControl();
-
-  bool saveAdobe(char *);
-  bool saveMSPAL(char *);
-  bool saveJASCPAL(char *);
-  void setPaletteAddress(int);
-  void setSelected(int);
-  void render(u16 color, int x, int y);
-  void refresh();
-  
-  virtual void OnPaint();
-  virtual BOOL OnEraseBkgnd(HDC);
-  virtual void OnLButtonDown(UINT, int, int);
-
-  static void registerClass();
+  virtual void updatePalette();
 };
 
 class PaletteView : public ResizeDlg, IUpdateListener {
 private:
-  PaletteViewControl paletteView;
-  PaletteViewControl paletteViewOBJ;
+  GBAPaletteViewControl paletteView;
+  GBAPaletteViewControl paletteViewOBJ;
   ColorControl colorControl;
   bool autoUpdate;
 protected:
@@ -98,6 +75,12 @@ extern int videoOption;
 extern void winAddUpdateListener(IUpdateListener *);
 extern void winRemoveUpdateListener(IUpdateListener *);
 
+void GBAPaletteViewControl::updatePalette()
+{
+  if(paletteRAM != NULL)
+    memcpy(palette, &paletteRAM[paletteAddress], 512);
+}
+
 BEGIN_MESSAGE_MAP(PaletteViewControl, Wnd)
   ON_WM_PAINT()
   ON_WM_ERASEBKGND()
@@ -122,6 +105,8 @@ PaletteViewControl::PaletteViewControl()
   w = 256;
   h = 256;
 
+  colors = 256;
+
   paletteAddress = 0;
   
   ZeroMemory(palette, 512);
@@ -134,6 +119,16 @@ PaletteViewControl::~PaletteViewControl()
   free(data);
 }
 
+void PaletteViewControl::init(int c, int w, int h)
+{
+  this->w = w;
+  this->h = h;
+  this->colors = c;
+
+  bmpInfo.bmiHeader.biWidth = w;
+  bmpInfo.bmiHeader.biHeight = -h;  
+}
+
 bool PaletteViewControl::saveAdobe(char *name)
 {
   FILE *f = fopen(name, "wb");
@@ -141,7 +136,7 @@ bool PaletteViewControl::saveAdobe(char *name)
   if(!f)
     return false;
 
-  for(int i = 0; i < 256; i++) {
+  for(int i = 0; i < colors; i++) {
     u16 c = palette[i];
     int r = (c & 0x1f) << 3;
     int g = (c & 0x3e0) >> 2;
@@ -149,6 +144,12 @@ bool PaletteViewControl::saveAdobe(char *name)
 
     u8 data[3] = { r, g, b };
     fwrite(data, 1, 3, f);
+  }
+  if(colors < 256) {
+    for(int i = colors; i < 256; i++) {
+      u8 data[3] = { 0, 0, 0 };
+      fwrite(data, 1, 3, f);
+    }
   }
   fclose(f);
 
@@ -165,18 +166,19 @@ bool PaletteViewControl::saveMSPAL(char *name)
   u8 data[4] = { 'R', 'I', 'F', 'F' };
 
   fwrite(data, 1, 4, f);
-  u8 data2[4] = { 0x10, 0x04, 0x00, 0x00 };
-  fwrite(data2, 1, 4, f);
+  utilPutDword(data, 256 * 4 + 16);
+  fwrite(data, 1, 4, f);
   u8 data3[4] = { 'P', 'A', 'L', ' ' };
   fwrite(data3, 1, 4, f);
   u8 data4[4] = { 'd', 'a', 't', 'a' };
   fwrite(data4, 1, 4, f);
-  u8 data5[4] = { 0x04, 0x04, 0x00, 0x00 };
-  fwrite(data5, 1, 4, f);
-  u8 data6[4] = { 0x00, 0x03, 0x00, 0x01 };
-  fwrite(data6, 1, 4, f);
+  utilPutDword(data, 256*4+4);
+  fwrite(data, 1, 4, f);
+  utilPutWord(&data[0], 0x0300);
+  utilPutWord(&data[2], 256); // causes problems if not 16 or 256
+  fwrite(data, 1, 4, f);
   
-  for(int i = 0; i < 256; i++) {
+  for(int i = 0; i < colors; i++) {
     u16 c = palette[i];
     int r = (c & 0x1f) << 3;
     int g = (c & 0x3e0) >> 2;
@@ -184,6 +186,12 @@ bool PaletteViewControl::saveMSPAL(char *name)
 
     u8 data7[4] = { r, g, b, 0 };
     fwrite(data7, 1, 4, f);
+  }
+  if(colors < 256) {
+    for(int i = colors; i < 256; i++) {
+      u8 data7[4] = { 0, 0, 0, 0 };
+      fwrite(data7, 1, 4, f);
+    }
   }
   fclose(f);
 
@@ -197,15 +205,19 @@ bool PaletteViewControl::saveJASCPAL(char *name)
   if(!f)
     return false;
 
-  fputs("JASC-PAL\r\n0100\r\n256\r\n",f);
+  fprintf(f, "JASC-PAL\r\n0100\r\n256\r\n");
   
-  for(int i = 0; i < 256; i++) {
+  for(int i = 0; i < colors; i++) {
     u16 c = palette[i];
     int r = (c & 0x1f) << 3;
     int g = (c & 0x3e0) >> 2;
     int b = (c & 0x7c00) >> 7;
 
     fprintf(f, "%d %d %d\r\n", r, g, b);
+  }
+  if(colors < 256) {
+    for(int i = colors; i < 256; i++)
+      fprintf(f, "0 0 0\r\n");
   }
   fclose(f);
 
@@ -225,8 +237,8 @@ void PaletteViewControl::setSelected(int s)
 
 void PaletteViewControl::render(u16 color, int x, int y)
 {
-  u8 *start = data + y*16*256*3 + x*16*3;
-  int skip = 256*3-16*3;
+  u8 *start = data + y*16*w*3 + x*16*3;
+  int skip = w*3-16*3;
 
   int r = (color & 0x1f) << 3;
   int g = (color & 0x3e0) >> 2;
@@ -303,11 +315,11 @@ void PaletteViewControl::render(u16 color, int x, int y)
 
 void PaletteViewControl::refresh()
 {
-  if(paletteRAM != NULL)
-    memcpy(palette, &paletteRAM[paletteAddress], 512);
-  
-  for(int i = 0; i < 256; i++) {
-    render(palette[i], i & 15, i >> 4);
+  updatePalette();
+  int sw = w/16;
+  int sh = h/16;
+  for(int i = 0; i < colors; i++) {
+    render(palette[i], i & (sw-1), i/sw);
   }
   InvalidateRect(NULL, FALSE);
 }
@@ -318,15 +330,17 @@ void PaletteViewControl::OnLButtonDown(UINT, int x, int y)
   GetClientRect(getHandle(), &rect);
   int h = rect.bottom - rect.top;
   int w = rect.right - rect.left;
-  int mult = w / 16;
-  int multY = h / 16;
+  int sw = (this->w/16);
+  int sh = (this->h/16);
+  int mult = w / sw;
+  int multY = h / sh;
 
-  setSelected(x/mult + (y/multY)*16);
+  setSelected(x/mult + (y/multY)*sw);
   
   SendMessage(GetParent(getHandle()),
               WM_PALINFO,
-              palette[x/mult+(y/multY)*16],
-              0x5000000+paletteAddress+2*(x/mult+(y/multY)*16));
+              palette[x/mult+(y/multY)*sw],
+              paletteAddress+(x/mult+(y/multY)*sw));
 }
 
 BOOL PaletteViewControl::OnEraseBkgnd(HDC)
@@ -354,20 +368,24 @@ void PaletteViewControl::OnPaint()
                 h,
                 0,
                 0,
-                256,
-                256,
+                this->w,
+                this->h,
                 data,
                 &bmpInfo,
                 DIB_RGB_COLORS,
                 SRCCOPY);
-  
-  int mult  = w / 16;
-  int multY = h / 16;
+  int sw = this->w / 16;
+  int sh = this->h / 16;
+  int mult  = w / sw;
+  int multY = h / sh;
   HPEN pen = CreatePen(PS_SOLID, 1, RGB(192,192,192));
   HPEN old = (HPEN)SelectObject(memDC, pen);
-  for(int i = 1; i < 16; i++) {
+  int i;
+  for(i = 1; i < sh; i++) {
     MoveToEx(memDC, 0, i * multY, NULL);
     LineTo(memDC, w, i * multY);
+  }
+  for(i = 1; i < sw; i++) {
     MoveToEx(memDC, i * mult, 0, NULL);
     LineTo(memDC, i * mult, h);
   }
@@ -379,8 +397,8 @@ void PaletteViewControl::OnPaint()
     pen = CreatePen(PS_SOLID, 2, RGB(255, 0, 0));
     old = (HPEN)SelectObject(memDC, pen);
 
-    int startX = (selected & 15)*mult+1;
-    int startY = (selected / 16)*multY+1;
+    int startX = (selected & (sw-1))*mult+1;
+    int startY = (selected / sw)*multY+1;
     int endX = startX + mult-2;
     int endY = startY + multY-2;
     
@@ -560,6 +578,11 @@ LRESULT PaletteView::OnPalInfo(WPARAM wParam, LPARAM lParam)
   u32 address = (u32)lParam;
   char buffer[256];
 
+  if(address >= 0x200)
+    address = 0x5000200 + 2*(address & 255);
+  else
+    address = 0x5000000 + 2*(address & 255); 
+  
   wsprintf(buffer, "0x%08X", address);
   ::SetWindowText(GetDlgItem(IDC_ADDRESS), buffer);
 

@@ -152,10 +152,10 @@ static void SmartIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
       emms;
     }
 #endif
-    src0++;
-    src1++;
-    src2++;
-    src3++;
+    src0+=2;
+    src1+=2;
+    src2+=2;
+    src3+=2;
   }
                 
   /* Swap buffers around */
@@ -432,8 +432,8 @@ static void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
       emms;
     }
 #endif
-    src0++;
-    src1++;
+    src0+=2;
+    src1+=2;
   }
 }
 #endif
@@ -569,3 +569,41 @@ void MotionBlurIB32(u8 *srcPtr, u32 srcPitch, int width, int height)
     }
 }
 
+static int count = 0;
+
+void InterlaceIB(u8 *srcPtr, u32 srcPitch, int width, int height)
+{
+  if(frm1 == NULL) {
+    Init();
+  }
+
+  u16 colorMask = ~RGB_LOW_BITS_MASK;
+  
+  u16 *src0 = (u16 *)srcPtr;
+  u16 *src1 = (u16 *)frm1;
+
+  int sPitch = srcPitch >> 1;
+
+  int pos = 0;
+  for (int j = 0; j < height;  j++) {
+    bool render = count ? (j & 1) != 0 : (j & 1) == 0;
+    if(render) {
+      for (int i = 0; i < sPitch; i++) {
+        u16 color = src0[pos];
+        src0[pos] =
+          (((color & colorMask) >> 1) + ((((src1[pos] & colorMask) >> 1) & colorMask) >> 1));
+        src1[pos] = color;
+        pos++;
+      }
+    } else {
+      for (int i = 0; i < sPitch; i++) {
+        u16 color = src0[pos];
+        src0[pos] =
+          (((((color & colorMask) >> 1) & colorMask) >> 1) + ((src1[pos] & colorMask) >> 1));
+        src1[pos] = color;
+        pos++;
+      }
+    }
+  }
+  count = count ^ 1;
+}

@@ -1514,7 +1514,10 @@ void gbReset()
 
   if(gbCgbMode) {
     if(gbSgbMode) {
-      AF.W = 0x01b0;
+      if(gbEmulatorType == 5)
+        AF.W = 0xffb0;
+      else
+        AF.W = 0x01b0;
       BC.W = 0x0013;
       DE.W = 0x00d8;
       HL.W = 0x014d;
@@ -2370,118 +2373,20 @@ void gbCleanUp()
 
 bool gbLoadRom(char *szFile)
 {
-  FILE * f = NULL;
-  char buffer[2048];
-  long size = 0;
+  int size = 0;
   
   if(gbRom != NULL) {
     gbCleanUp();
   }
 
-  if(CPUIsZipFile(szFile)) {
-    unzFile unz = unzOpen(szFile);
+  gbRom = utilLoad(szFile,
+                   utilIsGBImage,
+                   NULL,
+                   size);
+  if(!gbRom)
+    return false;
 
-    if(unz == NULL) {
-      systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", szFile);
-      return false;
-    }
-
-    int r = unzGoToFirstFile(unz);
-
-    if(r != UNZ_OK) {
-      unzClose(unz);
-      systemMessage(MSG_BAD_ZIP_FILE, "Bad ZIP file %s", szFile);
-      return false;
-    }
-
-    bool found = false;
-
-    unz_file_info info;
-    
-    while(1) {
-      r = unzGetCurrentFileInfo(unz,
-                                &info,
-                                buffer,
-                                sizeof(buffer),
-                                NULL,
-                                0,
-                                NULL,
-                                0);
-
-      if(r != UNZ_OK) {
-        unzClose(unz);
-        systemMessage(MSG_BAD_ZIP_FILE,
-                      "Bad ZIP file %s", szFile);
-        return false;
-      }
-
-      if(gbIsGameboyRom(buffer)) {
-        found = true;
-        break;
-      }
-
-      r = unzGoToNextFile(unz);
-
-      if(r != UNZ_OK)
-        break;
-    }
-
-    if(!found) {
-      unzClose(unz);
-      systemMessage(MSG_NO_IMAGE_ON_ZIP,
-                    "No image found on ZIP file %s", szFile);
-      return false;
-    }
-
-    int size = info.uncompressed_size;
-    
-    gbRomSize = size;
-    gbRom = (u8 *)malloc(size+4);
-
-    r = unzOpenCurrentFile(unz);
-
-    if(r != UNZ_OK) {
-      unzClose(unz);
-      systemMessage(MSG_ERROR_OPENING_IMAGE_FROM,
-                    "Error opening image %s from zip file %s",
-                    buffer, szFile);
-      free(gbRom);
-      gbRom = NULL;
-      return false;
-    }
-    
-    r = unzReadCurrentFile(unz,
-                           gbRom,
-                           size);
-
-    if(r != size) {
-      unzCloseCurrentFile(unz);
-      unzClose(unz);
-      systemMessage(MSG_ERROR_READING_IMAGE_FROM,
-                    "Error reading image %s from zip file %s",
-                    buffer, szFile);
-      free(gbRom);
-      gbRom = NULL;
-      return false;
-    }
-
-    unzCloseCurrentFile(unz);
-    unzClose(unz);    
-  } else {
-    f = fopen(szFile, "rb");
-    if(!f) {
-      systemMessage(MSG_ERROR_OPENING_IMAGE, "Error opening image %s", szFile);
-      return false;
-    }
-    fseek(f, 0 , SEEK_END);
-    size = ftell(f);
-    gbRom = (u8*)malloc(size);
-    fseek(f, 0, SEEK_SET);
-    fread(gbRom, 1, size, f);
-    fclose(f);
-
-    gbRomSize = size;
-  }
+  gbRomSize = size;
   
   return gbUpdateSizes();
 }
@@ -2596,7 +2501,8 @@ bool gbUpdateSizes()
 
   if(gbRom[0x146] == 0x03) {
     if(gbEmulatorType == 0 ||
-       gbEmulatorType == 2)
+       gbEmulatorType == 2 ||
+       gbEmulatorType == 5)
       gbSgbMode = 1;
     else
       gbSgbMode = 0;
@@ -2606,7 +2512,8 @@ bool gbUpdateSizes()
   if(gbRom[0x143] & 0x80) {
     if(gbEmulatorType == 0 ||
        gbEmulatorType == 1 ||
-       gbEmulatorType == 4) {
+       gbEmulatorType == 4 ||
+       gbEmulatorType == 5) {
       gbCgbMode = 1;
       gbVram = (u8 *)malloc(0x4000);
       gbWram = (u8 *)malloc(0x8000);
@@ -2771,6 +2678,8 @@ void gbEmulate(int ticksToStop)
 
             gbFrameCount++;
 
+            systemFrame();
+
             if((gbFrameCount % 10) == 0)
               system10Frames(60);
 
@@ -2848,7 +2757,7 @@ void gbEmulate(int ticksToStop)
                 case 16:
                   {
                     u16 * dest = (u16 *)pix +
-                      (gbBorderLineSkip+1) * (register_LY + gbBorderRowSkip+1)
+                      (gbBorderLineSkip+2) * (register_LY + gbBorderRowSkip+1)
                       + gbBorderColumnSkip;
                     for(int x = 0; x < 160; ) {
                       *dest++ = systemColorMap16[gbLineMix[x++]];

@@ -1889,14 +1889,6 @@ switch(opcode >> 8) {
  case 0xe5:
  case 0xe6:
  case 0xe7:
- case 0xe8:
- case 0xe9:
- case 0xea:
- case 0xeb:
- case 0xec:
- case 0xed:
- case 0xee:
- case 0xef:
    {
      // unconditional branch
      int offset = (opcode & 0x3FF) << 1;
@@ -1969,16 +1961,10 @@ switch(opcode >> 8) {
  case 0xde:
  default:
  unknown_thumb:
-#ifdef BKPT_SUPPORT
-    extern void (*dbgSignal)(int,int);
-    reg[15].I -= 2;
-    armNextPC -= 2;    
-    dbgSignal(4, 0);
-    return;   
-#else
-   // NOT DEFINED
-   systemMessage(MSG_UNKNOWN_THUMB_OPCODE,
-                 "Unknown opcode %04x from %08x", opcode, armNextPC);
-   break;
+#ifdef DEV_VERSION
+   if(systemVerbose & VERBOSE_UNDEFINED)
+     log("Undefined THUMB instruction %04x at %08x\n", opcode, armNextPC-2);
 #endif
+   CPUUndefinedException();
+   break;
 }

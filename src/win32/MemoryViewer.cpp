@@ -17,6 +17,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include "ResizeDlg.h"
+#include "MemoryViewer.h"
 #include <stdio.h>
 #include <memory.h>
 #include "../GBA.h"
@@ -49,61 +50,15 @@ extern void winAddUpdateListener(IUpdateListener *);
 extern void winRemoveUpdateListener(IUpdateListener *);
 extern char *winLoadFilter(int id);
 
-class MemoryViewerDlg;
-
-class MemoryViewer : public Wnd {
-  u32 address;
-  int dataSize;
-  bool hasCaret;
-  int caretWidth;
-  int caretHeight;
-  HFONT font;
-  SIZE fontSize;
-  u32 editAddress;
-  int editNibble;
-  int maxNibble;
-  int displayedLines;
-  int beginAscii;
-  int beginHex;
-  bool editAscii;
-  MemoryViewerDlg *dlg;
-
-  static bool isRegistered;
-protected:
-  DECLARE_MESSAGE_MAP()
+class GBAMemoryViewer : public MemoryViewer {
 public:
-  void beep();
-  void setDialog(MemoryViewerDlg *);
-  BOOL OnEditInput(UINT c);
-  LRESULT OnWMChar(WPARAM wParam, LPARAM lParam);
-  
-  void setCaretPos();
-  void destroyEditCaret();
-  void createEditCaret(int w, int h);
-  void moveAddress(s32 off, int nibble);
-  MemoryViewer();
-
-  static void registerClass();
-
-  void readData(u32,int,u8 *);
-  void setAddress(u32);
-  u32 getCurrentAddress() { return editAddress; }
-  void setSize(int);
-  int getSize() { return dataSize; }
-  void updateScrollInfo(int lines);
-
-  virtual BOOL OnEraseBkgnd(HDC);
-  virtual void OnPaint();
-  virtual void OnVScroll(UINT, UINT, HWND);
-  virtual void OnKeyDown(UINT virtKey, UINT, UINT);
-  virtual void OnKillFocus(HWND next);
-  virtual void OnSetFocus(HWND old);
-  virtual void OnLButtonDown(UINT flags, int x, int y);
-  virtual UINT OnGetDlgCode();
+  GBAMemoryViewer();
+  virtual void readData(u32, int, u8 *);
+  virtual void editData(u32,int,int,u32);
 };
 
-class MemoryViewerDlg : public ResizeDlg, IUpdateListener {
-  MemoryViewer viewer;
+class MemoryViewerDlg : public ResizeDlg, IUpdateListener, IMemoryViewerDlg {
+  GBAMemoryViewer viewer;
   bool autoUpdate;
 protected:
   DECLARE_MESSAGE_MAP()
@@ -122,27 +77,9 @@ public:
   void OnSave();
   void OnLoad();
 
-  void setCurrentAddress(u32);
+  virtual void setCurrentAddress(u32);
 
   virtual void update();
-};
-
-class MemoryViewerAddressSize : public Dlg {
-  u32 address;
-  int size;
-protected:
-  DECLARE_MESSAGE_MAP()
-public:
-  MemoryViewerAddressSize();
-  
-  void setAddress(u32 a) { address = a; }
-  void setSize(int s) { size = s; }
-  u32 getAddress() { return address; }
-  int getSize() { return size; }
-
-  virtual BOOL OnInitDialog(LPARAM);  
-  void OnOk();
-  void OnCancel();
 };
 
 bool MemoryViewer::isRegistered = false;
@@ -163,6 +100,7 @@ MemoryViewer::MemoryViewer()
   : Wnd()
 {
   address = 0;
+  addressSize = 0;
   dataSize = 0;
   editAddress = 0;
   editNibble = 0;
@@ -176,34 +114,28 @@ MemoryViewer::MemoryViewer()
   dlg = NULL;
 }
 
-void MemoryViewer::setDialog(MemoryViewerDlg *d)
+void MemoryViewer::setDialog(IMemoryViewerDlg *d)
 {
   dlg = d;
-}
-
-void MemoryViewer::readData(u32 address, int len, u8 *data)
-{
-  if(emulating && rom != NULL) {
-    for(int i = 0; i < len; i++) {
-      *data++ = CPUReadByteQuick(address);
-      address++;
-    }
-  } else {
-    for(int i = 0; i < len; i++) {
-      *data++ = 0;
-      address++;
-    }    
-  }
 }
 
 void MemoryViewer::setAddress(u32 a)
 {
   address = a;
   if(displayedLines) {
-    if((address+(displayedLines<<4)) < address) {
-      address = 0xffffffff - (displayedLines<<4) + 1;
+    if(addressSize) {
+      u16 addr = address;
+      if((u16)(addr+(displayedLines<<4)) < addr) {
+        address = 0xffff - (displayedLines<<4) + 1;
+      }      
+    } else {
+      if((address+(displayedLines<<4)) < address) {
+        address = 0xffffffff - (displayedLines<<4) + 1;
+      }
     }
   }
+  if(addressSize)
+    address &= 0xffff;
   InvalidateRect(NULL, TRUE);
 }
 
@@ -233,8 +165,14 @@ void MemoryViewer::updateScrollInfo(int lines)
   si.cbSize = sizeof(si);
   si.fMask = SIF_PAGE | SIF_RANGE | SIF_DISABLENOSCROLL | SIF_POS;
   si.nMin = 0;
-  si.nMax = 0xa000000 / page;
-  si.nPage = page;
+  if(addressSize) {
+    si.nMax = 0x10000/page;
+    si.nPage = 1;
+  } else {
+    si.nMax = 0xa000000 / page;
+    si.nPage = page;
+  }
+
   si.nPos = address / page;
   SetScrollInfo(getHandle(),
                 SB_VERT,
@@ -286,8 +224,11 @@ void MemoryViewer::OnPaint()
   
   for(int i = 0; i < lines; i++) {
     char buffer[33];
-    sprintf(buffer, "%08X", addr);
-    DrawText(memDC, buffer, 8, &r, DT_TOP | DT_LEFT | DT_NOPREFIX);
+    if(addressSize)
+      sprintf(buffer, "%04X", addr);
+    else
+      sprintf(buffer, "%08X", addr);
+    DrawText(memDC, buffer, addressSize ? 4 : 8, &r, DT_TOP | DT_LEFT | DT_NOPREFIX);
     r.left += 10*fontSize.cx;
     beginHex = r.left;
     readData(addr, 16, data);
@@ -333,6 +274,8 @@ void MemoryViewer::OnPaint()
     buffer[16] = 0;
     DrawText(memDC, buffer, 16, &r, DT_TOP | DT_LEFT | DT_NOPREFIX);
     addr += 16;
+    if(addressSize)
+      addr &= 0xffff;
     r.top += fontSize.cy;
     r.bottom += fontSize.cy;
     r.left = 3;
@@ -383,12 +326,13 @@ void MemoryViewer::OnVScroll(UINT type, UINT pos, HWND)
     break;
   case SB_THUMBTRACK:
     {
+      int page = displayedLines * 16;      
       SCROLLINFO si;
       ZeroMemory(&si, sizeof(si));
       si.cbSize = sizeof(si);
-      si.fMask = SIF_TRACKPOS | SIF_PAGE;
+      si.fMask = SIF_TRACKPOS;
       GetScrollInfo(getHandle(), SB_VERT, &si);
-      address = si.nPage * si.nTrackPos;
+      address = page * si.nTrackPos;
     }
     break;
   }
@@ -650,32 +594,22 @@ BOOL MemoryViewer::OnEditInput(UINT c)
   else if(c >= '0' && c <= '9')
     value = (c - '0');
   if(editAscii) {
-    CPUWriteByteQuick(editAddress, c);
+    editData(editAddress, 8, 0, c);
     moveAddress(1, 0);
     InvalidateRect(NULL, TRUE);
   } else {
     if(value != 256) {
       value <<= 4*(maxNibble-editNibble);
       u32 mask = ~(15 << 4*(maxNibble - editNibble));
-      u32 oldValue;
       switch(dataSize) {
       case 0:
-        oldValue = CPUReadByteQuick(editAddress);
-        oldValue &= mask;
-        oldValue |= value;
-        CPUWriteByteQuick(editAddress, oldValue);
+        editData(editAddress, 8, mask, value);
         break;
       case 1:
-        oldValue = CPUReadHalfWordQuick(editAddress);
-        oldValue &= mask;
-        oldValue |= value;
-        CPUWriteHalfWordQuick(editAddress, oldValue);
+        editData(editAddress, 16, mask, value);
         break;
       case 2:
-        oldValue = CPUReadMemoryQuick(editAddress);
-        oldValue &= mask;
-        oldValue |= value;
-        CPUWriteMemoryQuick(editAddress, oldValue);
+        editData(editAddress, 32, mask, value);
         break;
       }
       moveAddress(0, 1);
@@ -705,6 +639,47 @@ void MemoryViewer::registerClass()
     wc.lpszClassName = "VbaMemoryViewer";
     RegisterClass(&wc);
     isRegistered = true;
+  }
+}
+
+GBAMemoryViewer::GBAMemoryViewer()
+  : MemoryViewer()
+{
+  setAddressSize(0);
+}
+
+void GBAMemoryViewer::readData(u32 address, int len, u8 *data)
+{
+  if(emulating && rom != NULL) {
+    for(int i = 0; i < len; i++) {
+      *data++ = CPUReadByteQuick(address);
+      address++;
+    }
+  } else {
+    for(int i = 0; i < len; i++) {
+      *data++ = 0;
+      address++;
+    }    
+  }
+}
+
+void GBAMemoryViewer::editData(u32 address, int size, int mask, u32 value)
+{
+  u32 oldValue;
+  
+  switch(size) {
+  case 8:
+    oldValue = (CPUReadByteQuick(address) & mask) | value;
+    CPUWriteByteQuick(address, oldValue);
+    break;
+  case 16:
+    oldValue = (CPUReadHalfWordQuick(address) & mask) | value;
+    CPUWriteHalfWordQuick(address, oldValue);
+    break;
+  case 32:
+    oldValue = (CPUReadMemoryQuick(address) & mask) | value;
+    CPUWriteMemoryQuick(address, oldValue);
+    break;
   }
 }
 

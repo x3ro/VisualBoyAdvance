@@ -83,6 +83,12 @@
 #define IDD_MODES                       140
 #define IDD_DRIVERS                     142
 #define IDD_THROTTLE                    143
+#define IDD_GB_DISASSEMBLE              144
+#define IDD_GB_OAM_VIEW                 145
+#define IDD_GB_TILE_VIEWER              146
+#define IDD_GB_MAP_VIEW                 147
+#define IDD_GB_PALETTE_VIEW             148
+#define IDD_MODE_CONFIRM                149
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -349,6 +355,8 @@
 #define IDS_SELECT_AVI_NAME             1127
 #define IDS_INVALID_THROTTLE_VALUE      1128
 #define IDC_REFRESH2                    1129
+#define IDS_FILTER_INI                  1129
+#define IDS_SELECT_SKIN_FILE            1130
 #define IDC_CLOSE                       1131
 #define IDC_COLOR                       1136
 #define IDC_SAVE_BG                     1137
@@ -381,6 +389,7 @@
 #define IDC_ROT                         1160
 #define IDC_FLAGS                       1161
 #define IDC_COMMANDS                    1162
+#define IDC_BANK                        1162
 #define IDC_CURRENTS                    1163
 #define IDC_ASSIGN                      1164
 #define IDC_RESET                       1165
@@ -440,7 +449,9 @@
 #define IDC_VERBOSE_DMA2                1231
 #define IDC_XY                          1231
 #define IDC_VERBOSE_DMA3                1232
+#define IDC_VERBOSE_UNDEFINED           1233
 #define IDC_TITLE                       1234
+#define IDC_VERBOSE_AGBPRINT            1234
 #define IDC_CURRENT_ADDRESS             1235
 #define IDC_NOTES                       1236
 #define IDC_CURRENT_ADDRESS_LABEL       1236
@@ -449,6 +460,11 @@
 #define IDC_MODES                       1240
 #define IDC_DRIVERS                     1241
 #define IDC_THROTTLE                    1242
+#define IDC_H                           1243
+#define IDC_OAP                         1244
+#define IDC_BANK_0                      1245
+#define IDC_BANK_1                      1246
+#define IDC_TIMER                       1247
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -645,14 +661,32 @@
 #define ID_OPTIONS_FRAMESKIP_THROTTLE_25 40220
 #define ID_OPTIONS_FRAMESKIP_THROTTLE_OTHER 40221
 #define ID_OPTIONS_FRAMESKIP_THROTTLE_100 40222
+#define ID_OPTIONS_FILTER_SCANLINES     40223
+#define ID_OPTIONS_VIDEO_RENDERMETHOD_GDI 40228
+#define ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECTDRAW 40229
+#define ID_OPTIONS_VIDEO_RENDERMETHOD_DIRECT3D 40230
+#define ID_OPTIONS_VIDEO_RENDERMETHOD_OPENGL 40231
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DNOFILTER 40233
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DBILINEAR 40234
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DTRILINEAR 40235
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_D3DANISOTROPIC 40236
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_GLNEAREST 40237
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_GLBILINEAR 40238
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_GLTRIANGLE 40239
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_GLQUADS 40240
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_SELECTSKIN 40245
+#define ID_OPTIONS_VIDEO_RENDEROPTIONS_SKIN 40246
+#define ID_OPTIONS_EMULATOR_AGBPRINT    40247
+#define ID_OPTIONS_EMULATOR_REALTIMECLOCK 40248
+#define ID_OPTIONS_GAMEBOY_SGB2         40249
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        144
-#define _APS_NEXT_COMMAND_VALUE         40223
-#define _APS_NEXT_CONTROL_VALUE         1243
+#define _APS_NEXT_RESOURCE_VALUE        150
+#define _APS_NEXT_COMMAND_VALUE         40250
+#define _APS_NEXT_CONTROL_VALUE         1248
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -56,6 +56,57 @@ select Other... and type the three letter (or two) language name from
 These translation files are only for VisualBoyAdvance GUI and messages.
 Games will not be translated and cannot be translated by the emulator.
 
+Skins
+-----
+
+Skins consist of a bitmap (.bmp), a region file (.rgn), a draw rectangle
+on the region and an INI file.
+
+Once you have the bitmap, you the region creator which can be found at
+http://www.flipcode.com/articles/article_win32skins_regioncreator.zip
+to create the region from the bitmap. This allows for irregular skins
+with holes or any shape.
+
+Create the INI file like this:
+[skin]
+image=<relative path from ini to image bitmap>
+region=<relative path from ini to image region>
+draw=<draw rectangle defined as x,y,width,height separated by commas>
+
+Example:
+
+[skin]
+image=gbc.bmp
+regions=gbc.rgn
+draw=20,20,144,160
+
+Skins are only supported in DirectDraw and GDI modes and are also not supported
+in fullscreen mode.
+
+Per game settings
+-----------------
+
+Version 1.5 introduced the support for per game settings for GBA games. You
+can defined the following settings on a per game basis by using an INI file
+in the same directory as the emulator:
+
+rtcEnabled=<0 for false, anything else for true>
+flashSize=<65536 or 131072>
+saveType=<0 for automatic, 1 for EEPROM, 2 for SRAM, 3 for Flash or 4 for
+EEPROM+Sensor>
+
+Use the 4 letter game code to separate settings for each game. Example:
+
+[ABCD]
+rtcEnabled=0
+flashSize=65536
+saveType=0
+
+[ABC2]
+rtcEnabled=1
+flashSize=131072
+saveType=0
+
 FAQ
 ---
 
@@ -86,7 +137,7 @@ LICENSE
 -------
 
     VisualBoyAdvance - a Gameboy and GameboyAdvance emulator
-    Copyright (C) 1999-2002 by Forgotten
+    Copyright (C) 1999-2003 by Forgotten
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

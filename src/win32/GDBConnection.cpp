@@ -282,7 +282,7 @@ void toolsDebugGDB()
       //      emuHasDebugger = true;
       emuCount = 50000;    
       
-      CPUInit(biosFileName, useBiosFile);
+      CPUInit(biosFileName, useBiosFile ? true : false);
       CPUReset();    
     }
   }

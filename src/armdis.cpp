@@ -34,10 +34,10 @@ struct Opcodes {
 };
 
 #define debuggerReadMemory(addr) \
-  FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define debuggerReadHalfWord(addr) \
-  FROM16LE((*(u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
+  READ16LE(((u16*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
 #define debuggerReadByte(addr) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
@@ -78,6 +78,7 @@ const Opcodes thumbOpcodes[] = {
   {0xf800, 0x0800, "lsr %r0, %r3, %o"},
   {0xf800, 0x1000, "asr %r0, %r3, %o"},
   // Format 2
+  {0xfe00, 0x1c00, "mov %r0, %r3" },
   {0xfa00, 0x1800, "add %r0, %r3, %i"},
   {0xfa00, 0x1a00, "sub %r0, %r3, %i"},
   // Format 3
@@ -160,7 +161,7 @@ const Opcodes armOpcodes[] = {
   // Undefined
   {0x0e000010, 0x06000010, "[ undefined ]"},
   // Branch instructions
-  {0x0ffffff0, 0x012fff10, "bx%c %r0"},
+  {0x0ff000f0, 0x01200010, "bx%c %r0"},
   {0x0f000000, 0x0a000000, "b%c %o"},
   {0x0f000000, 0x0b000000, "bl%c %o"},
   {0x0f000000, 0x0f000000, "swi%c %q"},

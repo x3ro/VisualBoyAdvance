@@ -27,6 +27,8 @@
 #define VERBOSE_DMA1                32
 #define VERBOSE_DMA2                64
 #define VERBOSE_DMA3               128
+#define VERBOSE_UNDEFINED          256
+#define VERBOSE_AGBPRINT           512
 
 extern reg_pair reg[45];
 extern bool ioReadable[0x400];

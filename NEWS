@@ -1,3 +1,30 @@
+Version 1.5:
+
+Core changes:
+- added AGBPrint support (for developers only)
+- added RTC support
+- added scanlines filter
+- added support for gzip files
+- added support for compressed bios files (zip, gzip)
+- fixes Flash 1M support
+
+Gameboy:
+- added SGB2 support
+
+Windows:
+- added Gameboy tools (Disassembly, Memory Viewer, Tile Viewer, OAM Viewer,
+  Map Viewer and Palette Viewer)
+- added fullscreen mode confirmation for DirectDraw to avoid problems
+- added GDI, Direct3D and OpenGL rendering options
+- added skin support (see readme for information on creating skins)
+- added support for per game configuration of some settings (see readme for
+  details)
+- changed INI support to use emulator directory instead of Windows directory
+
+SDL version:
+- added support for per game configuration of some settings (see readme for
+  details)
+
 Version 1.4:
 
 Core changes:

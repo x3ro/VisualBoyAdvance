@@ -28,7 +28,7 @@ void regSetStringValue(char *key,char *value);
 void regSetDwordValue(char *key,DWORD value,bool force=false);
 void regSetBinaryValue(char *key, char *value, int count);
 void regDeleteValue(char *key);
-void regInit();
+void regInit(const char *);
 void regShutdown();
 bool regCreateFileType(char *ext, char *type);
 bool regAssociateType(char *type, char *desc, char *application);

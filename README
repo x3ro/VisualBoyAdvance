@@ -6,7 +6,7 @@ Features:
 
 - configurable GB/GBA keys, including joystick support
 - option to use BIOS file
-- zip file support
+- zip/gzip file support
 - directory selection for save state, battery and screen capture
 - fullscreen mode (selectable resolution)
 - video sizes 1x, 2x, 3x and 4x
@@ -21,6 +21,8 @@ Features:
 - 16, 24 and 32 bit desktop support
 - GDB remote debugging (see below for information)
 - auto frameskipping and throttle
+- AGBPrint support for development
+- RTC support
 
 Compiling the sources
 ---------------------
@@ -40,6 +42,30 @@ Installing
 
 The easiest installation is to place all files in the distribution in the
 same directory.
+
+Per game settings
+-----------------
+
+Version 1.5 introduced the support for per game settings for GBA games. You
+can defined the following settings on a per game basis by using an INI file
+in the same directory as the emulator:
+
+rtcEnabled=<0 for false, anything else for true>
+flashSize=<65536 or 131072>
+saveType=<0 for automatic, 1 for EEPROM, 2 for SRAM, 3 for Flash or 4 for
+EEPROM+Sensor>
+
+Use the 4 letter game code to separate settings for each game. Example:
+
+[ABCD]
+rtcEnabled=0
+flashSize=65536
+saveType=0
+
+[ABC2]
+rtcEnabled=1
+flashSize=131072
+saveType=0
 
 Support
 -------
@@ -78,7 +104,7 @@ Emulation key settings:
 - Button A: Z
 - Button B: X
 - Button L: A
-- Button R: X
+- Button R: S
 - Button Start: ENTER
 - Button Select: BACKSPACE
 - Speed up: SPACE
@@ -319,6 +345,7 @@ Command line options (override settings in configuration file)
        --filter-simple2x       8 - Simple2x
        --filter-bilinear       9 - Bilinear
        --filter-bilinear+     10 - Bilinear Plus
+       --filter-scanlines     11 - Scanlines
   -h , --help                 Print this help
   -i , --ips=PATCH            Apply given IPS patch
   -p , --profile=[HERTZ]      Enable profiling
@@ -338,19 +365,27 @@ Command line options (override settings in configuration file)
                                 32 - DMA 1
                                 64 - DMA 2
                                128 - DMA 3
+                               256 - Undefined instruction
+                               512 - AGBPrint messages
 
 Long options only:
-       --auto-frameskip       Enable auto frameskipping
-       --ifb-none             No interframe blending
-       --ifb-motion-blur      Interframe motion blur
-       --ifb-smart            Smart interframe blending
-       --no-auto-frameskip    Disable auto frameskipping
-       --no-ips               Do not apply IPS patch
-       --no-mmx               Disable MMX support
-       --no-show-speed        Don't show emulation speed
-       --no-throttle          Disable thrrotle
-       --show-speed-normal    Show emulation speed
-       --show-speed-detailed  Show detailed speed data
+       --agb-print              Enable AGBPrint support
+       --auto-frameskip         Enable auto frameskipping
+       --ifb-none               No interframe blending
+       --ifb-motion-blur        Interframe motion blur
+       --ifb-smart              Smart interframe blending
+       --no-agb-print           Disable AGBPrint support
+       --no-auto-frameskip      Disable auto frameskipping
+       --no-ips                 Do not apply IPS patch
+       --no-mmx                 Disable MMX support
+       --no-pause-when-inactive Don't pause when inactive
+       --no-rtc                 Disable RTC support
+       --no-show-speed          Don't show emulation speed
+       --no-throttle            Disable thrrotle
+       --pause-when-inactive    Pause when inactive
+       --rtc                    Enable RTC support
+       --show-speed-normal      Show emulation speed
+       --show-speed-detailed    Show detailed speed data
 
 Known bugs
 ----------
@@ -365,7 +400,7 @@ LICENSE
 -------
 
     VisualBoyAdvance - a Gameboy and GameboyAdvance emulator
-    Copyright (C) 1999-2002 by Forgotten
+    Copyright (C) 1999-2003 by Forgotten
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

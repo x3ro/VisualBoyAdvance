@@ -27,10 +27,12 @@
 
 #include "SDL.h"
 #include "GBA.h"
+#include "agbprint.h"
 #include "Flash.h"
 #include "Port.h"
 #include "Font.h"
 #include "debugger.h"
+#include "RTC.h"
 #include "Sound.h"
 #include "unzip.h"
 #include "Util.h"
@@ -81,6 +83,8 @@ extern void Bilinear(u8*,u32,u8*,u8*,u32,int,int);
 extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Scanlines(u8*,u32,u8*,u8*,u32,int,int);
+extern void Scanlines32(u8*,u32,u8*,u8*,u32,int,int);
 
 extern void SmartIB(u8*,u32,int,int);
 extern void SmartIB32(u8*,u32,int,int);
@@ -158,6 +162,8 @@ int cartridgeType = 3;
 int sizeOption = 0;
 int captureFormat = 0;
 
+int pauseWhenInactive = 1;
+int active = 1;
 int emulating = 0;
 int RGB_LOW_BITS_MASK=0x821;
 u32 systemColorMap32[0x10000];
@@ -215,6 +221,8 @@ int yuvType = 0;
 bool removeIntros = false;
 int sdlFlashSize = 0;
 int sdlAutoIPS = 1;
+int sdlRtcEnable = 0;
+int sdlAgbPrint = 0;
 
 int sdlDefaultJoypad = 0;
 
@@ -286,6 +294,7 @@ u16 defaultMotion[4] = {
 };
 
 struct option sdlOptions[] = {
+  { "agb-print", no_argument, &sdlAgbPrint, 1 },
   { "auto-frameskip", no_argument, &autoFrameSkip, 1 },  
   { "bios", required_argument, 0, 'b' },
   { "config", required_argument, 0, 'c' },
@@ -301,7 +310,8 @@ struct option sdlOptions[] = {
   { "filter-advmame", no_argument, &filter, 7 },
   { "filter-simple2x", no_argument, &filter, 8 },
   { "filter-bilinear", no_argument, &filter, 9 },
-  { "filter-bilinear+", no_argument, &filter, 10 },  
+  { "filter-bilinear+", no_argument, &filter, 10 },
+  { "filter-scanlines", no_argument, &filter, 11 },
   { "flash-size", required_argument, 0, 'S' },
   { "flash-64k", no_argument, &sdlFlashSize, 0 },
   { "flash-128k", no_argument, &sdlFlashSize, 1 },
@@ -313,13 +323,18 @@ struct option sdlOptions[] = {
   { "ifb-motion-blur", no_argument, &ifbType, 1 },
   { "ifb-smart", no_argument, &ifbType, 2 },
   { "ips", required_argument, 0, 'i' },
+  { "no-agb-print", no_argument, &sdlAgbPrint, 0 },
   { "no-auto-frameskip", no_argument, &autoFrameSkip, 0 },
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "no-mmx", no_argument, &disableMMX, 1 },
+  { "no-pause-when-inactive", no_argument, &pauseWhenInactive, 0 },
+  { "no-rtc", no_argument, &sdlRtcEnable, 0 },
   { "no-show-speed", no_argument, &showSpeed, 0 },
   { "no-throttle", no_argument, &throttle, 0 },
+  { "pause-when-inative", no_argument, &pauseWhenInactive, 1 },
   { "profile", optional_argument, 0, 'p' },
+  { "rtc", no_argument, &sdlRtcEnable, 1 },
   { "save-type", required_argument, 0, 't' },
   { "save-auto", no_argument, &cpuSaveType, 0 },
   { "save-eeprom", no_argument, &cpuSaveType, 1 },
@@ -830,7 +845,7 @@ char *sdlGetFilename(char *name)
   return filebuffer;
 }
 
-FILE *sdlFindPreferences()
+FILE *sdlFindFile(const char *name)
 {
   char buffer[4096];
   char path[2048];
@@ -844,12 +859,14 @@ FILE *sdlFindPreferences()
 #define FILE_SEP '\\'
 #define EXE_NAME "VisualBoyAdvance-SDL.exe"
 #endif
+
+  fprintf(stderr, "Seaching for file %s\n", name);
   
   if(GETCWD(buffer, 2048)) {
-    fprintf(stderr, "Searching for configuration file at: %s\n", buffer);
+    fprintf(stderr, "Searching current dir: %s\n", buffer);
   }
   
-  FILE *f = fopen("VisualBoyAdvance.cfg","r");
+  FILE *f = fopen(name,"r");
 
   if(f != NULL) {
     return f;
@@ -859,7 +876,7 @@ FILE *sdlFindPreferences()
 
   if(home != NULL) {
     fprintf(stderr, "Seaching home directory: %s\n", home);
-    sprintf(path, "%s%cVisualBoyAdvance.cfg", home, FILE_SEP);
+    sprintf(path, "%s%c%s", home, FILE_SEP, name);
     f = fopen(path, "r");
     
     if(f)
@@ -870,7 +887,7 @@ FILE *sdlFindPreferences()
   home = getenv("USERPROFILE");
   if(home != NULL) {
     fprintf(stderr, "Searching user profile directory: %s\n", home);
-    sprintf(path, "%s%cVisualBoyAdvance.cfg", home, FILE_SEP);
+    sprintf(path, "%s%c%s", home, FILE_SEP, name);
     f = fopen(path, "r");
     if(f)
       return f;
@@ -893,7 +910,7 @@ FILE *sdlFindPreferences()
         if(f != NULL) {
           char path2[2048];
           fclose(f);
-          sprintf(path2, "%s%cVisualBoyAdvance.cfg", tok, FILE_SEP);
+          sprintf(path2, "%s%c%s", tok, FILE_SEP, name);
           f = fopen(path2, "r");
           if(f) {
             fprintf(stderr, "Found at %s\n", path2);
@@ -910,7 +927,7 @@ FILE *sdlFindPreferences()
     char *p = strrchr(buffer, FILE_SEP);
     if(p) {
       *p = 0;
-      sprintf(path, "%s%cVisualBoyAdvance.cfg", buffer, FILE_SEP);
+      sprintf(path, "%s%c%s", buffer, FILE_SEP, name);
       f = fopen(path, "r");
       if(f)
         return f;
@@ -1074,7 +1091,7 @@ void sdlReadPreferences(FILE *f)
       strcpy(biosFileName, value);
     } else if(!strcmp(key, "filter")) {
       filter = sdlFromHex(value);
-      if(filter < 0 || filter > 10)
+      if(filter < 0 || filter > 11)
         filter = 0;
     } else if(!strcmp(key, "disableStatus")) {
       disableStatusMessages = sdlFromHex(value) ? true : false;
@@ -1082,7 +1099,7 @@ void sdlReadPreferences(FILE *f)
       gbBorderOn = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "emulatorType")) {
       gbEmulatorType = sdlFromHex(value);
-      if(gbEmulatorType < 0 || gbEmulatorType > 4)
+      if(gbEmulatorType < 0 || gbEmulatorType > 5)
         gbEmulatorType = 1;
     } else if(!strcmp(key, "colorOption")) {
       gbColorOption = sdlFromHex(value) ? true : false;
@@ -1150,6 +1167,12 @@ soundQuality);
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
 #endif
+    } else if(!strcmp(key, "pauseWhenInactive")) {
+      pauseWhenInactive = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "agbPrint")) {
+      sdlAgbPrint = sdlFromHex(value);
+    } else if(!strcmp(key, "rtcEnabled")) {
+      sdlRtcEnable = sdlFromHex(value);
     } else {
       fprintf(stderr, "Unknown configuration key %s\n", key);
     }
@@ -1158,7 +1181,7 @@ soundQuality);
 
 void sdlReadPreferences()
 {
-  FILE *f = sdlFindPreferences();
+  FILE *f = sdlFindFile("VisualBoyAdvance.cfg");
 
   if(f == NULL) {
     fprintf(stderr, "Configuration file NOT FOUND (using defaults)\n");
@@ -1171,7 +1194,92 @@ void sdlReadPreferences()
   fclose(f);
 }
 
-int sdlCalculateShift(u32 mask)
+static void sdlApplyPerImagePreferences()
+{
+  FILE *f = sdlFindFile("vba-games.ini");
+  if(!f) {
+    fprintf(stderr, "vba-games.ini NOT FOUND (using emulator settings)\n");
+    return;
+  } else
+    fprintf(stderr, "Reading vba-games.ini\n");
+
+  char buffer[7];
+  buffer[0] = '[';
+  buffer[1] = rom[0xac];
+  buffer[2] = rom[0xad];
+  buffer[3] = rom[0xae];
+  buffer[4] = rom[0xaf];
+  buffer[5] = ']';
+  buffer[6] = 0;
+
+  char readBuffer[2048];
+
+  bool found = false;
+  
+  while(1) {
+    char *s = fgets(readBuffer, 2048, f);
+
+    if(s == NULL)
+      break;
+
+    char *p  = strchr(s, ';');
+    
+    if(p)
+      *p = 0;
+    
+    char *token = strtok(s, " \t\n\r=");
+
+    if(!token)
+      continue;
+    if(strlen(token) == 0)
+      continue;
+
+    if(!strcmp(token, buffer)) {
+      found = true;
+      break;
+    }
+  }
+
+  if(found) {
+    while(1) {
+      char *s = fgets(readBuffer, 2048, f);
+
+      if(s == NULL)
+        break;
+
+      char *p = strchr(s, ';');
+      if(p)
+        *p = 0;
+
+      char *token = strtok(s, " \t\n\r=");
+      if(!token)
+        continue;
+      if(strlen(token) == 0)
+        continue;
+
+      if(token[0] == '[') // starting another image settings
+        break;
+      char *value = strtok(NULL, "\t\n\r=");
+      if(value == NULL)
+        continue;
+      
+      if(!strcmp(token, "rtcEnabled"))
+        rtcEnable(atoi(value) == 0 ? false : true);
+      else if(!strcmp(token, "flashSize")) {
+        int size = atoi(value);
+        if(size == 0x10000 || size == 0x20000)
+          flashSetSize(size);
+      } else if(!strcmp(token, "saveType")) {
+        int save = atoi(value);
+        if(save >= 0 && save < 5)
+          cpuSaveType = save;
+      }
+    }
+  }
+  fclose(f);
+}
+
+static int sdlCalculateShift(u32 mask)
 {
   int m = 0;
   
@@ -1183,7 +1291,7 @@ int sdlCalculateShift(u32 mask)
   return m-5;
 }
 
-int sdlCalculateMaskWidth(u32 mask)
+static int sdlCalculateMaskWidth(u32 mask)
 {
   int m = 0;
   int mask2 = mask;
@@ -1513,6 +1621,25 @@ void sdlPollEvents()
   SDL_Event event;
   while(SDL_PollEvent(&event)) {
     switch(event.type) {
+    case SDL_ACTIVEEVENT:
+      if(pauseWhenInactive && (event.active.state & SDL_APPINPUTFOCUS)) {
+        active = event.active.gain;
+        if(active) {
+          if(!paused) {
+            if(emulating)
+              soundResume();
+          }
+        } else {
+          wasPaused = true;
+          if(pauseWhenInactive) {
+            if(emulating)
+              soundPause();
+          }
+          
+          memset(delta,255,sizeof(delta));
+        }
+      }
+      break;
     case SDL_MOUSEMOTION:
     case SDL_MOUSEBUTTONUP:
     case SDL_MOUSEBUTTONDOWN:
@@ -1702,7 +1829,8 @@ void usage(char *cmd)
         printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
         printf("       --filter-simple2x       8 - Simple2x\n");
         printf("       --filter-bilinear       9 - Bilinear\n");
-        printf("       --filter-bilinear+     10 - Bilinear Plus\n");        
+        printf("       --filter-bilinear+     10 - Bilinear Plus\n");
+        printf("       --filter-scanlines     11 - Scanlines\n");
         printf("  -h , --help                 Print this help\n");
         printf("  -i , --ips=PATCH            Apply given IPS patch\n");
         printf("  -p , --profile=[HERTZ]      Enable profiling\n");
@@ -1722,19 +1850,27 @@ void usage(char *cmd)
         printf("                                32 - DMA 1\n");
         printf("                                64 - DMA 2\n");
         printf("                               128 - DMA 3\n");
+        printf("                               256 - Undefined instruction\n");
+        printf("                               512 - AGBPrint messages\n");
         printf("\n");
         printf("Long options only:\n");
-        printf("       --auto-frameskip       Enable auto frameskipping\n");
-        printf("       --ifb-none             No interframe blending\n");
-        printf("       --ifb-motion-blur      Interframe motion blur\n");
-        printf("       --ifb-smart            Smart interframe blending\n");
-        printf("       --no-auto-frameskip    Disable auto frameskipping\n");
-        printf("       --no-ips               Do not apply IPS patch\n");
-        printf("       --no-mmx               Disable MMX support\n");
-        printf("       --no-show-speed        Don't show emulation speed\n");
-        printf("       --no-throttle          Disable thrrotle\n");
-        printf("       --show-speed-normal    Show emulation speed\n");
-        printf("       --show-speed-detailed  Show detailed speed data\n");
+        printf("       --agb-print              Enable AGBPrint support\n");
+        printf("       --auto-frameskip         Enable auto frameskipping\n");
+        printf("       --ifb-none               No interframe blending\n");
+        printf("       --ifb-motion-blur        Interframe motion blur\n");
+        printf("       --ifb-smart              Smart interframe blending\n");
+        printf("       --no-agb-print           Disable AGBPrint support\n");
+        printf("       --no-auto-frameskip      Disable auto frameskipping\n");
+        printf("       --no-ips                 Do not apply IPS patch\n");
+        printf("       --no-mmx                 Disable MMX support\n");
+        printf("       --no-pause-when-inactive Don't pause when inactive\n");
+        printf("       --no-rtc                 Disable RTC support\n");
+        printf("       --no-show-speed          Don't show emulation speed\n");
+        printf("       --no-throttle            Disable thrrotle\n");
+        printf("       --pause-when-inactive    Pause when inactive\n");
+        printf("       --rtc                    Enable RTC support\n");
+        printf("       --show-speed-normal      Show emulation speed\n");
+        printf("       --show-speed-detailed    Show detailed speed data\n");
 }
 
 int main(int argc, char **argv)
@@ -1752,8 +1888,6 @@ int main(int argc, char **argv)
   batteryDir[0] = 0;
   ipsname[0] = 0;
   
-  char buffer[1024];
-
   int op = -1;
 
   frameSkip = 2;
@@ -1961,6 +2095,9 @@ int main(int argc, char **argv)
     flashSetSize(0x10000);
   else
     flashSetSize(0x20000);
+
+  rtcEnable(sdlRtcEnable ? true : false);
+  agbPrintEnable(sdlAgbPrint ? true : false);
   
   if(!debuggerStub) {
     if(optind >= argc) {
@@ -1984,7 +2121,7 @@ int main(int argc, char **argv)
   if(optind < argc) {
     char *szFile = argv[optind];
 
-    strcpy(filename, szFile);
+    utilGetBaseName(szFile, filename);
     char *p = strrchr(filename, '.');
 
     if(p)
@@ -1994,68 +2131,16 @@ int main(int argc, char **argv)
       sprintf(ipsname, "%s.ips", filename);
     
     bool failed = false;
-    if(CPUIsZipFile(szFile)) {
-      unzFile unz = unzOpen(szFile);
-      
-      if(unz == NULL) {
-        systemMessage(0, "Cannot open file %s", szFile);
-        exit(-1);
-      }
-      int r = unzGoToFirstFile(unz);
-      
-      if(r != UNZ_OK) {
-        unzClose(unz);
-        systemMessage(0, "Bad ZIP file %s", szFile);
-        exit(-1);
-      }
-      
-      bool found = false;
-      
-      unz_file_info info;
-      
-      while(true) {
-        r = unzGetCurrentFileInfo(unz,
-                                  &info,
-                                  buffer,
-                                  sizeof(buffer),
-                                  NULL,
-                                  0,
-                                  NULL,
-                                  0);
-        
-        if(r != UNZ_OK) {
-          unzClose(unz);
-          systemMessage(0,"Bad ZIP file %s", szFile);
-          exit(-1);
-        }
-        
-        if(gbIsGameboyRom(buffer)) {
-          found = true;
-          cartridgeType = 1;
-          break;
-        }
-        if(CPUIsGBAImage(buffer)) {
-          found = true;
-          cartridgeType = 0;
-          break;
-        }
-        
-        r = unzGoToNextFile(unz);
-        
-        if(r != UNZ_OK)
-          break;
-      }
-      
-      if(!found) {
-        unzClose(unz);
-        systemMessage(0, "No image found on ZIP file %s", szFile);
-        exit(-1);
-      }
-      
-      unzClose(unz);
+
+    IMAGE_TYPE type = utilFindType(szFile);
+
+    if(type == IMAGE_UNKNOWN) {
+      systemMessage(0, "Unknown file type %s", szFile);
+      exit(-1);
     }
+    cartridgeType = (int)type;
     
-    if(gbIsGameboyRom(szFile) || cartridgeType == 1) {
+    if(type == IMAGE_GB) {
       failed = !gbLoadRom(szFile);
       if(!failed) {
         cartridgeType = 1;
@@ -2081,9 +2166,11 @@ int main(int argc, char **argv)
           }
         }
       }
-    } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
+    } else if(type == IMAGE_GBA) {
       failed = !CPULoadRom(szFile);
       if(!failed) {
+        sdlApplyPerImagePreferences();
+        
         cartridgeType = 0;
         emuWriteState = CPUWriteState;
         emuReadState = CPUReadState;
@@ -2099,7 +2186,7 @@ int main(int argc, char **argv)
         emuCount = 50000;
 
         if(removeIntros && rom != NULL) {
-          *((u32 *)rom)= TO32LE(0xea00002e);
+          WRITE32LE(&rom[0], 0xea00002e);
         }
         
         CPUInit(biosFileName, useBios);
@@ -2134,9 +2221,6 @@ int main(int argc, char **argv)
         GPReset();
       }
 #endif
-    } else {
-      systemMessage(0, "Unknown file type %s", szFile);
-      exit(-1);
     }
     
     if(failed) {
@@ -2293,7 +2377,7 @@ int main(int argc, char **argv)
           (((i & 0x7c00) >> 10) << systemBlueShift);  
       }
     }
-    srcPitch = srcWidth * 2+2;
+    srcPitch = srcWidth * 2+4;
   } else {
     if(systemColorDepth != 32)
       filterFunction = NULL;
@@ -2348,6 +2432,9 @@ int main(int argc, char **argv)
     case 10:
       filterFunction = BilinearPlus;
       break;
+    case 11:
+      filterFunction = Scanlines;
+      break;
     }
   } else {
     switch(filter) {
@@ -2384,6 +2471,9 @@ int main(int argc, char **argv)
     case 10:
       filterFunction = BilinearPlus32;
       break;
+    case 11:
+      filterFunction = Scanlines32;
+      break;
     default:
       filterFunction = NULL;
       break;
@@ -2418,6 +2508,11 @@ int main(int argc, char **argv)
     }
   } else
     ifbFunction = NULL;
+
+  if(delta == NULL) {
+    delta = (u8*)malloc(322*242*4);
+    memset(delta, 255, 322*242*4);
+  }
   
   emulating = 1;
   renderedFrames = 0;
@@ -2429,7 +2524,7 @@ int main(int argc, char **argv)
   SDL_WM_SetCaption("VisualBoyAdvance", NULL);
 
   while(emulating) {
-    if(!paused) {
+    if(!paused && active) {
       if(debugger && emuHasDebugger)
         dbgMain();
       else
@@ -2485,11 +2580,6 @@ void systemDrawScreen()
     return;
   }
   
-  if(delta == NULL) {
-    delta = (u8*)malloc(322*242*4);
-    memset(delta, 255, 322*242*4);
-  }
-
   SDL_LockSurface(surface);
 
   if(screenMessage) {
@@ -2508,14 +2598,14 @@ void systemDrawScreen()
 
   if(ifbFunction) {
     if(systemColorDepth == 16)
-      ifbFunction(pix+destWidth+2, destWidth+2, srcWidth, srcHeight);
+      ifbFunction(pix+destWidth+4, destWidth+4, srcWidth, srcHeight);
     else
       ifbFunction(pix+destWidth*2+4, destWidth*2+4, srcWidth, srcHeight);
   }
   
   if(filterFunction) {
     if(systemColorDepth == 16)
-      filterFunction(pix+destWidth+2,destWidth+2, delta,
+      filterFunction(pix+destWidth+4,destWidth+4, delta,
                      (u8*)surface->pixels,surface->pitch,
                      srcWidth,
                      srcHeight);
@@ -2680,6 +2770,10 @@ void systemShowSpeed(int speed)
 
     systemSetTitle(buffer);
   }
+}
+
+void systemFrame()
+{
 }
 
 void system10Frames(int rate)

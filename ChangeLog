@@ -1,3 +1,7 @@
+2003-04-07  Forgotten  <forgotten@users.sourceforge.net>
+
+	* VBA:  too many changes to detail...
+
 2003-02-02  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp: added throttle support
