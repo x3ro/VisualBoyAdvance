@@ -1126,10 +1126,16 @@ void sdlReadPreferences(FILE *f)
         break;
       default:
         fprintf(stderr, "Unknown sound quality %d. Defaulting to 22Khz\n", 
-soundQuality);
+                soundQuality);
         soundQuality = 2;
         break;
       }
+    } else if(!strcmp(key, "soundOff")) {
+      soundOffFlag = sdlFromHex(value) ? true : false;
+    } else if(!strcmp(key, "soundEnable")) {
+      int res = sdlFromHex(value) & 0x30f;
+      soundEnable(res);
+      soundDisable(~res);
     } else if(!strcmp(key, "soundEcho")) {
       soundEcho = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "soundLowPass")) {
@@ -2267,6 +2273,9 @@ int main(int argc, char **argv)
   
   int flags = SDL_INIT_VIDEO|SDL_INIT_AUDIO|
     SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE;
+
+  if(soundOffFlag)
+    flags ^= SDL_INIT_AUDIO;
   
   if(SDL_Init(flags)) {
     systemMessage(0, "Failed to init SDL: %s", SDL_GetError());
@@ -2520,7 +2529,8 @@ int main(int argc, char **argv)
   emulating = 1;
   renderedFrames = 0;
 
-  soundInit();
+  if(!soundOffFlag)
+    soundInit();
 
   autoFrameSkipLastTime = throttleLastTime = systemGetClock();
   
