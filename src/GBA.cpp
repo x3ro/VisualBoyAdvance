@@ -104,14 +104,14 @@ bool timer3On = false;
 int timer3Ticks = 0;
 int timer3Reload = 0;
 int timer3ClockReload  = 0;
-u32 dma0SourceReload = 0;
-u32 dma0DestReload = 0;
-u32 dma1SourceReload = 0;
-u32 dma1DestReload = 0;
-u32 dma2SourceReload = 0;
-u32 dma2DestReload = 0;
-u32 dma3SourceReload = 0;
-u32 dma3DestReload = 0;
+u32 dma0Source = 0;
+u32 dma0Dest = 0;
+u32 dma1Source = 0;
+u32 dma1Dest = 0;
+u32 dma2Source = 0;
+u32 dma2Dest = 0;
+u32 dma3Source = 0;
+u32 dma3Dest = 0;
 void (*cpuSaveGameFunc)(u32,u8) = flashSaveDecide;
 void (*renderLine)() = mode0RenderLine;
 bool fxOn = false;
@@ -458,14 +458,14 @@ variable_desc saveGameStruct[] = {
   { &timer3Ticks , sizeof(int) },
   { &timer3Reload , sizeof(int) },
   { &timer3ClockReload  , sizeof(int) },
-  { &dma0SourceReload , sizeof(u32) },
-  { &dma0DestReload , sizeof(u32) },
-  { &dma1SourceReload , sizeof(u32) },
-  { &dma1DestReload , sizeof(u32) },
-  { &dma2SourceReload , sizeof(u32) },
-  { &dma2DestReload , sizeof(u32) },
-  { &dma3SourceReload , sizeof(u32) },
-  { &dma3DestReload , sizeof(u32) },
+  { &dma0Source , sizeof(u32) },
+  { &dma0Dest , sizeof(u32) },
+  { &dma1Source , sizeof(u32) },
+  { &dma1Dest , sizeof(u32) },
+  { &dma2Source , sizeof(u32) },
+  { &dma2Dest , sizeof(u32) },
+  { &dma3Source , sizeof(u32) },
+  { &dma3Dest , sizeof(u32) },
   { &fxOn, sizeof(bool) },
   { &windowOn, sizeof(bool) },
   { &N_FLAG , sizeof(bool) },
@@ -1831,75 +1831,58 @@ void CPUCheckDMA(int reason, int dmamask)
 {
   // DMA 0
   if((DM0CNT_H & 0x8000) && (dmamask & 1)) {
-   if(((DM0CNT_H >> 12) & 3) == reason) {
-     u32 sourceIncrement = 4;
-     u32 destIncrement = 4;
-     switch((DM0CNT_H >> 7) & 3) {
-     case 0:
-       break;
-     case 1:
-       sourceIncrement = (u32)-4;
-       break;
-     case 2:
-       sourceIncrement = 0;
-       break;
-     }
-     switch((DM0CNT_H >> 5) & 3) {
-     case 0:
-       break;
-     case 1:
-       destIncrement = (u32)-4;
-       break;
-     case 2:
-       destIncrement = 0;
-       break;
-     }      
-     u32 source = DM0SAD_L | (DM0SAD_H << 16);
-     u32 dest = DM0DAD_L | (DM0DAD_H << 16);
+    if(((DM0CNT_H >> 12) & 3) == reason) {
+      u32 sourceIncrement = 4;
+      u32 destIncrement = 4;
+      switch((DM0CNT_H >> 7) & 3) {
+      case 0:
+        break;
+      case 1:
+        sourceIncrement = (u32)-4;
+        break;
+      case 2:
+        sourceIncrement = 0;
+        break;
+      }
+      switch((DM0CNT_H >> 5) & 3) {
+      case 0:
+        break;
+      case 1:
+        destIncrement = (u32)-4;
+        break;
+      case 2:
+        destIncrement = 0;
+        break;
+      }      
 #ifdef DEV_VERSION
-     if(systemVerbose & VERBOSE_DMA0) {
-       int count = (DM0CNT_L ? DM0CNT_L : 0x4000) << 1;
-       if(DM0CNT_H & 0x0400)
-         count <<= 1;
-       log("DMA0: s=%08x d=%08x c=%04x count=%08x\n", source, dest, DM0CNT_H,
-           count);
-     }
+      if(systemVerbose & VERBOSE_DMA0) {
+        int count = (DM0CNT_L ? DM0CNT_L : 0x4000) << 1;
+        if(DM0CNT_H & 0x0400)
+          count <<= 1;
+        log("DMA0: s=%08x d=%08x c=%04x count=%08x\n", dma0Source, dma0Dest, 
+            DM0CNT_H,
+            count);
+      }
 #endif
-     doDMA(source, dest, sourceIncrement, destIncrement,
-           DM0CNT_L ? DM0CNT_L : 0x4000,
-           DM0CNT_H & 0x0400);
-     if(DM0CNT_H & 0x4000) {
-       IF |= 0x0100;
-       UPDATE_REG(0x202, IF);
-     }
-     
-     if(((DM0CNT_H >> 5) & 3) != 3) {
-       DM0DAD_L = dest & 0xFFFF;
-       DM0DAD_H = dest >> 16;
-       UPDATE_REG(0xB4, DM0DAD_L);
-       UPDATE_REG(0xB6, DM0DAD_H);
-     }
-     DM0SAD_L = source & 0xFFFF;
-     DM0SAD_H = source >> 16;
-     UPDATE_REG(0xB0, DM0SAD_L);
-     UPDATE_REG(0xB2, DM0SAD_H);      
-     if(!(DM0CNT_H & 0x0200) || !(DM0CNT_H & 0x3000)) {
-       DM0CNT_H &= 0x7FFF;
-       UPDATE_REG(0xBA, DM0CNT_H);
-       
-       DM0DAD_L = dma0DestReload & 0xFFFF;
-       DM0DAD_H = dma0DestReload >> 16;
-       UPDATE_REG(0xB4, DM0DAD_L);
-       UPDATE_REG(0xB6, DM0DAD_H);
-       
-       DM0SAD_L = dma0SourceReload & 0xFFFF;
-       DM0SAD_H = dma0SourceReload >> 16;
-       UPDATE_REG(0xB0, DM0SAD_L);
-       UPDATE_REG(0xB2, DM0SAD_H);
-     }
-   }
+      doDMA(dma0Source, dma0Dest, sourceIncrement, destIncrement,
+            DM0CNT_L ? DM0CNT_L : 0x4000,
+            DM0CNT_H & 0x0400);
+      if(DM0CNT_H & 0x4000) {
+        IF |= 0x0100;
+        UPDATE_REG(0x202, IF);
+      }
+      
+      if(((DM0CNT_H >> 5) & 3) == 3) {
+        dma0Dest = DM0DAD_L | (DM0DAD_H << 16);
+      }
+      
+      if(!(DM0CNT_H & 0x0200)) {
+        DM0CNT_H &= 0x7FFF;
+        UPDATE_REG(0xBA, DM0CNT_H);
+      }
+    }
   }
-   
+  
   // DMA 1
   if((DM1CNT_H & 0x8000) && (dmamask & 2)) {
     if(((DM1CNT_H >> 12) & 3) == reason) {
@@ -1925,17 +1908,15 @@ void CPUCheckDMA(int reason, int dmamask)
         destIncrement = 0;
         break;
       }      
-      u32 source = DM1SAD_L | (DM1SAD_H << 16);
-      u32 dest = DM1DAD_L | (DM1DAD_H << 16);
       if(reason == 3) {
 #ifdef DEV_VERSION
         if(systemVerbose & VERBOSE_DMA1) {
-          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", source, dest,
+          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", dma1Source, dma1Dest,
               DM1CNT_H,
               16);
         }
 #endif  
-        doDMA(source, dest, sourceIncrement, 0, 4,
+        doDMA(dma1Source, dma1Dest, sourceIncrement, 0, 4,
               0x0400);
       } else {
 #ifdef DEV_VERSION
@@ -1943,12 +1924,12 @@ void CPUCheckDMA(int reason, int dmamask)
           int count = (DM1CNT_L ? DM1CNT_L : 0x4000) << 1;
           if(DM1CNT_H & 0x0400)
             count <<= 1;
-          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", source, dest,
+          log("DMA1: s=%08x d=%08x c=%04x bytes=%08x\n", dma1Source, dma1Dest,
               DM1CNT_H,
               count);
         }
 #endif          
-        doDMA(source, dest, sourceIncrement, destIncrement,
+        doDMA(dma1Source, dma1Dest, sourceIncrement, destIncrement,
               DM1CNT_L ? DM1CNT_L : 0x4000,
               DM1CNT_H & 0x0400);
       }
@@ -1958,29 +1939,13 @@ void CPUCheckDMA(int reason, int dmamask)
         UPDATE_REG(0x202, IF);
       }
       
-      if((((DM1CNT_H >> 5) & 3) != 3) && (reason != 3)) {
-        DM1DAD_L = dest & 0xFFFF;
-        DM1DAD_H = dest >> 16;
-        UPDATE_REG(0xC0, DM1DAD_L);
-        UPDATE_REG(0xC2, DM1DAD_H);
+      if(((DM1CNT_H >> 5) & 3) == 3) {
+        dma1Dest = DM1DAD_L | (DM1DAD_H << 16);
       }
-      DM1SAD_L = source & 0xFFFF;
-      DM1SAD_H = source >> 16;
-      UPDATE_REG(0xBC, DM1SAD_L);
-      UPDATE_REG(0xBE, DM1SAD_H);      
-      if(!(DM1CNT_H & 0x0200) || !(DM1CNT_H & 0x3000)) {
+      
+      if(!(DM1CNT_H & 0x0200)) {
         DM1CNT_H &= 0x7FFF;
         UPDATE_REG(0xC6, DM1CNT_H);
-        
-        DM1DAD_L = dma1DestReload & 0xFFFF;
-        DM1DAD_H = dma1DestReload >> 16;
-        UPDATE_REG(0xC0, DM1DAD_L);
-        UPDATE_REG(0xC2, DM1DAD_H);
-        
-        DM1SAD_L = dma1SourceReload & 0xFFFF;
-        DM1SAD_H = dma1SourceReload >> 16;
-        UPDATE_REG(0xBC, DM1SAD_L);
-        UPDATE_REG(0xBE, DM1SAD_H);
       }
     }
   }
@@ -2010,18 +1975,16 @@ void CPUCheckDMA(int reason, int dmamask)
         destIncrement = 0;
         break;
       }      
-      u32 source = DM2SAD_L | (DM2SAD_H << 16);
-      u32 dest = DM2DAD_L | (DM2DAD_H << 16);
       if(reason == 3) {
 #ifdef DEV_VERSION
         if(systemVerbose & VERBOSE_DMA2) {
           int count = (4) << 2;
-          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", source, dest,
+          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", dma2Source, dma2Dest,
               DM2CNT_H,
               count);
         }
 #endif                  
-        doDMA(source, dest, sourceIncrement, 0, 4,
+        doDMA(dma2Source, dma2Dest, sourceIncrement, 0, 4,
               0x0400);
       } else {
 #ifdef DEV_VERSION
@@ -2029,12 +1992,12 @@ void CPUCheckDMA(int reason, int dmamask)
           int count = (DM2CNT_L ? DM2CNT_L : 0x4000) << 1;
           if(DM2CNT_H & 0x0400)
             count <<= 1;
-          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", source, dest,
+          log("DMA2: s=%08x d=%08x c=%04x bytes=%08x\n", dma2Source, dma2Dest,
               DM2CNT_H,
               count);
         }
 #endif                  
-        doDMA(source, dest, sourceIncrement, destIncrement,
+        doDMA(dma2Source, dma2Dest, sourceIncrement, destIncrement,
               DM2CNT_L ? DM2CNT_L : 0x4000,
               DM2CNT_H & 0x0400);
       }
@@ -2042,30 +2005,14 @@ void CPUCheckDMA(int reason, int dmamask)
         IF |= 0x0400;
         UPDATE_REG(0x202, IF);
       }
-      
-      if((((DM2CNT_H >> 5) & 3) != 3) && (reason != 3)) {
-        DM2DAD_L = dest & 0xFFFF;
-        DM2DAD_H = dest >> 16;
-        UPDATE_REG(0xCC, DM2DAD_L);
-        UPDATE_REG(0xCE, DM2DAD_H);
+
+      if(((DM2CNT_H >> 5) & 3) == 3) {
+        dma2Dest = DM2DAD_L | (DM2DAD_H << 16);
       }
-      DM2SAD_L = source & 0xFFFF;
-      DM2SAD_H = source >> 16;
-      UPDATE_REG(0xC8, DM2SAD_L);
-      UPDATE_REG(0xCA, DM2SAD_H);      
-      if(!(DM2CNT_H & 0x0200) || !(DM2CNT_H & 0x3000)) {
+      
+      if(!(DM2CNT_H & 0x0200)) {
         DM2CNT_H &= 0x7FFF;
         UPDATE_REG(0xD2, DM2CNT_H);
-       
-        DM2DAD_L = dma2DestReload & 0xFFFF;
-        DM2DAD_H = dma2DestReload >> 16;
-        UPDATE_REG(0xCC, DM2DAD_L);
-        UPDATE_REG(0xCE, DM2DAD_H);
-        
-        DM2SAD_L = dma2SourceReload & 0xFFFF;
-        DM2SAD_H = dma2SourceReload >> 16;
-        UPDATE_REG(0xC8, DM2SAD_L);
-        UPDATE_REG(0xCA, DM2SAD_H);
       }
     }
   }
@@ -2095,49 +2042,31 @@ void CPUCheckDMA(int reason, int dmamask)
         destIncrement = 0;
         break;
       }      
-      u32 source = DM3SAD_L | (DM3SAD_H << 16);
-      u32 dest = DM3DAD_L | (DM3DAD_H << 16);
 #ifdef DEV_VERSION
       if(systemVerbose & VERBOSE_DMA3) {
         int count = (DM3CNT_L ? DM3CNT_L : 0x10000) << 1;
         if(DM3CNT_H & 0x0400)
           count <<= 1;
-        log("DMA3: s=%08x d=%08x c=%04x bytes=%08x\n", source, dest,
+        log("DMA3: s=%08x d=%08x c=%04x bytes=%08x\n", dma3Source, dma3Dest,
             DM3CNT_H,
             count);
       }
 #endif                
-      doDMA(source, dest, sourceIncrement, destIncrement,
+      doDMA(dma3Source, dma3Dest, sourceIncrement, destIncrement,
             DM3CNT_L ? DM3CNT_L : 0x10000,
             DM3CNT_H & 0x0400);
       if(DM3CNT_H & 0x4000) {
         IF |= 0x0800;
         UPDATE_REG(0x202, IF);
       }
-      
-      if(((DM3CNT_H >> 5) & 3) != 3) {
-        DM3DAD_L = dest & 0xFFFF;
-        DM3DAD_H = dest >> 16;
-        UPDATE_REG(0xD8, DM3DAD_L);
-        UPDATE_REG(0xDA, DM3DAD_H);
+
+      if(((DM3CNT_H >> 5) & 3) == 3) {
+        dma3Dest = DM3DAD_L | (DM3DAD_H << 16);
       }
-      DM3SAD_L = source & 0xFFFF;
-      DM3SAD_H = source >> 16;
-      UPDATE_REG(0xD4, DM3SAD_L);
-      UPDATE_REG(0xD6, DM3SAD_H);      
-      if(!(DM3CNT_H & 0x0200) || !(DM3CNT_H & 0x3000)) {
+      
+      if(!(DM3CNT_H & 0x0200)) {
         DM3CNT_H &= 0x7FFF;
         UPDATE_REG(0xDE, DM3CNT_H);
-       
-        DM3DAD_L = dma3DestReload & 0xFFFF;
-        DM3DAD_H = dma3DestReload >> 16;
-        UPDATE_REG(0xD8, DM3DAD_L);
-        UPDATE_REG(0xDA, DM3DAD_H);
-        
-        DM3SAD_L = dma3SourceReload & 0xFFFF;
-        DM3SAD_H = dma3SourceReload >> 16;
-        UPDATE_REG(0xD4, DM3SAD_L);
-        UPDATE_REG(0xD6, DM3SAD_H);
       }
     }
   }
@@ -2377,213 +2306,145 @@ void CPUUpdateRegister(u32 address, u16 value)
   case 0xB0:
     DM0SAD_L = value;
     UPDATE_REG(0xB0, DM0SAD_L);
-    dma0SourceReload = (dma0SourceReload & 0xFFFF0000) | value;
     break;
   case 0xB2:
     DM0SAD_H = value & 0x07FF;
     UPDATE_REG(0xB2, DM0SAD_H);
-    dma0SourceReload = (dma0SourceReload & 0xFFFF) | (value<<16);      
     break;
   case 0xB4:
     DM0DAD_L = value;
     UPDATE_REG(0xB4, DM0DAD_L);
-    dma0DestReload = (dma0DestReload & 0xFFFF0000) | value;
     break;
   case 0xB6:
     DM0DAD_H = value & 0x07FF;
     UPDATE_REG(0xB6, DM0DAD_H);
-    dma0DestReload = (dma0DestReload & 0xFFFF) | (value<<16);
     break;
   case 0xB8:
     DM0CNT_L = value & 0x3FFF;
     UPDATE_REG(0xB8, 0);
     break;
   case 0xBA:
-    value &= 0xF7E0;
+    {
+      bool start = ((DM0CNT_H ^ value) & 0x8000) ? true : false;
+      value &= 0xF7E0;
+
+      DM0CNT_H = value;
+      UPDATE_REG(0xBA, DM0CNT_H);    
     
-    if((DM0CNT_H & 0x8200) == 0x8200 && (value & 0x8200) == 0x8000) {
-      if(DM0CNT_H & 0x3000) {
-        DM0CNT_H = value;
-        UPDATE_REG(0xBA, DM0CNT_H);
-        break;
-      }
-    }    
-    
-    if(DM0CNT_H & 0x8000) {
-      if(!(value & 0x8000)) {
-        DM0DAD_L = dma0DestReload & 0xFFFF;
-        DM0DAD_H = dma0DestReload >> 16;
-        UPDATE_REG(0xB4, DM0DAD_L);
-        UPDATE_REG(0xB6, DM0DAD_H);
-        
-        DM0SAD_L = dma0SourceReload & 0xFFFF;
-        DM0SAD_H = dma0SourceReload >> 16;
-        UPDATE_REG(0xB0, DM0SAD_L);
-        UPDATE_REG(0xB2, DM0SAD_H);                       
+      if(start && (value & 0x8000)) {
+        dma0Source = DM0SAD_L | (DM0SAD_H << 16);
+        dma0Dest = DM0DAD_L | (DM0DAD_H << 16);
+        CPUCheckDMA(0, 1);
       }
     }
-    DM0CNT_H = value;
-    UPDATE_REG(0xBA, DM0CNT_H);    
-    CPUCheckDMA(0, 1);
     break;      
   case 0xBC:
     DM1SAD_L = value;
     UPDATE_REG(0xBC, DM1SAD_L);
-    dma1SourceReload = (dma1SourceReload & 0xFFFF0000) | value;
     break;
   case 0xBE:
     DM1SAD_H = value & 0x0FFF;
     UPDATE_REG(0xBE, DM1SAD_H);
-    dma1SourceReload = (dma1SourceReload & 0xFFFF) | (value << 16);
     break;
   case 0xC0:
     DM1DAD_L = value;
     UPDATE_REG(0xC0, DM1DAD_L);
-    dma1DestReload = (dma1DestReload & 0xFFFF0000) | value;
     break;
   case 0xC2:
     DM1DAD_H = value & 0x07FF;
     UPDATE_REG(0xC2, DM1DAD_H);
-    dma1DestReload = (dma1DestReload & 0xFFFF) | (value << 16);
     break;
   case 0xC4:
     DM1CNT_L = value & 0x3FFF;
     UPDATE_REG(0xC4, 0);
     break;
   case 0xC6:
-    value &= 0xF7E0;
-    
-    if((DM1CNT_H & 0x8200) == 0x8200 && (value & 0x8200) == 0x8000) {
-      if(DM1CNT_H & 0x3000) {
-        DM1CNT_H = value;
-        UPDATE_REG(0xC6, DM1CNT_H);
-        break;
+    {
+      bool start = ((DM1CNT_H ^ value) & 0x8000) ? true : false;
+      value &= 0xF7E0;
+      
+      DM1CNT_H = value;
+      UPDATE_REG(0xC6, DM1CNT_H);
+      
+      if(start && (value & 0x8000)) {
+        dma1Source = DM1SAD_L | (DM1SAD_H << 16);
+        dma1Dest = DM1DAD_L | (DM1DAD_H << 16);
+        CPUCheckDMA(0, 2);
       }
     }
-    
-    if(DM1CNT_H & 0x8000) {
-      if(!(value & 0x8000)) {
-        DM1DAD_L = dma1DestReload & 0xFFFF;
-        DM1DAD_H = dma1DestReload >> 16;
-        UPDATE_REG(0xC0, DM1DAD_L);
-        UPDATE_REG(0xC2, DM1DAD_H);
-        
-        DM1SAD_L = dma1SourceReload & 0xFFFF;
-        DM1SAD_H = dma1SourceReload >> 16;
-        UPDATE_REG(0xBC, DM1SAD_L);
-        UPDATE_REG(0xBE, DM1SAD_H);                       
-      }
-    }
-    DM1CNT_H = value;
-    UPDATE_REG(0xC6, DM1CNT_H);
-    
-    CPUCheckDMA(0, 2);
     break;
   case 0xC8:
     DM2SAD_L = value;
     UPDATE_REG(0xC8, DM2SAD_L);
-    dma2SourceReload = (dma2SourceReload & 0xFFFF0000) | value;
     break;
   case 0xCA:
     DM2SAD_H = value & 0x0FFF;
     UPDATE_REG(0xCA, DM2SAD_H);
-    dma2SourceReload = (dma2SourceReload & 0xFFFF) | (value<<16);
     break;
   case 0xCC:
     DM2DAD_L = value;
     UPDATE_REG(0xCC, DM2DAD_L);
-    dma2DestReload = (dma2DestReload & 0xFFFF0000) | value;
     break;
   case 0xCE:
     DM2DAD_H = value & 0x07FF;
     UPDATE_REG(0xCE, DM2DAD_H);
-    dma2DestReload = (dma2DestReload & 0xFFFF) | (value<<16);
     break;
   case 0xD0:
     DM2CNT_L = value & 0x3FFF;
     UPDATE_REG(0xD0, 0);
     break;
   case 0xD2:
-    value &= 0xF7E0;
-    
-    if((DM2CNT_H & 0x8200) == 0x8200 && (value & 0x8200) == 0x8000) {
-      if(DM2CNT_H & 0x3000) {
-        DM2CNT_H = value;
-        UPDATE_REG(0xD2, DM2CNT_H);
-        break;
-      }
+    {
+      bool start = ((DM2CNT_H ^ value) & 0x8000) ? true : false;
+      
+      value &= 0xF7E0;
+      
+      DM2CNT_H = value;
+      UPDATE_REG(0xD2, DM2CNT_H);
+      
+      if(start && (value & 0x8000)) {
+        dma2Source = DM2SAD_L | (DM2SAD_H << 16);
+        dma2Dest = DM2DAD_L | (DM2DAD_H << 16);
+
+        CPUCheckDMA(0, 4);
+      }            
     }
-    
-    if(DM2CNT_H & 0x8000) {
-      if(!(value & 0x8000)) {
-        DM2DAD_L = dma2DestReload & 0xFFFF;
-        DM2DAD_H = dma2DestReload >> 16;
-        UPDATE_REG(0xCC, DM2DAD_L);
-        UPDATE_REG(0xCE, DM2DAD_H);
-        
-        DM2SAD_L = dma2SourceReload & 0xFFFF;
-        DM2SAD_H = dma2SourceReload >> 16;
-        UPDATE_REG(0xC8, DM2SAD_L);
-        UPDATE_REG(0xCA, DM2SAD_H);                       
-      }
-    }            
-    DM2CNT_H = value;
-    UPDATE_REG(0xD2, DM2CNT_H);
-    
-    CPUCheckDMA(0, 4);
     break;
   case 0xD4:
     DM3SAD_L = value;
     UPDATE_REG(0xD4, DM3SAD_L);
-    dma3SourceReload = (dma3SourceReload & 0xFFFF0000) | value;
     break;
   case 0xD6:
     DM3SAD_H = value & 0x0FFF;
     UPDATE_REG(0xD6, DM3SAD_H);
-    dma3SourceReload = (dma3SourceReload & 0xFFFF) | (value<<16);
     break;
   case 0xD8:
     DM3DAD_L = value;
     UPDATE_REG(0xD8, DM3DAD_L);
-    dma3DestReload = (dma3DestReload & 0xFFFF0000) | value;
     break;
   case 0xDA:
     DM3DAD_H = value & 0x0FFF;
     UPDATE_REG(0xDA, DM3DAD_H);
-    dma3DestReload = (dma3DestReload & 0xFFFF) | (value<<16);
     break;
   case 0xDC:
     DM3CNT_L = value;
     UPDATE_REG(0xDC, 0);
     break;
   case 0xDE:
-    value &= 0xFFE0;
+    {
+      bool start = ((DM3CNT_H ^ value) & 0x8000) ? true : false;
+
+      value &= 0xFFE0;
+
+      DM3CNT_H = value;
+      UPDATE_REG(0xDE, DM3CNT_H);
     
-    if((DM3CNT_H & 0x8200) == 0x8200 && (value & 0x8200) == 0x8000) {
-      if(DM3CNT_H & 0x3000) {
-        DM3CNT_H = value;
-        UPDATE_REG(0xDE, DM3CNT_H);
-        break;
+      if(start && (value & 0x8000)) {
+        dma3Source = DM3SAD_L | (DM3SAD_H << 16);
+        dma3Dest = DM3DAD_L | (DM3DAD_H << 16);
+        CPUCheckDMA(0,8);
       }
     }
-    
-    if(DM3CNT_H & 0x8000) {
-      if(!(value & 0x8000)) {
-        DM3DAD_L = dma3DestReload & 0xFFFF;
-        DM3DAD_H = dma3DestReload >> 16;
-        UPDATE_REG(0xD8, DM3DAD_L);
-        UPDATE_REG(0xDA, DM3DAD_H);
-        
-        DM3SAD_L = dma3SourceReload & 0xFFFF;
-        DM3SAD_H = dma3SourceReload >> 16;
-        UPDATE_REG(0xD4, DM3SAD_L);
-        UPDATE_REG(0xD6, DM3SAD_H);                       
-      }
-    }
-    DM3CNT_H = value;
-    UPDATE_REG(0xDE, DM3CNT_H);
-    
-    CPUCheckDMA(0,8);
     break;
   case 0x100:
     timer0Reload = value;
@@ -3212,14 +3073,14 @@ void CPUReset()
   timer3Ticks = 0;
   timer3Reload = 0;
   timer3ClockReload  = 0;
-  dma0SourceReload = 0;
-  dma0DestReload = 0;
-  dma1SourceReload = 0;
-  dma1DestReload = 0;
-  dma2SourceReload = 0;
-  dma2DestReload = 0;
-  dma3SourceReload = 0;
-  dma3DestReload = 0;
+  dma0Source = 0;
+  dma0Dest = 0;
+  dma1Source = 0;
+  dma1Dest = 0;
+  dma2Source = 0;
+  dma2Dest = 0;
+  dma3Source = 0;
+  dma3Dest = 0;
   cpuSaveGameFunc = flashSaveDecide;
   renderLine = mode0RenderLine;
   fxOn = false;
