@@ -2400,7 +2400,7 @@ bool systemSoundInit()
     soundBufferLen = 368*2;
     break;
   }
-  audio.format=AUDIO_S16;
+  audio.format=AUDIO_S16SYS;
   audio.channels = 2;
   audio.samples = 1024;
   audio.callback = soundCallback;

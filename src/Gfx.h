@@ -801,16 +801,16 @@ void inline gfxDrawSprites(u32 *lineOBJ)
             // int t2 = t - (fieldY >> 1);
             int rot = (a1 >> 9) & 0x1F;
             u16 *OAM = (u16 *)oam;
-            int dx = OAM[3 + (rot << 4)];
+            int dx = FROM16LE(OAM[3 + (rot << 4)]);
             if(dx & 0x8000)
               dx |= 0xFFFF8000;
-            int dmx = OAM[7 + (rot << 4)];
+            int dmx = FROM16LE(OAM[7 + (rot << 4)]);
             if(dmx & 0x8000)
               dmx |= 0xFFFF8000;
-            int dy = OAM[11 + (rot << 4)];
+            int dy = FROM16LE(OAM[11 + (rot << 4)]);
             if(dy & 0x8000)
               dy |= 0xFFFF8000;
-            int dmy = OAM[15 + (rot << 4)];
+            int dmy = FROM16LE(OAM[15 + (rot << 4)]);
             if(dmy & 0x8000)
               dmy |= 0xFFFF8000;
             
@@ -1151,16 +1151,16 @@ void inline gfxDrawOBJWin(u32 *lineOBJWin)
             // int t2 = t - (fieldY >> 1);
             int rot = (a1 >> 9) & 0x1F;
             u16 *OAM = (u16 *)oam;
-            int dx = OAM[3 + (rot << 4)];
+            int dx = FROM16LE(OAM[3 + (rot << 4)]);
             if(dx & 0x8000)
               dx |= 0xFFFF8000;
-            int dmx = OAM[7 + (rot << 4)];
+            int dmx = FROM16LE(OAM[7 + (rot << 4)]);
             if(dmx & 0x8000)
               dmx |= 0xFFFF8000;
-            int dy = OAM[11 + (rot << 4)];
+            int dy = FROM16LE(OAM[11 + (rot << 4)]);
             if(dy & 0x8000)
               dy |= 0xFFFF8000;
-            int dmy = OAM[15 + (rot << 4)];
+            int dmy = FROM16LE(OAM[15 + (rot << 4)]);
             if(dmy & 0x8000)
               dmy |= 0xFFFF8000;
             

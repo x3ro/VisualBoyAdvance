@@ -19,6 +19,8 @@ SDL version:
 - fixed configuration problem with saveType and removeIntros
 Porting:
 - fixed big endian problems in SGB code
+- fixed big endian problems with rotated sprites
+- fixed big endian sound endianess
 
 Version 1.2:
 
