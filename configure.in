@@ -61,7 +61,7 @@ CXXFLAGS="$CXXFLAGS $SDL_CFLAGS"
 LIBS="$LIBS $SDL_LIBS"
 
 dnl Checks for libraries.
-AC_CHECK_LIB(png, png_create_write_struct,,AC_MSG_ERROR(Cannot compile without libpng))
+AC_CHECK_LIB(png, png_create_write_struct,,AC_MSG_ERROR(Cannot compile without libpng),[-lz])
 AC_CHECK_LIB(pthread, pthread_yield)
 AC_CHECK_LIB(z, gzopen,,AC_MSG_ERROR(Cannot compile without libz))
 
@@ -69,6 +69,9 @@ dnl Checks for header files.
 AC_PATH_X
 AC_HEADER_STDC
 AC_CHECK_HEADERS(malloc.h strings.h unistd.h arpa/inet.h netinet/in.h zutil.h)
+
+dnl Checks for Program
+AC_PATH_PROG(NASM,nasm,no)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
