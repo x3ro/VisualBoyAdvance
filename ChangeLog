@@ -1,3 +1,8 @@
+2003-01-03  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp: added bilinear filter support
+	* src/SDL.cpp: added bilinear filter support
+
 2002-12-11  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/Flash.cpp (flashSetSize): fixed reversed device ID and manufacturer ID

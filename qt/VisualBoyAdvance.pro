@@ -1,4 +1,4 @@
-SOURCES	+= ../src/qt/main.cpp ../src/qt/qtGUI.cpp ../src/GBA.cpp ../src/EEprom.cpp ../src/Flash.cpp ../src/Sram.cpp ../src/Globals.cpp ../src/Cheats.cpp ../src/Sound.cpp ../src/Mode0.cpp ../src/Mode1.cpp ../src/Mode2.cpp ../src/Mode3.cpp ../src/Mode4.cpp ../src/Mode5.cpp ../src/bios.cpp ../src/elf.cpp ../src/unzip.cpp ../src/Gfx.cpp ../src/Util.cpp ../src/Font.cpp ../src/admame.cpp ../src/2xSaI.cpp ../src/motionblur.cpp ../src/pixel.cpp ../src/tvmode.cpp ../src/simple2x.cpp
+SOURCES	+= ../src/qt/main.cpp ../src/qt/qtGUI.cpp ../src/GBA.cpp ../src/EEprom.cpp ../src/Flash.cpp ../src/Sram.cpp ../src/Globals.cpp ../src/Cheats.cpp ../src/Sound.cpp ../src/Mode0.cpp ../src/Mode1.cpp ../src/Mode2.cpp ../src/Mode3.cpp ../src/Mode4.cpp ../src/Mode5.cpp ../src/bios.cpp ../src/elf.cpp ../src/unzip.cpp ../src/Gfx.cpp ../src/Util.cpp ../src/Font.cpp ../src/admame.cpp ../src/2xSaI.cpp ../src/motionblur.cpp ../src/pixel.cpp ../src/tvmode.cpp ../src/simple2x.cpp ../src/bilinear.cpp
 HEADERS	+= ../src/qt/qtGUI.h
 UI_DIR = .ui
 MOC_DIR = .moc

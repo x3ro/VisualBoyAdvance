@@ -1390,6 +1390,10 @@ BEGIN
 
             MENUITEM "Simple 2x",                   ID_OPTIONS_FILTER16BIT_SIMPLE2X
 
+            MENUITEM "Bilinear",                    ID_OPTIONS_FILTER_BILINEAR
+
+            MENUITEM "Bilinear Plus",               ID_OPTIONS_FILTER_BILINEARPLUS
+
             MENUITEM SEPARATOR
             MENUITEM "&Disable MMX",                ID_OPTIONS_FILTER_DISABLEMMX
 

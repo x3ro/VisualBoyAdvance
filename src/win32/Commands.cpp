@@ -140,6 +140,8 @@ struct {
   { "OptionsFilterMotionBlur", ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL },
   { "OptionsFilterAdMameScale2x", ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X },
   { "OptionsFilterSimple2x", ID_OPTIONS_FILTER16BIT_SIMPLE2X },
+  { "OptionsFilterBilinear", ID_OPTIONS_FILTER_BILINEAR },
+  { "OptionsFilterBilinearPlus", ID_OPTIONS_FILTER_BILINEARPLUS },  
   { "OptionsJoypadConfigure", ID_OPTIONS_JOYPAD },
   { "OptionsJoypadMotionConfigure", ID_OPTIONS_JOYPAD_MOTIONCONFIGURE },
   { "OptionsJoypadAutofireA", ID_OPTIONS_JOYPAD_AUTOFIRE_A },

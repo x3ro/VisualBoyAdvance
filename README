@@ -313,6 +313,8 @@ Command line options (override settings in configuration file)
        --filter-motion-blur    6 - Motion Blur
        --filter-advmame        7 - AdvanceMAME Scale2x
        --filter-simple2x       8 - Simple2x
+       --filter-bilinear       9 - Bilinear
+       --filter-bilinear+     10 - Bilinear Plus
   -h , --help                 Print this help
   -i , --ips=PATCH            Apply given IPS patch
   -p , --profile=[HERTZ]      Enable profiling

@@ -46,6 +46,8 @@ extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
+extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 
 QImage image(240, 160, 32);
 QImage filterImage(480, 320, 32);
@@ -323,6 +325,17 @@ qtGUI::qtGUI()
                          SLOT(optionsFilter(int)),
                          0,
                          8);
+  filterMenu->insertItem(tr("&Bilinear"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         9);
+
+  filterMenu->insertItem(tr("Bilinear &Plus"),
+                         this,
+                         SLOT(optionsFilter(int)),
+                         0,
+                         10);  
 
   // Cheats menu
   cheatsMenu = new QPopupMenu(this);
@@ -407,7 +420,7 @@ void qtGUI::readSettings()
     videoOption = 0;
 
   filterType = settings->readNumEntry("/VisualBoyAdvance/filter", 0);
-  if(filterType < 0 || filterType > 8)
+  if(filterType < 0 || filterType > 10)
     filterType = 0;
 
   recentFreeze = settings->readBoolEntry("/VisualBoyAdvance/recentFreeze",
@@ -817,7 +830,7 @@ void qtGUI::optionsFilter(int id)
 {
   filterMenu->setItemChecked(filterType, false);
   filterType = id;
-  if(filterType < 0 || filterType > 8)
+  if(filterType < 0 || filterType > 10)
     filterType = 0;
   settings->writeEntry("/VisualBoyAdvance/filter", filterType);
   updateFilter();
@@ -872,6 +885,12 @@ void qtGUI::updateFilter()
     break;
   case 8:
     filterFunction = Simple2x32;
+    break;
+  case 9:
+    filterFunction = Bilinear32;
+    break;
+  case 10:
+    filterFunction = BilinearPlus32;
     break;
   }
 }

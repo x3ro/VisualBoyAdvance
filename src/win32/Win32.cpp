@@ -325,6 +325,10 @@ extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Bilinear(u8*,u32,u8*,u8*,u32,int,int);
+extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
+extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
+extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 extern void winGBARomInfo(u8*);
 extern void winGBRomInfo(u8*);
 extern void winCheatsDialog();
@@ -1562,6 +1566,14 @@ void updateFilterMenu(HMENU menu)
                 CHECKMENUSTATE(filterType == 8));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_SIMPLE2X,
                  ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+  CheckMenuItem(menu, ID_OPTIONS_FILTER_BILINEAR,
+                CHECKMENUSTATE(filterType == 9));
+  EnableMenuItem(menu, ID_OPTIONS_FILTER_BILINEAR,
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
+  CheckMenuItem(menu, ID_OPTIONS_FILTER_BILINEARPLUS,
+                CHECKMENUSTATE(filterType == 10));
+  EnableMenuItem(menu, ID_OPTIONS_FILTER_BILINEARPLUS,
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_DISABLEMMX,
                 CHECKMENUSTATE(disableMMX));
 }
@@ -2553,6 +2565,12 @@ void updateFilter()
     case 8:
       filterFunction = Simple2x;
       break;
+    case 9:
+      filterFunction = Bilinear;
+      break;
+    case 10:
+      filterFunction = BilinearPlus;
+      break;
     }
     if(filterType != 0) {
       filterWidth = sizeX;
@@ -2595,6 +2613,12 @@ void updateFilter()
         break;
       case 8:
         filterFunction = Simple2x32;
+        break;
+      case 9:
+        filterFunction = Bilinear32;
+        break;
+      case 10:
+        filterFunction = BilinearPlus32;
         break;
       }
       if(filterType != 0) {
@@ -3964,6 +3988,16 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("filter", filterType);
       updateFilter();
       break;
+    case ID_OPTIONS_FILTER_BILINEAR:
+      filterType = 9;
+      regSetDwordValue("filter", filterType);
+      updateFilter();
+      break;
+    case ID_OPTIONS_FILTER_BILINEARPLUS:
+      filterType = 10;
+      regSetDwordValue("filter", filterType);
+      updateFilter();
+      break;
     case ID_OPTIONS_FILTER_DISABLEMMX:
       disableMMX = !disableMMX;
       if(!disableMMX)
@@ -4415,7 +4449,6 @@ BOOL initDirectDraw()
     break;
   case 32:
     systemColorDepth = 32;
-    filterFunction = NULL;
     break;
   default:
     systemMessage(IDS_ERROR_DISP_COLOR, "Unsupported display setting for color depth: %d bits. \nWindows desktop must be in either 16-bit, 24-bit or 32-bit mode for this program to work in window mode.",px.dwRGBBitCount);
@@ -4655,7 +4688,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", 0);
 
   filterType = regQueryDwordValue("filter", 0);
-  if(filterType < 0 || filterType > 8)
+  if(filterType < 0 || filterType > 10)
     filterType = 0;
 
   disableMMX = regQueryDwordValue("disableMMX", 0) ? true: false;

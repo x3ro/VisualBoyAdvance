@@ -77,6 +77,10 @@ extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void Bilinear(u8*,u32,u8*,u8*,u32,int,int);
+extern void Bilinear32(u8*,u32,u8*,u8*,u32,int,int);
+extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
+extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 
 void Init_Overlay(SDL_Surface *surface, int overlaytype);
 void Quit_Overlay(void);
@@ -252,12 +256,14 @@ struct option sdlOptions[] = {
   { "filter-normal", no_argument, &filter, 0 },
   { "filter-tv-mode", no_argument, &filter, 1 },
   { "filter-2xsai", no_argument, &filter, 2 },
-  { "filter_super-2xsai", no_argument, &filter, 3 },
-  { "filter_super-eagle", no_argument, &filter, 4 },
-  { "filter_pixelate", no_argument, &filter, 5 },
-  { "filter_motion-blur", no_argument, &filter, 6 },
-  { "filter_advmame", no_argument, &filter, 7 },
-  { "filter_simple2x", no_argument, &filter, 8 },
+  { "filter-super-2xsai", no_argument, &filter, 3 },
+  { "filter-super-eagle", no_argument, &filter, 4 },
+  { "filter-pixelate", no_argument, &filter, 5 },
+  { "filter-motion-blur", no_argument, &filter, 6 },
+  { "filter-advmame", no_argument, &filter, 7 },
+  { "filter-simple2x", no_argument, &filter, 8 },
+  { "filter-bilinear", no_argument, &filter, 9 },
+  { "filter-bilinear+", no_argument, &filter, 10 },  
   { "flash-size", required_argument, 0, 'S' },
   { "flash-64k", no_argument, &sdlFlashSize, 0 },
   { "flash-128k", no_argument, &sdlFlashSize, 1 },
@@ -948,7 +954,7 @@ void sdlReadPreferences(FILE *f)
       strcpy(biosFileName, value);
     } else if(!strcmp(key, "filter")) {
       filter = sdlFromHex(value);
-      if(filter < 0 || filter > 8)
+      if(filter < 0 || filter > 10)
         filter = 0;
     } else if(!strcmp(key, "disableStatus")) {
       disableStatusMessages = sdlFromHex(value) ? true : false;
@@ -1534,6 +1540,8 @@ void usage(char *cmd)
         printf("       --filter-motion-blur    6 - Motion Blur\n");
         printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
         printf("       --filter-simple2x       8 - Simple2x\n");
+        printf("       --filter-bilinear       9 - Bilinear\n");
+        printf("       --filter-bilinear+     10 - Bilinear Plus\n");        
         printf("  -h , --help                 Print this help\n");
         printf("  -i , --ips=PATCH            Apply given IPS patch\n");
         printf("  -p , --profile=[HERTZ]      Enable profiling\n");
@@ -2133,6 +2141,12 @@ int main(int argc, char **argv)
     case 8:
       filterFunction = Simple2x;
       break;
+    case 9:
+      filterFunction = Bilinear;
+      break;
+    case 10:
+      filterFunction = BilinearPlus;
+      break;
     }
   } else {
     switch(filter) {
@@ -2162,6 +2176,12 @@ int main(int argc, char **argv)
       break;
     case 8:
       filterFunction = Simple2x32;
+      break;
+    case 9:
+      filterFunction = Bilinear32;
+      break;
+    case 10:
+      filterFunction = BilinearPlus32;
       break;
     default:
       filterFunction = NULL;

@@ -100,6 +100,10 @@ SOURCE=..\src\admame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\bilinear.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\bios.cpp
 # End Source File
 # Begin Source File
