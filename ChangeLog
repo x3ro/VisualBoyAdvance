@@ -1,3 +1,8 @@
+2002-11-21  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/gb/gbSGB.cpp: fixed big endian problems
+	* src/win32/Win32.cpp (updateVideoMenu): fixed missing check marks on layers menu
+
 2002-11-20  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp (main): added profiling support
