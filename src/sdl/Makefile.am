@@ -77,7 +77,7 @@ VisualBoyAdvance_SOURCES = \
 
 VisualBoyAdvance_LDADD = @VBA_LIBS@ @SDL_LIBS@
 
-VisualBoyAdvance_DEPENDENCIES = libgba.a @VBA_LIBS@
+VisualBoyAdvance_DEPENDENCIES = @VBA_LIBS@
 
 TestEmu_SOURCES = \
 	TestEmu.cpp		\
@@ -148,6 +148,8 @@ TestEmu_SOURCES = \
 	../unzip.h
 
 TestEmu_LDADD = @VBA_LIBS@ @SDL_LIBS@
+
+TestEmu_DEPENDENCIES = @VBA_LIBS@
 
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src	\

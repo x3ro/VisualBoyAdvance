@@ -232,6 +232,8 @@ VisualBoyAdvance_SOURCES = \
 
 VisualBoyAdvance_LDADD = @VBA_LIBS@ @SDL_LIBS@
 
+VisualBoyAdvance_DEPENDENCIES = @VBA_LIBS@
+
 TestEmu_SOURCES = \
 	TestEmu.cpp		\
 	debugger.cpp		\
@@ -303,6 +305,8 @@ TestEmu_SOURCES = \
 
 TestEmu_LDADD = @VBA_LIBS@ @SDL_LIBS@
 
+TestEmu_DEPENDENCIES = @VBA_LIBS@
+
 AM_CPPFLAGS = \
 	-I$(top_srcdir)/src	\
 	-DSDL
@@ -329,7 +333,6 @@ am_TestEmu_OBJECTS = TestEmu.$(OBJEXT) debugger.$(OBJEXT) \
 	motionblur.$(OBJEXT) pixel.$(OBJEXT) remote.$(OBJEXT) \
 	scanline.$(OBJEXT) simple2x.$(OBJEXT) unzip.$(OBJEXT)
 TestEmu_OBJECTS = $(am_TestEmu_OBJECTS)
-TestEmu_DEPENDENCIES =
 TestEmu_LDFLAGS =
 am_VisualBoyAdvance_OBJECTS = SDL.$(OBJEXT) debugger.$(OBJEXT) \
 	2xSaI.$(OBJEXT) Cheats.$(OBJEXT) EEprom.$(OBJEXT) \
@@ -344,7 +347,6 @@ am_VisualBoyAdvance_OBJECTS = SDL.$(OBJEXT) debugger.$(OBJEXT) \
 	motionblur.$(OBJEXT) pixel.$(OBJEXT) remote.$(OBJEXT) \
 	scanline.$(OBJEXT) simple2x.$(OBJEXT) unzip.$(OBJEXT)
 VisualBoyAdvance_OBJECTS = $(am_VisualBoyAdvance_OBJECTS)
-VisualBoyAdvance_DEPENDENCIES =
 VisualBoyAdvance_LDFLAGS =
 
 DEFAULT_INCLUDES =  -I. -I$(srcdir)
