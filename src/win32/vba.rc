@@ -98,7 +98,7 @@ BEGIN
     CTEXT           "VisualBoyAdvance Emulator",IDC_STATIC,13,7,134,8
     CTEXT           "Copyright (c) 2001-03 by Forgotten",IDC_STATIC,31,35,
                     110,8
-    CTEXT           "http://vboy.emuhq.com",IDC_URL,42,55,76,8
+    CTEXT           "http://vba.ngemu.com",IDC_URL,42,55,76,8
     CTEXT           "Contribution by Costis",IDC_STATIC,30,45,102,8
     CTEXT           "Version",IDC_STATIC,45,16,70,8
     CTEXT           "",IDC_VERSION,59,25,43,8
