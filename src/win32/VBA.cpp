@@ -2148,15 +2148,44 @@ void VBA::saveSettings()
   regSetDwordValue("fsMaxScale", fsMaxScale);
 }
 
+static UINT power_get[3] = {
+  SPI_GETSCREENSAVETIMEOUT,
+  SPI_GETLOWPOWERTIMEOUT,
+  SPI_GETPOWEROFFTIMEOUT
+};
+
+static UINT power_set[3] = {
+  SPI_SETSCREENSAVETIMEOUT,
+  SPI_SETLOWPOWERTIMEOUT,
+  SPI_SETPOWEROFFTIMEOUT
+};
+
+static int power[3];
+
 void VBA::enablePowerManagement()
 {
-  SetThreadExecutionState(ES_CONTINUOUS);
+  for(int i = 0;i < 3; i++) {
+    if(power[i] != -1)
+      SystemParametersInfo(power_set[i],
+                           power[i],
+                           NULL,
+                           0);
+  }
 }
 
 void VBA::disablePowerManagement()
 {
-  SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | 
-                          ES_DISPLAY_REQUIRED);
+  for(int i = 0;i < 3; i++) {
+    power[i] = -1;
+    if(SystemParametersInfo(power_get[i],
+                            0,
+                            &power[i],
+                            0))
+      SystemParametersInfo(power_set[i],
+                           0,
+                           NULL,
+                           0);
+  }
 }
 
 void winSignal(int, int)

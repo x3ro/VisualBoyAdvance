@@ -421,6 +421,8 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
 
 void MainWnd::OnClose() 
 {
+  theApp.enablePowerManagement();
+
   CWnd::OnClose();
 
   delete this;
@@ -1103,14 +1105,18 @@ void MainWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
     theApp.active = a;
     theApp.input->activate();
     if(!theApp.paused) {
-      if(emulating)
+      if(emulating) {
+        theApp.disablePowerManagement();
         soundResume();
+      }
     }
   } else {
     theApp.wasPaused = true;
     if(theApp.pauseWhenInactive) {
-      if(emulating)
+      if(emulating) {
+        theApp.enablePowerManagement();
         soundPause();
+      }
       theApp.active = a;
     }
 
