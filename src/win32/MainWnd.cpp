@@ -373,6 +373,9 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
 	ON_UPDATE_COMMAND_UI(ID_OPTIONS_SOUND_VOLUME_25X, OnUpdateOptionsSoundVolume25x)
 	ON_COMMAND(ID_OPTIONS_SOUND_VOLUME_5X, OnOptionsSoundVolume5x)
 	ON_UPDATE_COMMAND_UI(ID_OPTIONS_SOUND_VOLUME_5X, OnUpdateOptionsSoundVolume5x)
+	ON_COMMAND(ID_CHEATS_DISABLECHEATS, OnCheatsDisablecheats)
+	ON_UPDATE_COMMAND_UI(ID_CHEATS_DISABLECHEATS, OnUpdateCheatsDisablecheats)
+	ON_COMMAND(ID_OPTIONS_VIDEO_FULLSCREENMAXSCALE, OnOptionsVideoFullscreenmaxscale)
 	//}}AFX_MSG_MAP
   ON_COMMAND_EX_RANGE(ID_FILE_MRU_FILE1, ID_FILE_MRU_FILE10, OnFileRecentFile)
   ON_COMMAND_EX_RANGE(ID_FILE_LOADGAME_SLOT1, ID_FILE_LOADGAME_SLOT10, OnFileLoadSlot)
@@ -396,11 +399,13 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X, ID_OPTIONS_FILTER16BIT_SIMPLE2X, OnOptionsFilter)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_FILTER_BILINEAR, ID_OPTIONS_FILTER_BILINEARPLUS, OnOptionsFilter)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_FILTER_SCANLINES, ID_OPTIONS_FILTER_SCANLINES, OnOptionsFilter)
+  ON_COMMAND_EX_RANGE(ID_OPTIONS_FILTER_HQ2X, ID_OPTIONS_FILTER_LQ2X, OnOptionsFilter)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER_NORMAL, ID_OPTIONS_FILTER_TVMODE, OnUpdateOptionsFilter)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL, ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL, OnUpdateOptionsFilter)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X, ID_OPTIONS_FILTER16BIT_SIMPLE2X, OnUpdateOptionsFilter)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER_BILINEAR, ID_OPTIONS_FILTER_BILINEARPLUS, OnUpdateOptionsFilter)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER_SCANLINES, ID_OPTIONS_FILTER_SCANLINES, OnUpdateOptionsFilter)
+  ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER_HQ2X, ID_OPTIONS_FILTER_LQ2X, OnUpdateOptionsFilter)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE, ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART, OnOptionsFilterIFB)
   ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE, ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART, OnUpdateOptionsFilterIFB)
   ON_COMMAND_EX_RANGE(ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_1, ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_4, OnOptionsJoypadDefault)
@@ -536,7 +541,7 @@ bool MainWnd::FileRun()
                              tempName);
     if(i != (UINT)-1 && (i <= 5))
       cpuSaveType = (int)i;
-    
+
     theApp.emuWriteState = CPUWriteState;
     theApp.emuWriteMemState = CPUWriteMemState;
     theApp.emuReadState = CPUReadState;
@@ -609,9 +614,8 @@ bool MainWnd::FileRun()
   theApp.rewindCount = 0;
   theApp.rewindCounter = 0;
   theApp.rewindSaveNeeded = false;
-
-  if(theApp.screenSaverState)
-    theApp.setScreenSaverEnable(false);
+  
+  theApp.disablePowerManagement();
   
   return true;
 }
@@ -986,7 +990,7 @@ bool MainWnd::fileOpenSelect()
   CString filter = winLoadFilter(IDS_FILTER_ROM);
   CString title = winResLoadString(IDS_SELECT_ROM);
 
-  FileDlg dlg(this, "", filter, selectedFilter, "", exts, theApp.dir, title, true);
+  FileDlg dlg(this, "", filter, selectedFilter, "", exts, theApp.dir, title, false);
 
   if(dlg.DoModal() == IDOK) {
     regSetDwordValue("selectedFilter", dlg.m_ofn.nFilterIndex);
@@ -1147,14 +1151,4 @@ void MainWnd::OnDropFiles(HDROP hDropInfo)
     }
   }
   DragFinish(hDropInfo);
-}
-
-void MainWnd::OnFileLoadgameAutoloadmostrecent() 
-{
-	theApp.autoLoadMostRecent = !theApp.autoLoadMostRecent;
-}
-
-void MainWnd::OnUpdateFileLoadgameAutoloadmostrecent(CCmdUI* pCmdUI) 
-{
-  pCmdUI->SetCheck(theApp.autoLoadMostRecent);
 }
