@@ -1,3 +1,7 @@
+2003-01-14  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (initApp): fixed problem when video mode was never selected
+
 2003-01-13  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp: show detailed speed data

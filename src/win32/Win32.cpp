@@ -4869,10 +4869,12 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   fsHeight = regQueryDwordValue("fsHeight", 0);
   fsColorDepth = regQueryDwordValue("fsColorDepth", 0);
 
-  if(fsWidth < 0 || fsWidth > 4095 || fsHeight < 0 || fsHeight > 4095)
-    videoOption = 0;
-  if(fsColorDepth != 16 && fsColorDepth != 24 && fsColorDepth != 32)
-    videoOption = 0;
+  if(videoOption == VIDEO_OTHER) {
+    if(fsWidth < 0 || fsWidth > 4095 || fsHeight < 0 || fsHeight > 4095)
+      videoOption = 0;
+    if(fsColorDepth != 16 && fsColorDepth != 24 && fsColorDepth != 32)
+      videoOption = 0;
+  }
 
   windowPositionX = regQueryDwordValue("windowX", 0);
   if(windowPositionX < 0)
