@@ -887,6 +887,18 @@ BEGIN
     LTEXT           "Available drivers:",IDC_STATIC,7,7,194,8
 END
 
+IDD_THROTTLE DIALOG DISCARDABLE  0, 0, 186, 63
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Throttle"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_THROTTLE,7,20,172,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",ID_OK,37,42,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,99,42,50,14
+    LTEXT           "Enter desired throttle (5%...1000%):",IDC_STATIC,7,7,
+                    172,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1140,6 +1152,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 114
     END
+
+    IDD_THROTTLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1210,6 +1230,8 @@ BEGIN
 
             MENUITEM "&Gameshark Snapshot...",      ID_FILE_EXPORT_GAMESHARKSNAPSHOT
 
+            MENUITEM "Settings to INI",             ID_FILE_EXPORT_SETTINGSTOINI
+
         END
         MENUITEM SEPARATOR
         MENUITEM "S&creen capture...",          ID_FILE_SCREENCAPTURE
@@ -1223,8 +1245,26 @@ BEGIN
     BEGIN
         POPUP "&Frame skip"
         BEGIN
+            POPUP "Throttle"
+            BEGIN
+                MENUITEM "No throttle",                 ID_OPTIONS_FRAMESKIP_THROTTLE_NOTHROTTLE
+
+                MENUITEM "25%",                         ID_OPTIONS_FRAMESKIP_THROTTLE_25
+
+                MENUITEM "50%",                         ID_OPTIONS_FRAMESKIP_THROTTLE_50
+
+                MENUITEM "100%",                        ID_OPTIONS_FRAMESKIP_THROTTLE_100
+
+                MENUITEM "150%",                        ID_OPTIONS_FRAMESKIP_THROTTLE_150
+
+                MENUITEM "200%",                        ID_OPTIONS_FRAMESKIP_THROTTLE_200
+
+                MENUITEM "Other...",                    ID_OPTIONS_FRAMESKIP_THROTTLE_OTHER
+
+            END
             MENUITEM "&Automatic",                  ID_OPTIONS_FRAMESKIP_AUTOMATIC
 
+            MENUITEM SEPARATOR
             MENUITEM "&0",                          ID_OPTIONS_VIDEO_FRAMESKIP_0
 
             MENUITEM "&1",                          ID_OPTIONS_VIDEO_FRAMESKIP_1
@@ -1312,6 +1352,8 @@ BEGIN
             MENUITEM "Remove intros (GBA)",         ID_OPTIONS_EMULATOR_REMOVEINTROSGBA
 
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
+
+            MENUITEM "Store settings in Registry",  ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY
 
             POPUP "Show speed"
             BEGIN
@@ -1827,6 +1869,8 @@ BEGIN
     IDS_SELECT_DUMP_FILE    "Select dump file name"
     IDS_FILTER_AVI          "AVI File_*.AVI__"
     IDS_SELECT_AVI_NAME     "Select AVI file name"
+    IDS_INVALID_THROTTLE_VALUE 
+                            "Invalid throttle value. Please enter a number between 5 and 1000."
 END
 
 #endif    // English (U.S.) resources

@@ -102,6 +102,11 @@ BOOL aviRecording = FALSE;
 CAVIFile *aviRecorder = NULL;
 char aviRecordName[2048];
 
+int throttle = 0;
+u32 throttleLastTime = 0;
+
+u32 autoFrameSkipLastTime = 0;
+
 BOOL autoFrameSkip = TRUE;
 int showSpeed = 1;
 BOOL showSpeedTransparent = TRUE;
@@ -119,7 +124,7 @@ BOOL menuToggle = TRUE;
 BOOL useBiosFile = FALSE;
 BOOL pauseWhenInactive = TRUE;
 int nCmdShow = 0;
-UINT configDialogTimerId  = 0;
+
 BOOL ddrawEmulationOnly = FALSE;
 BOOL ddrawUseVideoMemory = FALSE;
 BOOL tripleBuffering = TRUE;
@@ -203,6 +208,7 @@ bool autoSaveLoadCheatList = false;
 int captureFormat = 0;
 
 std::list<IUpdateListener *> updateList;
+int updateCount = 0;
 
 extern bool soundEcho;
 extern bool soundLowPass;
@@ -674,7 +680,7 @@ void checkKeys()
 
 #define KEYDOWN(buffer,key) (buffer[key] & 0x80)
 
-int readKeyboard()
+bool readKeyboard()
 {
   if(pDevices[0].needed) {
     HRESULT hret = pDevices[0].device->
@@ -684,16 +690,16 @@ int readKeyboard()
     if(hret == DIERR_INPUTLOST || hret == DIERR_NOTACQUIRED) {
       hret = pDevices[0].device->Acquire();
       if(hret != DI_OK)
-        return 0;
+        return false;
       hret = pDevices[0].device->GetDeviceState(256,(LPVOID)pDevices[0].data);
     }
  
     return hret == DI_OK;
   }
-  return TRUE;
+  return true;
 }
 
-int readJoystick(int joy)
+bool readJoystick(int joy)
 {
   if(pDevices[joy].needed) {
     if(pDevices[joy].isPolled)
@@ -720,7 +726,7 @@ int readJoystick(int joy)
     return hret == DI_OK;
   }
 
-  return TRUE;
+  return true;
 }
 
 void checkKeyboard()
@@ -1322,6 +1328,27 @@ void updateFrameSkipMenu(HMENU menu)
   if(menu == NULL)
     return;
 
+  HMENU sub = GetSubMenu(menu, 0);
+
+  if(sub != NULL) {
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_NOTHROTTLE,
+                  CHECKMENUSTATE(throttle == 0));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_25,
+                  CHECKMENUSTATE(throttle == 25));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_50,
+                  CHECKMENUSTATE(throttle == 50));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_100,
+                  CHECKMENUSTATE(throttle == 100));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_150,
+                  CHECKMENUSTATE(throttle == 150));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_200,
+                  CHECKMENUSTATE(throttle == 200));
+    CheckMenuItem(sub, ID_OPTIONS_FRAMESKIP_THROTTLE_OTHER,
+                  CHECKMENUSTATE(throttle != 0 && throttle != 25 &&
+                                 throttle != 50 && throttle != 100 &&
+                                 throttle != 150 && throttle != 200));        
+  }
+  
   if(cartridgeType == 0) {
     CheckMenuItem(menu, ID_OPTIONS_VIDEO_FRAMESKIP_0,
                   CHECKMENUSTATE(frameSkip == 0));
@@ -1501,8 +1528,10 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(captureFormat == 0));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_BMPFORMAT,
                 CHECKMENUSTATE(captureFormat != 0));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY,
+                CHECKMENUSTATE(regEnabled));
 
-  HMENU sub = GetSubMenu(menu, 8);
+  HMENU sub = GetSubMenu(menu, 9);
   if(sub != NULL) {
     CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_NONE,
                   CHECKMENUSTATE(showSpeed == 0));
@@ -1518,11 +1547,10 @@ void updateEmulatorMenu(HMENU menu)
     sub = GetSubMenu(menu, 7);
     if(sub == NULL)
       sub = GetSubMenu(menu, 8);
-  }
-  if(sub == NULL)
-    sub = GetSubMenu(menu, 9);
+  } else
+    sub = GetSubMenu(menu, 10);
 
-  updateSaveTypeMenu(menu);
+  updateSaveTypeMenu(sub);
 }
 
 void updateSoundMenu(HMENU menu)
@@ -2235,11 +2263,13 @@ void systemDrawScreen()
 
   renderedFrames++;
 
-  for(std::list<IUpdateListener *>::iterator it = updateList.begin();
-      it != updateList.end(); ) {
-    IUpdateListener *up = *it;
-    it++;
-    up->update();
+  if(updateCount) {
+    for(std::list<IUpdateListener *>::iterator it = updateList.begin();
+        it != updateList.end(); ) {
+      IUpdateListener *up = *it;
+      it++;
+      up->update();
+    }
   }
 
   if(aviRecording) {
@@ -2306,11 +2336,9 @@ void systemDrawScreen()
   DDSURFACEDESC2 ddsDesc;
   
   ZeroMemory(&ddsDesc, sizeof(ddsDesc));
-  
-
 
   ddsDesc.dwSize = sizeof(ddsDesc);
-  
+
   hret = ddsOffscreen->Lock(NULL,
                             &ddsDesc,
                             DDLOCK_WRITEONLY|
@@ -2446,8 +2474,8 @@ void systemDrawScreen()
                           buffer);        
     }
   } else if(ddrawDebug)
-    winlog("Error during lock: %08x\n", hret);    
-  
+    winlog("Error during lock: %08x\n", hret);
+
   hret = ddsOffscreen->Unlock(NULL);
   
   if(hret == DD_OK) {
@@ -2455,7 +2483,7 @@ void systemDrawScreen()
     if(tripleBuffering && videoOption > VIDEO_4X) {
       hret = ddsFlip->Blt(&dest, ddsOffscreen, &rect, DDBLT_WAIT, NULL);
       if(hret == DD_OK) {
-        if(menuToggle) {
+        if(menuToggle || !active) {
           pDirectDraw->FlipToGDISurface();
           ddsPrimary->SetClipper(ddsClipper);
           hret = ddsPrimary->Blt(&dest, ddsFlip, &dest, DDBLT_ASYNC, NULL);
@@ -3356,6 +3384,14 @@ extern void toolsCustomize();
 extern void toolsDebugGDB();
 extern void toolsDebugGDBLoad();
 extern void optionsGameboyColors();
+extern int optionsThrottleOther(int);
+
+void winCheckFullscreen()
+{
+  if(videoOption > VIDEO_4X && tripleBuffering) {
+    pDirectDraw->FlipToGDISurface();
+  }
+}
 
 //-----------------------------------------------------------------------------
 // Name: WindowProc()
@@ -3382,6 +3418,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             soundResume();
         }
       } else {
+        wasPaused = TRUE;
         if(pauseWhenInactive) {
           if(emulating)
             soundPause();
@@ -3550,6 +3587,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_COMMAND:
     switch(wParam & 0xFFFF) {
     case ID_FILE_OPEN:
+      winCheckFullscreen();
       if(fileOpenSelect()) {
         if(fileOpen())
           emulating = TRUE;
@@ -3560,6 +3598,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       break;
     case ID_FILE_OPENGAMEBOY:
+      winCheckFullscreen();      
       if(fileOpenSelectGB()) {
         if(fileOpen())
           emulating = TRUE;
@@ -3570,10 +3609,12 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       break;
     case ID_FILE_LOAD:
+      winCheckFullscreen();      
       if(emulating)
         loadSaveGame();
       break;
     case ID_FILE_SAVE:
+      winCheckFullscreen();      
       if(emulating)
         writeSaveGame();
       break;
@@ -3635,18 +3676,26 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       break;
     case ID_FILE_IMPORT_GAMESHARKCODEFILE:
+      winCheckFullscreen();      
       fileImportGSCodeFile();
       break;
     case ID_FILE_IMPORT_GAMESHARKSNAPSHOT:
+      winCheckFullscreen();      
       fileImportGSSnapshot();
       break;
     case ID_FILE_IMPORT_BATTERYFILE:
+      winCheckFullscreen();      
       fileImportBatteryFile();
       break;
     case ID_FILE_EXPORT_BATTERYFILE:
+      winCheckFullscreen();      
       fileExportBatteryFile();
       break;
+    case ID_FILE_EXPORT_SETTINGSTOINI:
+      regExportSettingsToINI();
+      break;
     case ID_FILE_EXPORT_GAMESHARKSNAPSHOT:
+      winCheckFullscreen();      
       fileExportGSASnapshot();
       break;
     case ID_FILE_PAUSE:
@@ -3670,9 +3719,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       break;
     case ID_FILE_SCREENCAPTURE:
+      winCheckFullscreen();      
       screenCapture();
       break;
     case ID_FILE_ROMINFORMATION:
+      winCheckFullscreen();      
       if(cartridgeType == 0)
         winGBARomInfo(rom);
       else
@@ -3717,6 +3768,28 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if(!autoFrameSkip && emulating)
         updateFrameSkip();
       break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_NOTHROTTLE:
+      throttle = 0;
+      break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_25:
+      throttle = 25;
+      break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_50:
+      throttle = 50;
+      break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_150:
+      throttle = 150;
+      break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_200:
+      throttle = 200;
+      break;
+    case ID_OPTIONS_FRAMESKIP_THROTTLE_OTHER:
+      {
+        int res = optionsThrottleOther(throttle);
+        if(res)
+          throttle = res;
+      }
+      break;
     case ID_OPTIONS_VIDEO_VSYNC:
       vsync = !vsync;
       regSetDwordValue("vsync", vsync);
@@ -3744,6 +3817,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_OPTIONS_VIDEO_FULLSCREEN:
       {
+        winCheckFullscreen();        
         GUID *pGUID = NULL;
         int size = winVideoModeSelect(hWindow, &pGUID);
         if(size != -1) {
@@ -3814,6 +3888,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     "Setting will be effective the next time you start the emulator");
       break;      
     case ID_OPTIONS_EMULATOR_DIRECTORIES:
+      winCheckFullscreen();      
       showDirectories(hWindow);
       break;
     case ID_OPTIONS_EMULATOR_PAUSEWHENINACTIVE:
@@ -3846,11 +3921,13 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
       break;
     case ID_OPTIONS_EMULATOR_SELECTBIOSFILE:
+      winCheckFullscreen();      
       if(emulatorSelectBiosFile()) {
         regSetStringValue("biosFile", biosFileName);
       }
       break;
     case ID_OPTIONS_EMULATOR_ASSOCIATE:
+      winCheckFullscreen();      
       emulatorAssociate();
       break;
     case ID_OPTIONS_EMULATOR_PNGFORMAT:
@@ -3860,6 +3937,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_EMULATOR_BMPFORMAT:
       captureFormat = 1;
       regSetDwordValue("captureFormat", 1);      
+      break;
+    case ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY:
+      regEnabled = !regEnabled;
+      regSetDwordValue("regEnabled", regEnabled, true);
       break;
     case ID_OPTIONS_EMULATOR_SHOWSPEED_NONE:
       showSpeed = 0;
@@ -4002,9 +4083,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                        soundVolume);
       break;
     case ID_OPTIONS_SOUND_STARTRECORDING:
+      winCheckFullscreen();      
       fileSoundRecord();
       break;
     case ID_OPTIONS_SOUND_STOPRECORDING:
+      winCheckFullscreen();      
       if(soundRecorder) {
         delete soundRecorder;
         soundRecorder = NULL;
@@ -4056,6 +4139,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("colorOption", 1);
       break;
     case ID_OPTIONS_GAMEBOY_COLORS:
+      winCheckFullscreen();      
       optionsGameboyColors();
       break;
     case ID_OPTIONS_PRIORITY_HIGHEST:
@@ -4157,15 +4241,19 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("disableMMX", disableMMX);
       break;
     case ID_OPTIONS_JOYPAD_CONFIGURE_1:
+      winCheckFullscreen();
       configurePad(0);
       break;
     case ID_OPTIONS_JOYPAD_CONFIGURE_2:
+      winCheckFullscreen();      
       configurePad(1);
       break;
     case ID_OPTIONS_JOYPAD_CONFIGURE_3:
+      winCheckFullscreen();
       configurePad(2);
       break;
     case ID_OPTIONS_JOYPAD_CONFIGURE_4:
+      winCheckFullscreen();
       configurePad(3);
       break;
     case ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_1:
@@ -4185,6 +4273,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("joypadDefault", joypadDefault);
       break;
     case ID_OPTIONS_JOYPAD_MOTIONCONFIGURE:
+      winCheckFullscreen();      
       motionConfigurePad();
       break;
     case ID_OPTIONS_JOYPAD_AUTOFIRE_A:
@@ -4230,15 +4319,18 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       winSetLanguageOption(1, false);
       break;
     case ID_OPTIONS_LANGUAGE_OTHER:
+      winCheckFullscreen();
       winSetLanguageOption(2, false);
       break;
     case ID_CHEATS_SEARCHFORCHEATS:
+      winCheckFullscreen();
       if(cartridgeType == 0)
         winCheatsDialog();
       else
         winGbCheatsDialog();
       break;
     case ID_CHEATS_CHEATLIST:
+      winCheckFullscreen();
       if(cartridgeType == 0)
         winCheatsListDialog();
       else
@@ -4254,36 +4346,47 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       regSetDwordValue("autoSaveCheatList", autoSaveLoadCheatList);
       break;
     case ID_CHEATS_LOADCHEATLIST:
+      winCheckFullscreen();      
       winLoadCheatList();
       break;
     case ID_CHEATS_SAVECHEATLIST:
+      winCheckFullscreen();      
       winSaveCheatList();
       break;
     case ID_TOOLS_DISASSEMBLE:
+      winCheckFullscreen();      
       toolsDisassemble();
       break;
     case ID_TOOLS_LOGGING:
+      winCheckFullscreen();      
       toolsLogging();
       break;
     case ID_TOOLS_MAPVIEW:
+      winCheckFullscreen();
       toolsMapView();
       break;
     case ID_TOOLS_MEMORYVIEWER:
+      winCheckFullscreen();      
       toolsMemoryViewer();
       break;
     case ID_TOOLS_PALETTEVIEW:
+      winCheckFullscreen();      
       toolsPaletteView();
       break;
     case ID_TOOLS_OAMVIEWER:
+      winCheckFullscreen();
       toolsOamViewer();
       break;
     case ID_TOOLS_TILEVIEWER:
+      winCheckFullscreen();
       toolsTileViewer();
       break;
     case ID_TOOLS_CUSTOMIZE:
+      winCheckFullscreen();
       toolsCustomize();
       break;
     case ID_TOOLS_RECORD_STARTAVIRECORDING:
+      winCheckFullscreen();      
       fileAVIRecord();
       break;
     case ID_TOOLS_RECORD_STOPAVIRECORDING:
@@ -4294,9 +4397,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       aviRecording = FALSE;
       break;
     case ID_TOOLS_DEBUG_GDB:
+      winCheckFullscreen();      
       toolsDebugGDB();
       break;
     case ID_TOOLS_DEBUG_LOADANDWAIT:
+      winCheckFullscreen();      
       toolsDebugGDBLoad();
       break;
     case ID_TOOLS_DEBUG_DISCONNECT:
@@ -4314,6 +4419,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       debugger = true;
       break;
     case ID_HELP_ABOUT:
+      winCheckFullscreen();      
       helpAbout();
       break;
     }
@@ -4483,6 +4589,23 @@ BOOL initDirectDraw()
     return FALSE;
   }
 
+  if(ddrawDebug) {
+    DDCAPS driver;
+    DDCAPS hel;
+    ZeroMemory(&driver, sizeof(driver));
+    ZeroMemory(&hel, sizeof(hel));
+    driver.dwSize = sizeof(driver);
+    hel.dwSize = sizeof(hel);
+    pDirectDraw->GetCaps(&driver, &hel);
+    int i;
+    DWORD *p = (DWORD *)&driver;
+    for(i = 0; i < driver.dwSize; i+=4)
+      winlog("Driver CAPS %2d: %08x\n", i>>2, *p++);
+    p = (DWORD *)&hel;
+    for(i = 0; i < hel.dwSize; i+=4)
+      winlog("HEL CAPS %2d: %08x\n", i>>2, *p++);
+  }
+  
   mode320Available = FALSE;
   mode640Available = FALSE;
   mode800Available = FALSE;
@@ -4541,6 +4664,17 @@ BOOL initDirectDraw()
     return FALSE;
   }
 
+  if(ddrawDebug) {
+    DDSCAPS2 caps;
+    ZeroMemory(&caps, sizeof(caps));
+    ddsPrimary->GetCaps(&caps);
+
+    winlog("Primary CAPS 1: %08x\n", caps.dwCaps);
+    winlog("Primary CAPS 2: %08x\n", caps.dwCaps2);
+    winlog("Primary CAPS 3: %08x\n", caps.dwCaps3);
+    winlog("Primary CAPS 4: %08x\n", caps.dwCaps4);
+  }
+
   if(videoOption > VIDEO_4X && tripleBuffering) {
     DDSCAPS2 caps;
     ZeroMemory(&caps, sizeof(caps));
@@ -4597,11 +4731,16 @@ BOOL initDirectDraw()
     return FALSE;
   }
 
-  
-  ZeroMemory(&ddsd, sizeof(ddsd));
-  ddsd.dwSize = sizeof(ddsd);
-  
-  hret = ddsOffscreen->GetSurfaceDesc(&ddsd);
+  if(ddrawDebug) {
+    DDSCAPS2 caps;
+    ZeroMemory(&caps, sizeof(caps));
+    ddsOffscreen->GetCaps(&caps);
+
+    winlog("Offscreen CAPS 1: %08x\n", caps.dwCaps);
+    winlog("Offscreen CAPS 2: %08x\n", caps.dwCaps2);
+    winlog("Offscreen CAPS 3: %08x\n", caps.dwCaps3);
+    winlog("Offscreen CAPS 4: %08x\n", caps.dwCaps4);
+  }
   
   DDPIXELFORMAT px;
 
@@ -4609,8 +4748,12 @@ BOOL initDirectDraw()
 
   hret = ddsOffscreen->GetPixelFormat(&px);
 
-  if(ddrawDebug)
-    winlog("Pixel Color Depth: %d\n", px.dwRGBBitCount);
+  if(ddrawDebug) {
+    DWORD *pdword = (DWORD *)&px;
+    for(int ii = 0; ii < 8; ii++) {
+      winlog("Pixel format %d %08x\n", ii, pdword[ii]);
+    }
+  }
   
   switch(px.dwRGBBitCount) {
   case 15:
@@ -4814,6 +4957,9 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   
   regInit();
 
+  regEnabled = regQueryDwordValue("regEnabled", 1, true) ?
+    true : false;
+  
   languageOption = regQueryDwordValue("language", 1);
   if(languageOption < 0 || languageOption > 2)
     languageOption = 1;
@@ -5401,6 +5547,7 @@ BOOL fileOpen()
   emulating = TRUE;
   frameskipadjust = 0;
   renderedFrames = 0;
+  autoFrameSkipLastTime = throttleLastTime = systemGetClock();
 
   if(screenSaverState)
     setScreenSaverEnable(FALSE);
@@ -6091,6 +6238,8 @@ void systemMessage(int number, char *defaultMsg, ...)
   
   va_start(valist, defaultMsg);
   vsprintf(buffer, msg, valist);
+
+  winCheckFullscreen();
   
   MessageBox(hWindow, buffer, winResLoadString(IDS_ERROR),
              MB_OK | MB_ICONERROR);
@@ -6120,9 +6269,19 @@ void systemShowSpeed(int speed)
 
     systemSetTitle(buffer);
   }
+}
 
-  if(!wasPaused && autoFrameSkip) {
-    if(speed >= 99) {
+void system10Frames(int rate)
+{
+  u32 time = systemGetClock();  
+  if(!wasPaused && autoFrameSkip && !throttle) {
+    u32 diff = time - autoFrameSkipLastTime;
+    int speed = 100;
+
+    if(diff)
+      speed = (1000000/rate)/diff;
+    
+    if(speed >= 98) {
       frameskipadjust++;
 
       if(frameskipadjust >= 3) {
@@ -6136,14 +6295,28 @@ void systemShowSpeed(int speed)
       else if(systemFrameSkip < 9)
         frameskipadjust--;
 
-      while(frameskipadjust <= -2) {
+      if(frameskipadjust <= -2) {
         frameskipadjust += 2;
         if(systemFrameSkip < 9)
           systemFrameSkip++;
       }
-    }
-    wasPaused = FALSE;
+    }    
   }
+  if(!wasPaused && throttle) {
+    if(!speedup) {
+      u32 diff = time - throttleLastTime;
+      
+      int target = (1000000/(rate*throttle));
+      int d = (target - diff);
+      
+      if(d > 0) {
+        Sleep(d);
+      }
+    }
+    throttleLastTime = systemGetClock();
+  }
+  wasPaused = FALSE;
+  autoFrameSkipLastTime = time;
 }
 
 void systemScreenMessage(char *msg)
@@ -6463,23 +6636,24 @@ void systemWriteDataToSoundBuffer()
   }
   
   HRESULT hr;
-  if(!speedup && synchronize) {
+
+  if(!speedup && synchronize && !throttle) {
     DWORD status=0;
     hr = dsbSecondary->GetStatus(&status);
     if(status && DSBSTATUS_PLAYING) {
       if(!soundPaused) {      
         DWORD play;
-        
         while(true) {
           dsbSecondary->GetCurrentPosition(&play, NULL);
-          
+
           if(play < soundNextPosition ||
              play > soundNextPosition+soundBufferLen) {
             break;
           }
 
-          if(dsbEvent)
+          if(dsbEvent) {
             WaitForSingleObject(dsbEvent, 50);
+          }
         }
       }
     } else {
@@ -6559,11 +6733,15 @@ void winCenterWindow(HWND window)
 void winAddUpdateListener(IUpdateListener *l)
 {
   updateList.push_back(l);
+  updateCount++;
 }
 
 void winRemoveUpdateListener(IUpdateListener *l)
 {
   updateList.remove(l);
+  updateCount--;
+  if(updateCount < 0)
+    updateCount = 0;
 }
 
 extern void toolsLog(char *);

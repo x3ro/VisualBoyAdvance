@@ -50,6 +50,7 @@
 
 #include "Wnd.h"
 #include "AcceleratorManager.h"
+#include "Reg.h"
 
 #include <vector>
 
@@ -559,53 +560,44 @@ bool CAcceleratorManager::Load(HKEY hRegKey, LPCTSTR szRegKey)
   m_hRegKey = hRegKey;
   m_szRegKey = szRegKey;
 
-  LONG res = RegOpenKeyEx(hRegKey, szRegKey, 0L, KEY_ALL_ACCESS, &hKey);
-  if(res == ERROR_SUCCESS) {
-    DWORD data[2048/sizeof(DWORD)];
+  DWORD data[2048/sizeof(DWORD)];
 
-    DWORD dwType;
-    DWORD len = sizeof(data);
-    res = RegQueryValueEx(hKey, "keyboard", NULL, &dwType, 
-                          (LPBYTE)data, &len);
-    RegCloseKey(hKey);
+  DWORD len = sizeof(data);
+  if(regQueryBinaryValue("keyboard", (char *)data, len)) {
+    int count = len/sizeof(DWORD);
 
-    if(res == ERROR_SUCCESS) {
-      int count = len/sizeof(DWORD);
-
-      CCmdAccelOb* pCmdAccel;
-      CAccelsOb* pAccel;
-      DWORD dwIDAccelData, dwAccelData;
-
-      int iIndex = 0;
-      if(count) {
-        while(iIndex < count) {
-          dwIDAccelData = data[iIndex++];
-
-          WORD wIDCommand = LOWORD(dwIDAccelData);
-          CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(wIDCommand);
-          bool bExistID = (it != m_mapAccelTable.end());
-
+    CCmdAccelOb* pCmdAccel;
+    CAccelsOb* pAccel;
+    DWORD dwIDAccelData, dwAccelData;
+    
+    int iIndex = 0;
+    if(count) {
+      while(iIndex < count) {
+        dwIDAccelData = data[iIndex++];
+        
+        WORD wIDCommand = LOWORD(dwIDAccelData);
+        CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(wIDCommand);
+        bool bExistID = (it != m_mapAccelTable.end());
+        
+        if (bExistID) {
+          pCmdAccel = it->second;
+          pCmdAccel->DeleteUserAccels();
+        }
+        for (int j = 0; j < HIWORD(dwIDAccelData) && iIndex < count; j++) {
+          dwAccelData = data[iIndex++];
           if (bExistID) {
-            pCmdAccel = it->second;
-            pCmdAccel->DeleteUserAccels();
-          }
-          for (int j = 0; j < HIWORD(dwIDAccelData) && iIndex < count; j++) {
-            dwAccelData = data[iIndex++];
-            if (bExistID) {
-              pAccel = new CAccelsOb;
-              ASSERT(pAccel != NULL);
-              pAccel->SetData(dwAccelData);
-              pCmdAccel->Add(pAccel);
-            }
+            pAccel = new CAccelsOb;
+            ASSERT(pAccel != NULL);
+            pAccel->SetData(dwAccelData);
+            pCmdAccel->Add(pAccel);
           }
         }
       }
-      UpdateWndTable();
-      return true;
     }
-    return false;
+    UpdateWndTable();
+    return true;
   }
-  return true;
+  return false;
 }
 
 
@@ -676,24 +668,14 @@ bool CAcceleratorManager::Write()
     it3++;
   }
 
-  HKEY hKey;
-  LONG res = RegCreateKeyEx(m_hRegKey, m_szRegKey, 0L,"", REG_OPTION_NON_VOLATILE, 
-                            KEY_ALL_ACCESS, NULL, &hKey, NULL);
-  if(res == ERROR_SUCCESS) {
-    res = RegSetValueEx(hKey, "keyboard", 0L, REG_BINARY, (CONST BYTE *)data,
-                        count * sizeof(DWORD));
-    RegCloseKey(hKey);
-  }
+  regSetBinaryValue("keyboard", (char *)data, count*sizeof(DWORD));
 
   AccelsDatasArray.clear();
   CmdDatasArray.clear();
 
   free(data);
 
-  if (res == ERROR_SUCCESS)
-    return true;
-  else
-    return false;
+  return true;
 }
 
 

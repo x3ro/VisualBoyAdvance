@@ -82,6 +82,7 @@
 #define IDD_ADDR_SIZE                   139
 #define IDD_MODES                       140
 #define IDD_DRIVERS                     142
+#define IDD_THROTTLE                    143
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -346,6 +347,7 @@
 #define IDC_SAVE                        1127
 #define IDC_GOPC                        1127
 #define IDS_SELECT_AVI_NAME             1127
+#define IDS_INVALID_THROTTLE_VALUE      1128
 #define IDC_REFRESH2                    1129
 #define IDC_CLOSE                       1131
 #define IDC_COLOR                       1136
@@ -446,6 +448,7 @@
 #define IDC_SIZE_CONTROL                1240
 #define IDC_MODES                       1240
 #define IDC_DRIVERS                     1241
+#define IDC_THROTTLE                    1242
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -633,14 +636,23 @@
 #define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_2 40209
 #define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_3 40210
 #define ID_OPTIONS_JOYPAD_DEFAULTJOYPAD_4 40211
+#define ID_OPTIONS_EMULATOR_STORESETTINGSINREGISTRY 40214
+#define ID_FILE_EXPORT_SETTINGSTOINI    40215
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_NOTHROTTLE 40216
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_50 40217
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_150 40218
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_200 40219
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_25 40220
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_OTHER 40221
+#define ID_OPTIONS_FRAMESKIP_THROTTLE_100 40222
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        143
-#define _APS_NEXT_COMMAND_VALUE         40212
-#define _APS_NEXT_CONTROL_VALUE         1242
+#define _APS_NEXT_RESOURCE_VALUE        144
+#define _APS_NEXT_COMMAND_VALUE         40223
+#define _APS_NEXT_CONTROL_VALUE         1243
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

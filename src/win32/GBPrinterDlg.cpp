@@ -482,12 +482,15 @@ void GBPrinterDlg::OnPaint()
   EndPaint(getHandle(), &ps);
 }
 
+extern void winCheckFullscreen();
+
 void systemGbPrint(u8 *data,
                    int pages,
                    int feed,
                    int palette,
                    int contrast)
 {
+  winCheckFullscreen();
   GBPrinterDlg printer;
   printer.processData(data);
   printer.DoModal(IDD_GB_PRINTER, hWindow);

@@ -19,16 +19,18 @@
 #ifndef VBA_REG_H
 #define VBA_REG_H
 
+extern bool regEnabled;
+
 char *regQueryStringValue(char *key, char *def);
-DWORD regQueryDwordValue(char *key, DWORD def);
+DWORD regQueryDwordValue(char *key, DWORD def, bool force=false);
 BOOL regQueryBinaryValue(char *key, char *value, int count);
 void regSetStringValue(char *key,char *value);
-void regSetDwordValue(char *key,DWORD value);
+void regSetDwordValue(char *key,DWORD value,bool force=false);
 void regSetBinaryValue(char *key, char *value, int count);
 void regDeleteValue(char *key);
 void regInit();
 void regShutdown();
 bool regCreateFileType(char *ext, char *type);
 bool regAssociateType(char *type, char *desc, char *application);
-     
+void regExportSettingsToINI();
 #endif // VBA_REG_H

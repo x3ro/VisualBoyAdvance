@@ -21,6 +21,11 @@
 static char buffer[2048];
 static HKEY vbKey = NULL;
 
+#define VBA_INI "vba.ini"
+#define VBA_PREF "preferences"
+
+bool regEnabled = true;
+
 void regInit()
 {
   DWORD disp = 0;
@@ -42,95 +47,154 @@ void regShutdown()
 
 char *regQueryStringValue(char * key, char *def)
 {
-  DWORD type = 0;
-  DWORD size = 2048;
-  
-  LONG res = RegQueryValueEx(vbKey,
-                             key,
-                             NULL,
-                             &type,
-                             (UCHAR *)buffer,
-                             &size);
+  if(regEnabled) {
+    DWORD type = 0;
+    DWORD size = 2048;
+    
+    LONG res = RegQueryValueEx(vbKey,
+                               key,
+                               NULL,
+                               &type,
+                               (UCHAR *)buffer,
+                               &size);
+    
+    if(res == ERROR_SUCCESS && type == REG_SZ)
+      return buffer;
 
-  if(res == ERROR_SUCCESS && type == REG_SZ)
+    return def;
+  }
+
+  DWORD res = GetPrivateProfileString(VBA_PREF,
+                                      key,
+                                      def,
+                                      (LPTSTR)buffer,
+                                      2048,
+                                      VBA_INI);
+
+  if(res)
     return buffer;
 
   return def;
 }
 
-DWORD regQueryDwordValue(char * key, DWORD def)
+DWORD regQueryDwordValue(char * key, DWORD def, bool force)
 {
-  DWORD type = 0;
-  DWORD size = sizeof(DWORD);
-  DWORD result = 0;
-  
-  LONG res = RegQueryValueEx(vbKey,
-                             key,
-                             NULL,
-                             &type,
-                             (UCHAR *)&result,
-                             &size);
-  
-  if(res == ERROR_SUCCESS && type == REG_DWORD)
-    return result;
+  if(regEnabled || force) {
+    DWORD type = 0;
+    DWORD size = sizeof(DWORD);
+    DWORD result = 0;
+    
+    LONG res = RegQueryValueEx(vbKey,
+                               key,
+                               NULL,
+                               &type,
+                               (UCHAR *)&result,
+                               &size);
+    
+    if(res == ERROR_SUCCESS && type == REG_DWORD)
+      return result;
 
-  return def;
+    return def;
+  }
+
+  return GetPrivateProfileInt(VBA_PREF,
+                              key,
+                              def,
+                              VBA_INI);
 }
 
 BOOL regQueryBinaryValue(char * key, char *value, int count)
 {
-  DWORD type = 0;
-  DWORD size = count;
-  DWORD result = 0;
-  
-  LONG res = RegQueryValueEx(vbKey,
-                             key,
-                             NULL,
-                             &type,
-                             (UCHAR *)value,
-                             &size);
-  
-  if(res == ERROR_SUCCESS && type == REG_BINARY)
-    return TRUE;
+  if(regEnabled) {
+    DWORD type = 0;
+    DWORD size = count;
+    DWORD result = 0;
+    
+    
+    LONG res = RegQueryValueEx(vbKey,
+                               key,
+                               NULL,
+                               &type,
+                               (UCHAR *)value,
+                               &size);
+    
+    if(res == ERROR_SUCCESS && type == REG_BINARY)
+      return TRUE;
 
-  return FALSE;
+    return FALSE;
+  }
+
+  return GetPrivateProfileStruct(VBA_PREF,
+                                 key,
+                                 value,
+                                 count,
+                                 VBA_INI);
 }
 
 void regSetStringValue(char * key, char * value)
 {
-  LONG res = RegSetValueEx(vbKey,
-                           key,
-                           NULL,
-                           REG_SZ,
-                           (const UCHAR *)value,
-                           strlen(value)+1);
-  
+  if(regEnabled) {
+    LONG res = RegSetValueEx(vbKey,
+                             key,
+                             NULL,
+                             REG_SZ,
+                             (const UCHAR *)value,
+                             strlen(value)+1);
+  } else {
+    WritePrivateProfileString(VBA_PREF,
+                              key,
+                              value,
+                              VBA_INI);
+  }
 }
 
-void regSetDwordValue(char * key, DWORD value)
+void regSetDwordValue(char * key, DWORD value, bool force)
 {
-  LONG res = RegSetValueEx(vbKey,
-                           key,
-                           NULL,
-                           REG_DWORD,
-                           (const UCHAR *)&value,
-                           sizeof(DWORD));
+  if(regEnabled || force) {
+    LONG res = RegSetValueEx(vbKey,
+                             key,
+                             NULL,
+                             REG_DWORD,
+                             (const UCHAR *)&value,
+                             sizeof(DWORD));
+  } else {
+    wsprintf(buffer, "%u", value);
+    WritePrivateProfileString(VBA_PREF,
+                              key,
+                              buffer,
+                              VBA_INI);
+  }
 }
 
 void regSetBinaryValue(char *key, char *value, int count)
 {
-  LONG res = RegSetValueEx(vbKey,
-                           key,
-                           NULL,
-                           REG_BINARY,
-                           (const UCHAR *)value,
-                           count);  
+  if(regEnabled) {
+    LONG res = RegSetValueEx(vbKey,
+                             key,
+                             NULL,
+                             REG_BINARY,
+                             (const UCHAR *)value,
+                             count);
+  } else {
+    WritePrivateProfileStruct(VBA_PREF,
+                              key,
+                              value,
+                              count,
+                              VBA_INI);
+  }
 }
 
 void regDeleteValue(char *key)
 {
-  LONG res = RegDeleteValue(vbKey,
-                            key);
+  if(regEnabled) {
+    LONG res = RegDeleteValue(vbKey,
+                              key);
+  } else {
+    WritePrivateProfileString(VBA_PREF,
+                              key,
+                              NULL,
+                              VBA_INI);
+  }
 }
 
 bool regCreateFileType(char *ext, char *type)
@@ -204,4 +268,56 @@ bool regAssociateType(char *type, char *desc, char *application)
     RegCloseKey(key);
   }
   return false;
+}
+
+void regExportSettingsToINI()
+{
+  char valueName[256];
+  
+  if(vbKey != NULL) {
+    int index = 0;
+    while(1) {
+      DWORD nameSize = 256;
+      DWORD size = 2048;
+      DWORD type;
+      LONG res = RegEnumValue(vbKey,
+                              index,
+                              valueName,
+                              &nameSize,
+                              NULL,
+                              &type,
+                              (LPBYTE)buffer,
+                              &size);
+      
+      if(res == ERROR_SUCCESS) {
+        switch(type) {
+        case REG_DWORD:
+          {
+            char temp[256];
+            wsprintf(temp, "%u", *((DWORD *)buffer));
+            WritePrivateProfileString(VBA_PREF,
+                                      valueName,
+                                      temp,
+                                      VBA_INI);
+          }
+          break;
+        case REG_SZ:
+          WritePrivateProfileString(VBA_PREF,
+                                    valueName,
+                                    buffer,
+                                    VBA_INI);
+          break;
+        case REG_BINARY:
+          WritePrivateProfileStruct(VBA_PREF,
+                                    valueName,
+                                    buffer,
+                                    size,
+                                    VBA_INI);
+          break;
+        }
+        index++;
+      } else
+        break;
+    }
+  }
 }
