@@ -3256,7 +3256,7 @@ void fileExportGSASnapshot()
   }
 
   char buffer[16];
-  strncpy(buffer, &rom[0xa0], 12);
+  strncpy(buffer, (const char *)&rom[0xa0], 12);
   buffer[12] = 0;
 
   fileExportSPSSnapshot(szFile, buffer);

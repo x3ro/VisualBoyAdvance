@@ -1041,8 +1041,8 @@ void soundMix()
     soundRight[2] = soundRight[1];
     soundRight[1] = soundRight[0];
     soundRight[0] = res;
-    res = (soundLeft[4] + 2*soundLeft[3] + 8*soundLeft[2] + 2*soundLeft[1] +
-           soundLeft[0])/14;
+    res = (soundRight[4] + 2*soundRight[3] + 8*soundRight[2] + 2*soundRight[1] +
+           soundRight[0])/14;
   }
 
   res *= (soundVolume+1);

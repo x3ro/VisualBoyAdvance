@@ -24,6 +24,7 @@
 
 extern u8 soundBuffer[6][735];
 extern u16 soundFinalWave[1470];
+extern int soundVolume;
 
 #define SOUND_MAGIC   0x60000000
 #define SOUND_MAGIC_2 0x30000000
@@ -609,6 +610,8 @@ void gbSoundMix()
     res = (soundLeft[4] + 2*soundLeft[3] + 8*soundLeft[2] + 2*soundLeft[1] +
            soundLeft[0])/14;
   }
+
+  res *= (soundVolume+1);
   
   if(res > 32767)
     res = 32767;
@@ -659,6 +662,8 @@ void gbSoundMix()
     res = (soundRight[4] + 2*soundRight[3] + 8*soundRight[2] + 2*soundRight[1] +
            soundRight[0])/14;
   }
+
+  res *= (soundVolume+1);  
   
   if(res > 32767)
     res = 32767;
