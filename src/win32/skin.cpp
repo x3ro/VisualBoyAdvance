@@ -148,9 +148,10 @@ bool CSkin::Hook(HWND hWnd)
              FALSE);
   
   SetMenu(m_hWnd, NULL);
-
-   // set the skin region to the window
-  SetWindowRgn(m_hWnd, m_rgnSkin, true);    
+  
+  if(m_rgnSkin != NULL)
+    // set the skin region to the window
+    SetWindowRgn(m_hWnd, m_rgnSkin, true);    
 
   // subclass the window procedure
   m_OldWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)SkinWndProc);
@@ -193,9 +194,10 @@ bool CSkin::UnHook()
   // cannot unsubclass if there is no window subclassed
   // returns true anyways.
   if (!Hooked()) return true;
-
-  // remove the skin region from the window
-  SetWindowRgn(m_hWnd, NULL, true);
+  
+  if(m_rgnSkin != NULL)
+    // remove the skin region from the window
+    SetWindowRgn(m_hWnd, NULL, true);
 
   // unsubclass the window procedure
   OurWnd = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)m_OldWndProc);
@@ -344,11 +346,10 @@ bool CSkin::GetSkinData(const char *skinFile)
     return false;
   }
   CStdString bmpName = buffer;
-  if(!GetPrivateProfileString("skin", "region", "", buffer, 2048, skinFile)) {
-    m_error = "Missing skin region";
-    return false;
+  CStdString rgn = "";
+  if(GetPrivateProfileString("skin", "region", "", buffer, 2048, skinFile)) {
+    rgn = buffer;
   }
-  CStdString rgn = buffer;
 
   if(!GetPrivateProfileString("skin", "draw", "", buffer, 2048, skinFile)) {
     m_error = "Missing draw rectangle";
@@ -377,7 +378,8 @@ bool CSkin::GetSkinData(const char *skinFile)
   }
 
   bmpName = path + bmpName;
-  rgn = path + rgn;
+  if(strcmp(rgn, ""))
+    rgn = path + rgn;
   
   m_hBmp = (HBITMAP)LoadImage(NULL, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE|LR_CREATEDIBSECTION);
   if (!m_hBmp) {
@@ -393,14 +395,13 @@ bool CSkin::GetSkinData(const char *skinFile)
   m_iWidth = bmp.bmWidth;
   m_iHeight = bmp.bmHeight;
 
-  m_rgnSkin = LoadRegion(rgn);
-  
-  // check if we have the skin at hand.
-  if (!m_rgnSkin) {
-    m_error = "Error loading skin region " + rgn;
-    return false;
+  if(strcmp(rgn, "")) {
+    m_rgnSkin = LoadRegion(rgn);
+    if(m_rgnSkin == NULL) {
+      m_error = "Error loading skin region " + rgn;
+      return false;
+    }
   }
-
 
   // -------------------------------------------------
   // well, things are looking good...
