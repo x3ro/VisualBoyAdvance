@@ -10,6 +10,11 @@
   <property name="modal">False</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">False</property>
+  <property name="decorated">True</property>
+  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_pager_hint">False</property>
+  <property name="type_hint">GDK_WINDOW_TYPE_HINT_NORMAL</property>
+  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
 
   <child>
     <widget class="GtkVBox" id="vbox1">
@@ -45,7 +50,7 @@
 			  <accelerator key="O" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image74">
+			    <widget class="GtkImage" id="image80">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-open</property>
 			      <property name="icon_size">1</property>
@@ -59,7 +64,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator1">
+			<widget class="GtkSeparatorMenuItem" id="separator1">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -99,7 +104,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator2">
+			<widget class="GtkSeparatorMenuItem" id="separator2">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -124,7 +129,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator3">
+			<widget class="GtkSeparatorMenuItem" id="separator3">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -138,7 +143,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator4">
+			<widget class="GtkSeparatorMenuItem" id="separator4">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -160,7 +165,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator5">
+			<widget class="GtkSeparatorMenuItem" id="separator5">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -182,7 +187,7 @@
 		      </child>
 
 		      <child>
-			<widget class="GtkMenuItem" id="separator6">
+			<widget class="GtkSeparatorMenuItem" id="separator6">
 			  <property name="visible">True</property>
 			</widget>
 		      </child>
@@ -194,7 +199,7 @@
 			  <property name="use_underline">True</property>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image75">
+			    <widget class="GtkImage" id="image81">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-close</property>
 			      <property name="icon_size">1</property>
@@ -215,7 +220,7 @@
 			  <accelerator key="X" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image76">
+			    <widget class="GtkImage" id="image82">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-quit</property>
 			      <property name="icon_size">1</property>
@@ -333,7 +338,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator19">
+				<widget class="GtkSeparatorMenuItem" id="separator19">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -520,7 +525,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator9">
+				<widget class="GtkSeparatorMenuItem" id="separator9">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -742,7 +747,7 @@
 				      </child>
 
 				      <child>
-					<widget class="GtkMenuItem" id="separator10">
+					<widget class="GtkSeparatorMenuItem" id="separator10">
 					  <property name="visible">True</property>
 					</widget>
 				      </child>
@@ -830,22 +835,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator11">
-				  <property name="visible">True</property>
-				</widget>
-			      </child>
-
-			      <child>
-				<widget class="GtkCheckMenuItem" id="SoundOldSync">
-				  <property name="visible">True</property>
-				  <property name="label" translatable="yes">Use old synchronization</property>
-				  <property name="use_underline">True</property>
-				  <property name="active">False</property>
-				</widget>
-			      </child>
-
-			      <child>
-				<widget class="GtkMenuItem" id="separator12">
+				<widget class="GtkSeparatorMenuItem" id="separator11">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -878,7 +868,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator13">
+				<widget class="GtkSeparatorMenuItem" id="separator13">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -938,7 +928,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator14">
+				<widget class="GtkSeparatorMenuItem" id="separator14">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -973,7 +963,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator15">
+				<widget class="GtkSeparatorMenuItem" id="separator15">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1082,7 +1072,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator16">
+				<widget class="GtkSeparatorMenuItem" id="separator16">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1202,7 +1192,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator20">
+				<widget class="GtkSeparatorMenuItem" id="separator20">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1347,7 +1337,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator17">
+				<widget class="GtkSeparatorMenuItem" id="separator17">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1420,7 +1410,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator18">
+				<widget class="GtkSeparatorMenuItem" id="separator18">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1465,7 +1455,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator24">
+				<widget class="GtkSeparatorMenuItem" id="separator24">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1479,7 +1469,7 @@
 			      </child>
 
 			      <child>
-				<widget class="GtkMenuItem" id="separator25">
+				<widget class="GtkSeparatorMenuItem" id="separator25">
 				  <property name="visible">True</property>
 				</widget>
 			      </child>
@@ -1648,6 +1638,10 @@
 	  <property name="yalign">0.5</property>
 	  <property name="xscale">0</property>
 	  <property name="yscale">0</property>
+	  <property name="top_padding">0</property>
+	  <property name="bottom_padding">0</property>
+	  <property name="left_padding">0</property>
+	  <property name="right_padding">0</property>
 
 	  <child>
 	    <placeholder/>
@@ -1666,10 +1660,15 @@
 <widget class="GtkDialog" id="AboutDialog">
   <property name="title" translatable="yes">About VBA</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">False</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
+  <property name="decorated">True</property>
+  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_pager_hint">False</property>
+  <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -1691,6 +1690,7 @@
 	      <property name="label">gtk-close</property>
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
+	      <property name="focus_on_click">True</property>
 	      <property name="response_id">-7</property>
 	    </widget>
 	  </child>
@@ -1775,10 +1775,15 @@
 <widget class="GtkDialog" id="ThrottleDialog">
   <property name="title" translatable="yes">Throttle</property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
-  <property name="window_position">GTK_WIN_POS_NONE</property>
+  <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">False</property>
   <property name="resizable">True</property>
   <property name="destroy_with_parent">True</property>
+  <property name="decorated">True</property>
+  <property name="skip_taskbar_hint">False</property>
+  <property name="skip_pager_hint">False</property>
+  <property name="type_hint">GDK_WINDOW_TYPE_HINT_DIALOG</property>
+  <property name="gravity">GDK_GRAVITY_NORTH_WEST</property>
   <property name="has_separator">True</property>
 
   <child internal-child="vbox">
@@ -1800,6 +1805,7 @@
 	      <property name="label">gtk-cancel</property>
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
+	      <property name="focus_on_click">True</property>
 	      <property name="response_id">-6</property>
 	    </widget>
 	  </child>
@@ -1812,6 +1818,7 @@
 	      <property name="label">gtk-ok</property>
 	      <property name="use_stock">True</property>
 	      <property name="relief">GTK_RELIEF_NORMAL</property>
+	      <property name="focus_on_click">True</property>
 	      <property name="response_id">-5</property>
 	    </widget>
 	  </child>

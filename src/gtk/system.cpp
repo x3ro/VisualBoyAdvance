@@ -18,37 +18,51 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <SDL.h>
+#include <SDL_thread.h>
 
 #include "../GBA.h"
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
 #include "../Util.h"
+#include "../Sound.h"
 
 #include "window.h"
 
-int systemRedShift;
-int systemGreenShift;
-int systemBlueShift;
-int systemColorDepth;
-int systemDebug;
-int systemVerbose;
-int systemSaveUpdateCounter;
-int systemFrameSkip;
-u32 systemColorMap32[0x10000];
-u16 systemColorMap16[0x10000];
-u16 systemGbPalette[24];
+// Required vars, used by the emulator core
+//
+int  systemRedShift;
+int  systemGreenShift;
+int  systemBlueShift;
+int  systemColorDepth;
+int  systemDebug;
+int  systemVerbose;
+int  systemSaveUpdateCounter;
+int  systemFrameSkip;
+u32  systemColorMap32[0x10000];
+u16  systemColorMap16[0x10000];
+u16  systemGbPalette[24];
 bool systemSoundOn;
 
+int  emulating;
+bool debugger;
+int  RGB_LOW_BITS_MASK;
+
+// Extra vars, only used for the GUI
+//
 int systemRenderedFrames;
 int systemFPS;
 
-int emulating;
-bool debugger;
-int RGB_LOW_BITS_MASK;
+// Sound stuff
+//
+static SDL_cond *  pstSoundCond  = NULL;
+static SDL_mutex * pstSoundMutex = NULL;
+static u8          auiSoundBuffer[4096];
+static int         iSoundLen = 0;
 
-inline VBA::Window * gui()
+inline VBA::Window * GUI()
 {
   return VBA::Window::poGetInstance();
 }
@@ -60,16 +74,18 @@ void systemMessage(int _iId, const char * _csFormat, ...)
   char * csMsg = g_strdup_vprintf(_csFormat, args);
   va_end(args);
 
-  Gtk::MessageDialog oDialog(*gui(), csMsg,
+  Gtk::MessageDialog oDialog(*GUI(), csMsg,
                              Gtk::MESSAGE_ERROR,
                              Gtk::BUTTONS_OK);
+  oDialog.show(); // TEST
+  oDialog.grab_focus(); // TEST
   oDialog.run();
   free(csMsg);
 }
 
 void systemDrawScreen()
 {
-  gui()->vDrawScreen();
+  GUI()->vDrawScreen();
   systemRenderedFrames++;
 }
 
@@ -80,7 +96,7 @@ bool systemReadJoypads()
 
 u32 systemReadJoypad(int)
 {
-  return gui()->uiReadJoypad();
+  return GUI()->uiReadJoypad();
 }
 
 void systemShowSpeed(int _iSpeed)
@@ -88,12 +104,12 @@ void systemShowSpeed(int _iSpeed)
   systemFPS = systemRenderedFrames;
   systemRenderedFrames = 0;
 
-  gui()->vShowSpeed(_iSpeed);
+  GUI()->vShowSpeed(_iSpeed);
 }
 
 void system10Frames(int _iRate)
 {
-  gui()->vComputeFrameskip(_iRate);
+  GUI()->vComputeFrameskip(_iRate);
 }
 
 void systemFrame()
@@ -102,7 +118,7 @@ void systemFrame()
 
 void systemSetTitle(const char * _csTitle)
 {
-  gui()->set_title(_csTitle);
+  GUI()->set_title(_csTitle);
 }
 
 void systemScreenCapture(int _iNum)
@@ -111,23 +127,156 @@ void systemScreenCapture(int _iNum)
 
 void systemWriteDataToSoundBuffer()
 {
+  if (SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
+  {
+    SDL_PauseAudio(0);
+  }
+
+  bool bWait = true;
+  while (bWait && ! speedup && GUI()->iGetThrottle() == 0)
+  {
+    SDL_mutexP(pstSoundMutex);
+    if (iSoundLen < 2048 * 2)
+    {
+      bWait = false;
+    }
+    SDL_mutexV(pstSoundMutex);
+  }
+
+  int iLen = soundBufferLen;
+  int iCopied = 0;
+  if (iSoundLen + iLen >= 2048 * 2)
+  {
+    iCopied = 2048 * 2 - iSoundLen;
+    memcpy(&auiSoundBuffer[iSoundLen], soundFinalWave, iCopied);
+
+    iSoundLen = 2048 * 2;
+    SDL_CondSignal(pstSoundCond);
+
+    bWait = true;
+    if (! speedup && GUI()->iGetThrottle() == 0)
+    {
+      while(bWait)
+      {
+        SDL_mutexP(pstSoundMutex);
+        if (iSoundLen < 2048 * 2)
+        {
+          bWait = false;
+        }
+        SDL_mutexV(pstSoundMutex);
+      }
+
+      memcpy(auiSoundBuffer, ((u8 *)soundFinalWave) + iCopied,
+             soundBufferLen - iCopied);
+
+      iSoundLen = soundBufferLen - iCopied;
+    }
+    else
+    {
+      memcpy(auiSoundBuffer, ((u8 *)soundFinalWave) + iCopied,
+             soundBufferLen);
+    }
+  }
+  else
+  {
+    memcpy(&auiSoundBuffer[iSoundLen], soundFinalWave, soundBufferLen);
+    iSoundLen += soundBufferLen;
+  }
+}
+
+static void vSoundCallback(void * _pvUserData, u8 * _puiStream, int _iLen)
+{
+  if (! emulating)
+  {
+    return;
+  }
+
+  SDL_mutexP(pstSoundMutex);
+  if (! speedup && GUI()->iGetThrottle() == 0)
+  {
+    while (iSoundLen < 2048 * 2 && emulating)
+    {
+      SDL_CondWait(pstSoundCond, pstSoundMutex);
+    }
+  }
+  if (emulating)
+  {
+    memcpy(_puiStream, auiSoundBuffer, _iLen);
+  }
+  iSoundLen = 0;
+  SDL_mutexV(pstSoundMutex);
 }
 
 bool systemSoundInit()
 {
+  SDL_AudioSpec stAudio;
+
+  switch (soundQuality)
+  {
+  case 1:
+    stAudio.freq = 44100;
+    soundBufferLen = 1470 * 2;
+    break;
+  case 2:
+    stAudio.freq = 22050;
+    soundBufferLen = 736 * 2;
+    break;
+  case 4:
+    stAudio.freq = 11025;
+    soundBufferLen = 368 * 2;
+    break;
+  }
+
+  stAudio.format   = AUDIO_S16SYS;
+  stAudio.channels = 2;
+  stAudio.samples  = 1024;
+  stAudio.callback = vSoundCallback;
+  stAudio.userdata = NULL;
+
+  if (SDL_OpenAudio(&stAudio, NULL) < 0)
+  {
+    fprintf(stderr, "Failed to open audio: %s\n", SDL_GetError());
+    return false;
+  }
+
+  pstSoundCond  = SDL_CreateCond();
+  pstSoundMutex = SDL_CreateMutex();
+
+  soundBufferTotalLen = soundBufferLen * 10;
+  iSoundLen = 0;
+  systemSoundOn = true;
+
   return true;
 }
 
 void systemSoundShutdown()
 {
+  SDL_mutexP(pstSoundMutex);
+  int iSave = emulating;
+  emulating = 0;
+  SDL_CondSignal(pstSoundCond);
+  SDL_mutexV(pstSoundMutex);
+
+  SDL_DestroyCond(pstSoundCond);
+  pstSoundCond = NULL;
+
+  SDL_DestroyMutex(pstSoundMutex);
+  pstSoundMutex = NULL;
+
+  SDL_CloseAudio();
+
+  emulating = iSave;
+  systemSoundOn = false;
 }
 
 void systemSoundPause()
 {
+  SDL_PauseAudio(1);
 }
 
 void systemSoundResume()
 {
+  SDL_PauseAudio(0);
 }
 
 void systemSoundReset()
@@ -167,7 +316,7 @@ void systemScreenMessage(const char * _csMsg)
 
 bool systemCanChangeSoundQuality()
 {
-  return false;
+  return true;
 }
 
 bool systemPauseOnFrame()

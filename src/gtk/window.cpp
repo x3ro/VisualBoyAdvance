@@ -26,6 +26,7 @@
 #include "../GBA.h"
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
+#include "../Sound.h"
 #include "../Util.h"
 
 #include "tools.h"
@@ -61,10 +62,14 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   m_iThrottleMax    (1000),
   m_iScaleMin       (1),
   m_iScaleMax       (6),
-  m_iShowSpeedMin   (ShowSpeedNone),
-  m_iShowSpeedMax   (ShowSpeedDetailed),
-  m_iSaveTypeMin    (SaveTypeAuto),
-  m_iSaveTypeMax    (SaveTypeNone),
+  m_iShowSpeedMin   (ShowNone),
+  m_iShowSpeedMax   (ShowDetailed),
+  m_iSaveTypeMin    (SaveAuto),
+  m_iSaveTypeMax    (SaveNone),
+  m_iSoundQualityMin(Sound44K),
+  m_iSoundQualityMax(Sound11K),
+  m_iSoundVolumeMin (Sound100),
+  m_iSoundVolumeMax (Sound50),
   m_iFilter2xMin    (FirstFilter),
   m_iFilter2xMax    (LastFilter),
   m_iFilterIBMin    (FirstFilterIB),
@@ -292,9 +297,9 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   }
   astShowSpeed[] =
   {
-    { "ShowSpeedNone",       ShowSpeedNone       },
-    { "ShowSpeedPercentage", ShowSpeedPercentage },
-    { "ShowSpeedDetailed",   ShowSpeedDetailed   }
+    { "ShowSpeedNone",       ShowNone       },
+    { "ShowSpeedPercentage", ShowPercentage },
+    { "ShowSpeedDetailed",   ShowDetailed   }
   };
   EShowSpeed eDefaultShowSpeed = (EShowSpeed)m_poDisplayConfig->oGetKey<int>("show_speed");
   for (guint i = 0; i < sizeof(astShowSpeed) / sizeof(astShowSpeed[0]); i++)
@@ -319,12 +324,12 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   }
   astSaveType[] =
   {
-    { "SaveTypeAutomatic",    SaveTypeAuto         },
-    { "SaveTypeEeprom",       SaveTypeEEPROM       },
-    { "SaveTypeSram",         SaveTypeSRAM         },
-    { "SaveTypeFlash",        SaveTypeFlash        },
-    { "SaveTypeEepromSensor", SaveTypeEEPROMSensor },
-    { "SaveTypeNone",         SaveTypeNone         }
+    { "SaveTypeAutomatic",    SaveAuto         },
+    { "SaveTypeEeprom",       SaveEEPROM       },
+    { "SaveTypeSram",         SaveSRAM         },
+    { "SaveTypeFlash",        SaveFlash        },
+    { "SaveTypeEepromSensor", SaveEEPROMSensor },
+    { "SaveTypeNone",         SaveNone         }
   };
   ESaveType eDefaultSaveType = (ESaveType)m_poCoreConfig->oGetKey<int>("save_type");
   for (guint i = 0; i < sizeof(astSaveType) / sizeof(astSaveType[0]); i++)
@@ -364,6 +369,142 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
                                       SigC::slot(*this, &Window::vOnFlashSizeToggled),
                                       poCMI, astFlashSize[i].m_iFlashSize));
+  }
+
+  // Sound menu
+  //
+  std::string sDefaultSoundStatus = m_poSoundConfig->sGetKey("status");
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundOff"));
+  if (sDefaultSoundStatus == "off")
+  {
+    poCMI->set_active();
+    vOnSoundStatusToggled(poCMI, SoundOff);
+  }
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                    SigC::slot(*this, &Window::vOnSoundStatusToggled),
+                                    poCMI, SoundOff));
+  m_poSoundOffItem = poCMI;
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundMute"));
+  if (sDefaultSoundStatus == "mute")
+  {
+    poCMI->set_active();
+    vOnSoundStatusToggled(poCMI, SoundMute);
+  }
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                    SigC::slot(*this, &Window::vOnSoundStatusToggled),
+                                    poCMI, SoundMute));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundOn"));
+  if (sDefaultSoundStatus == "on")
+  {
+    poCMI->set_active();
+    vOnSoundStatusToggled(poCMI, SoundOn);
+  }
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                    SigC::slot(*this, &Window::vOnSoundStatusToggled),
+                                    poCMI, SoundOn));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundEcho"));
+  poCMI->set_active(m_poSoundConfig->oGetKey<bool>("echo"));
+  vOnSoundEchoToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnSoundEchoToggled),
+                                    poCMI));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundLowPass"));
+  poCMI->set_active(m_poSoundConfig->oGetKey<bool>("low_pass"));
+  vOnSoundLowPassToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnSoundLowPassToggled),
+                                    poCMI));
+
+  poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget("SoundReverseStereo"));
+  poCMI->set_active(m_poSoundConfig->oGetKey<bool>("reverse_stereo"));
+  vOnSoundReverseToggled(poCMI);
+  poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *>(
+                                    SigC::slot(*this, &Window::vOnSoundReverseToggled),
+                                    poCMI));
+
+  struct
+  {
+    const char * m_csName;
+    const int    m_iSoundChannel;
+    const bool   m_bChecked;
+  }
+  astSoundChannel[] =
+  {
+    { "SoundChannel1", 0, m_poSoundConfig->oGetKey<bool>("channel_1") },
+    { "SoundChannel2", 1, m_poSoundConfig->oGetKey<bool>("channel_2") },
+    { "SoundChannel3", 2, m_poSoundConfig->oGetKey<bool>("channel_3") },
+    { "SoundChannel4", 3, m_poSoundConfig->oGetKey<bool>("channel_4") },
+    { "SoundChannelA", 4, m_poSoundConfig->oGetKey<bool>("channel_A") },
+    { "SoundChannelB", 5, m_poSoundConfig->oGetKey<bool>("channel_B") }
+  };
+  for (guint i = 0; i < sizeof(astSoundChannel) / sizeof(astSoundChannel[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundChannel[i].m_csName));
+    poCMI->set_active(astSoundChannel[i].m_bChecked);
+    vOnSoundChannelToggled(poCMI, astSoundChannel[i].m_iSoundChannel);
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnSoundChannelToggled),
+                                      poCMI, astSoundChannel[i].m_iSoundChannel));
+  }
+
+  struct
+  {
+    const char *        m_csName;
+    const ESoundQuality m_eSoundQuality;
+  }
+  astSoundQuality[] =
+  {
+    { "Sound11Khz", Sound11K },
+    { "Sound22Khz", Sound22K },
+    { "Sound44Khz", Sound44K }
+  };
+  ESoundQuality eDefaultSoundQuality = (ESoundQuality)m_poSoundConfig->oGetKey<int>("quality");
+  for (guint i = 0; i < sizeof(astSoundQuality) / sizeof(astSoundQuality[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundQuality[i].m_csName));
+    if (astSoundQuality[i].m_eSoundQuality == eDefaultSoundQuality)
+    {
+      poCMI->set_active();
+      vOnSoundQualityToggled(poCMI, eDefaultSoundQuality);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnSoundQualityToggled),
+                                      poCMI, astSoundQuality[i].m_eSoundQuality));
+  }
+
+  // Volume menu
+  //
+  struct
+  {
+    const char *       m_csName;
+    const ESoundVolume m_eSoundVolume;
+  }
+  astSoundVolume[] =
+  {
+    { "Volume25",   Sound25  },
+    { "Volume50",   Sound50  },
+    { "Volume100",  Sound100 },
+    { "Volume200",  Sound200 },
+    { "Volume300",  Sound300 },
+    { "Volume400",  Sound400 }
+  };
+  ESoundVolume eDefaultSoundVolume = (ESoundVolume)m_poSoundConfig->oGetKey<int>("volume");
+  for (guint i = 0; i < sizeof(astSoundVolume) / sizeof(astSoundVolume[0]); i++)
+  {
+    poCMI = dynamic_cast<Gtk::CheckMenuItem *>(_poXml->get_widget(astSoundVolume[i].m_csName));
+    if (astSoundVolume[i].m_eSoundVolume == eDefaultSoundVolume)
+    {
+      poCMI->set_active();
+      vOnSoundVolumeToggled(poCMI, eDefaultSoundVolume);
+    }
+    poCMI->signal_toggled().connect(SigC::bind<Gtk::CheckMenuItem *, int>(
+                                      SigC::slot(*this, &Window::vOnSoundVolumeToggled),
+                                      poCMI, astSoundVolume[i].m_eSoundVolume));
   }
 
   // Filter menu
@@ -493,6 +634,7 @@ void Window::vInitSystem()
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
   systemFrameSkip = 0;
   systemSoundOn = false;
+  soundOffFlag = true;
 
   systemRenderedFrames = 0;
   systemFPS = 0;
@@ -544,31 +686,47 @@ void Window::vInitConfig()
   // Core section
   //
   m_poCoreConfig = m_oConfig.poAddSection("Core");
-  m_poCoreConfig->vSetKey     ("frameskip",     "auto"       );
-  m_poCoreConfig->vSetKey     ("throttle",      0            );
-  m_poCoreConfig->vSetKey     ("layer_bg0",     true         );
-  m_poCoreConfig->vSetKey     ("layer_bg1",     true         );
-  m_poCoreConfig->vSetKey     ("layer_bg2",     true         );
-  m_poCoreConfig->vSetKey     ("layer_bg3",     true         );
-  m_poCoreConfig->vSetKey     ("layer_obj",     true         );
-  m_poCoreConfig->vSetKey     ("layer_win0",    true         );
-  m_poCoreConfig->vSetKey     ("layer_win1",    true         );
-  m_poCoreConfig->vSetKey     ("layer_objwin",  true         );
-  m_poCoreConfig->vSetKey     ("use_bios_file", false        );
-  m_poCoreConfig->vSetKey     ("bios_file",     ""           );
-  m_poCoreConfig->vSetKey<int>("save_type",     SaveTypeAuto );
-  m_poCoreConfig->vSetKey<int>("flash_size",    64           );
+  m_poCoreConfig->vSetKey     ("frameskip",     "auto"   );
+  m_poCoreConfig->vSetKey     ("throttle",      0        );
+  m_poCoreConfig->vSetKey     ("layer_bg0",     true     );
+  m_poCoreConfig->vSetKey     ("layer_bg1",     true     );
+  m_poCoreConfig->vSetKey     ("layer_bg2",     true     );
+  m_poCoreConfig->vSetKey     ("layer_bg3",     true     );
+  m_poCoreConfig->vSetKey     ("layer_obj",     true     );
+  m_poCoreConfig->vSetKey     ("layer_win0",    true     );
+  m_poCoreConfig->vSetKey     ("layer_win1",    true     );
+  m_poCoreConfig->vSetKey     ("layer_objwin",  true     );
+  m_poCoreConfig->vSetKey     ("use_bios_file", false    );
+  m_poCoreConfig->vSetKey     ("bios_file",     ""       );
+  m_poCoreConfig->vSetKey<int>("save_type",     SaveAuto );
+  m_poCoreConfig->vSetKey<int>("flash_size",    64       );
 
   // Display section
   //
   m_poDisplayConfig = m_oConfig.poAddSection("Display");
-  m_poDisplayConfig->vSetKey     ("scale",               1                   );
-  m_poDisplayConfig->vSetKey<int>("show_speed",          ShowSpeedPercentage );
-  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone          );
-  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone        );
+  m_poDisplayConfig->vSetKey     ("scale",               1              );
+  m_poDisplayConfig->vSetKey<int>("show_speed",          ShowPercentage );
+  m_poDisplayConfig->vSetKey<int>("filter2x",            FilterNone     );
+  m_poDisplayConfig->vSetKey<int>("filterIB",            FilterIBNone   );
 #ifdef MMX
-  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false               );
+  m_poDisplayConfig->vSetKey     ("filter_disable_mmx",  false          );
 #endif // MMX
+
+  // Sound section
+  //
+  m_poSoundConfig = m_oConfig.poAddSection("Sound");
+  m_poSoundConfig->vSetKey("status",         "on"     );
+  m_poSoundConfig->vSetKey("echo",           false    );
+  m_poSoundConfig->vSetKey("low_pass",       false    );
+  m_poSoundConfig->vSetKey("reverse_stereo", false    );
+  m_poSoundConfig->vSetKey("channel_1",      true     );
+  m_poSoundConfig->vSetKey("channel_2",      true     );
+  m_poSoundConfig->vSetKey("channel_3",      true     );
+  m_poSoundConfig->vSetKey("channel_4",      true     );
+  m_poSoundConfig->vSetKey("channel_A",      true     );
+  m_poSoundConfig->vSetKey("channel_B",      true     );
+  m_poSoundConfig->vSetKey("quality",        Sound22K );
+  m_poSoundConfig->vSetKey("volume",         Sound100 );
 }
 
 void Window::vCheckConfig()
@@ -653,6 +811,28 @@ void Window::vCheckConfig()
   if (iValue != iAdjusted)
   {
     m_poDisplayConfig->vSetKey("filterIB", iAdjusted);
+  }
+
+  // Sound section
+  //
+  sValue = m_poSoundConfig->sGetKey("status");
+  if (sValue != "off" && sValue != "on" && sValue != "mute")
+  {
+    m_poSoundConfig->vSetKey("status", "on");
+  }
+
+  iValue = m_poSoundConfig->oGetKey<int>("quality");
+  iAdjusted = CLAMP(iValue, m_iSoundQualityMin, m_iSoundQualityMax);
+  if (iValue != iAdjusted)
+  {
+    m_poSoundConfig->vSetKey("quality", iAdjusted);
+  }
+
+  iValue = m_poSoundConfig->oGetKey<int>("volume");
+  iAdjusted = CLAMP(iValue, m_iSoundVolumeMin, m_iSoundVolumeMax);
+  if (iValue != iAdjusted)
+  {
+    m_poSoundConfig->vSetKey("volume", iAdjusted);
   }
 }
 
@@ -748,12 +928,12 @@ void Window::vShowSpeed(int _iSpeed)
 {
   char csTitle[50];
 
-  if (m_eShowSpeed == ShowSpeedPercentage)
+  if (m_eShowSpeed == ShowPercentage)
   {
     snprintf(csTitle, 50, "VBA - %d%%", _iSpeed);
     set_title(csTitle);
   }
-  else if (m_eShowSpeed == ShowSpeedDetailed)
+  else if (m_eShowSpeed == ShowDetailed)
   {
     snprintf(csTitle, 50, "VBA - %d%% (%d, %d fps)",
              _iSpeed, systemFrameSkip, systemFPS);
@@ -1080,6 +1260,7 @@ void Window::vOnFileClose()
   if (emulating)
   {
     vStopEmu();
+    vSetDefaultTitle();
     vDrawDefaultScreen();
     vSaveBattery();
     m_stEmulator.emuCleanUp();
@@ -1238,7 +1419,7 @@ void Window::vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed)
   }
 
   m_eShowSpeed = (EShowSpeed)_iShowSpeed;
-  if (m_eShowSpeed == ShowSpeedNone)
+  if (m_eShowSpeed == ShowNone)
   {
     vSetDefaultTitle();
   }
@@ -1272,6 +1453,128 @@ void Window::vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize)
     flashSetSize(0x20000);
   }
   m_poCoreConfig->vSetKey("flash_size", _iFlashSize);
+}
+
+void Window::vOnSoundStatusToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundStatus)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  std::string sSoundStatus;
+  switch (_iSoundStatus)
+  {
+  case SoundOff:
+    soundOffFlag = true;
+    if (systemSoundOn)
+    {
+      soundShutdown();
+    }
+    sSoundStatus = "off";
+    break;
+  case SoundMute:
+    soundDisable(0x30f);
+    sSoundStatus = "mute";
+    break;
+  case SoundOn:
+    if (soundOffFlag)
+    {
+      soundOffFlag = false;
+      if (! soundInit())
+      {
+        m_poSoundOffItem->set_active();
+        return;
+      }
+    }
+    soundEnable(0x30f);
+    sSoundStatus = "on";
+    break;
+  }
+  m_poSoundConfig->vSetKey("status", sSoundStatus);
+}
+
+void Window::vOnSoundEchoToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  soundEcho = _poCMI->get_active();
+  m_poSoundConfig->vSetKey("echo", soundEcho);
+}
+
+void Window::vOnSoundLowPassToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  soundLowPass = _poCMI->get_active();
+  m_poSoundConfig->vSetKey("low_pass", soundLowPass);
+}
+
+void Window::vOnSoundReverseToggled(Gtk::CheckMenuItem * _poCMI)
+{
+  soundReverse = _poCMI->get_active();
+  m_poSoundConfig->vSetKey("reverse_stereo", soundReverse);
+}
+
+void Window::vOnSoundChannelToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundChannel)
+{
+  int iShift = _iSoundChannel;
+  if (_iSoundChannel > 3)
+  {
+    iShift += 4;
+  }
+  int iFlag = 1 << iShift;
+  int iActive = soundGetEnable() & 0x30f;
+  if (_poCMI->get_active())
+  {
+    iActive |= iFlag;
+  }
+  else
+  {
+    iActive &= ~iFlag;
+  }
+  soundEnable(iActive);
+  soundDisable(~iActive & 0x30f);
+
+  const char * acsChannels[] =
+  {
+    "channel_1",
+    "channel_2",
+    "channel_3",
+    "channel_4",
+    "channel_A",
+    "channel_B"
+  };
+  m_poSoundConfig->vSetKey(acsChannels[_iSoundChannel], _poCMI->get_active());
+}
+
+void Window::vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQuality)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  if (m_eCartridge == CartridgeGBA)
+  {
+    soundSetQuality(_iSoundQuality);
+  }
+  else if (m_eCartridge == CartridgeGB)
+  {
+    gbSoundSetQuality(_iSoundQuality);
+  }
+  else
+  {
+    soundQuality = _iSoundQuality;
+  }
+  m_poSoundConfig->vSetKey("quality", _iSoundQuality);
+}
+
+void Window::vOnSoundVolumeToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundVolume)
+{
+  if (! _poCMI->get_active())
+  {
+    return;
+  }
+
+  soundVolume = _iSoundVolume;
+  m_poSoundConfig->vSetKey("volume", _iSoundVolume);
 }
 
 void Window::vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x)

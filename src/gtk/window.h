@@ -25,6 +25,8 @@
 
 #include <string>
 
+#include "../System.h"
+
 #include "configfile.h"
 #include "screenarea.h"
 #include "filters.h"
@@ -60,25 +62,51 @@ public:
   void vDrawScreen();
   void vComputeFrameskip(int _iRate);
   void vShowSpeed(int _iSpeed);
-  inline u32 uiReadJoypad() { return m_uiJoypadState; }
-  inline ECartridge eGetCartridge() { return m_eCartridge; }
+
+  inline u32        uiReadJoypad()  const { return m_uiJoypadState; }
+  inline ECartridge eGetCartridge() const { return m_eCartridge; }
+  inline int        iGetThrottle()  const { return m_iThrottle; }
 
 protected:
   enum EShowSpeed
   {
-    ShowSpeedNone,
-    ShowSpeedPercentage,
-    ShowSpeedDetailed
+    ShowNone,
+    ShowPercentage,
+    ShowDetailed
   };
 
   enum ESaveType
   {
-    SaveTypeAuto,
-    SaveTypeEEPROM,
-    SaveTypeSRAM,
-    SaveTypeFlash,
-    SaveTypeEEPROMSensor,
-    SaveTypeNone
+    SaveAuto,
+    SaveEEPROM,
+    SaveSRAM,
+    SaveFlash,
+    SaveEEPROMSensor,
+    SaveNone
+  };
+
+  enum ESoundStatus
+  {
+    SoundOff,
+    SoundMute,
+    SoundOn
+  };
+
+  enum ESoundQuality
+  {
+    Sound44K = 1,
+    Sound22K = 2,
+    Sound11K = 4
+  };
+
+  enum ESoundVolume
+  {
+    Sound100,
+    Sound200,
+    Sound300,
+    Sound400,
+    Sound25,
+    Sound50
   };
 
   virtual void vOnFileOpen();
@@ -96,6 +124,13 @@ protected:
   virtual void vOnShowSpeedToggled(Gtk::CheckMenuItem * _poCMI, int _iShowSpeed);
   virtual void vOnSaveTypeToggled(Gtk::CheckMenuItem * _poCMI, int _iSaveType);
   virtual void vOnFlashSizeToggled(Gtk::CheckMenuItem * _poCMI, int _iFlashSize);
+  virtual void vOnSoundStatusToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundStatus);
+  virtual void vOnSoundEchoToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnSoundLowPassToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnSoundReverseToggled(Gtk::CheckMenuItem * _poCMI);
+  virtual void vOnSoundChannelToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundChannel);
+  virtual void vOnSoundQualityToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundQuality);
+  virtual void vOnSoundVolumeToggled(Gtk::CheckMenuItem * _poCMI, int _iSoundVolume);
   virtual void vOnFilter2xToggled(Gtk::CheckMenuItem * _poCMI, int _iFilter2x);
   virtual void vOnFilterIBToggled(Gtk::CheckMenuItem * _poCMI, int _iFilterIB);
 #ifdef MMX
@@ -122,6 +157,10 @@ private:
   const int m_iShowSpeedMax;
   const int m_iSaveTypeMin;
   const int m_iSaveTypeMax;
+  const int m_iSoundQualityMin;
+  const int m_iSoundQualityMax;
+  const int m_iSoundVolumeMin;
+  const int m_iSoundVolumeMax;
   const int m_iFilter2xMin;
   const int m_iFilter2xMax;
   const int m_iFilterIBMin;
@@ -136,11 +175,13 @@ private:
   Config::File      m_oConfig;
   Config::Section * m_poCoreConfig;
   Config::Section * m_poDisplayConfig;
+  Config::Section * m_poSoundConfig;
 
   Gtk::FileSelection * m_poFileOpenDialog;
   ScreenArea *         m_poScreenArea;
   Gtk::CheckMenuItem * m_poFilePauseItem;
   Gtk::CheckMenuItem * m_poUseBiosItem;
+  Gtk::CheckMenuItem * m_poSoundOffItem;
 
   SigC::Connection m_oEmuSig;
 
