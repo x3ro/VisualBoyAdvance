@@ -149,6 +149,10 @@ SOURCE=..\src\Globals.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\hq2x.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\interframe.cpp
 # End Source File
 # Begin Source File
@@ -206,10 +210,6 @@ SOURCE=..\src\Sound.cpp
 # Begin Source File
 
 SOURCE=..\src\Sram.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\tvmode.cpp
 # End Source File
 # Begin Source File
 
@@ -293,10 +293,6 @@ SOURCE=..\src\exprNode.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\Font.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\getopt.c
 # End Source File
 # Begin Source File
@@ -314,6 +310,10 @@ SOURCE=..\src\remote.cpp
 # Begin Source File
 
 SOURCE=..\src\SDL.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Text.cpp
 # End Source File
 # End Group
 # End Group

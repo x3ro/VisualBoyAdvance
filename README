@@ -347,6 +347,8 @@ Command line options (override settings in configuration file)
        --filter-bilinear       9 - Bilinear
        --filter-bilinear+     10 - Bilinear Plus
        --filter-scanlines     11 - Scanlines
+       --filter-hq2x          12 - hq2x
+       --filter-lq2x          13 - lq2x
   -h , --help                 Print this help
   -i , --ips=PATCH            Apply given IPS patch
   -p , --profile=[HERTZ]      Enable profiling

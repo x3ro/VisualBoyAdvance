@@ -172,10 +172,6 @@ SOURCE=..\src\Flash.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\Font.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\GBA.cpp
 # End Source File
 # Begin Source File
@@ -185,6 +181,10 @@ SOURCE=..\src\Gfx.cpp
 # Begin Source File
 
 SOURCE=..\src\Globals.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\hq2x.cpp
 # End Source File
 # Begin Source File
 
@@ -252,7 +252,7 @@ SOURCE=..\src\Sram.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\tvmode.cpp
+SOURCE=..\src\Text.cpp
 # End Source File
 # Begin Source File
 
@@ -584,6 +584,10 @@ SOURCE=..\src\win32\MainWndTools.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\MaxScale.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\MemoryViewer.cpp
 # End Source File
 # Begin Source File
@@ -724,10 +728,6 @@ SOURCE=..\src\Flash.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\Font.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\gb\GB.h
 # End Source File
 # Begin Source File
@@ -840,6 +840,10 @@ SOURCE=..\src\win32\Input.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\interp.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\IOViewer.h
 # End Source File
 # Begin Source File
@@ -865,6 +869,10 @@ SOURCE=..\src\win32\MainWnd.h
 # Begin Source File
 
 SOURCE=..\src\win32\MapView.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\MaxScale.h
 # End Source File
 # Begin Source File
 
@@ -961,6 +969,10 @@ SOURCE=..\src\win32\StringTokenizer.h
 # Begin Source File
 
 SOURCE=..\src\System.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\Text.h
 # End Source File
 # Begin Source File
 

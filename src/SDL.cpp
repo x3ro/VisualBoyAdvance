@@ -88,6 +88,10 @@ extern void BilinearPlus(u8*,u32,u8*,u8*,u32,int,int);
 extern void BilinearPlus32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines(u8*,u32,u8*,u8*,u32,int,int);
 extern void Scanlines32(u8*,u32,u8*,u8*,u32,int,int);
+extern void hq2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void hq2x32(u8*,u32,u8*,u8*,u32,int,int);
+extern void lq2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void lq2x32(u8*,u32,u8*,u8*,u32,int,int);
 
 extern void SmartIB(u8*,u32,int,int);
 extern void SmartIB32(u8*,u32,int,int);
@@ -328,6 +332,8 @@ struct option sdlOptions[] = {
   { "filter-bilinear", no_argument, &filter, 9 },
   { "filter-bilinear+", no_argument, &filter, 10 },
   { "filter-scanlines", no_argument, &filter, 11 },
+  { "filter-hq2x", no_argument, &filter, 12 },
+  { "filter-lq2x", no_argument, &filter, 13 },
   { "flash-size", required_argument, 0, 'S' },
   { "flash-64k", no_argument, &sdlFlashSize, 0 },
   { "flash-128k", no_argument, &sdlFlashSize, 1 },
@@ -1111,7 +1117,7 @@ void sdlReadPreferences(FILE *f)
       strcpy(biosFileName, value);
     } else if(!strcmp(key, "filter")) {
       filter = sdlFromHex(value);
-      if(filter < 0 || filter > 11)
+      if(filter < 0 || filter > 13)
         filter = 0;
     } else if(!strcmp(key, "disableStatus")) {
       disableStatusMessages = sdlFromHex(value) ? true : false;
@@ -1879,6 +1885,8 @@ void usage(char *cmd)
         printf("       --filter-bilinear       9 - Bilinear\n");
         printf("       --filter-bilinear+     10 - Bilinear Plus\n");
         printf("       --filter-scanlines     11 - Scanlines\n");
+        printf("       --filter-hq2x          12 - hq2x\n");
+        printf("       --filter-lq2x          13 - lq2x\n");
         printf("  -h , --help                 Print this help\n");
         printf("  -i , --ips=PATCH            Apply given IPS patch\n");
         printf("  -p , --profile=[HERTZ]      Enable profiling\n");
@@ -2462,7 +2470,6 @@ int main(int argc, char **argv)
 
   if(systemColorDepth != 32) {
     switch(filter) {
-    default:
     case 0:
       filterFunction = NULL;
       break;
@@ -2498,6 +2505,15 @@ int main(int argc, char **argv)
       break;
     case 11:
       filterFunction = Scanlines;
+      break;
+    case 12:
+      filterFunction = hq2x;
+      break;
+    case 13:
+      filterFunction = lq2x;
+      break;
+    default:
+      filterFunction = NULL;
       break;
     }
   } else {
@@ -2537,6 +2553,12 @@ int main(int argc, char **argv)
       break;
     case 11:
       filterFunction = Scanlines32;
+      break;
+    case 12:
+      filterFunction = hq2x32;
+      break;
+    case 13:
+      filterFunction = lq2x32;
       break;
     default:
       filterFunction = NULL;
