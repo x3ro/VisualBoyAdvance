@@ -241,7 +241,7 @@ Command line options (override settings in configuration file)
     4 - Super Eagle
     5 - Pixelate (experimental)
     6 - Motion Blur (experimental)
-  -s<frameskip> Set frame skip (0...5)
+  -s<frameskip> Set frame skip (0...9)
   -v<verbose> Set verbose level (add flags values for multiple):
       1 - SWI
       2 - Unaliagned memory access

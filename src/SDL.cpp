@@ -846,8 +846,8 @@ soundQuality);
       soundReverse = sdlFromHex(value) ? true : false;
     } else if(!strcmp(key, "removeIntros")) {
       removeIntros = sdlFromHex(value) ? true : false;
-#ifdef MMX
     } else if(!strcmp(key, "disableMMX")) {
+#ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
 #endif
     } else {
@@ -1346,6 +1346,10 @@ int main(int argc, char **argv)
     switch(op) {
     case 'b':
       useBios = true;
+      if(optarg == NULL) {
+        fprintf(stderr, "Missing BIOS file name\n");
+        exit(-1);
+      }
       strcpy(biosFileName, optarg);
       break;
     case 'd':

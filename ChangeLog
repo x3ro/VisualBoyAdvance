@@ -1,5 +1,7 @@
 2002-10-27  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/SDL.cpp (sdlReadPreferences): Fixed warning if MMX not in use when reading the configuration file
+	* src/SDL.cpp (main): Fixed crash if BIOS file not specified correctly
 	* src/win32/Win32.cpp: Support for higher frameskip 
 	* src/SDL.cpp: Support for higher frameskip 
 

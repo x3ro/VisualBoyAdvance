@@ -6,11 +6,15 @@ Core changes:
 - don't reset LCD after disabling forced blank
 - speed up now uses frameskip 9 (6 FPS)
 - added AdvanceMAME Scale2x and Simple 2x filters
+- added support for higher frameskip (up to 9)
 Windows changes:
 - added freeze recent list option
 - added 800x600 support
 SDL version:
 - fixed crash when printing void * variables
+- fixed crash when -b specified incorrectly
+- fixed warning when reading configuration file about disableMMX if compiled
+  without MMX support
 
 Version 1.1:
 
