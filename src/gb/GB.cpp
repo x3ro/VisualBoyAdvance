@@ -788,7 +788,6 @@ void  gbWriteMemory(register u16 address, register u8 value)
     SOUND_EVENT(address,value);
     return;
   }
-
   case 0x40: {
     int lcdChange = (register_LCDC & 0x80) ^ (value & 0x80);
 
@@ -2771,6 +2770,9 @@ void gbEmulate(int ticksToStop)
             gbWindowLine = -1;
 
             gbFrameCount++;
+
+            if((gbFrameCount % 10) == 0)
+              system10Frames(60);
 
             if(gbFrameCount >= 60) {
               u32 currentTime = systemGetClock();
