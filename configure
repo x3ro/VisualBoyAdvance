@@ -940,7 +940,7 @@ fi
 echo "$ac_t""$ac_cv_use_prof" 1>&6
 
 PACKAGE=VisualBoyAdvance
-VERSION=1.4
+VERSION=1.5
 CCC="gcc  c++ g++ CC cxx cc++ cl"
 # Extract the first word of "gcc", so it can be a program name with args.
 set dummy gcc; ac_word=$2

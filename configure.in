@@ -42,7 +42,7 @@ ac_cv_use_prof=$withval, ac_cv_use_prof=yes)
 AC_CACHE_CHECK(whether to enable profiling, ac_cv_use_prof, ac_cv_use_prof=yes)
 
 PACKAGE=VisualBoyAdvance
-VERSION=1.4
+VERSION=1.5
 CCC="gcc  c++ g++ CC cxx cc++ cl"
 dnl Checks for programs.
 AC_PROG_CC
