@@ -1,0 +1,4 @@
+# List of source files which containing translatable strings.
+
+src/gtk/vba.glade
+src/gtk/window.cpp

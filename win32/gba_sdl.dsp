@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /Ob2 /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "NDEBUG" /D "FINAL_VERSION" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /Ob2 /I "../src" /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "NDEBUG" /D "FINAL_VERSION" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -67,7 +67,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MD /W3 /Gm /GX /ZI /Od /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "_DEBUG" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /GZ /c
+# ADD CPP /nologo /MD /W3 /Gm /GX /ZI /Od /I "../src" /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "_DEBUG" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -265,7 +265,7 @@ SOURCE=..\src\armdis.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\debugger.cpp
+SOURCE=..\src\sdl\debugger.cpp
 # End Source File
 # Begin Source File
 
@@ -297,7 +297,7 @@ SOURCE=..\src\remote.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\SDL.cpp
+SOURCE=..\src\sdl\SDL.cpp
 # End Source File
 # Begin Source File
 

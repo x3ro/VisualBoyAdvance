@@ -1,0 +1,99 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR VBA development team
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: undefined\n"
+"POT-Creation-Date: 2004-03-29 19:53+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/gtk/vba.glade:8
+msgid "VisualBoyAdvance"
+msgstr ""
+
+#: src/gtk/vba.glade:35
+msgid "_File"
+msgstr ""
+
+#: src/gtk/vba.glade:52
+msgid "_Pause"
+msgstr ""
+
+#: src/gtk/vba.glade:61
+msgid "_Reset"
+msgstr ""
+
+#: src/gtk/vba.glade:107
+msgid "_Video"
+msgstr ""
+
+#: src/gtk/vba.glade:116
+msgid "_Zoom"
+msgstr ""
+
+#: src/gtk/vba.glade:125
+msgid "_1x"
+msgstr ""
+
+#: src/gtk/vba.glade:134
+msgid "_2x"
+msgstr ""
+
+#: src/gtk/vba.glade:144
+msgid "_3x"
+msgstr ""
+
+#: src/gtk/vba.glade:154
+msgid "_4x"
+msgstr ""
+
+#: src/gtk/vba.glade:172
+msgid "_Help"
+msgstr ""
+
+#: src/gtk/vba.glade:181
+msgid "_About"
+msgstr ""
+
+#: src/gtk/vba.glade:222
+msgid "About VBA"
+msgstr ""
+
+#: src/gtk/vba.glade:287
+msgid "An emulator for Gameboy™ and GameboyAdvance™."
+msgstr ""
+
+#: src/gtk/vba.glade:309
+msgid "<small>Copyright © 1999-2004 Forgotten</small>"
+msgstr ""
+
+#: src/gtk/window.cpp:245
+#, c-format
+msgid "Unknown file type %s"
+msgstr ""
+
+#: src/gtk/window.cpp:324
+#, c-format
+msgid "Failed to load file %s"
+msgstr ""
+
+#: src/gtk/window.cpp:352
+msgid "Loaded battery"
+msgstr ""
+
+#: src/gtk/window.cpp:363
+msgid "Saved battery"
+msgstr ""
+
+#: src/gtk/window.cpp:397
+msgid "Open a ROM"
+msgstr ""

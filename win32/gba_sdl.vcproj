@@ -22,7 +22,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include/zlib,include/png,SDL-1.2.2/include"
+				AdditionalIncludeDirectories="../src,include/zlib,include/png,SDL-1.2.2/include"
 				PreprocessorDefinitions="_DEBUG,DEV_VERSION,WIN32,_CONSOLE,BKPT_SUPPORT,MMX,SDL,PROFILING"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="2"
@@ -80,7 +80,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="include/zlib,include/png,SDL-1.2.2/include"
+				AdditionalIncludeDirectories="../src,include/zlib,include/png,SDL-1.2.2/include"
 				PreprocessorDefinitions="NDEBUG,FINAL_VERSION,DEV_VERSION,WIN32,_CONSOLE,BKPT_SUPPORT,MMX,SDL,PROFILING"
 				StringPooling="TRUE"
 				RuntimeLibrary="2"
@@ -254,7 +254,7 @@
 				Name="SDL"
 				Filter="">
 				<File
-					RelativePath="..\src\SDL.cpp">
+					RelativePath="..\src\sdl\SDL.cpp">
 				</File>
 				<File
 					RelativePath="..\src\Text.cpp">
@@ -263,7 +263,7 @@
 					RelativePath="..\src\armdis.cpp">
 				</File>
 				<File
-					RelativePath="..\src\debugger.cpp">
+					RelativePath="..\src\sdl\debugger.cpp">
 				</File>
 				<File
 					RelativePath="..\src\expr-lex.cpp">
