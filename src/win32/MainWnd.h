@@ -408,10 +408,12 @@ class MainWnd : public CWnd
   afx_msg void OnUpdateOptionsSoundVolume5x(CCmdUI* pCmdUI);
   afx_msg void OnCheatsDisablecheats();
   afx_msg void OnUpdateCheatsDisablecheats(CCmdUI* pCmdUI);
-	afx_msg void OnOptionsVideoFullscreenmaxscale();
-	//}}AFX_MSG
+  afx_msg void OnOptionsVideoFullscreenmaxscale();
+  afx_msg void OnOptionsEmulatorGameoverrides();
+  afx_msg void OnUpdateOptionsEmulatorGameoverrides(CCmdUI* pCmdUI);
+  //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
-
+    
     afx_msg BOOL OnFileRecentFile(UINT nID);
   afx_msg BOOL OnFileLoadSlot(UINT nID);
   afx_msg BOOL OnFileSaveSlot(UINT nID);

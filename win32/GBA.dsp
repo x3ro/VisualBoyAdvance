@@ -560,6 +560,10 @@ SOURCE=..\src\win32\DirectSound.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\GameOverrides.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\GDIDisplay.cpp
 # End Source File
 # Begin Source File
@@ -733,6 +737,10 @@ SOURCE=..\src\win32\FileDlg.h
 # Begin Source File
 
 SOURCE=..\src\Flash.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\GameOverrides.h
 # End Source File
 # Begin Source File
 

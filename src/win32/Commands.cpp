@@ -129,6 +129,7 @@ struct {
   { "OptionsEmulatorDirectories", ID_OPTIONS_EMULATOR_DIRECTORIES },
   { "OptionsEmulatorSelectBIOS", ID_OPTIONS_EMULATOR_SELECTBIOSFILE },
   { "OptionsEmulatorUseBIOS", ID_OPTIONS_EMULATOR_USEBIOSFILE },
+  { "OptionsEmulatorGameOverrides", ID_OPTIONS_EMULATOR_GAMEOVERRIDES },
   { "OptionsEmulatorSkipBIOS", ID_OPTIONS_EMULATOR_SKIPBIOS },
   { "OptionsEmulatorShowSpeedNone", ID_OPTIONS_EMULATOR_SHOWSPEED_NONE },
   { "OptionsEmulatorShowSpeedPercentage", ID_OPTIONS_EMULATOR_SHOWSPEED_PERCENTAGE },

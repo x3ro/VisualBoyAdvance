@@ -1201,6 +1201,27 @@ BEGIN
     DEFPUSHBUTTON   "&Copy",IDC_COPY,87,164,50,14
 END
 
+IDD_GAME_OVERRIDES DIALOG DISCARDABLE  0, 0, 271, 118
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Game overrides"
+FONT 8, "MS Sans Serif"
+BEGIN
+    COMBOBOX        IDC_RTC,152,35,112,12,CBS_DROPDOWNLIST | WS_VSCROLL | 
+                    WS_TABSTOP
+    COMBOBOX        IDC_SAVE_TYPE,152,55,112,12,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_FLASH_SIZE,152,76,112,12,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,7,97,50,14
+    PUSHBUTTON      "Defaults",IDC_DEFAULTS,110,97,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,213,97,50,14
+    LTEXT           "Overrides for game:",IDC_STATIC,7,17,140,8
+    EDITTEXT        IDC_NAME,152,15,112,14,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Real Time Clock:",IDC_STATIC,7,37,140,8
+    LTEXT           "Save Type:",IDC_STATIC,7,57,140,8
+    LTEXT           "Flash Size:",IDC_STATIC,7,77,140,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1542,6 +1563,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 179
     END
+
+    IDD_GAME_OVERRIDES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 264
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 111
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1781,6 +1810,8 @@ BEGIN
             MENUITEM "Auto hide menu",              ID_OPTIONS_EMULATOR_AUTOHIDEMENU
 
             MENUITEM "Rewind interval...",          ID_OPTIONS_EMULATOR_REWINDINTERVAL
+
+            MENUITEM "&Game Overrides...",          ID_OPTIONS_EMULATOR_GAMEOVERRIDES
 
             POPUP "Show speed"
             BEGIN

@@ -22,6 +22,7 @@
 #include "Associate.h"
 #include "Directories.h"
 #include "FileDlg.h"
+#include "GameOverrides.h"
 #include "GBColorDlg.h"
 #include "Joypad.h"
 #include "MaxScale.h"
@@ -1668,4 +1669,18 @@ void MainWnd::OnOptionsVideoFullscreenmaxscale()
   theApp.winCheckFullscreen();
 
   dlg.DoModal();
+}
+
+
+void MainWnd::OnOptionsEmulatorGameoverrides() 
+{
+  if(emulating && theApp.cartridgeType == 0) {
+    GameOverrides dlg(this);
+    dlg.DoModal();
+  }
+}
+
+void MainWnd::OnUpdateOptionsEmulatorGameoverrides(CCmdUI* pCmdUI) 
+{
+  pCmdUI->Enable(emulating && theApp.cartridgeType == 0);
 }

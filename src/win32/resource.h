@@ -5,6 +5,7 @@
 #define IDS_UNSUPPORTED_VBA_SGM         1
 #define IDS_CANNOT_LOAD_SGM             2
 #define IDS_SAVE_GAME_NOT_USING_BIOS    3
+#define IDC_DEFAULTS                    3
 #define IDS_SAVE_GAME_USING_BIOS        4
 #define IDS_UNSUPPORTED_SAVE_TYPE       5
 #define IDS_CANNOT_OPEN_FILE            6
@@ -93,6 +94,7 @@
 #define IDD_IO_VIEWER                   151
 #define IDD_MAX_SCALE                   154
 #define IDD_BUG_REPORT                  155
+#define IDD_GAME_OVERRIDES              156
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -487,9 +489,13 @@
 #define IDC_BIT_3                       1253
 #define IDC_COPY                        1253
 #define IDC_BIT_4                       1254
+#define IDC_NAME                        1254
 #define IDC_BIT_5                       1255
+#define IDC_RTC                         1255
 #define IDC_BIT_6                       1256
+#define IDC_SAVE_TYPE                   1256
 #define IDC_BIT_7                       1257
+#define IDC_FLASH_SIZE                  1257
 #define IDC_BIT_8                       1258
 #define IDC_BIT_9                       1259
 #define IDC_BIT_10                      1260
@@ -738,14 +744,15 @@
 #define ID_OPTIONS_VIDEO_FULLSCREENMAXSCALE 40273
 #define ID_OPTIONS_FILTER_HQ2X          40274
 #define ID_OPTIONS_FILTER_LQ2X          40275
+#define ID_OPTIONS_EMULATOR_GAMEOVERRIDES 40276
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        156
-#define _APS_NEXT_COMMAND_VALUE         40276
-#define _APS_NEXT_CONTROL_VALUE         1254
+#define _APS_NEXT_RESOURCE_VALUE        158
+#define _APS_NEXT_COMMAND_VALUE         40277
+#define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           103
 #endif
 #endif
