@@ -1,6 +1,7 @@
 Version 1.2 (in progress):
 
 Core changes:
+- fixed problem on big endian when setting IO memory reable positions
 - big endian support
 - C core for portability
 - don't reset LCD after disabling forced blank

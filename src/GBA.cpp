@@ -2841,7 +2841,8 @@ void CPUInit(char *biosFileName, bool useBiosFile)
     cpuLowestBitSet[i] = j;
   }
 
-  memset(ioReadable, 1, 0x400);
+  for(i = 0; i < 0x400; i++)
+    ioReadable[i] = true;
   for(i = 0x10; i < 0x48; i++)
     ioReadable[i] = false;
   for(i = 0x4c; i < 0x50; i++)

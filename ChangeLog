@@ -1,3 +1,7 @@
+2002-10-28  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPUInit): fix bug setting reable IO positions
+
 2002-10-27  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp (sdlReadPreferences): Fixed warning if MMX not in use when reading the configuration file
