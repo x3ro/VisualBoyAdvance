@@ -2080,8 +2080,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x05b:
@@ -2094,8 +2096,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x09b:
@@ -2108,8 +2112,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x0db:
@@ -2122,8 +2128,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x11b:
@@ -2144,7 +2152,8 @@ if(cond_res) {
       u32 address = reg[base].I - reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x15b:
@@ -2165,7 +2174,8 @@ if(cond_res) {
       u32 address = reg[base].I - ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x19b:
@@ -2186,7 +2196,8 @@ if(cond_res) {
       u32 address = reg[base].I + reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x1db:
@@ -2207,7 +2218,8 @@ if(cond_res) {
       u32 address = reg[base].I + ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = CPUReadHalfWord(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x01d:
@@ -2220,8 +2232,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x05d:
@@ -2234,8 +2248,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x09d:
@@ -2248,8 +2264,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x0dd:
@@ -2262,8 +2280,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x11d:
@@ -2284,7 +2304,8 @@ if(cond_res) {
       u32 address = reg[base].I - reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x15d:
@@ -2305,7 +2326,8 @@ if(cond_res) {
       u32 address = reg[base].I - ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x19d:
@@ -2326,7 +2348,8 @@ if(cond_res) {
       u32 address = reg[base].I + reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x1dd:
@@ -2347,7 +2370,8 @@ if(cond_res) {
       u32 address = reg[base].I + ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s8)CPUReadByte(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x01f:
@@ -2360,8 +2384,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x05f:
@@ -2374,8 +2400,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      address -= offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address -= offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x09f:
@@ -2388,8 +2416,10 @@ if(cond_res) {
       int offset = reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x0df:
@@ -2402,8 +2432,10 @@ if(cond_res) {
       int offset = (opcode & 0x0F) | ((opcode >> 4) & 0xF0);
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      address += offset;
-      reg[base].I = address;
+      if(dest != base) {
+        address += offset;
+        reg[base].I = address;
+      }
     }
     break;
   case 0x11f:
@@ -2424,7 +2456,8 @@ if(cond_res) {
       u32 address = reg[base].I - reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x15f:
@@ -2445,7 +2478,8 @@ if(cond_res) {
       u32 address = reg[base].I - ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x19f:
@@ -2466,7 +2500,8 @@ if(cond_res) {
       u32 address = reg[base].I + reg[opcode & 0x0F].I;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
   case 0x1df:
@@ -2487,7 +2522,8 @@ if(cond_res) {
       u32 address = reg[base].I + ((opcode & 0x0F)|((opcode>>4)&0xF0));
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
       reg[dest].I = (s16)CPUReadHalfWordSigned(address);
-      reg[base].I = address;
+      if(dest != base)
+        reg[base].I = address;
     }
     break;
     LOGICAL_DATA_OPCODE(OP_EOR,  OP_EOR, 0x020);
@@ -3002,7 +3038,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I -= offset;
+      if(dest != base)
+        reg[base].I -= offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3020,7 +3057,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I -= offset;
+      if(dest != base)
+        reg[base].I -= offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
     }
     break;
@@ -3032,7 +3070,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I += offset;
+      if(dest != base)
+        reg[base].I += offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3050,7 +3089,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I += offset;
+      if(dest != base)
+        reg[base].I += offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
     }
     break;
@@ -3078,8 +3118,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3113,8 +3154,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3208,7 +3250,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I -= offset;
+      if(dest != base)
+        reg[base].I -= offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -3221,7 +3264,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I += offset;
+      if(dest != base)
+        reg[base].I += offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -3243,8 +3287,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -3266,8 +3311,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -3695,7 +3741,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3718,7 +3765,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3747,7 +3795,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3775,7 +3824,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address - value;
+      if(dest != base)
+        reg[base].I = address - value;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3797,7 +3847,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3820,7 +3871,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3849,7 +3901,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3877,7 +3930,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadMemory(address);
-      reg[base].I = address + value;
+      if(dest != base)
+        reg[base].I = address + value;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -3981,8 +4035,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4001,8 +4056,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;      
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4027,8 +4083,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4052,8 +4109,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - value;
-      reg[base].I = address;      
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4157,8 +4215,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4177,8 +4236,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;      
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4203,8 +4263,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4228,8 +4289,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + value;
-      reg[base].I = address;      
       reg[dest].I = CPUReadMemory(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess32(address);
       if(dest == 15) {
         clockTicks += 2;
@@ -4663,7 +4725,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4680,7 +4743,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4703,7 +4767,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address - offset;
+      if(dest != base)
+        reg[base].I = address - offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4725,7 +4790,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address - value;
+      if(dest != base)
+        reg[base].I = address - value;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4741,7 +4807,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4758,7 +4825,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4781,7 +4849,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address + offset;
+      if(dest != base)
+        reg[base].I = address + offset;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4803,7 +4872,8 @@ if(cond_res) {
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I;
       reg[dest].I = CPUReadByte(address);
-      reg[base].I = address + value;
+      if(dest != base)
+        reg[base].I = address + value;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4877,8 +4947,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4891,8 +4962,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;      
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4911,8 +4983,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -4930,8 +5003,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I - value;
-      reg[base].I = address;      
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -5005,8 +5079,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -5019,8 +5094,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;      
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -5039,8 +5115,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + offset;
-      reg[base].I = address;
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
@@ -5058,8 +5135,9 @@ if(cond_res) {
       int dest = (opcode >> 12) & 15;
       int base = (opcode >> 16) & 15;
       u32 address = reg[base].I + value;
-      reg[base].I = address;      
       reg[dest].I = CPUReadByte(address);
+      if(dest != base)
+        reg[base].I = address;      
       clockTicks += 3 + CPUUpdateTicksAccess16(address);
     }
     break;
