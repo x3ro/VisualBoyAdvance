@@ -110,7 +110,7 @@ int profWrite32(FILE *f, u32 v)
   return 0;
 }
 
-int profWrite(FILE *f, char *buf, int n)
+int profWrite(FILE *f, char *buf, unsigned int n)
 {
   if(fwrite(buf, 1, n, f) != n)
     return 1;
@@ -194,7 +194,7 @@ void profStartup(u32 lowpc, u32 highpc)
     return;
   o = highpc - lowpc;
   if( monsize < o )
-    s_scale = ( (float) monsize / o ) * SCALE_1_TO_1;
+    s_scale = (int)(( (float) monsize / o ) * SCALE_1_TO_1);
   else
     s_scale = SCALE_1_TO_1;
   profControl(1);
@@ -323,7 +323,7 @@ void profCount()
     if (toindex >= tolimit) {
       goto overflow;
     }
-    *frompcindex = toindex;
+    *frompcindex = (unsigned short)toindex;
     top = &tos[toindex];
     top->selfpc = selfpc;
     top->count = 1;
@@ -360,7 +360,7 @@ void profCount()
       top->selfpc = selfpc;
       top->count = 1;
       top->link = *frompcindex;
-      *frompcindex = toindex;
+      *frompcindex = (unsigned short)toindex;
       goto done;
     }
     /*
@@ -378,7 +378,7 @@ void profCount()
       toindex = prevtop->link;
       prevtop->link = top->link;
       top->link = *frompcindex;
-      *frompcindex = toindex;
+      *frompcindex = (unsigned short)toindex;
       goto done;
     }
     
