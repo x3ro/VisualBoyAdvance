@@ -4,10 +4,11 @@ Core changes:
 - big endian support
 - C core for portability
 - don't reset LCD after disabling forced blank
-- speed up now uses frameskip 5
+- speed up now uses frameskip 9 (6 FPS)
 - added AdvanceMAME Scale2x and Simple 2x filters
 Windows changes:
 - added freeze recent list option
+- added 800x600 support
 SDL version:
 - fixed crash when printing void * variables
 

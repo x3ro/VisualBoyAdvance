@@ -1187,9 +1187,11 @@ BEGIN
             MENUITEM "x&2",                         ID_OPTIONS_VIDEO_X2
             MENUITEM "x&3",                         ID_OPTIONS_VIDEO_X3
             MENUITEM "x&4",                         ID_OPTIONS_VIDEO_X4
-            MENUITEM "&F&ull Screen (320x240)",     ID_OPTIONS_VIDEO_FULLSCREEN320X240
+            MENUITEM "Full Screen (320x240)",       ID_OPTIONS_VIDEO_FULLSCREEN320X240
 
-            MENUITEM "Fu&ll Screen (640x480)",      ID_OPTIONS_VIDEO_FULLSCREEN640X480
+            MENUITEM "Full Screen (640x480)",       ID_OPTIONS_VIDEO_FULLSCREEN640X480
+
+            MENUITEM "Full Screen (800x600)",       ID_OPTIONS_VIDEO_FULLSCREEN800X600
 
             MENUITEM SEPARATOR
             MENUITEM "&Disable SFX",                ID_OPTIONS_VIDEO_DISABLESFX

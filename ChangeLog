@@ -1,3 +1,7 @@
+2002-10-26  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src\win32\Win32.cpp: Add 800x600 support 
+
 2002-10-25  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src\win32\Win32.cpp (fileExportGSASnapshot): added code

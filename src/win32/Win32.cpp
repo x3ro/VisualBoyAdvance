@@ -107,6 +107,7 @@ BOOL active = TRUE;
 BOOL fullScreenStretch = FALSE;
 BOOL mode320Available = FALSE;
 BOOL mode640Available = FALSE;
+BOOL mode800Available = FALSE;
 BOOL changingVideoSize = FALSE;
 u8 *delta[257*244*2];
 void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
@@ -232,7 +233,7 @@ deviceInfo          *pDevices     = NULL;
 
 enum {
   VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480
+  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600
 };
 
 enum {
@@ -1306,6 +1307,10 @@ void updateVideoMenu(HMENU menu)
                 CHECKMENUSTATE((videoOption == VIDEO_640x480)));
   EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN640X480,
                  ENABLEMENU(mode640Available));  
+  CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
+                CHECKMENUSTATE((videoOption == VIDEO_800x600)));
+  EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
+                 ENABLEMENU(mode800Available));  
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DISABLESFX,
                 CHECKMENUSTATE(cpuDisableSfx));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREENSTRETCHTOFIT,
@@ -2340,6 +2345,32 @@ void adjustDestRect()
       dest.bottom = 480;
     }          
   }
+  if(videoOption == VIDEO_800x600) {
+    if(cartridgeType == 0) {
+      dest.top += 60;
+      dest.bottom += 60;
+      dest.left += 40;
+      dest.right += 40;
+    } else {
+      if(gbBorderOn) {
+        dest.top += 76;
+        dest.bottom += 76;
+        dest.left += 144;
+        dest.right += 144;
+      } else {
+        dest.top += 12;
+        dest.bottom += 12;
+        dest.left += 80;
+        dest.right += 80;
+      }
+    }
+    if(fullScreenStretch) {
+      dest.top = 0+menuSkip;
+      dest.left = 0;
+      dest.right = 800;
+      dest.bottom = 600;
+    }          
+  }  
 }
 
 void updateFilter()
@@ -2446,7 +2477,8 @@ void updateWindowSize(int value)
     videoOption = value;
     if(!initDirectDraw()) {
       if(videoOption == VIDEO_320x240 ||
-         videoOption == VIDEO_640x480)
+         videoOption == VIDEO_640x480 ||
+         videoOption == VIDEO_800x600)
         regSetDwordValue("video", VIDEO_1X);
       changingVideoSize = FALSE;
       fileExit();
@@ -2531,6 +2563,24 @@ void updateWindowSize(int value)
       surfaceSizeY = 480;
     }
     break;
+  case VIDEO_800x600:
+    if(cartridgeType == 0) {
+      surfaceSizeX = sizeX * 3;
+      surfaceSizeY = sizeY * 3;
+    } else {
+      if(gbBorderOn) {
+        surfaceSizeX = sizeX * 2;
+        surfaceSizeY = sizeY * 2;
+      } else {
+        surfaceSizeX = sizeX * 4;
+        surfaceSizeY = sizeY * 4;
+      }      
+    }
+    if(fullScreenStretch) {
+      surfaceSizeX = 800;
+      surfaceSizeY = 600;
+    }
+    break;
   }
 
   rect.right = sizeX;
@@ -2595,6 +2645,9 @@ void updateVideoSize(UINT id)
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN640X480:
     value = VIDEO_640x480;
+    break;
+  case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
+    value = VIDEO_800x600;
     break;
   }
 
@@ -3367,6 +3420,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_VIDEO_X4:
     case ID_OPTIONS_VIDEO_FULLSCREEN320X240:
     case ID_OPTIONS_VIDEO_FULLSCREEN640X480:
+    case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
       updateVideoSize(wParam&0xffff);
       break;
     case ID_OPTIONS_VIDEO_DISABLESFX:
@@ -3794,6 +3848,11 @@ HRESULT WINAPI checkModesAvailable(LPDDSURFACEDESC2 surf, LPVOID lpContext)
      surf->ddpfPixelFormat.dwRGBBitCount == 16) {
     mode640Available = TRUE;
   }
+  if(surf->dwWidth == 800 &&
+     surf->dwHeight == 600 &&
+     surf->ddpfPixelFormat.dwRGBBitCount == 16) {
+    mode800Available = TRUE;
+  }
   return DDENUMRET_OK;
 }
 
@@ -3833,6 +3892,14 @@ BOOL initDirectDraw()
     if(fullScreenStretch) {
       surfaceSizeX = 640;
       surfaceSizeY = 480;
+    }    
+    break;
+  case VIDEO_800x600:
+    surfaceSizeX = sizeX * 3;
+    surfaceSizeY = sizeY * 3;
+    if(fullScreenStretch) {
+      surfaceSizeX = 800;
+      surfaceSizeY = 600;
     }    
     break;
   }
@@ -3986,6 +4053,21 @@ BOOL initDirectDraw()
     }
   }
 
+  if(videoOption == VIDEO_800x600) {
+    hret = pDirectDraw->SetDisplayMode(800,
+                                       600,
+                                       16,
+                                       0,
+                                       0);
+    if(hret != DD_OK) {
+      log("Error SetDisplayMode %08x\n", hret);      
+      videoOption = VIDEO_1X;
+      regSetDwordValue("video", videoOption);
+      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
+      return FALSE;
+    }
+  }
+  
   DDSURFACEDESC2 ddsd;
   ZeroMemory(&ddsd,sizeof(ddsd));
   ddsd.dwSize = sizeof(ddsd);
@@ -4253,7 +4335,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   videoOption = regQueryDwordValue("video", 0);
 
-  if(videoOption < 0 || videoOption > VIDEO_640x480)
+  if(videoOption < 0 || videoOption > VIDEO_800x600)
     videoOption = 0;
 
   windowPositionX = regQueryDwordValue("windowX", 0);
@@ -4312,8 +4394,7 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   recentFreeze = regQueryDwordValue("recentFreeze", 0);
 
   if(!initDirectDraw()) {
-    if(videoOption == VIDEO_320x240 ||
-       videoOption == VIDEO_640x480)
+    if(videoOption >= VIDEO_320x240)
       regSetDwordValue("video", VIDEO_1X);    
     return FALSE;
   }
