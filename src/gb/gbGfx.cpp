@@ -143,7 +143,7 @@ void gbRenderLine()
   int tile_pattern_address = tile_pattern + tile * 16 + by*2;
 
   if(register_LCDC & 0x80) {
-    if(register_LCDC & 0x01 || gbCgbMode) {
+    if((register_LCDC & 0x01 || gbCgbMode) && (layerSettings & 0x0100)) {
       while(x < 160) {
         u8 tile_a = 0;
         u8 tile_b = 0;
@@ -218,7 +218,7 @@ void gbRenderLine()
     }
     
     // do the window display
-    if((register_LCDC & 0x20) != 0) {
+    if((register_LCDC & 0x20) && (layerSettings & 0x2000)) {
       int wy = register_WY;
       
       if(y >= wy) {
@@ -473,7 +473,7 @@ void gbDrawSprites()
   if(!(register_LCDC & 0x80))
     return;
   
-  if((register_LCDC & 2)) {
+  if((register_LCDC & 2) && (layerSettings & 0x1000)) {
     int yc = register_LY;
       
     int address = 0xfe00;

@@ -45,6 +45,8 @@ extern int CPUReadInt(gzFile);
 extern void CPUWriteInt(gzFile, int);
 extern bool CPUIsZipFile(char *);
 
+bool gbUpdateSizes();
+
 // debugging
 bool memorydebug = false;
 char gbBuffer[2048];
@@ -2482,7 +2484,11 @@ bool gbLoadRom(char *szFile)
     gbRomSize = size;
   }
   
-  
+  return gbUpdateSizes();
+}
+
+bool gbUpdateSizes()
+{
   if(gbRom[0x148] > 7) {
     systemMessage(MSG_UNSUPPORTED_ROM_SIZE,
                   "Unsupported rom size %02x", gbRom[0x148]);
@@ -2775,8 +2781,11 @@ void gbEmulate(int ticksToStop)
               gbLastTime = currentTime;
               gbFrameCount = 0;       
             }
-
-            gbJoymask = systemReadJoypad();         
+            u32 joy = 0;
+            if(systemReadJoypads())
+              // read default joystick
+              joy = systemReadJoypad(-1);
+            gbJoymask = joy;
             int newmask = gbJoymask & 255;
 
             if(gbRom[0x147] == 0x22) {
@@ -2787,7 +2796,7 @@ void gbEmulate(int ticksToStop)
               gbInterrupt |= 16;
             }
 
-            newmask = systemReadJoypadExtended();
+            newmask = (joy >> 10);
             
             speedup = (newmask & 1) ? true : false;
             gbCapture = (newmask & 2) ? true : false;
@@ -3112,8 +3121,10 @@ void gbEmulate(int ticksToStop)
     }
 
     if(ticksToStop <= 0) {
-      if(!(register_LCDC & 0x80))
-        gbJoymask = systemReadJoypad();     
+      if(!(register_LCDC & 0x80)) {
+        if(systemReadJoypads())
+          gbJoymask = systemReadJoypad(-1);
+      }
       return;
     }
   }
