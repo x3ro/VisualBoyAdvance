@@ -66,7 +66,7 @@
 #include "Cheats.h"
 #include "Globals.h"
 #include "NLS.h"
-#include <zlib.h>
+#include "Util.h"
 
 /**
  * Gameshark code types:
@@ -1590,7 +1590,7 @@ void cheatsAddCBACode(char *code, char *desc)
 
 void cheatsSaveGame(gzFile file)
 {
-  CPUWriteInt(file, cheatsNumber);
+  utilWriteInt(file, cheatsNumber);
   
   gzwrite(file, cheatsList, sizeof(cheatsList));
 }
@@ -1599,7 +1599,7 @@ void cheatsReadGame(gzFile file)
 {
   cheatsNumber = 0;
   
-  cheatsNumber = CPUReadInt(file);
+  cheatsNumber = utilReadInt(file);
 
   gzread(file, cheatsList, sizeof(cheatsList));
 

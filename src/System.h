@@ -45,13 +45,6 @@ typedef signed __int64 s64;
 typedef signed long long s64;
 #endif
 
-// save game
-
-typedef struct {
-  void *address;
-  int size;
-} variable_desc;
-
 extern void log(char *,...);
 
 extern bool systemPauseOnFrame();

@@ -16,23 +16,17 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <zlib.h>
 #include <stdlib.h>
 #include <memory.h>
 
 #include "../System.h"
 #include "../Port.h"
+#include "../Util.h"
 #include "GB.h"
 #include "gbGlobals.h"
 
 extern u8 *pix;
 extern bool speedup;
-
-extern void CPUWriteData(gzFile, variable_desc *);
-extern void CPUReadData(gzFile, variable_desc *);
-extern int CPUReadInt(gzFile);
-extern void CPUWriteInt(gzFile, int);
-extern bool CPUIsZipFile(char *);
 
 #define GBSGB_NONE            0
 #define GBSGB_RESET           1
@@ -861,7 +855,7 @@ variable_desc gbSgbSaveStructV3[] = {
 
 void gbSgbSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, gbSgbSaveStructV3);
+  utilWriteData(gzFile, gbSgbSaveStructV3);
 
   gzwrite(gzFile, gbSgbBorder, 2048);
   gzwrite(gzFile, gbSgbBorderChar, 32*256);
@@ -876,9 +870,9 @@ void gbSgbSaveGame(gzFile gzFile)
 void gbSgbReadGame(gzFile gzFile, int version)
 {
   if(version >= 3)
-    CPUReadData(gzFile, gbSgbSaveStructV3);
+    utilReadData(gzFile, gbSgbSaveStructV3);
   else {
-    CPUReadData(gzFile, gbSgbSaveStruct);
+    utilReadData(gzFile, gbSgbSaveStruct);
     gbSgbFourPlayers = 0;
   }
 

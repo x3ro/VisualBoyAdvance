@@ -18,6 +18,7 @@
  */
 #include "GBA.h"
 #include "EEprom.h"
+#include "Util.h"
 
 extern int cpuDmaCount;
 
@@ -53,16 +54,16 @@ void eepromReset()
 
 void eepromSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, eepromSaveData);
-  CPUWriteInt(gzFile, eepromSize);
+  utilWriteData(gzFile, eepromSaveData);
+  utilWriteInt(gzFile, eepromSize);
   gzwrite(gzFile, eepromData, 0x2000);
 }
 
 void eepromReadGame(gzFile gzFile, int version)
 {
-  CPUReadData(gzFile, eepromSaveData);
+  utilReadData(gzFile, eepromSaveData);
   if(version >= SAVE_GAME_VERSION_3) {
-    eepromSize = CPUReadInt(gzFile);
+    eepromSize = utilReadInt(gzFile);
     gzread(gzFile, eepromData, 0x2000);
   } else {
     // prior to 0.7.1, only 4K EEPROM was supported

@@ -39,12 +39,6 @@
 extern u8 *pix;
 extern bool speedup;
 
-extern void CPUWriteData(gzFile, variable_desc *);
-extern void CPUReadData(gzFile, variable_desc *);
-extern int CPUReadInt(gzFile);
-extern void CPUWriteInt(gzFile, int);
-extern bool CPUIsZipFile(char *);
-
 bool gbUpdateSizes();
 
 // debugging
@@ -2093,11 +2087,11 @@ bool gbWriteSaveState(char *name)
   if(gzFile == NULL)
     return false;
 
-  CPUWriteInt(gzFile, GBSAVE_GAME_VERSION);
+  utilWriteInt(gzFile, GBSAVE_GAME_VERSION);
 
   gzwrite(gzFile, &gbRom[0x134], 15);
   
-  CPUWriteData(gzFile, gbSaveGameStruct);
+  utilWriteData(gzFile, gbSaveGameStruct);
 
   gzwrite(gzFile, &IFF, 2);
   
@@ -2146,7 +2140,7 @@ bool gbReadSaveState(char *name)
     return false;
   }
 
-  int version = CPUReadInt(gzFile);
+  int version = utilReadInt(gzFile);
 
   if(version > GBSAVE_GAME_VERSION || version < 0) {
     systemMessage(MSG_UNSUPPORTED_VB_SGM,
@@ -2167,7 +2161,7 @@ bool gbReadSaveState(char *name)
     return false;
   }
   
-  CPUReadData(gzFile, gbSaveGameStruct);
+  utilReadData(gzFile, gbSaveGameStruct);
 
   if(version >= GBSAVE_GAME_VERSION_7) {
     gzread(gzFile, &IFF, 2);

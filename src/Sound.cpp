@@ -21,6 +21,7 @@
 #include "GBA.h"
 #include "Globals.h"
 #include "Sound.h"
+#include "Util.h"
 
 #define USE_TICKS_AS  380
 #define SOUND_MAGIC   0x60000000
@@ -1271,17 +1272,17 @@ void soundSetQuality(int quality)
 
 void soundSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, soundSaveStruct);
-  CPUWriteData(gzFile, soundSaveStructV2);
+  utilWriteData(gzFile, soundSaveStruct);
+  utilWriteData(gzFile, soundSaveStructV2);
   
   gzwrite(gzFile, &soundQuality, sizeof(int));
 }
 
 void soundReadGame(gzFile gzFile, int version)
 {
-  CPUReadData(gzFile, soundSaveStruct);
+  utilReadData(gzFile, soundSaveStruct);
   if(version >= SAVE_GAME_VERSION_3) {
-    CPUReadData(gzFile, soundSaveStructV2);
+    utilReadData(gzFile, soundSaveStructV2);
   } else {
     sound3Bank = (ioMem[NR30] >> 6) & 1;
     sound3DataSize = (ioMem[NR30] >> 5) & 1;

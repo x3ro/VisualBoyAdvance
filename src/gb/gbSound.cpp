@@ -18,7 +18,8 @@
  */
 #include <memory.h>
 
-#include "../GBA.h"
+#include "../System.h"
+#include "../Util.h"
 #include "gbGlobals.h"
 #include "gbSound.h"
 
@@ -906,7 +907,7 @@ variable_desc gbSoundSaveStruct[] = {
 
 void gbSoundSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, gbSoundSaveStruct);
+  utilWriteData(gzFile, gbSoundSaveStruct);
 
   gzwrite(gzFile, soundBuffer, 4*735);
   gzwrite(gzFile, soundFinalWave, 2*735);
@@ -915,7 +916,7 @@ void gbSoundSaveGame(gzFile gzFile)
 
 void gbSoundReadGame(int version,gzFile gzFile)
 {
-  CPUReadData(gzFile, gbSoundSaveStruct);
+  utilReadData(gzFile, gbSoundSaveStruct);
 
   soundBufferIndex = soundIndex * 2;
   

@@ -20,10 +20,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <zlib.h>
 
-#include "../GBA.h"
+#include "../System.h"
+#include "../Cheats.h"
 #include "../NLS.h"
+#include "../Util.h"
+
 #include "gbCheats.h"
 #include "gbGlobals.h"
 
@@ -49,7 +51,7 @@ void gbCheatUpdateMap()
 
 void gbCheatsSaveGame(gzFile gzFile)
 {
-  CPUWriteInt(gzFile, gbCheatNumber);
+  utilWriteInt(gzFile, gbCheatNumber);
   if(gbCheatNumber)
     gzwrite(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
 }
@@ -57,10 +59,10 @@ void gbCheatsSaveGame(gzFile gzFile)
 void gbCheatsReadGame(gzFile gzFile, int version)
 {
   if(version <= 8) {
-    int gbGgOn = CPUReadInt(gzFile);
+    int gbGgOn = utilReadInt(gzFile);
 
     if(gbGgOn) {
-      int n = CPUReadInt(gzFile);
+      int n = utilReadInt(gzFile);
       gbXxCheat tmpCheat;
       for(int i = 0; i < n; i++) {
         gzread(gzFile,&tmpCheat, sizeof(gbXxCheat));
@@ -68,10 +70,10 @@ void gbCheatsReadGame(gzFile gzFile, int version)
       }
     }
   
-    int gbGsOn = CPUReadInt(gzFile);
+    int gbGsOn = utilReadInt(gzFile);
     
     if(gbGsOn) {
-      int n = CPUReadInt(gzFile);
+      int n = utilReadInt(gzFile);
       gbXxCheat tmpCheat;
       for(int i = 0; i < n; i++) {
         gzread(gzFile,&tmpCheat, sizeof(gbXxCheat));
@@ -79,7 +81,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
       }
     }
   } else {
-    gbCheatNumber = CPUReadInt(gzFile);
+    gbCheatNumber = utilReadInt(gzFile);
 
     if(gbCheatNumber) {
       gzread(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);

@@ -960,3 +960,31 @@ u8 *utilLoad(const char *file,
 
   return image;
 }
+
+void utilWriteInt(gzFile gzFile, int i)
+{
+  gzwrite(gzFile, &i, sizeof(int));
+}
+
+int utilReadInt(gzFile gzFile)
+{
+  int i = 0;
+  gzread(gzFile, &i, sizeof(int));
+  return i;
+}
+
+void utilReadData(gzFile gzFile, variable_desc* data)
+{
+  while(data->address) {
+    gzread(gzFile, data->address, data->size);
+    data++;
+  }
+}
+
+void utilWriteData(gzFile gzFile, variable_desc *data)
+{
+  while(data->address) {
+    gzwrite(gzFile, data->address, data->size);
+    data++;
+  }
+}

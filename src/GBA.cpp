@@ -611,34 +611,6 @@ static void CPUUpdateRenderBuffers()
   }
 }
 
-void CPUWriteInt(gzFile gzFile, int i)
-{
-  gzwrite(gzFile, &i, sizeof(int));
-}
-
-int CPUReadInt(gzFile gzFile)
-{
-  int i = 0;
-  gzread(gzFile, &i, sizeof(int));
-  return i;
-}
-
-void CPUReadData(gzFile gzFile, variable_desc* data)
-{
-  while(data->address) {
-    gzread(gzFile, data->address, data->size);
-    data++;
-  }
-}
-
-void CPUWriteData(gzFile gzFile, variable_desc *data)
-{
-  while(data->address) {
-    gzwrite(gzFile, data->address, data->size);
-    data++;
-  }
-}
-
 bool CPUWriteState(char *file)
 {
   gzFile gzFile = gzopen(file, "wb");
@@ -648,20 +620,20 @@ bool CPUWriteState(char *file)
     return false;
   }
 
-  CPUWriteInt(gzFile, SAVE_GAME_VERSION);
+  utilWriteInt(gzFile, SAVE_GAME_VERSION);
 
   gzwrite(gzFile, &rom[0xa0], 16);
 
-  CPUWriteInt(gzFile, useBios);
+  utilWriteInt(gzFile, useBios);
   
   gzwrite(gzFile, &reg[0], sizeof(reg));
 
-  CPUWriteData(gzFile, saveGameStruct);
+  utilWriteData(gzFile, saveGameStruct);
 
   // new to version 0.7.1
-  CPUWriteInt(gzFile, stopState);
+  utilWriteInt(gzFile, stopState);
   // new to version 0.8
-  CPUWriteInt(gzFile, intState);
+  utilWriteInt(gzFile, intState);
 
   gzwrite(gzFile, internalRAM, 0x8000);
   gzwrite(gzFile, paletteRAM, 0x400);
@@ -692,7 +664,7 @@ bool CPUReadState(char * file)
   if(gzFile == NULL)
     return false;
 
-  int version = CPUReadInt(gzFile);
+  int version = utilReadInt(gzFile);
 
   if(version > SAVE_GAME_VERSION || version < SAVE_GAME_VERSION_1) {
     systemMessage(MSG_UNSUPPORTED_VBA_SGM,
@@ -716,7 +688,7 @@ bool CPUReadState(char * file)
     return false;
   }
 
-  bool ub = CPUReadInt(gzFile) ? true : false;
+  bool ub = utilReadInt(gzFile) ? true : false;
 
   if(ub != useBios) {
     if(useBios)
@@ -731,17 +703,17 @@ bool CPUReadState(char * file)
 
   gzread(gzFile, &reg[0], sizeof(reg));
 
-  CPUReadData(gzFile, saveGameStruct);
+  utilReadData(gzFile, saveGameStruct);
 
   if(version < SAVE_GAME_VERSION_3)
     stopState = false;
   else
-    stopState = CPUReadInt(gzFile) ? true : false;
+    stopState = utilReadInt(gzFile) ? true : false;
 
   if(version < SAVE_GAME_VERSION_4)
     intState = false;
   else
-    intState = CPUReadInt(gzFile) ? true : false;
+    intState = utilReadInt(gzFile) ? true : false;
   
   gzread(gzFile, internalRAM, 0x8000);
   gzread(gzFile, paletteRAM, 0x400);
@@ -935,14 +907,6 @@ bool CPUReadGSASnapshot(char *fileName)
   return true;
 }
 
-void CPUWriteInt(char *buffer, int value)
-{
-  buffer[0] = value & 255;
-  buffer[1] = (value >> 8) & 255;
-  buffer[2] = (value >> 16) & 255;
-  buffer[3] = (value >> 24) & 255;
-}
-
 bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
 {
   FILE *file = fopen(fileName, "wb");
@@ -952,20 +916,20 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
     return false;
   }
 
-  char buffer[17];
+  u8 buffer[17];
 
-  CPUWriteInt(buffer, 0x0d); // SharkPortSave length
+  utilPutDword(buffer, 0x0d); // SharkPortSave length
   fwrite(buffer, 1, 4, file);
   fwrite("SharkPortSave", 1, 0x0d, file);
-  CPUWriteInt(buffer, 0x000f0000);
+  utilPutDword(buffer, 0x000f0000);
   fwrite(buffer, 1, 4, file); // save type 0x000f0000 = GBA save
-  CPUWriteInt(buffer, strlen(title));
+  utilPutDword(buffer, strlen(title));
   fwrite(buffer, 1, 4, file); // title length
   fwrite(title, 1, strlen(title), file);
-  CPUWriteInt(buffer, strlen(desc));
+  utilPutDword(buffer, strlen(desc));
   fwrite(buffer, 1, 4, file); // desc length
   fwrite(desc, 1, strlen(desc), file);
-  CPUWriteInt(buffer, strlen(notes));
+  utilPutDword(buffer, strlen(notes));
   fwrite(buffer, 1, 4, file); // notes length
   fwrite(notes, 1, strlen(notes), file);
   int saveSize = 0x10000;
@@ -973,7 +937,7 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
     saveSize = flashSize;
   int totalSize = saveSize + 0x1c;
 
-  CPUWriteInt(buffer, totalSize); // length of remainder of save - CRC
+  utilPutDword(buffer, totalSize); // length of remainder of save - CRC
   fwrite(buffer, 1, 4, file);
 
   char temp[0x2001c];
@@ -992,7 +956,7 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
     crc += ((u32)temp[i] << (crc % 0x18));
   }
   
-  CPUWriteInt(buffer, crc);
+  utilPutDword(buffer, crc);
   fwrite(buffer, 1, 4, file); // CRC?
   
   fclose(file);

@@ -22,6 +22,7 @@
 #include "Globals.h"
 #include "Flash.h"
 #include "Sram.h"
+#include "Util.h"
 
 #define FLASH_READ_ARRAY         0
 #define FLASH_CMD_1              1
@@ -75,19 +76,19 @@ void flashReset()
 
 void flashSaveGame(gzFile gzFile)
 {
-  CPUWriteData(gzFile, flashSaveData3);
+  utilWriteData(gzFile, flashSaveData3);
 }
 
 void flashReadGame(gzFile gzFile, int version)
 {
   if(version < SAVE_GAME_VERSION_5)
-    CPUReadData(gzFile, flashSaveData);
+    utilReadData(gzFile, flashSaveData);
   else if(version < SAVE_GAME_VERSION_7) {
-    CPUReadData(gzFile, flashSaveData2);
+    utilReadData(gzFile, flashSaveData2);
     flashBank = 0;
     flashSetSize(flashSize);
   } else {
-    CPUReadData(gzFile, flashSaveData3);
+    utilReadData(gzFile, flashSaveData3);
   }
 }
 

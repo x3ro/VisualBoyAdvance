@@ -24,6 +24,13 @@ enum IMAGE_TYPE {
   IMAGE_GB      = 1
 };
 
+// save game
+
+typedef struct {
+  void *address;
+  int size;
+} variable_desc;
+
 extern bool utilWritePNGFile(char *, int, int, u8 *);
 extern bool utilWriteBMPFile(char *, int, int, u8 *);
 extern void utilApplyIPS(char *ips, u8 **rom, int *size);
@@ -42,4 +49,8 @@ extern u8 *utilLoad(const char *,
 
 extern void utilPutDword(u8 *, u32);
 extern void utilPutWord(u8 *, u16);
+extern void utilWriteData(gzFile, variable_desc *);
+extern void utilReadData(gzFile, variable_desc *);
+extern int utilReadInt(gzFile);
+extern void utilWriteInt(gzFile, int);
 #endif
