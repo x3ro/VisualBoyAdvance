@@ -59,27 +59,18 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 host_alias = @host_alias@
 host_triplet = @host@
-AMDEPBACKSLASH = @AMDEPBACKSLASH@
-AMTAR = @AMTAR@
-AWK = @AWK@
 CC = @CC@
 CXX = @CXX@
-DEPDIR = @DEPDIR@
-INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LEX = @LEX@
 MAKEINFO = @MAKEINFO@
 NASM = @NASM@
 PACKAGE = @PACKAGE@
 RANLIB = @RANLIB@
-STRIP = @STRIP@
 VBA_EXTRA = @VBA_EXTRA@
 VBA_GP = @VBA_GP@
 VBA_MMX = @VBA_MMX@
 VERSION = @VERSION@
 YACC = @YACC@
-am__include = @am__include@
-am__quote = @am__quote@
-install_sh = @install_sh@
 
 noinst_LIBRARIES = libgp.a
 

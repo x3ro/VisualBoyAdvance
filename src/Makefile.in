@@ -146,6 +146,14 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
+DEP_FILES =  .deps/2xSaI.P .deps/Cheats.P .deps/EEprom.P .deps/Flash.P \
+.deps/Font.P .deps/GBA.P .deps/Gfx.P .deps/Globals.P .deps/Mode0.P \
+.deps/Mode1.P .deps/Mode2.P .deps/Mode3.P .deps/Mode4.P .deps/Mode5.P \
+.deps/SDL.P .deps/Sound.P .deps/Sram.P .deps/TestEmu.P .deps/Util.P \
+.deps/admame.P .deps/armdis.P .deps/bios.P .deps/debugger.P .deps/elf.P \
+.deps/expr-lex.P .deps/expr.P .deps/exprNode.P .deps/motionblur.P \
+.deps/pixel.P .deps/remote.P .deps/simple2x.P .deps/tvmode.P \
+.deps/unzip.P
 SOURCES = $(VisualBoyAdvance_SOURCES) $(TestEmu_SOURCES)
 OBJECTS = $(VisualBoyAdvance_OBJECTS) $(TestEmu_OBJECTS)
 
@@ -153,9 +161,9 @@ all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .cpp .o .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps src/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu src/Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -184,9 +192,6 @@ uninstall-binPROGRAMS:
 	list='$(bin_PROGRAMS)'; for p in $$list; do \
 	  rm -f $(DESTDIR)$(bindir)/`echo $$p|sed 's/$(EXEEXT)$$//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
 	done
-
-.c.o:
-	$(COMPILE) -c $<
 
 .s.o:
 	$(COMPILE) -c $<
@@ -308,6 +313,11 @@ distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 subdir = src
 
 distdir: $(DISTFILES)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(top_distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu src/Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -329,64 +339,57 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 	$(MAKE) $(AM_MAKEFLAGS) top_distdir="$(top_distdir)" distdir="$(distdir)" dist-hook
-2xSaI.o: 2xSaI.cpp System.h unzip.h
-admame.o: admame.cpp System.h unzip.h
-armdis.o: armdis.cpp System.h unzip.h Port.h GBA.h Cheats.h Globals.h \
-	EEprom.h Flash.h armdis.h elf.h
-bios.o: bios.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h GBAinline.h Port.h
-Cheats.o: Cheats.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h GBAinline.h Port.h NLS.h
-debugger.o: debugger.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
-	EEprom.h Flash.h Port.h armdis.h elf.h exprNode.h
-EEprom.o: EEprom.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h
-elf.o: elf.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Port.h elf.h NLS.h
-expr-lex.o: expr-lex.cpp expr.cpp.h
-expr.o: expr.cpp System.h unzip.h elf.h exprNode.h
-exprNode.o: exprNode.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
-	EEprom.h Flash.h Port.h elf.h exprNode.h
-Flash.o: Flash.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Sram.h
-Font.o: Font.cpp System.h unzip.h
-GBA.o: GBA.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h GBAinline.h Port.h Gfx.h Sound.h Sram.h bios.h NLS.h \
-	elf.h Util.h arm-new.cpp thumb.cpp
-Gfx.o: Gfx.cpp System.h unzip.h
-Globals.o: Globals.cpp GBA.h System.h unzip.h Cheats.h Globals.h \
-	EEprom.h Flash.h
-Mode0.o: Mode0.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-Mode1.o: Mode1.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-Mode2.o: Mode2.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-Mode3.o: Mode3.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-Mode4.o: Mode4.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-Mode5.o: Mode5.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Gfx.h
-motionblur.o: motionblur.cpp System.h unzip.h
-pixel.o: pixel.cpp System.h unzip.h
-remote.o: remote.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h
-SDL.o: SDL.cpp AutoBuild.h GBA.h System.h unzip.h Cheats.h Globals.h \
-	EEprom.h Flash.h Font.h debugger.h Sound.h gb/GB.h \
-	gb/gbGlobals.h
-simple2x.o: simple2x.cpp System.h unzip.h
-Sound.o: Sound.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Sound.h
-Sram.o: Sram.cpp GBA.h System.h unzip.h Cheats.h Globals.h EEprom.h \
-	Flash.h Sram.h
-TestEmu.o: TestEmu.cpp AutoBuild.h GBA.h System.h unzip.h Cheats.h \
-	Globals.h EEprom.h Flash.h Font.h debugger.h Sound.h gb/GB.h \
-	gb/gbGlobals.h
-tvmode.o: tvmode.cpp System.h unzip.h
-unzip.o: unzip.cpp unzip.h
-Util.o: Util.cpp System.h unzip.h NLS.h
 
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
+
+%.o: %.cpp
+	@echo '$(CXXCOMPILE) -c $<'; \
+	$(CXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.cpp
+	@echo '$(LTCXXCOMPILE) -c $<'; \
+	$(LTCXXCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-recursive
 dvi-am:
@@ -425,23 +428,24 @@ distclean-generic:
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-binPROGRAMS mostlyclean-compile \
-		mostlyclean-tags mostlyclean-generic
+		mostlyclean-tags mostlyclean-depend mostlyclean-generic
 
 mostlyclean: mostlyclean-recursive
 
-clean-am:  clean-binPROGRAMS clean-compile clean-tags clean-generic \
-		mostlyclean-am
+clean-am:  clean-binPROGRAMS clean-compile clean-tags clean-depend \
+		clean-generic mostlyclean-am
 
 clean: clean-recursive
 
 distclean-am:  distclean-binPROGRAMS distclean-compile distclean-tags \
-		distclean-generic clean-am
+		distclean-depend distclean-generic clean-am
 
 distclean: distclean-recursive
 
 maintainer-clean-am:  maintainer-clean-binPROGRAMS \
 		maintainer-clean-compile maintainer-clean-tags \
-		maintainer-clean-generic distclean-am
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -456,12 +460,14 @@ uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
 all-recursive check-recursive installcheck-recursive info-recursive \
 dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
-distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
-dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs-am \
-installdirs mostlyclean-generic distclean-generic clean-generic \
-maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+distclean-tags clean-tags maintainer-clean-tags distdir \
+mostlyclean-depend distclean-depend clean-depend \
+maintainer-clean-depend info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs-am installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
 dist-hook:

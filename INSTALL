@@ -1,0 +1,51 @@
+What is this?
+-------------
+
+VisualBoyAdvance is a Nintendo (TM) Gameboy and GameboyAdvance emulator with
+debugging capabilities.
+
+How to compile the source
+-------------------------
+
+1. Unix
+-------
+
+The following software is needed in order to compile:
+
+- libpng: http://www.libpng.org/pub/png/libpng.html
+- zlib: http://www.gzip.org/zlib/
+- libSDL: http://www.libsdl.org
+- nasm (optional for x86 MMX support): http://nasm.sourceforge.net/
+
+Unpack the sources from the tar.gz file, then run the configure script. The
+following extra options may be used to configure the generated executables:
+
+--enable-c-core (--disable-c-core): enables the C core instead of x86 core
+--enable-dev (--disable-dev): enables the development features (slower)
+--enable-gp (--disable-gp): enables GP32 emulation
+--with-mmx (--without-mmx): enables MMX support
+
+After configure completes, just issue the make command. If it all goes well,
+you will have the emulator compiled in the src directory. Issuing the
+make install command will install the executables into the /usr/local/bin
+directory (subject to change).
+
+The emulator code should work in both big and little endian computers, but
+it has not been tested yet in big endian machines enough.
+
+2. Windows
+----------
+
+Needed software:
+- nasm: see above for URL. Install it in the default directory
+- Microsoft Visual C++ 6.0 or greater: to compile
+
+The win32 directory contains Microsoft Visual Studio workspace files needed
+to compile the project with Microsoft Visual C++ 6.0 or greater. The gba.dsp
+workspace compiles the full Windows version and gba_sdl.dsp compiles the
+Windows SDL version.
+
+The Windows version contains three possible configurations:
+- Debug: full debugging of the emulator is possible
+- Release: optimized version for GBA developers
+- ReleaseNoDev: optimized version without development features
