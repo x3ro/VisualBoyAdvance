@@ -14,7 +14,7 @@ case "$target" in
                 ;;
 esac
 
-AM_INIT_AUTOMAKE(VisualBoyAdvance, 1.6)
+AM_INIT_AUTOMAKE(VisualBoyAdvance, 1.6a)
 
 AC_ARG_ENABLE(gp,
 [  --enable-gp             enable GP32 emulation (default is NO)],
