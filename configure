@@ -1661,7 +1661,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=VisualBoyAdvance
- VERSION=1.6a
+ VERSION=1.7
 
 
 cat >>confdefs.h <<_ACEOF
@@ -5721,11 +5721,6 @@ presetting ac_cv_c_bigendian=no (or yes) will help" >&2;}
 esac
 
 
-
-
-
-
-
 CXXFLAGS="$CXXFLAGS -DSDL -DBKPT_SUPPORT -fno-exceptions"
 
 if test "${ac_cv_use_c_core}" = "yes"; then
@@ -5753,6 +5748,11 @@ if test "${ac_cv_use_dev}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DDEV_VERSION"
   VBA_PROF=prof/libprof.a
 fi
+
+
+
+
+
 
 
                                                                       ac_config_files="$ac_config_files Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile"

@@ -14,7 +14,7 @@ case "$target" in
                 ;;
 esac
 
-AM_INIT_AUTOMAKE(VisualBoyAdvance, 1.6a)
+AM_INIT_AUTOMAKE(VisualBoyAdvance, 1.7)
 
 AC_ARG_ENABLE(gp,
 [  --enable-gp             enable GP32 emulation (default is NO)],
@@ -92,11 +92,6 @@ AC_DEFINE(socklen_t,int)])])
 
 AC_C_BIGENDIAN
 
-AC_SUBST(VBA_MMX)
-AC_SUBST(VBA_EXTRA)
-AC_SUBST(VBA_GP)
-AC_SUBST(VBA_PROF)
-
 CXXFLAGS="$CXXFLAGS -DSDL -DBKPT_SUPPORT -fno-exceptions"
 
 if test "${ac_cv_use_c_core}" = "yes"; then
@@ -126,5 +121,10 @@ if test "${ac_cv_use_dev}" = "yes"; then
 fi
 
 dnl Checks for library functions.
+
+AC_SUBST(VBA_MMX)
+AC_SUBST(VBA_EXTRA)
+AC_SUBST(VBA_GP)
+AC_SUBST(VBA_PROF)
 
 AC_OUTPUT(Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile)
