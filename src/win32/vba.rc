@@ -463,7 +463,9 @@ BEGIN
     CONTROL         "BG2",IDC_BG2,"Button",BS_AUTORADIOBUTTON,13,91,30,10
     CONTROL         "BG3",IDC_BG3,"Button",BS_AUTORADIOBUTTON,13,105,30,10
     CONTROL         "Stretch to fit",IDC_STRETCH,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,122,68,10
+                    WS_GROUP | WS_TABSTOP,7,122,68,10
+    CONTROL         "Auto update",IDC_AUTO_UPDATE,"Button",BS_AUTOCHECKBOX | 
+                    WS_GROUP | WS_TABSTOP,7,134,55,10
     PUSHBUTTON      "&Refresh",IDC_REFRESH,25,217,50,14,WS_GROUP
     PUSHBUTTON      "&Save...",IDC_SAVE,88,217,50,14,WS_GROUP
     PUSHBUTTON      "&Close",IDC_CLOSE,155,217,50,14
@@ -478,8 +480,6 @@ BEGIN
     LTEXT           "",IDC_B,245,197,50,8
     GROUPBOX        "Frame",IDC_STATIC,7,11,63,37
     GROUPBOX        "Background",IDC_STATIC,7,52,63,67
-    CONTROL         "Auto update",IDC_AUTO_UPDATE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,7,134,55,10
     LTEXT           "",IDC_XY,129,95,53,8
     LTEXT           "Mode:",IDC_STATIC,80,15,34,8
     LTEXT           "",IDC_MODE,130,15,53,8

@@ -658,11 +658,11 @@ void MapView::enableButtons(int mode)
     id = IDC_BG3;
     break;
   }
-  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
+  CheckRadioButton(IDC_BG0, IDC_BG3, id);
   id = IDC_FRAME_0;
   if(frame != 0)
     id = IDC_FRAME_1;
-  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
+  CheckRadioButton(IDC_FRAME_0, IDC_FRAME_1, id);
 }
 
 void MapView::OnFrame0() 
@@ -674,7 +674,7 @@ void MapView::OnFrame0()
 void MapView::OnFrame1() 
 {
   frame = 1;
-  paint();  
+  paint();
 }
 
 void MapView::OnBg0() 
@@ -758,18 +758,19 @@ u32 MapView::GetClickAddress(int x, int y)
 
   u32 base = ((control >> 8) & 0x1f) * 0x800 + 0x6000000;
   
-  if(bg == 0 || bg == 1) {
+  // all text bgs (16 bits)
+  if(mode == 0 ||(mode < 3 && bg < 2)) {
     return GetTextClickAddress(base, x, y);
   }
-  if(mode == 0) {
-    return GetTextClickAddress(base, x, y);
+  // rot bgs (8 bits)
+  if(mode < 3) {
+    return base + (x>>3) + (w>>3)*(y>>3);
   }
-  if(bg == 2 && mode < 3) {
-    return base + (x>>3)*2+64*(y>>3);
-  }
+  // mode 3/5 (16 bits)
   if(mode != 4) {
     return 0x6000000 + 0xa000*frame + 2*x + w*y*2;
   }
+  // mode 4 (8 bits)
   return 0x6000000 + 0xa000*frame + x + w*y;
 }
 
@@ -790,7 +791,13 @@ LRESULT MapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
   GetDlgItem(IDC_ADDRESS)->SetWindowText(buffer);
 
   int mode = DISPCNT & 7;  
-  if(mode < 3) {
+  if(mode >= 3) {
+    // bitmap modes
+    GetDlgItem(IDC_TILE_NUM)->SetWindowText("---");
+    GetDlgItem(IDC_FLIP)->SetWindowText("--");
+    GetDlgItem(IDC_PALETTE_NUM)->SetWindowText("---");
+  } else if(mode == 0 || bg < 2) {
+    // text bgs
     u16 value = *((u16 *)&vram[address - 0x6000000]);
 
     int tile = value & 1023;
@@ -807,6 +814,7 @@ LRESULT MapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
       buffer = "---";
     GetDlgItem(IDC_PALETTE_NUM)->SetWindowText(buffer);
   } else {
+    // rot bgs
     GetDlgItem(IDC_TILE_NUM)->SetWindowText("---");
     GetDlgItem(IDC_FLIP)->SetWindowText("--");
     GetDlgItem(IDC_PALETTE_NUM)->SetWindowText("---");

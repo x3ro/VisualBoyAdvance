@@ -427,11 +427,11 @@ BOOL GBMapView::OnInitDialog()
   UINT id = IDC_BANK_0;
   if(bank == 1)
     id = IDC_BANK_1;
-  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
+  CheckRadioButton(IDC_BANK_0, IDC_BANK_1, id);
   id = IDC_BG0;
   if(bg == 1)
     id = IDC_BG1;
-  GetDlgItem(id)->SendMessage(BM_SETCHECK, BST_CHECKED, 0);
+  CheckRadioButton(IDC_BG0, IDC_BG1, id);
   paint();
 
   return TRUE;  // return TRUE unless you set the focus to a control
