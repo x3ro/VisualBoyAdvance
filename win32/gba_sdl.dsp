@@ -256,18 +256,6 @@ SOURCE=..\src\gb\gbSGB.cpp
 SOURCE=..\src\gb\gbSound.cpp
 # End Source File
 # End Group
-# Begin Group "GP"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\src\gp\GP.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\src\gp\gpGfxRender.cpp
-# End Source File
-# End Group
 # Begin Group "SDL"
 
 # PROP Default_Filter ""
