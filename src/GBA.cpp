@@ -44,6 +44,24 @@
 
 #define UPDATE_REG(address, value) WRITE16LE(((u16 *)&ioMem[address]),value)
 
+#define ARM_PREFETCH \
+  {\
+    cpuPrefetch[0] = CPUReadMemoryQuick(armNextPC);\
+    cpuPrefetch[1] = CPUReadMemoryQuick(armNextPC+4);\
+  }
+
+#define THUMB_PREFETCH \
+  {\
+    cpuPrefetch[0] = CPUReadHalfWordQuick(armNextPC);\
+    cpuPrefetch[1] = CPUReadHalfWordQuick(armNextPC+2);\
+  }
+
+#define ARM_PREFETCH_NEXT \
+  cpuPrefetch[1] = CPUReadMemoryQuick(armNextPC+4);
+
+#define THUMB_PREFETCH_NEXT\
+  cpuPrefetch[1] = CPUReadHalfWordQuick(armNextPC+2);
+
 #ifdef __GNUC__
 #define _stricmp strcasecmp
 #endif
@@ -78,6 +96,8 @@ bool cpuSramEnabled = true;
 bool cpuFlashEnabled = true;
 bool cpuEEPROMEnabled = true;
 bool cpuEEPROMSensorEnabled = false;
+
+u32 cpuPrefetch[2];
 
 #ifdef PROFILING
 int profilingTicks = 0;
@@ -812,6 +832,11 @@ static bool CPUReadState(gzFile gzFile)
     gbaSaveType = 3;
 
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+  if(armState) {
+    ARM_PREFETCH;
+  } else {
+    THUMB_PREFETCH;
+  }
   
   return true;  
 }
@@ -1626,6 +1651,7 @@ void CPUUndefinedException()
   armState = true;
   armIrqEnable = false;
   armNextPC = 0x04;
+  ARM_PREFETCH;
   reg[15].I += 4;  
 }
 
@@ -1639,6 +1665,7 @@ void CPUSoftwareInterrupt()
   armState = true;
   armIrqEnable = false;
   armNextPC = 0x08;
+  ARM_PREFETCH;
   reg[15].I += 4;
 }
 
@@ -3136,7 +3163,7 @@ void CPUReset()
     if(useBios && !skipBios) {
       reg[15].I = 0x00000000;
       armMode = 0x13;
-      armIrqEnable = false;      
+      armIrqEnable = false;  
     } else {
       reg[13].I = 0x03007F00;
       reg[15].I = 0x08000000;
@@ -3298,6 +3325,8 @@ void CPUReset()
     break;
   } 
 
+  ARM_PREFETCH;
+
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
   
   lastTime = systemGetClock();
@@ -3317,6 +3346,7 @@ void CPUInterrupt()
 
   armNextPC = reg[15].I;
   reg[15].I += 4;
+  ARM_PREFETCH;
 
   //  if(!holdState)
   biosProtected[0] = 0x02;

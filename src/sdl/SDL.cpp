@@ -2376,42 +2376,21 @@ int main(int argc, char **argv)
   if(systemColorDepth == 16) {
     if(sdlCalculateMaskWidth(surface->format->Gmask) == 6) {
       Init_2xSaI(565);
-      RGB_LOW_BITS_MASK = 0x821;
     } else {
       Init_2xSaI(555);
-      RGB_LOW_BITS_MASK = 0x421;      
-    }
-    if(cartridgeType == 2) {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = (((i >> 1) & 0x1f) << systemBlueShift) |
-          (((i & 0x7c0) >> 6) << systemGreenShift) |
-          (((i & 0xf800) >> 11) << systemRedShift);  
-      }      
-    } else {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);  
-      }
     }
     srcPitch = srcWidth * 2+4;
   } else {
     if(systemColorDepth != 32)
       filterFunction = NULL;
-    RGB_LOW_BITS_MASK = 0x010101;
-    if(systemColorDepth == 32) {
-      Init_2xSaI(32);
-    }
-    for(int i = 0; i < 0x10000; i++) {
-      systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
-        (((i & 0x3e0) >> 5) << systemGreenShift) |
-        (((i & 0x7c00) >> 10) << systemBlueShift);  
-    }
+    Init_2xSaI(32);
     if(systemColorDepth == 32)
       srcPitch = srcWidth*4 + 4;
     else
       srcPitch = srcWidth*3;
   }
+
+  utilUpdateSystemColorMaps();
 
   if(systemColorDepth != 32) {
     switch(filter) {

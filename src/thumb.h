@@ -763,7 +763,8 @@
 #endif
 #endif
 
-u32 opcode = CPUReadHalfWordQuick(armNextPC);
+u32 opcode = cpuPrefetch[0];
+cpuPrefetch[0] = cpuPrefetch[1];
 clockTicks = thumbCycles[opcode >> 8] + memoryWaitFetch[(armNextPC >> 24) & 15];
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
@@ -773,6 +774,7 @@ if(armNextPC == stop) {
 
 armNextPC = reg[15].I;
 reg[15].I += 2;
+THUMB_PREFETCH_NEXT;
 
 switch(opcode >> 8) {
  case 0x00:
@@ -1294,6 +1296,7 @@ switch(opcode >> 8) {
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
          clockTicks++;
        }       
        break;
@@ -1304,6 +1307,7 @@ switch(opcode >> 8) {
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
          clockTicks++;     
        }
        break;
@@ -1362,6 +1366,7 @@ switch(opcode >> 8) {
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
          clockTicks++;
        }
        break;
@@ -1372,6 +1377,7 @@ switch(opcode >> 8) {
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
          clockTicks++;
        }   
        break;
@@ -1389,11 +1395,13 @@ switch(opcode >> 8) {
          armState = false;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
        } else {
          armState = true;
          reg[15].I &= 0xFFFFFFFC;
          armNextPC = reg[15].I;
          reg[15].I += 4;
+         ARM_PREFETCH;
        }
        break;
      case 1:
@@ -1403,11 +1411,13 @@ switch(opcode >> 8) {
          armState = false;
          armNextPC = reg[15].I;
          reg[15].I += 2;
+         THUMB_PREFETCH;
        } else {
          armState = true;
          reg[15].I &= 0xFFFFFFFC;       
          armNextPC = reg[15].I;
          reg[15].I += 4;
+         ARM_PREFETCH;
        }
        break;
      default:
@@ -1943,6 +1953,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      reg[13].I = temp;
+     THUMB_PREFETCH;
    }
    break;      
 #define THUMB_STM_REG(val,r,b) \
@@ -2260,6 +2271,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;
    }
    break;      
@@ -2269,6 +2281,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2278,6 +2291,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2287,6 +2301,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2296,6 +2311,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2305,6 +2321,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2314,6 +2331,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2323,6 +2341,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2332,6 +2351,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2341,6 +2361,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2350,6 +2371,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2359,6 +2381,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2368,6 +2391,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2377,6 +2401,7 @@ switch(opcode >> 8) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
      clockTicks = 3;       
    }
    break;   
@@ -2400,6 +2425,7 @@ switch(opcode >> 8) {
      reg[15].I += offset;
      armNextPC = reg[15].I;
      reg[15].I += 2;
+     THUMB_PREFETCH;
    }
    break;
  case 0xf0:
@@ -2438,6 +2464,7 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      reg[14].I = temp|1;
+     THUMB_PREFETCH;
    }
    break;
 #ifdef BKPT_SUPPORT

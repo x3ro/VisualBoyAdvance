@@ -1129,10 +1129,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1166,10 +1168,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1208,10 +1212,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1243,10 +1249,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1286,10 +1294,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1329,10 +1339,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1374,10 +1386,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1416,10 +1430,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1464,10 +1480,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1501,10 +1519,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1537,10 +1557,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1578,10 +1600,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1612,10 +1636,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1654,10 +1680,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1696,10 +1724,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1740,10 +1770,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1781,10 +1813,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1828,10 +1862,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1864,10 +1900,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1898,10 +1936,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1934,10 +1974,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -1968,10 +2010,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2006,10 +2050,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2044,10 +2090,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2084,10 +2132,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2123,10 +2173,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2168,10 +2220,12 @@
           reg[15].I &= 0xFFFFFFFC;\
           armNextPC = reg[15].I;\
           reg[15].I += 4;\
+          ARM_PREFETCH;\
         } else {\
           reg[15].I &= 0xFFFFFFFE;\
           armNextPC = reg[15].I;\
           reg[15].I += 2;\
+          THUMB_PREFETCH;\
         }\
       } else {\
         OPCODE \
@@ -2179,7 +2233,8 @@
     }\
     break;
 
-  u32 opcode = CPUReadMemoryQuick(armNextPC);
+  u32 opcode = cpuPrefetch[0];
+  cpuPrefetch[0] = cpuPrefetch[1];
 
   clockTicks = memoryWaitFetch32[(armNextPC >> 24) & 15];
 
@@ -2191,6 +2246,8 @@
 
   armNextPC = reg[15].I;
   reg[15].I += 4;
+  ARM_PREFETCH_NEXT;
+
   int cond = opcode >> 28;
   // suggested optimization for frequent cases
   bool cond_res;
@@ -3187,10 +3244,12 @@ if(cond_res) {
         reg[15].I = reg[base].I & 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       } else {
         reg[15].I = reg[base].I & 0xFFFFFFFE;
         armNextPC = reg[15].I;
         reg[15].I += 2;
+        THUMB_PREFETCH;
       }
     }
     break;
@@ -3411,6 +3470,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -3443,6 +3503,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -3473,6 +3534,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -3492,6 +3554,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -3509,6 +3572,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -3528,6 +3592,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4114,6 +4179,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4138,6 +4204,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4168,6 +4235,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4197,6 +4265,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4220,6 +4289,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4244,6 +4314,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4274,6 +4345,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4303,6 +4375,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4321,6 +4394,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4340,6 +4414,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4365,6 +4440,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4389,6 +4465,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4409,6 +4486,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4430,6 +4508,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4457,6 +4536,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4483,6 +4563,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4501,6 +4582,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4520,6 +4602,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4545,6 +4628,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4569,6 +4653,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4589,6 +4674,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4610,6 +4696,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4637,6 +4724,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -4663,6 +4751,7 @@ if(cond_res) {
         reg[15].I &= 0xFFFFFFFC;
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -6228,6 +6317,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -6263,6 +6353,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
       if(!(opcode & (1 << base)))
         reg[base].I = temp;
@@ -6304,9 +6395,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6381,9 +6474,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6453,6 +6548,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
   break;
@@ -6488,6 +6584,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
       if(!(opcode & (1 << base)))
         reg[base].I = temp;
@@ -6527,9 +6624,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6604,9 +6703,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6678,6 +6779,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -6713,6 +6815,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
       if(!(opcode & (1 << base)))
         reg[base].I = temp;
@@ -6754,9 +6857,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6831,9 +6936,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -6903,6 +7010,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
     }
     break;
@@ -6938,6 +7046,7 @@ if(cond_res) {
           clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);
         armNextPC = reg[15].I;
         reg[15].I += 4;
+        ARM_PREFETCH;
       }
       if(!(opcode & (1 << base)))
         reg[base].I = temp;
@@ -6977,9 +7086,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -7054,9 +7165,11 @@ if(cond_res) {
         if(armState) {
           armNextPC = reg[15].I & 0xFFFFFFFC;
           reg[15].I = armNextPC + 4;
+          ARM_PREFETCH;
         } else {
           armNextPC = reg[15].I & 0xFFFFFFFE;
           reg[15].I = armNextPC + 2;
+          THUMB_PREFETCH;
         }
       } else {
         LDM_REG(1, 0);
@@ -7107,6 +7220,7 @@ if(cond_res) {
       reg[15].I += offset;
       armNextPC = reg[15].I;
       reg[15].I += 4;
+      ARM_PREFETCH;
     }
     break;
   CASE_256(0xb00)
@@ -7122,6 +7236,7 @@ if(cond_res) {
       reg[15].I += offset;
       armNextPC = reg[15].I;
       reg[15].I += 4;
+      ARM_PREFETCH;
     }
     break;
   CASE_256(0xf00)

@@ -909,15 +909,9 @@ void Window::vInitSystem()
 
   for (int i = 0; i < 0x10000; i++)
   {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
     systemColorMap32[i] = (((i & 0x1f) << systemRedShift)
                            | (((i & 0x3e0) >> 5) << systemGreenShift)
                            | (((i & 0x7c00) >> 10) << systemBlueShift));
-#else
-    systemColorMap32[i] = (((i & 0x1f) << systemRedShift)
-                           | (((i & 0x3e0) >> 5) << systemGreenShift)
-                           | (((i & 0x7c00) >> 10) << systemBlueShift));
-#endif
   }
 
   gbFrameSkip = 0;

@@ -139,6 +139,29 @@ bool debuggerAtBreakpoint = false;
 int debuggerBreakpointNumber = 0;
 int debuggerRadix = 0;
 
+extern u32 cpuPrefetch[2];
+
+#define ARM_PREFETCH \
+  {\
+    cpuPrefetch[0] = debuggerReadMemory(armNextPC);\
+    cpuPrefetch[1] = debuggerReadMemory(armNextPC+4);\
+  }
+
+#define THUMB_PREFETCH \
+  {\
+    cpuPrefetch[0] = debuggerReadHalfWord(armNextPC);\
+    cpuPrefetch[1] = debuggerReadHalfWord(armNextPC+2);\
+  }
+
+static void debuggerPrefetch()
+{
+  if(armState) {
+    ARM_PREFETCH;
+  } else {
+    THUMB_PREFETCH;
+  }
+}
+
 void debuggerApplyBreakpoint(u32 address, int num, int size)
 {
   if(size)
@@ -729,8 +752,10 @@ void debuggerNext(int n, char **args)
     if(debuggerAtBreakpoint) {
       debuggerContinueAfterBreakpoint();
       debuggerEnableBreakpoints(false);
-    } else 
+    } else {
+      debuggerPrefetch();
       emulator.emuMain(1);
+    }
   }
   debuggerDisableBreakpoints();
   Function *f = NULL;
@@ -752,6 +777,7 @@ void debuggerContinue(int n, char **args)
     debuggerContinueAfterBreakpoint();
   debuggerEnableBreakpoints(false);
   debugger = false;
+  debuggerPrefetch();
 }
 
 void debuggerSignal(int sig,int number)
@@ -1094,6 +1120,7 @@ void debuggerContinueAfterBreakpoint()
 {
   printf("Continuing after breakpoint\n");
   debuggerEnableBreakpoints(true);
+  debuggerPrefetch();
   emulator.emuMain(1);
   debuggerAtBreakpoint = false;
 }
