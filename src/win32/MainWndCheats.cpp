@@ -160,6 +160,6 @@ void MainWnd::OnCheatsDisablecheats()
 
 void MainWnd::OnUpdateCheatsDisablecheats(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(cheatsEnabled);
+  pCmdUI->SetCheck(!cheatsEnabled);
 }
 
