@@ -2961,7 +2961,6 @@ void elfCleanUp()
 
   elfDebugStrings = NULL;
   if(elfDebugInfo) {
-    free(elfDebugInfo->debugdata);
     int num = elfDebugInfo->numRanges;
     int i;
     for(i = 0; i < num; i++) {
