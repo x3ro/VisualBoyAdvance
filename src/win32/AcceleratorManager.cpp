@@ -623,6 +623,15 @@ bool CAcceleratorManager::Load(HKEY hRegKey, LPCTSTR szRegKey)
     
     int iIndex = 0;
     if(count) {
+
+      CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.begin();
+
+      while(it != m_mapAccelTable.end()) {
+        pCmdAccel = it->second;
+        pCmdAccel->DeleteUserAccels();
+        it++;
+      }
+      
       while(iIndex < count) {
         dwIDAccelData = data[iIndex++];
         
