@@ -1882,10 +1882,17 @@ void VBA::winSetLanguageOption(int option, bool force)
                        lbuffer, 10)) {
         HINSTANCE l = winLoadLanguage(lbuffer);
         if(l == NULL) {
-          systemMessage(IDS_FAILED_TO_LOAD_LIBRARY,
-                        "Failed to load library %s",
-                        lbuffer);
-          return;
+          LCID locIdBase = MAKELCID( MAKELANGID( PRIMARYLANGID( GetSystemDefaultLangID() ), SUBLANG_NEUTRAL ), SORT_DEFAULT );
+          if(GetLocaleInfo(locIdBase, LOCALE_SABBREVLANGNAME,
+                           lbuffer, 10)) {
+            l = winLoadLanguage(lbuffer);
+            if(l == NULL) {
+              systemMessage(IDS_FAILED_TO_LOAD_LIBRARY,
+                            "Failed to load library %s",
+                            lbuffer);
+              return;
+            }
+          }
         }
         AfxSetResourceHandle(l);
         if(languageModule != NULL)
