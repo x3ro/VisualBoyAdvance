@@ -184,6 +184,7 @@ bool debugger = false;
 int winFlashSize = 0x10000;
 bool winRtcEnable = false;
 int winSaveType = 0;
+bool autoHideMenu = false;
 
 int frameskipadjust = 0;
 int renderedFrames = 0;
@@ -1714,6 +1715,8 @@ void updateEmulatorMenu(HMENU menu)
                 CHECKMENUSTATE(agbPrintIsEnabled()));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_REALTIMECLOCK,
                 CHECKMENUSTATE(winRtcEnable));
+  CheckMenuItem(menu, ID_OPTIONS_EMULATOR_AUTOHIDEMENU,
+                CHECKMENUSTATE(autoHideMenu));
 
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SHOWSPEED_NONE,
                 CHECKMENUSTATE(showSpeed == 0));
@@ -4174,6 +4177,10 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       rtcEnable(winRtcEnable);
       regSetDwordValue("rtcEnabled", winRtcEnable);
       break;
+    case ID_OPTIONS_EMULATOR_AUTOHIDEMENU:
+      autoHideMenu = !autoHideMenu;
+      regSetDwordValue("autoHideMenu", autoHideMenu);
+      break;
     case ID_OPTIONS_EMULATOR_SHOWSPEED_NONE:
       showSpeed = 0;
       systemSetTitle("VisualBoyAdvance");
@@ -4989,6 +4996,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   winRtcEnable = regQueryDwordValue("rtcEnabled", 0) ? true : false;
   rtcEnable(winRtcEnable);
 
+  autoHideMenu = regQueryDwordValue("autoHideMenu", 0) ? true : false;
+
   skinEnabled = regQueryDwordValue("skinEnabled", 0) ? true : false;
 
   skinName = regQueryStringValue("skinName", "");
@@ -5413,6 +5422,9 @@ BOOL fileOpen()
   updateWindowSize(videoOption);
 
   updateFrameSkip();
+
+  if(autoHideMenu && videoOption > VIDEO_4X && menuToggle)
+    fileToggleMenu();
   
   emulating = TRUE;
   frameskipadjust = 0;

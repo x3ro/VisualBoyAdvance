@@ -1650,6 +1650,8 @@ BEGIN
 
             MENUITEM "Real Time Clock",             ID_OPTIONS_EMULATOR_REALTIMECLOCK
 
+            MENUITEM "Auto hide menu",              ID_OPTIONS_EMULATOR_AUTOHIDEMENU
+
             POPUP "Show speed"
             BEGIN
                 MENUITEM "None",                        ID_OPTIONS_EMULATOR_SHOWSPEED_NONE
