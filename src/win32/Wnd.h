@@ -271,6 +271,7 @@ class Wnd {
     { ASSERT(::IsWindow(hWnd)); return ::ShowWindow(hWnd, nCmdShow); }
   void UpdateWindow()
     { ASSERT(::IsWindow(hWnd)); ::UpdateWindow(hWnd); }  
+  BOOL Create(const char *, const char *, DWORD, const RECT&, HWND, UINT);
 
   int RunModalLoop();
   BOOL ContinueModal();
@@ -308,6 +309,7 @@ class Wnd {
   virtual void OnSizing(UINT, RECT *);
   virtual void OnTimer(UINT);
   virtual void OnVScroll(UINT, UINT, HWND);  
+  virtual LRESULT Default(UINT, WPARAM, LPARAM);
 
   virtual void PreSubclassWindow();
   

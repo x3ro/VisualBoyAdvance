@@ -21,6 +21,8 @@
 Wnd *wndInit = NULL;
 HHOOK wndOldHook = NULL;
 extern HWND hWindow;
+extern UCHAR *winResGetResource(LPCTSTR, LPCTSTR);
+extern HINSTANCE hInstance;
 
 MapHWND Wnd::map;
 
@@ -278,6 +280,35 @@ void Wnd::Detach()
   ASSERT(hWnd != NULL);
   
   hWnd = NULL;
+}
+
+BOOL Wnd::Create(const char *className, const char *name,
+		 DWORD style , const RECT& r, 
+		 HWND parent, UINT id)
+{
+  ASSERT(parent != NULL);
+  ASSERT((style & WS_POPUP) == 0);
+
+  WndHookCreate(this);
+
+  HWND h = ::CreateWindowEx(0,
+			    className,
+			    name,
+			    style,
+			    r.left,
+			    r.top,
+			    r.right - r.left,
+			    r.bottom - r.top,
+			    parent,
+			    (HMENU)id,
+			    hInstance,
+			    NULL);
+  
+  if(h == NULL)
+    return FALSE;
+
+  ASSERT(hWnd == h);
+  return TRUE;
 }
 
 void Wnd::SetOldWndProc(WNDPROC old)
@@ -734,17 +765,25 @@ void Wnd::PreSubclassWindow()
 {
 }
 
+LRESULT Wnd::Default(UINT message, WPARAM wParam, LPARAM lParam)
+{
+  HWND handle= getHandle();
+  WNDPROC old = oldWndProc;
+
+  if(old != NULL && handle != NULL)
+    return CallWindowProc(old, handle, message, wParam, lParam);
+  if(handle != NULL)
+    return DefWindowProc(handle, message, wParam, lParam);
+
+  return 0;
+}
+
 LRESULT Wnd::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
   LRESULT l = 0;
-  HWND handle= getHandle();
-  WNDPROC old = oldWndProc;
   
   if(!OnMsg(message, wParam, lParam, l)) {
-    if(old != NULL && handle != NULL)
-      return CallWindowProc(old, handle, message, wParam, lParam);
-    if(handle != NULL)
-       return DefWindowProc(handle, message, wParam, lParam);
+    return Default(message, wParam, lParam);
   }
   return l;
 }
@@ -813,8 +852,6 @@ Dlg::~Dlg()
 {
 }
 
-extern UCHAR *winResGetResource(LPCTSTR, LPCTSTR);
-extern HINSTANCE hInstance;
 
 BEGIN_MESSAGE_MAP(Dlg, Wnd)
   ON_WM_CLOSE()
