@@ -34,7 +34,7 @@ void MainWnd::OnHelpAbout()
 
 void MainWnd::OnHelpFaq() 
 {
-  ::ShellExecute(0, _T("open"), "http://vboy.emuhq.com/faq.shtml", 
+  ::ShellExecute(0, _T("open"), "http://vba.ngemu.com/faq.shtml", 
                  0, 0, SW_SHOWNORMAL);
 }
 

@@ -44,15 +44,15 @@ Hyperlink::~Hyperlink()
 
 
 BEGIN_MESSAGE_MAP(Hyperlink, CStatic)
-	//{{AFX_MSG_MAP(Hyperlink)
-	ON_WM_CTLCOLOR_REFLECT()
-	ON_WM_ERASEBKGND()
-	ON_WM_MOUSEMOVE()
-	//}}AFX_MSG_MAP
+  //{{AFX_MSG_MAP(Hyperlink)
+  ON_WM_CTLCOLOR_REFLECT()
+  ON_WM_ERASEBKGND()
+  ON_WM_MOUSEMOVE()
+  //}}AFX_MSG_MAP
   ON_CONTROL_REFLECT(STN_CLICKED, OnClicked)
 END_MESSAGE_MAP()
 
-/////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////
 // Hyperlink message handlers
 
 void Hyperlink::PreSubclassWindow() 
@@ -73,7 +73,7 @@ void Hyperlink::PreSubclassWindow()
   m_underlineFont.CreateFontIndirect(&lg);
   SetFont(&m_underlineFont);
 	
-	CStatic::PreSubclassWindow();
+  CStatic::PreSubclassWindow();
 }
 
 void Hyperlink::OnClicked()
@@ -86,7 +86,7 @@ void Hyperlink::OnClicked()
 
 HBRUSH Hyperlink::CtlColor(CDC* pDC, UINT nCtlColor) 
 {
-	pDC->SetTextColor(RGB(0,0,240));
+  pDC->SetTextColor(RGB(0,0,240));
 	
   return (HBRUSH)GetStockObject(NULL_BRUSH);
 }
@@ -103,7 +103,7 @@ BOOL Hyperlink::OnEraseBkgnd(CDC* pDC)
 void Hyperlink::OnMouseMove(UINT nFlags, CPoint point) 
 {
   if(!m_over) {
-	  m_over = true;
+    m_over = true;
     SetCapture();
     ::SetCursor(m_cursor);
   } else {

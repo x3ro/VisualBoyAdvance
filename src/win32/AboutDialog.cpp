@@ -66,8 +66,10 @@ BOOL AboutDialog::OnInitDialog()
   
   CWnd *p = GetDlgItem(IDC_TRANSLATOR_URL);
   if(p) {
-    m_translator.Attach(p->GetSafeHwnd());
+    m_translator.SubclassDlgItem(IDC_TRANSLATOR_URL, this);
   }
+
+  m_link.SetWindowText("http://vba.ngemu.com");
 
   return TRUE;  // return TRUE unless you set the focus to a control
   // EXCEPTION: OCX Property Pages should return FALSE
