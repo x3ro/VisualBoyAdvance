@@ -840,8 +840,11 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                   u32 color = vram[0x10000 + (((c + (yyy>>3) * inc)*
                                     32 + (yyy & 7) * 8 + (xxx >> 3) * 64 +
                                     (xxx & 7))&0x7FFF)];
-                  if(color && (prio < (lineOBJ[sx]&0xFF000000))) {
-                      lineOBJ[sx] = READ16LE(&spritePalette[color]) | prio;
+                  if ((color==0) && (((prio >> 25)&3) < 
+                                     ((lineOBJ[sx]>>25)&3)))
+                    lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
+                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
+                    lineOBJ[sx] = READ16LE(&spritePalette[color]) | prio;
                   }
 
                   if (a0 & 0x1000) {
@@ -880,7 +883,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                   else
                     color &= 0x0F;
                   
-                  if(color && (prio < (lineOBJ[sx]&0xFF000000))) {
+                  if ((color==0) && (((prio >> 25)&3) < 
+                                     ((lineOBJ[sx]>>25)&3)))
+                    lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
+                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                     lineOBJ[sx] = READ16LE(&spritePalette[palette+color]) | prio;
                   }
                 }
@@ -932,10 +938,13 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                 xxx = 7;
               u32 prio = (((a2 >> 10) & 3) << 25) | ((a0 & 0x0c00)<<6);
                 
-                  for(int xx = 0; xx < sizeX; xx++) {
+              for(int xx = 0; xx < sizeX; xx++) {
                 if(sx < 240) {
                   u8 color = vram[address];
-                  if(color && (prio < (lineOBJ[sx] & 0xFF000000))) {
+                  if ((color==0) && (((prio >> 25)&3) < 
+                                     ((lineOBJ[sx]>>25)&3)))
+                    lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
+                  else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                     lineOBJ[sx] = READ16LE(&spritePalette[color]) | prio;
                   }
                   if (a0 & 0x1000) {
@@ -1001,7 +1010,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                     } else
                       color &= 0x0F;
                     
-                    if(color && (prio < (lineOBJ[sx] & 0xFF000000))) {
+                    if ((color==0) && (((prio >> 25)&3) < 
+                                       ((lineOBJ[sx]>>25)&3)))
+                      lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
+                    else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                       lineOBJ[sx] = READ16LE(&spritePalette[palette + color]) | prio;
                     }
                   }
@@ -1032,7 +1044,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                     } else
                       color &= 0x0F;
                     
-                    if(color && (prio < (lineOBJ[sx] & 0xFF000000))) {
+                    if ((color==0) && (((prio >> 25)&3) < 
+                                       ((lineOBJ[sx]>>25)&3)))
+                      lineOBJ[sx] = (lineOBJ[sx] & 0xF9FFFFFF) | prio;
+                    else if((color) && (prio < (lineOBJ[sx]&0xFF000000))) {
                       lineOBJ[sx] = READ16LE(&spritePalette[palette + color]) | prio;
                     }
                   }
