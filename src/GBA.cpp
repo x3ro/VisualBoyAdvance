@@ -1674,6 +1674,13 @@ void CPUSoftwareInterrupt(int comment)
     agbPrintFlush();
     return;
   }
+#ifdef SDL
+  if(comment == 0xf9) {
+    emulating = 0;
+    CPU_BREAK_LOOP_2;
+    return;
+  }
+#endif
   if(useBios) {
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_SWI) {
