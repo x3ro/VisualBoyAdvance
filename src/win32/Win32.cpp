@@ -44,6 +44,7 @@
 #include "../gb/gbPrinter.h"
 #include "wavwrite.h"
 #include "CommDlg.h"
+#include "ExportGSASnapshot.h"
 #include "AcceleratorManager.h"
 #include "IUpdate.h"
 #include <list>
@@ -316,6 +317,7 @@ extern void winGbCheatsListDialog();
 extern void configurePad();
 extern void motionConfigurePad();
 extern int winGSACodeSelect(HWND, LPARAM);
+extern void fileExportSPSSnapshot(char *, char *);
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -1147,6 +1149,8 @@ void updateExportMenu(HMENU menu)
   
   EnableMenuItem(menu, ID_FILE_EXPORT_BATTERYFILE,
                  ENABLEMENU(emulating));
+  EnableMenuItem(menu, ID_FILE_EXPORT_GAMESHARKSNAPSHOT,
+                 ENABLEMENU(emulating && cartridgeType == 0));
 }  
 
 void updateRecentMenu(HMENU menu)
@@ -2975,6 +2979,37 @@ void fileExportBatteryFile()
                   szFile);
 }
 
+void fileExportGSASnapshot()
+{
+  char *p = strrchr(filename,'\\');
+  if(p)
+    p++;
+  else
+    p = filename;
+  sprintf(szFile, "%s", p);
+
+  char *exts[] = {".sps" };
+
+  FileDlg dlg(hWindow,
+              (char *)szFile,
+              (int)sizeof(szFile),
+              (char *)winLoadFilter(IDS_FILTER_SPS),
+              1,
+              "SPS",
+              exts,
+              (char *)NULL, 
+              (char *)winResLoadString(IDS_SELECT_SNAPSHOT_FILE),
+              TRUE);
+
+  BOOL res = dlg.DoModal();  
+  if(res == FALSE) {
+    DWORD res = CommDlgExtendedError();
+    return;
+  }
+
+  fileExportSPSSnapshot(szFile, p);
+}
+
 extern void helpAbout();
 extern void toolsLogging();
 extern void toolsDisassemble();
@@ -3261,14 +3296,11 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_FILE_IMPORT_BATTERYFILE:
       fileImportBatteryFile();
       break;
-      //    case ID_FILE_IMPORT_EEPROMFILEOLDFORMAT:
-      //      fileImportEepromFile();
-      break;
     case ID_FILE_EXPORT_BATTERYFILE:
       fileExportBatteryFile();
       break;
-      //    case ID_FILE_EXPORT_EEPROMFILEOLDFORMAT:
-      //      fileExportEepromFile();
+    case ID_FILE_EXPORT_GAMESHARKSNAPSHOT:
+      fileExportGSASnapshot();
       break;
     case ID_FILE_PAUSE:
       paused = !paused;

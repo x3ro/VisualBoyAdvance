@@ -319,6 +319,10 @@ SOURCE=..\src\win32\Disassemble.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\ExportGSASnapshot.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\GBACheats.cpp
 # End Source File
 # Begin Source File
@@ -640,6 +644,10 @@ InputName=2xSaImmx
 # Begin Source File
 
 SOURCE=..\src\VisualBoyAdvance.exe.manifest
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\win32\VisualBoyAdvance.exe.manifest
 # End Source File
 # Begin Source File
 

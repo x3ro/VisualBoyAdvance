@@ -773,9 +773,11 @@ bool CPUReadGSASnapshot(char *fileName)
   fseek(file, 4, SEEK_CUR); // skip some sort of flag
   fread(&i, 1, 4, file); // name length
   fseek(file, i, SEEK_CUR); // skip name
-  fread(&i, 1, 4, file); // date length
-  fseek(file, i, SEEK_CUR); // skip date
-  fseek(file, 8, SEEK_CUR); // skip flags;
+  fread(&i, 1, 4, file); // desc length
+  fseek(file, i, SEEK_CUR); // skip desc
+  fread(&i, 1, 4, file); // notes length
+  fseek(file, i, SEEK_CUR); // skip notes
+  fseek(file, 4, SEEK_CUR); // skip flags;
   char buffer[17];
   char buffer2[17];
   fread(buffer, 1, 16, file);
@@ -811,6 +813,55 @@ bool CPUReadGSASnapshot(char *fileName)
   }
   fclose(file);
   CPUReset();
+  return true;
+}
+
+void CPUWriteInt(char *buffer, int value)
+{
+  buffer[0] = value & 255;
+  buffer[1] = (value >> 8) & 255;
+  buffer[2] = (value >> 16) & 255;
+  buffer[3] = (value >> 24) & 255;
+}
+
+bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
+{
+  FILE *file = fopen(fileName, "wb");
+    
+  if(!file) {
+    systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", fileName);
+    return false;
+  }
+
+  char buffer[17];
+
+  CPUWriteInt(buffer, 0x0d); // SharkPortSave length
+  fwrite(buffer, 1, 4, file);
+  fwrite("SharkPortSave", 1, 0x0d, file);
+  CPUWriteInt(buffer, 0x000f0000);
+  fwrite(buffer, 1, 4, file); // some flags
+  CPUWriteInt(buffer, strlen(title));
+  fwrite(buffer, 1, 4, file); // title length
+  fwrite(title, 1, strlen(title), file);
+  CPUWriteInt(buffer, strlen(desc));
+  fwrite(buffer, 1, 4, file); // desc length
+  fwrite(desc, 1, strlen(desc), file);
+  CPUWriteInt(buffer, strlen(notes));
+  fwrite(buffer, 1, 4, file); // notes length
+  fwrite(notes, 1, strlen(notes), file);
+
+  CPUWriteInt(buffer, 0x0001001c); // more flags
+  fwrite(buffer, 1, 4, file);
+
+  fwrite(&rom[0xa0], 1, 16, file); // write ROM internal name
+  memset(buffer, 0, 12);
+  fwrite(buffer, 1, 12, file); // more flags... unknown
+
+  fwrite(flashSaveMemory, 1, 0x10000, file); // write save
+  memset(buffer, 0, 4);
+  fwrite(buffer, 1, 4, file); // CRC?
+  
+  fclose(file);
   return true;
 }
 

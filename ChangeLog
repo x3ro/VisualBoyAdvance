@@ -1,3 +1,13 @@
+2002-10-25  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src\win32\Win32.cpp (fileExportGSASnapshot): added code
+	* src\win32\ExportGSASnapshot.cpp: Created dialog 
+	* src\win32\Commands.cpp: Added new menu options
+
+2002-10-24  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src\GBA.cpp (CPUReadGSASnapshot): Now skipping notes if they exist
+
 2002-10-23  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src\win32\Win32.cpp (initApp): remember freeze recent list flag

@@ -77,6 +77,7 @@
 #define IDD_GDB_PORT                    135
 #define IDD_GDB_WAITING                 136
 #define IDD_LOGGING                     137
+#define IDD_EXPORT_SPS                  138
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -428,6 +429,8 @@
 #define IDC_VERBOSE_DMA2                1231
 #define IDC_XY                          1231
 #define IDC_VERBOSE_DMA3                1232
+#define IDC_TITLE                       1234
+#define IDC_NOTES                       1236
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -575,14 +578,15 @@
 #define ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X 40160
 #define ID_OPTIONS_FILTER16BIT_SIMPLE2X 40161
 #define ID_FILE_RECENT_FREEZE           40162
+#define ID_FILE_EXPORT_GAMESHARKSNAPSHOT 40163
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        138
-#define _APS_NEXT_COMMAND_VALUE         40163
-#define _APS_NEXT_CONTROL_VALUE         1233
+#define _APS_NEXT_RESOURCE_VALUE        139
+#define _APS_NEXT_COMMAND_VALUE         40164
+#define _APS_NEXT_CONTROL_VALUE         1235
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

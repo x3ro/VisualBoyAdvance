@@ -75,6 +75,7 @@ extern void (*cpuSaveGameFunc)(u32,u8);
 extern bool freezeWorkRAM[0x40000];
 extern bool freezeInternalRAM[0x8000];
 extern bool CPUReadGSASnapshot(char *);
+extern bool CPUWriteGSASnapshot(char *, char *, char *, char *);
 extern bool CPUWriteBatteryFile(char *);
 extern bool CPUReadBatteryFile(char *);
 extern bool CPUExportEepromFile(char *);

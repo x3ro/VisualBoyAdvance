@@ -838,6 +838,22 @@ BEGIN
     GROUPBOX        "Verbose",IDC_STATIC,7,7,93,117
 END
 
+IDD_EXPORT_SPS DIALOG DISCARDABLE  0, 0, 248, 148
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export Gameshark Snapshot"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_TITLE,84,7,157,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_DESC,84,27,157,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NOTES,84,47,157,73,ES_MULTILINE | ES_AUTOHSCROLL | 
+                    ES_WANTRETURN
+    DEFPUSHBUTTON   "OK",ID_OK,67,127,50,14
+    PUSHBUTTON      "Cancel",ID_CANCEL,130,127,50,14
+    LTEXT           "Title:",IDC_STATIC,7,8,62,8
+    LTEXT           "Description:",IDC_STATIC,7,28,63,8
+    LTEXT           "Notes:",IDC_STATIC,7,48,60,8
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1059,6 +1075,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 211
     END
+
+    IDD_EXPORT_SPS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 241
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 141
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -1126,6 +1150,8 @@ BEGIN
         POPUP "E&xport"
         BEGIN
             MENUITEM "&Battery file...",            ID_FILE_EXPORT_BATTERYFILE
+
+            MENUITEM "&Gameshark Snapshot...",      ID_FILE_EXPORT_GAMESHARKSNAPSHOT
 
         END
         MENUITEM SEPARATOR
