@@ -273,12 +273,18 @@ int cheatsCheckKeys(u32 keys, u32 extended)
       }
       break;
     case CBA_IF_KEYS_PRESSED:
-      if(cheatsList[i].address == 0x20) {
-        if((keys & cheatsList[i].value) != cheatsList[i].value) {
-          i++;
+      {
+        u16 value = cheatsList[i].value;
+        u32 addr = cheatsList[i].address;
+        if((addr & 0x30) == 0x20) {
+          if((keys & value) != value) {
+            i++;
+          }
+        } else if((addr & 0x30) == 0x10) {
+          if((keys & value) == value) {
+            i++;
+          }
         }
-      } else if(cheatsList[i].value != keys) {
-        i++;
       }
       break;
     case CBA_IF_TRUE:
