@@ -257,7 +257,7 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
       u16 c = gbPalette[palette + color];
       if(!color)
         c = gbPalette[0];
-      if((yy < 40 || yy >= 284) || (xx < 48 || xx >= 208)) {
+      if((yy < 40 || yy >= 184) || (xx < 48 || xx >= 208)) {
         switch(systemColorDepth) {
         case 16:
           gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
