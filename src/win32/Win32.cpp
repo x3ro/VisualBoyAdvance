@@ -2037,7 +2037,7 @@ void updateToolsMenu(HMENU menu)
                  ENABLEMENU(emulating && moviePlaying));
 
   EnableMenuItem(menu, ID_TOOLS_REWIND,
-                 ENABLEMENU(rewindMemory != NULL && emulating));
+                 ENABLEMENU(rewindMemory != NULL && emulating && rewindCount));
 }
 
 void updateSoundChannels(UINT id)
@@ -5517,6 +5517,10 @@ BOOL fileOpen()
   renderedFrames = 0;
   autoFrameSkipLastTime = throttleLastTime = systemGetClock();
 
+  rewindCount = 0;
+  rewindCounter = 0;
+  rewindSaveNeeded = false;
+
   if(screenSaverState)
     setScreenSaverEnable(FALSE);
   
@@ -5571,6 +5575,10 @@ bool loadSaveGame()
   }
 
   bool res = loadSaveGame(ofn.lpstrFile);
+
+  rewindCount = 0;
+  rewindCounter = 0;
+  rewindSaveNeeded = false;
   
   systemScreenMessage((char *)winResLoadString(IDS_LOADED_STATE));  
   
@@ -5595,6 +5603,10 @@ bool loadSaveGame(int num)
     sprintf(szFile, "%s\\%s%d.sgm", saveDir, p, num);
 
   bool res = loadSaveGame(szFile);
+
+  rewindCount = 0;
+  rewindCounter = 0;
+  rewindSaveNeeded = false;
 
   sprintf(winBuffer, winResLoadString(IDS_LOADED_STATE_N), num);
   
