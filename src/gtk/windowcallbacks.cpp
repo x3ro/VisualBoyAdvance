@@ -138,7 +138,7 @@ void Window::vOnFileOpen()
   m_poFileOpenDialog->hide();
 }
 
-void Window::vOnLoadGame()
+void Window::vOnFileLoad()
 {
   std::string sSaveDir = m_poDirConfig->sGetKey("saves");
 
@@ -189,7 +189,7 @@ void Window::vOnLoadGame()
   }
 }
 
-void Window::vOnSaveGame()
+void Window::vOnFileSave()
 {
   Glib::ustring sSaveDir = m_poDirConfig->sGetKey("saves");
 
@@ -198,17 +198,15 @@ void Window::vOnSaveGame()
   Gtk::FileSelection oDialog(_("Save game"));
   oDialog.set_transient_for(*this);
 
-  Glib::ustring sDefaultFile;
   if (sSaveDir == "")
   {
-    sDefaultFile = sCutSuffix(m_sRomFile) + ".sgm";
+    oDialog.set_filename(sCutSuffix(m_sRomFile));
   }
   else
   {
-    sDefaultFile = sSaveDir + "/"
-      + sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sgm";
+    oDialog.set_filename(sSaveDir + "/" +
+                         sCutSuffix(Glib::path_get_basename(m_sRomFile)));
   }
-  oDialog.set_filename(sDefaultFile);
 
 #else // ! GTKMM20
 
@@ -226,7 +224,7 @@ void Window::vOnSaveGame()
     oDialog.set_current_folder(sSaveDir);
     oDialog.add_shortcut_folder(sSaveDir);
   }
-  oDialog.set_current_name(sCutSuffix(Glib::path_get_basename(m_sRomFile)) + ".sgm");
+  oDialog.set_current_name(sCutSuffix(Glib::path_get_basename(m_sRomFile)));
 
   Gtk::FileFilter oSaveFilter;
   oSaveFilter.set_name(_("VisualBoyAdvance save game"));
@@ -283,7 +281,7 @@ void Window::vOnLoadGameMostRecent()
 
   if (iMostRecent >= 0)
   {
-    vOnLoadGameSlot(iMostRecent + 1);
+    vOnLoadGame(iMostRecent + 1);
   }
 }
 
@@ -292,7 +290,7 @@ void Window::vOnLoadGameAutoToggled(Gtk::CheckMenuItem * _poCMI)
   m_poCoreConfig->vSetKey("load_game_auto", _poCMI->get_active());
 }
 
-void Window::vOnLoadGameSlot(int _iSlot)
+void Window::vOnLoadGame(int _iSlot)
 {
   int i = _iSlot - 1;
   if (! m_astGameSlot[i].m_bEmpty)
@@ -319,15 +317,15 @@ void Window::vOnSaveGameOldest()
 
   if (iOldest >= 0)
   {
-    vOnSaveGameSlot(iOldest + 1);
+    vOnSaveGame(iOldest + 1);
   }
   else
   {
-    vOnSaveGameSlot(1);
+    vOnSaveGame(1);
   }
 }
 
-void Window::vOnSaveGameSlot(int _iSlot)
+void Window::vOnSaveGame(int _iSlot)
 {
   int i = _iSlot - 1;
   m_stEmulator.emuWriteState(m_astGameSlot[i].m_sFile.c_str());
@@ -463,11 +461,12 @@ void Window::vOnExportBatteryFile()
 
   if (sBatteryDir == "")
   {
-    oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
+    oDialog.set_filename(sCutSuffix(m_sRomFile));
   }
   else
   {
-    oDialog.set_filename(sBatteryDir + "/");
+    oDialog.set_filename(sBatteryDir + "/" +
+                         sCutSuffix(Glib::path_get_basename(m_sRomFile)));
   }
 
 #else // ! GTKMM20
@@ -486,6 +485,7 @@ void Window::vOnExportBatteryFile()
     oDialog.set_current_folder(sBatteryDir);
     oDialog.add_shortcut_folder(sBatteryDir);
   }
+  oDialog.set_current_name(sCutSuffix(Glib::path_get_basename(m_sRomFile)));
 
   Gtk::FileFilter oBatteryFilter;
   oBatteryFilter.set_name(_("Battery file"));
@@ -560,6 +560,115 @@ void Window::vOnExportBatteryFile()
     {
       vPopupError(_("Failed to export battery file %s."),
                   sFile.c_str());
+    }
+  }
+}
+
+void Window::vOnFileScreenCapture()
+{
+  std::string sCaptureDir = m_poDirConfig->sGetKey("captures");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Save screenshot"));
+  oDialog.set_transient_for(*this);
+
+  if (sCaptureDir == "")
+  {
+    oDialog.set_filename(sCutSuffix(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_filename(sCaptureDir + "/" +
+                         sCutSuffix(Glib::path_get_basename(m_sRomFile)));
+  }
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Save screenshot"),
+                                 Gtk::FILE_CHOOSER_ACTION_SAVE);
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::SAVE,   Gtk::RESPONSE_OK);
+
+  if (sCaptureDir == "")
+  {
+    oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_current_folder(sCaptureDir);
+    oDialog.add_shortcut_folder(sCaptureDir);
+  }
+  oDialog.set_current_name(sCutSuffix(Glib::path_get_basename(m_sRomFile)));
+
+  Gtk::FileFilter oPngFilter;
+  oPngFilter.set_name(_("PNG image"));
+  oPngFilter.add_pattern("*.[pP][nN][gG]");
+
+  Gtk::FileFilter oBmpFilter;
+  oBmpFilter.set_name(_("BMP image"));
+  oBmpFilter.add_pattern("*.[bB][mM][pP]");
+
+  oDialog.add_filter(oPngFilter);
+  oDialog.add_filter(oBmpFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    Glib::ustring sFile = oDialog.get_filename();
+    Glib::ustring sExt;
+
+#ifdef GTKMM20
+
+    sExt = ".png";
+
+#else // ! GTKMM20
+
+    if (oDialog.get_filter() == &oPngFilter)
+    {
+      sExt = ".png";
+    }
+    else
+    {
+      sExt = ".bmp";
+    }
+
+#endif // ! GTKMM20
+
+    if (! bHasSuffix(sFile, sExt, false))
+    {
+      sFile += sExt;
+    }
+
+    if (Glib::file_test(sFile, Glib::FILE_TEST_EXISTS))
+    {
+      Gtk::MessageDialog oConfirmDialog(*this,
+                                        _("File already exists. Overwrite it?"),
+#ifndef GTKMM20
+                                        false,
+#endif // ! GTKMM20
+                                        Gtk::MESSAGE_QUESTION,
+                                        Gtk::BUTTONS_YES_NO);
+      if (oConfirmDialog.run() != Gtk::RESPONSE_YES)
+      {
+        continue;
+      }
+    }
+
+    bool bResult;
+    if (sExt == ".png")
+    {
+      bResult = m_stEmulator.emuWritePNG(sFile.c_str());
+    }
+    else
+    {
+      bResult = m_stEmulator.emuWriteBMP(sFile.c_str());
+    }
+
+    if (bResult)
+    {
+      break;
     }
   }
 }

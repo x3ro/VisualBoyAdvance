@@ -130,13 +130,13 @@ protected:
   };
 
   virtual void vOnFileOpen();
-  virtual void vOnLoadGame();
-  virtual void vOnSaveGame();
+  virtual void vOnFileLoad();
+  virtual void vOnFileSave();
   virtual void vOnLoadGameMostRecent();
   virtual void vOnLoadGameAutoToggled(Gtk::CheckMenuItem * _poCMI);
-  virtual void vOnLoadGameSlot(int _iSlot);
+  virtual void vOnLoadGame(int _iSlot);
   virtual void vOnSaveGameOldest();
-  virtual void vOnSaveGameSlot(int _iSlot);
+  virtual void vOnSaveGame(int _iSlot);
   virtual void vOnFilePauseToggled(Gtk::CheckMenuItem * _poCMI);
   virtual void vOnFileReset();
   virtual void vOnRecentReset();
@@ -144,6 +144,7 @@ protected:
   virtual void vOnRecentFile(std::string _sFile);
   virtual void vOnImportBatteryFile();
   virtual void vOnExportBatteryFile();
+  virtual void vOnFileScreenCapture();
   virtual void vOnFileClose();
   virtual void vOnFileExit();
   virtual void vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue);

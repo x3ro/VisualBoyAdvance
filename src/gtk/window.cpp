@@ -131,11 +131,11 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileOpen));
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileLoad"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnLoadGame));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileLoad));
   m_listSensitiveWhenPlaying.push_back(poMI);
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileSave"));
-  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnSaveGame));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileSave));
   m_listSensitiveWhenPlaying.push_back(poMI);
 
   for (int i = 0; i < 10; i++)
@@ -147,10 +147,10 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
     m_apoSaveGameItem[i] = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget(csName));
 
     m_apoLoadGameItem[i]->signal_activate().connect(SigC::bind<int>(
-                                                      SigC::slot(*this, &Window::vOnLoadGameSlot),
+                                                      SigC::slot(*this, &Window::vOnLoadGame),
                                                       i + 1));
     m_apoSaveGameItem[i]->signal_activate().connect(SigC::bind<int>(
-                                                      SigC::slot(*this, &Window::vOnSaveGameSlot),
+                                                      SigC::slot(*this, &Window::vOnSaveGame),
                                                       i + 1));
   }
   vUpdateGameSlots();
@@ -180,6 +180,10 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileReset"));
   poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileReset));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileScreenCapture"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnFileScreenCapture));
   m_listSensitiveWhenPlaying.push_back(poMI);
 
   poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("FileClose"));
