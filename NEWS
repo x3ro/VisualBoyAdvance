@@ -4,6 +4,7 @@ Windows version:
 - automatically apply IPS patch if it exists
 - removed some test code introduced at version 1.1 that slows down the emulator
 SDL version:
+- added profiling support (GMON format - see README)
 - automatically apply IPS patch if it exists
 - improved search for configuration file: current directory, user directory,
   executable directory (in order) are searched

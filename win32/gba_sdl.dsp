@@ -42,7 +42,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "NDEBUG" /D "FINAL_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "DEV_VERSION" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /GX /O2 /Ob2 /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "NDEBUG" /D "FINAL_VERSION" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -50,7 +50,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib /nologo /subsystem:console /machine:I386 /out:"SDLRelease/VisualBoyAdvance-SDL.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib wsock32.lib /nologo /subsystem:console /machine:I386 /nodefaultlib:"libmmd" /nodefaultlib:"libircmt" /out:"SDLRelease/VisualBoyAdvance-SDL.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "gba_sdl - Win32 Debug"
@@ -67,7 +67,7 @@ LINK32=xilink6.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /MD /W3 /Gm /GX /ZI /Od /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "_DEBUG" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /YX /FD /GZ /c
+# ADD CPP /nologo /MD /W3 /Gm /GX /ZI /Od /I "include/zlib" /I "include/png" /I "SDL-1.2.2/include" /D "_DEBUG" /D "DEV_VERSION" /D "WIN32" /D "_CONSOLE" /D "_MBCS" /D "BKPT_SUPPORT" /D "MMX" /D "SDL" /D "PROFILING" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x409 /d "_DEBUG"
 # ADD RSC /l 0x409 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -75,7 +75,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=xilink6.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 winmm.lib wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /profile /map /debug /machine:I386 /out:"SDLDebug/VisualBoyAdvance-SDL.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# ADD LINK32 winmm.lib wsock32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /map /debug /machine:I386 /nodefaultlib:"libmmd" /nodefaultlib:"libircmt" /out:"SDLDebug/VisualBoyAdvance-SDL.exe" /MAPINFO:EXPORTS /MAPINFO:LINES
+# SUBTRACT LINK32 /profile
 
 !ENDIF 
 
@@ -273,6 +274,10 @@ SOURCE=..\src\Font.cpp
 # Begin Source File
 
 SOURCE=..\src\getopt.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\prof\prof.cpp
 # End Source File
 # Begin Source File
 

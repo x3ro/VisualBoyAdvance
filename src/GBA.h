@@ -100,6 +100,10 @@ extern void CPULoop(int);
 extern void CPUCheckDMA(int,int);
 extern bool CPUIsGBAImage(char *);
 extern bool CPUIsZipFile(char *);
+#ifdef PROFILING
+extern void cpuProfil(char *buffer, int, u32, int);
+extern void cpuEnableProfiling(int hz);
+#endif
 
 #define R13_IRQ  18
 #define R14_IRQ  19

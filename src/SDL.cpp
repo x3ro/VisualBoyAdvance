@@ -1467,6 +1467,7 @@ void usage(char *cmd)
         printf("    6 - Motion Blur\n");
         printf("    7 - AdvanceMAME Scale2x\n");
         printf("    8 - Simple2x\n");
+        printf("  -p Enable profiling\n");
         printf("  -s<frameskip> Set frame skip (0...9)\n");
         printf("  -t<type> Set the available save type\n");
         printf("    0 - Automatic (EEPROM, SRAM, FLASH)\n");
@@ -1510,7 +1511,7 @@ int main(int argc, char **argv)
 
   sdlReadPreferences();
   
-  while((op = getopt(argc, argv, "FNY:G:D:b:df:s:t:v:1234")) != -1) {
+  while((op = getopt(argc, argv, "FNY:G:D:b:df:p::s:t:v:1234")) != -1) {
     switch(op) {
     case 'b':
       useBios = true;
@@ -1594,6 +1595,14 @@ int main(int argc, char **argv)
       } else {
         filter = 0;
       }
+      break;
+    case 'p':
+#ifdef PROFILING
+      if(optarg) {
+        cpuEnableProfiling(atoi(optarg));
+      } else
+        cpuEnableProfiling(100);
+#endif
       break;
     case 's':
       if(optarg) {

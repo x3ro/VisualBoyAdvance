@@ -1,3 +1,9 @@
+2002-11-20  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/SDL.cpp (main): added profiling support
+	* src/GBA.cpp: added profiling support
+	* src/prof/prof.cpp: added profiling support
+
 2002-11-14  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (systemWriteDataToSoundBuffer): remove test code that causes slowdown

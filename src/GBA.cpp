@@ -36,6 +36,9 @@
 #include "NLS.h"
 #include "elf.h"
 #include "Util.h"
+#ifdef PROFILING
+#include "prof/prof.h"
+#endif
 
 #define UPDATE_REG(address, value) *((u16 *)&ioMem[address]) = TO16LE(value)
 
@@ -72,6 +75,14 @@ bool cpuFlashEnabled = true;
 bool cpuEEPROMEnabled = true;
 bool cpuEEPROMSensorEnabled = false;
 
+#ifdef PROFILING
+int profilingTicks = 0;
+int profilingTicksReload = 0;
+static char *profilBuffer = NULL;
+static int profilSize = 0;
+static u32 profilLowPC = 0;
+static int profilScale = 0;
+#endif
 bool freezeWorkRAM[0x40000];
 bool freezeInternalRAM[0x8000];
 int lcdTicks = 960;
@@ -443,6 +454,24 @@ variable_desc saveGameStruct[] = {
 //int cpuLoopTicks = 0;
 int cpuSavedTicks = 0;
 
+#ifdef PROFILING
+void cpuProfil(char *buf, int size, u32 lowPC, int scale)
+{
+  profilBuffer = buf;
+  profilSize = size;
+  profilLowPC = lowPC;
+  profilScale = scale;
+}
+
+void cpuEnableProfiling(int hz)
+{
+  if(hz == 0)
+    hz = 100;
+  profilingTicks = profilingTicksReload = 16777216 / hz;
+  profSetHertz(hz);
+}
+#endif
+
 inline int CPUUpdateTicksAccess32(u32 address)
 {
   return memoryWait32[(address>>24)&15];
@@ -482,6 +511,13 @@ inline void CPUUpdateTicks(int &cpuLoopTicks)
   if(timer3On && (timer3Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer3Ticks;
   }
+#ifdef PROFILING
+  if(profilingTicksReload != 0) {
+    if(profilingTicks < cpuLoopTicks) {
+      cpuLoopTicks = profilingTicks;
+    }
+  }
+#endif
   cpuSavedTicks = cpuLoopTicks;
 }
 
@@ -1012,6 +1048,12 @@ bool CPUIsELF(char *file)
 
 void CPUCleanUp()
 {
+#ifdef PROFILING
+  if(profilingTicksReload) {
+    profCleanup();
+  }
+#endif
+  
   if(rom != NULL) {
     free(rom);
     rom = NULL;
@@ -1473,6 +1515,24 @@ void CPUSoftwareInterrupt(int comment)
   if(comment == 0xff || comment == 0x00ff0000) {
     extern void (*dbgOutput)(char *, u32);
     dbgOutput(NULL, reg[0].I);
+    return;
+  }
+#endif
+#ifdef PROFILING
+  if(comment == 0xfe || comment == 0x00fe0000) {
+    profStartup(reg[0].I, reg[1].I);
+    return;
+  }
+  if(comment == 0xfd || comment == 0x00fd0000) {
+    profControl(reg[0].I);
+    return;
+  }
+  if(comment == 0xfc || comment == 0x00fc0000) {
+    profCleanup();
+    return;
+  }
+  if(comment == 0xfb || comment == 0x00fb0000) {
+    profCount();
     return;
   }
 #endif
@@ -3332,6 +3392,13 @@ void CPULoop(int ticks)
       if(timer3On && (timer3Ticks < clockTicks)) {
         clockTicks = timer3Ticks;
       }
+#ifdef PROFILING
+      if(profilingTicksReload != 0) {
+        if(profilingTicks < clockTicks) {
+          clockTicks = profilingTicks;
+        }
+      }
+#endif
     }
 
     clockTicks += cpuMemoryWait[(reg[15].I >> 24) & 15];
@@ -3753,7 +3820,21 @@ void CPULoop(int ticks)
           soundTicks += SOUND_CLOCK_TICKS;
         }
         timerOverflow = 0;
-      }      
+      }
+
+#ifdef PROFILING
+      profilingTicks -= clockTicks;
+      if(profilingTicks <= 0) {
+        profilingTicks += profilingTicksReload;
+        if(profilBuffer && profilSize) {
+          u16 *b = (u16 *)profilBuffer;
+          int pc = ((reg[15].I - profilLowPC) * profilScale)/0x10000;
+          if(pc >= 0 && pc < profilSize) {
+            b[pc]++;
+          }
+        }
+      }
+#endif
 
       ticks -= clockTicks;
 
