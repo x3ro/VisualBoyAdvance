@@ -17,12 +17,19 @@
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "GBA.h"
+#include "Globals.h"
 #include "Flash.h"
 #include "Sram.h"
 
 u8 sramRead(u32 address)
 {
   return flashSaveMemory[address & 0xFFFF];
+}
+void sramDelayedWrite(u32 address, u8 byte)
+{
+  saveType = 1;
+  cpuSaveGameFunc = sramWrite;
+  sramWrite(address, byte);
 }
 
 void sramWrite(u32 address, u8 byte)

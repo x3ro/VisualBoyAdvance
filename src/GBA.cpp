@@ -1399,6 +1399,8 @@ int CPULoadRom(const char *szFile)
     return 0;
   }      
 
+  flashInit();
+
   CPUUpdateRenderBuffers(true);
 
   return romSize;
@@ -3296,32 +3298,35 @@ void CPUReset()
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = false;
+    // EEPROM usage is automatically detected
     break;
   case 2: // SRAM
     cpuSramEnabled = true;
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
-    cpuSaveGameFunc = sramWrite;
+    cpuSaveGameFunc = sramDelayedWrite; // to insure we detect the write
     break;
   case 3: // FLASH
     cpuSramEnabled = false;
     cpuFlashEnabled = true;
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
-    cpuSaveGameFunc = flashWrite;
+    cpuSaveGameFunc = flashDelayedWrite; // to insure we detect the write
     break;
   case 4: // EEPROM+Sensor
     cpuSramEnabled = false;
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = true;
+    // EEPROM usage is automatically detected
     break;
   case 5: // NONE
     cpuSramEnabled = false;
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
+    // no save at all
     break;
   } 
 

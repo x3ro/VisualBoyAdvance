@@ -67,6 +67,11 @@ static variable_desc flashSaveData3[] = {
   { NULL, 0 }
 };
 
+void flashInit()
+{
+  memset(flashSaveMemory, 0xff, sizeof(flashSaveMemory));
+}
+
 void flashReset()
 {
   flashState = FLASH_READ_ARRAY;
@@ -144,6 +149,13 @@ void flashSaveDecide(u32 address, u8 byte)
   }
 
   (*cpuSaveGameFunc)(address, byte);
+}
+
+void flashDelayedWrite(u32 address, u8 byte)
+{
+  saveType = 2;
+  cpuSaveGameFunc = flashWrite;
+  flashWrite(address, byte);
 }
 
 void flashWrite(u32 address, u8 byte)

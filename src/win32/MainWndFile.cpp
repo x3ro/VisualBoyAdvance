@@ -728,7 +728,7 @@ void MainWnd::OnFileSavegameOldestslot()
   CString name;
   CFileStatus status;
   CString str;
-  unsigned long time = -1;
+  unsigned long time = (unsigned long)-1;
   int found = 0;
     
   for(int i = 0; i < 10; i++) {
