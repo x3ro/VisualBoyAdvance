@@ -1763,6 +1763,9 @@ void CPUSoftwareInterrupt(int comment)
   case 0x1F:
     BIOS_MidiKey2Freq();
     break;
+  case 0x2A:
+    BIOS_SndDriverJmpTableCopy();
+    // let it go, because we don't really emulate this function
   default:
 #ifdef DEV_VERSION
     if(systemVerbose & VERBOSE_SWI) {

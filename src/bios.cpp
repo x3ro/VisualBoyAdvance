@@ -1104,3 +1104,17 @@ void BIOS_MidiKey2Freq()
   }
 #endif
 }
+
+void BIOS_SndDriverJmpTableCopy()
+{
+#ifdef DEV_VERSION
+  if(systemVerbose & VERBOSE_SWI) {
+    log("SndDriverJmpTableCopy: dest=%08x\n",
+        reg[0].I);
+  }
+#endif
+  for(int i = 0; i < 0x24; i++) {
+    CPUWriteMemory(reg[0].I, 0x9c);
+    reg[0].I += 4;
+  }
+}
