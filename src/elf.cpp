@@ -2631,7 +2631,7 @@ void elfReadSymtab(u8 *data)
   //  free(symtab);
 }
 
-bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
+bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
 {
   int count = READ16LE(&eh->e_phnum);
   int i;
@@ -2641,7 +2641,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
 
   // read program headers... should probably move this code down
   u8 *p = data + READ32LE(&eh->e_phoff);
-  
+  size = 0;
   for(i = 0; i < count; i++) {
     ELFProgramHeader *ph = (ELFProgramHeader *)p;
     p += sizeof(ELFProgramHeader);
@@ -2665,6 +2665,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
         memcpy(&rom[READ32LE(&ph->paddr) & 0x1ffffff],
                data + READ32LE(&ph->offset),
                READ32LE(&ph->filesz));
+        size += READ32LE(&ph->filesz);
       }
     }
   }
@@ -2713,6 +2714,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
           memcpy(&rom[READ32LE(&sh[i]->addr) & 0x1ffffff],
                  data + READ32LE(&sh[i]->offset),
                  READ32LE(&sh[i]->size));
+          size += READ32LE(&sh[i]->size);
         }
       }      
     }
@@ -2794,7 +2796,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, bool parseDebug)
 
 extern bool parseDebug;
 
-bool elfRead(char *name, FILE *f)
+bool elfRead(char *name, int& siz, FILE *f)
 {
   fseek(f, 0, SEEK_END);
   long size = ftell(f);
@@ -2813,7 +2815,7 @@ bool elfRead(char *name, FILE *f)
     return false;
   }
 
-  if(!elfReadProgram(header, filedata, parseDebug)) {
+  if(!elfReadProgram(header, filedata, siz, parseDebug)) {
     free(filedata);
     return false;
   }

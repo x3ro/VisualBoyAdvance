@@ -1240,18 +1240,13 @@ bool CPULoadRom(char *szFile)
                   "ROM");
     return false;
   }
-  u16 *temp = (u16 *)rom;
-  int i;
-  for(i = 0; i < 0x2000000; i+=2) {
-    WRITE16LE(temp, (i >> 1) & 0xFFFF);
-    temp++;
-  }
   workRAM = (u8 *)calloc(1, 0x40000);
   if(workRAM == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "WRAM");
     return false;
   }
+
   u8 *whereToLoad = rom;
   if(cpuIsMultiBoot)
     whereToLoad = workRAM;
@@ -1267,7 +1262,7 @@ bool CPULoadRom(char *szFile)
       workRAM = NULL;
       return false;
     }
-    if(!elfRead(szFile, f)) {
+    if(!elfRead(szFile, size, f)) {
       free(rom);
       rom = NULL;
       free(workRAM);
@@ -1283,6 +1278,13 @@ bool CPULoadRom(char *szFile)
     free(workRAM);
     workRAM = NULL;
     return false;
+  }
+
+  u16 *temp = (u16 *)(rom+((size+1)&~1));
+  int i;
+  for(i = (size+1)&~1; i < 0x2000000; i+=2) {
+    WRITE16LE(temp, (i >> 1) & 0xFFFF);
+    temp++;
   }
 
   bios = (u8 *)calloc(1,0x4000);
