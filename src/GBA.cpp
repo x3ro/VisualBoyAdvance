@@ -1472,12 +1472,21 @@ void CPUUpdateFlags()
   CPUUpdateFlags(true);
 }
 
+#ifdef WORDS_BIGENDIAN
+static void CPUSwap(volatile u32 *a, volatile u32 *b)
+{
+  volatile u32 c = *b;
+  *b = *a;
+  *a = c;
+}
+#else
 static void CPUSwap(u32 *a, u32 *b)
 {
   u32 c = *b;
   *b = *a;
   *a = c;
 }
+#endif
 
 void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
 {
@@ -2894,7 +2903,7 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
 {
 #ifdef WORDS_BIGENDIAN
   if(!cpuBiosSwapped) {
-    for(int i = 0; i < sizeof(myROM)/4; i++) {
+    for(unsigned int i = 0; i < sizeof(myROM)/4; i++) {
       WRITE32LE(&myROM[i], myROM[i]);
     }
     cpuBiosSwapped = true;

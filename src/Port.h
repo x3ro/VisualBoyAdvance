@@ -33,42 +33,23 @@ static inline u32 swap32(u32 v)
 
 #ifdef WORDS_BIGENDIAN
 #if defined(__GNUC__) && defined(__ppc__)
-inline u32 READ32LE(const void* address)
-{
-  register int ReturnValue;
-  asm volatile("lwbrx %0, 0, %1\n"
-               : "=r" (ReturnValue)
-               : "r" (address)
-               );
-  return ReturnValue;
-}
-inline u32 READ16LE(const void* address)
-{
-  register int ReturnValue;
-  asm volatile("lhbrx %0, 0, %1\n"
-               : "=r" (ReturnValue)
-               : "r" (address)
-               );
-  return ReturnValue;
-}
 
-inline void WRITE32LE(void* address, u32 Value)
-{
-  asm volatile("stwbrx %0, 0, %1\n"
-               : // No outputs
-               : "r" (Value), "r" (address)
-               : "memory"
-               );
-}
+#define READ16LE(base) \
+  ({ unsigned short lhbrxResult;       \
+     __asm__ ("lhbrx %0, 0, %1" : "=r" (lhbrxResult) : "r" (base) : "memory"); \
+      lhbrxResult; })
 
-inline void WRITE16LE(void* address, u32 Value)
-{
-  asm volatile("sthbrx %0, 0, %1\n"
-               : // No outputs
-               : "r" (Value), "r" (address)
-               : "memory"
-               );
-}
+#define READ32LE(base) \
+  ({ unsigned long lwbrxResult; \
+     __asm__ ("lwbrx %0, 0, %1" : "=r" (lwbrxResult) : "r" (base) : "memory"); \
+      lwbrxResult; })
+
+#define WRITE16LE(base, value) \
+  __asm__ ("sthbrx %0, 0, %1" : : "r" (value), "r" (base) : "memory")
+  
+#define WRITE32LE(base, value) \
+  __asm__ ("stwbrx %0, 0, %1" : : "r" (value), "r" (base) : "memory")
+  
 #else
 #define READ16LE(x) \
   swap16(*((u16 *)(x)))
