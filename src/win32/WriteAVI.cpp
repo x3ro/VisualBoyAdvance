@@ -170,7 +170,7 @@ bool CAVIFile::AddSound(const int frame, const char *sound, int len)
   int samples = len / soundFormat.nBlockAlign;
   ULONG nTotalBytesWritten = 0;
   HRESULT hr = S_OK;
-  while((hr == S_OK) && (nTotalBytesWritten < len)) {
+  while((hr == S_OK) && ((int)nTotalBytesWritten < len)) {
     LONG nBytesWritten = 0;
     LONG nSamplesWritten = 0;
     

@@ -606,7 +606,6 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
 bool CAcceleratorManager::Load(HKEY hRegKey, LPCTSTR szRegKey)
 {
   ASSERT(szRegKey != NULL);
-  HKEY hKey;
 
   m_hRegKey = hRegKey;
   m_szRegKey = szRegKey;
