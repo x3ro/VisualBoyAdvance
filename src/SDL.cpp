@@ -197,6 +197,10 @@ int frameskipadjust = 0;
 int showRenderedFrames = 0;
 int renderedFrames = 0;
 
+int throttle = 0;
+u32 throttleLastTime = 0;
+u32 autoFrameSkipLastTime = 0;
+
 int showSpeed = 1;
 int showSpeedTransparent = 1;
 bool disableStatusMessages = false;
@@ -314,6 +318,7 @@ struct option sdlOptions[] = {
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "no-mmx", no_argument, &disableMMX, 1 },
   { "no-show-speed", no_argument, &showSpeed, 0 },
+  { "no-throttle", no_argument, &throttle, 0 },
   { "profile", optional_argument, 0, 'p' },
   { "save-type", required_argument, 0, 't' },
   { "save-auto", no_argument, &cpuSaveType, 0 },
@@ -323,6 +328,7 @@ struct option sdlOptions[] = {
   { "save-sensor", no_argument, &cpuSaveType, 4 },
   { "show-speed-normal", no_argument, &showSpeed, 1 },
   { "show-speed-detailed", no_argument, &showSpeed, 2 },
+  { "throttle", required_argument, 0, 'T' },
   { "verbose", required_argument, 0, 'v' },  
   { "video-1x", no_argument, &sizeOption, 0 },
   { "video-2x", no_argument, &sizeOption, 1 },
@@ -1136,6 +1142,10 @@ soundQuality);
       showSpeedTransparent = sdlFromHex(value);
     } else if(!strcmp(key, "autoFrameSkip")) {
       autoFrameSkip = sdlFromHex(value);
+    } else if(!strcmp(key, "throttle")) {
+      throttle = sdlFromHex(value);
+      if(throttle != 0 && (throttle < 5 || throttle > 1000))
+        throttle = 0;
     } else if(!strcmp(key, "disableMMX")) {
 #ifdef MMX
       cpu_mmx = sdlFromHex(value) ? false : true;
@@ -1671,6 +1681,7 @@ void usage(char *cmd)
         printf("  -S , --flash-size=SIZE      Set the Flash size\n");
         printf("       --flash-64k             0 -  64K Flash\n");
         printf("       --flash-128k            1 - 128K Flash\n");
+        printf("  -T , --throttle=THROTTLE    Set the desired throttle (5...1000)\n");
         printf("  -Y , --yuv=TYPE             Use YUV overlay for drawing:\n");
         printf("                               0 - YV12\n");
         printf("                               1 - UYVY\n");
@@ -1721,6 +1732,7 @@ void usage(char *cmd)
         printf("       --no-ips               Do not apply IPS patch\n");
         printf("       --no-mmx               Disable MMX support\n");
         printf("       --no-show-speed        Don't show emulation speed\n");
+        printf("       --no-throttle          Disable thrrotle\n");
         printf("       --show-speed-normal    Show emulation speed\n");
         printf("       --show-speed-detailed  Show detailed speed data\n");
 }
@@ -1753,7 +1765,7 @@ int main(int argc, char **argv)
 
   sdlPrintUsage = 0;
   
-  while((op = getopt_long(argc, argv, "FNY:G:D:b:c:df:hi:p::s:t:v:1234",
+  while((op = getopt_long(argc, argv, "FNT:Y:G:D:b:c:df:hi:p::s:t:v:1234",
                           sdlOptions, NULL)) != -1) {
     switch(op) {
     case 0:
@@ -1898,6 +1910,14 @@ int main(int argc, char **argv)
         if(a < 0 || a > 4)
           a = 0;
         cpuSaveType = a;
+      }
+      break;
+    case 'T':
+      if(optarg) {
+        int t = atoi(optarg);
+        if(t < 5 || t > 1000)
+          t = 0;
+        throttle = t;
       }
       break;
     case 'v':
@@ -2397,8 +2417,11 @@ int main(int argc, char **argv)
     ifbFunction = NULL;
   
   emulating = 1;
-  renderedFrames = 0;  
+  renderedFrames = 0;
+
   soundInit();
+
+  autoFrameSkipLastTime = throttleLastTime = systemGetClock();
   
   SDL_WM_SetCaption("VisualBoyAdvance", NULL);
 
@@ -2654,9 +2677,19 @@ void systemShowSpeed(int speed)
 
     systemSetTitle(buffer);
   }
+}
 
-  if(!wasPaused && autoFrameSkip) {
-    if(speed >= 99) {
+void system10Frames(int rate)
+{
+  u32 time = systemGetClock();  
+  if(!wasPaused && autoFrameSkip && !throttle) {
+    u32 diff = time - autoFrameSkipLastTime;
+    int speed = 100;
+
+    if(diff)
+      speed = (1000000/rate)/diff;
+    
+    if(speed >= 98) {
       frameskipadjust++;
 
       if(frameskipadjust >= 3) {
@@ -2670,14 +2703,28 @@ void systemShowSpeed(int speed)
       else if(systemFrameSkip < 9)
         frameskipadjust--;
 
-      while(frameskipadjust <= -2) {
+      if(frameskipadjust <= -2) {
         frameskipadjust += 2;
         if(systemFrameSkip < 9)
           systemFrameSkip++;
       }
+    }    
+  }
+  if(!wasPaused && throttle) {
+    if(!speedup) {
+      u32 diff = time - throttleLastTime;
+      
+      int target = (1000000/(rate*throttle));
+      int d = (target - diff);
+      
+      if(d > 0) {
+        SDL_Delay(d);
+      }
     }
-    wasPaused = false;
-  }  
+    throttleLastTime = systemGetClock();
+  }
+  wasPaused = false;
+  autoFrameSkipLastTime = time;
 }
 
 void systemScreenCapture(int a)

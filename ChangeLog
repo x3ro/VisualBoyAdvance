@@ -1,3 +1,14 @@
+2003-02-02  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp: added throttle support
+	* src/GBA.cpp (CPUUpdateRegister): fixed some wrong timer assumption (bad copy/paste)
+
+2003-01-29  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp: use registry or INI to store settings
+	* src/win32/Reg.cpp: use registry or INI to store settings
+	* src/win32/AcceleratorManager.cpp: use Reg.cpp to store settings
+
 2003-01-25  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/win32/Win32.cpp (WindowProc): minimize problem when minimizing emulator in fullscreen mode and filter is active

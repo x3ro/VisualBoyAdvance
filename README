@@ -6,6 +6,7 @@ Features:
 
 - configurable GB/GBA keys, including joystick support
 - option to use BIOS file
+- zip file support
 - directory selection for save state, battery and screen capture
 - fullscreen mode (selectable resolution)
 - video sizes 1x, 2x, 3x and 4x
@@ -19,6 +20,7 @@ Features:
 - pause, reset through keyboard
 - 16, 24 and 32 bit desktop support
 - GDB remote debugging (see below for information)
+- auto frameskipping and throttle
 
 Compiling the sources
 ---------------------
@@ -295,6 +297,7 @@ Command line options (override settings in configuration file)
   -S , --flash-size=SIZE      Set the Flash size
        --flash-64k             0 -  64K Flash
        --flash-128k            1 - 128K Flash
+  -T , --throttle=THROTTLE    Set the desired throttle (5...1000)
   -Y , --yuv=TYPE             Use YUV overlay for drawing:
                                0 - YV12
                                1 - UYVY
@@ -345,6 +348,7 @@ Long options only:
        --no-ips               Do not apply IPS patch
        --no-mmx               Disable MMX support
        --no-show-speed        Don't show emulation speed
+       --no-throttle          Disable thrrotle
        --show-speed-normal    Show emulation speed
        --show-speed-detailed  Show detailed speed data
 

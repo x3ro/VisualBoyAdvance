@@ -10,12 +10,16 @@ Core changes:
 - added support to enable/disable GB/GBC video layers
 - fixed crash when loading a second ELF file
 - fixed missing EMMS instruction in ADVANCEMAME Scale 2x MMX version
+- fixed some timer settings problems (bad copy paste of code)
 
 Windows version:
 - allows AMD CPUs to take advantage of MMX code
 - added support to select video mode for fullscreen mode
 - added fullscreen triple buffering support
 - added support for multiple joypad configuration
+- added support to store settings to INI
+- added export settings from Registry to INI
+- added throttle support (between 5% and 1000%)
 - fixed problem displaying error messages in fullscreen mode
 - fixed tile viewer to display all tiles in 256 mode
 - fixed Visual Studio project files so that they work on other computers

@@ -435,6 +435,10 @@ SOURCE=..\src\win32\stdafx.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\src\win32\Throttle.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\win32\TileViewer.cpp
 # End Source File
 # Begin Source File
