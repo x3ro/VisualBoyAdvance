@@ -437,7 +437,8 @@ bool MainWnd::FileRun()
     writeBatteryFile();
     cheatSearchCleanup(&cheatSearchData);
     theApp.emuCleanUp();
-    remoteCleanUp();    
+    remoteCleanUp(); 
+    emulating = false;   
   }
   char tempName[2048];
   char file[2048];
@@ -859,7 +860,8 @@ void MainWnd::writeBatteryFile()
   else
     filename.Format("%s\\%s.sav", saveDir, buffer);
 
-  theApp.emuWriteBattery(filename);
+  if(theApp.emuWriteBattery)
+    theApp.emuWriteBattery(filename);
 }
 
 
@@ -885,9 +887,10 @@ void MainWnd::readBatteryFile()
   else
     filename.Format("%s\\%s.sav", saveDir, buffer);
 
-  bool res;
+  bool res = false;
 
-  res = theApp.emuReadBattery(filename);
+  if(theApp.emuReadBattery)
+    res = theApp.emuReadBattery(filename);
 
   if(res)
     systemScreenMessage(winResLoadString(IDS_LOADED_BATTERY));
