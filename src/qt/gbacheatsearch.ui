@@ -1,0 +1,559 @@
+<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<class>GBACheatSearch</class>
+<comment>/*
+ * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
+ * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+</comment>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>GBACheatSearch</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>442</width>
+            <height>494</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Search for cheats</string>
+    </property>
+    <grid>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <property name="margin">
+            <number>11</number>
+        </property>
+        <property name="spacing">
+            <number>6</number>
+        </property>
+        <widget class="QButtonGroup" row="1" column="0">
+            <property name="name">
+                <cstring>ButtonGroup2</cstring>
+            </property>
+            <property name="title">
+                <string>Search Type</string>
+            </property>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>old</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>20</y>
+                        <width>110</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Ol&amp;d value</string>
+                </property>
+                <property name="checked">
+                    <bool>false</bool>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>specific</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>40</y>
+                        <width>110</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Spe&amp;cific value</string>
+                </property>
+            </widget>
+        </widget>
+        <widget class="QButtonGroup" row="2" column="0" rowspan="2" colspan="1">
+            <property name="name">
+                <cstring>ButtonGroup3</cstring>
+            </property>
+            <property name="title">
+                <string>Data size</string>
+            </property>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>size8</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>20</y>
+                        <width>80</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;8 bits</string>
+                </property>
+                <property name="checked">
+                    <bool>false</bool>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>size16</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>40</y>
+                        <width>80</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;16 bits</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>size32</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>60</y>
+                        <width>80</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;32 bits</string>
+                </property>
+            </widget>
+        </widget>
+        <widget class="QButtonGroup" row="1" column="1" rowspan="3" colspan="1">
+            <property name="name">
+                <cstring>ButtonGroup4</cstring>
+            </property>
+            <property name="title">
+                <string>Compare type</string>
+            </property>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>equal</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>20</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Equal</string>
+                </property>
+                <property name="checked">
+                    <bool>false</bool>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>notEqual</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>40</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Not equal</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>lessThan</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>60</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Less than</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>lessOrEqual</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>80</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>Le&amp;ss or equal</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>greaterThan</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>100</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Greater than</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>greaterOrEqual</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>120</y>
+                        <width>130</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>G&amp;reater or equal</string>
+                </property>
+            </widget>
+        </widget>
+        <widget class="QListView" row="0" column="0" rowspan="1" colspan="3">
+            <column>
+                <property name="text">
+                    <string>Column 1</string>
+                </property>
+                <property name="clickable">
+                    <bool>true</bool>
+                </property>
+                <property name="resizeable">
+                    <bool>true</bool>
+                </property>
+            </column>
+        <item>
+            <property name="text">
+                <string>New Item</string>
+            </property>
+            <property name="pixmap">
+                <pixmap></pixmap>
+            </property>
+        </item>
+            <property name="name">
+                <cstring>results</cstring>
+            </property>
+            <property name="resizeMode">
+                <enum>AllColumns</enum>
+            </property>
+        </widget>
+        <widget class="QButtonGroup" row="1" column="2" rowspan="2" colspan="1">
+            <property name="name">
+                <cstring>ButtonGroup5</cstring>
+            </property>
+            <property name="title">
+                <string>Signed/Unsigned</string>
+            </property>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>typeSigned</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>20</y>
+                        <width>100</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>S&amp;igned</string>
+                </property>
+                <property name="checked">
+                    <bool>false</bool>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>typeUnsigned</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>40</y>
+                        <width>100</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Unsigned</string>
+                </property>
+            </widget>
+            <widget class="QRadioButton">
+                <property name="name">
+                    <cstring>typeHex</cstring>
+                </property>
+                <property name="geometry">
+                    <rect>
+                        <x>10</x>
+                        <y>60</y>
+                        <width>100</width>
+                        <height>20</height>
+                    </rect>
+                </property>
+                <property name="text">
+                    <string>&amp;Hexadecimal</string>
+                </property>
+            </widget>
+        </widget>
+        <widget class="QCheckBox" row="3" column="2">
+            <property name="name">
+                <cstring>update</cstring>
+            </property>
+            <property name="text">
+                <string>U&amp;pdate values</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit" row="4" column="1" rowspan="1" colspan="2">
+            <property name="name">
+                <cstring>value</cstring>
+            </property>
+        </widget>
+        <widget class="QLabel" row="4" column="0">
+            <property name="name">
+                <cstring>TextLabel1</cstring>
+            </property>
+            <property name="text">
+                <string>Enter value:</string>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="5" column="0" rowspan="1" colspan="3">
+            <property name="name">
+                <cstring>Layout2</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>start</cstring>
+                    </property>
+                    <property name="text">
+                        <string>&amp;Start</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>search</cstring>
+                    </property>
+                    <property name="text">
+                        <string>S&amp;earch</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>add</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Add cheat</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>ok</cstring>
+                    </property>
+                    <property name="text">
+                        <string>OK</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </grid>
+</widget>
+<connections>
+    <connection>
+        <sender>ok</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>ok_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>old</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>old_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>specific</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>specific_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>size8</sender>
+        <signal>released()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>size8_released()</slot>
+    </connection>
+    <connection>
+        <sender>size16</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>size16_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>size32</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>size32_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>equal</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>equal_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>notEqual</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>notEqual_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>lessThan</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>lessThan_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>lessOrEqual</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>lessOrEqual_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>greaterThan</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>greaterThan_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>greaterOrEqual</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>greaterOrEqual_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>typeSigned</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>typeSigned_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>typeUnsigned</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>typeUnsigned_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>typeHex</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>typeHex_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>update</sender>
+        <signal>toggled(bool)</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>update_toggled(bool)</slot>
+    </connection>
+    <connection>
+        <sender>start</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>start_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>search</sender>
+        <signal>clicked()</signal>
+        <receiver>GBACheatSearch</receiver>
+        <slot>search_clicked()</slot>
+    </connection>
+</connections>
+<includes>
+    <include location="local" impldecl="in declaration">../GBA.h</include>
+    <include location="local" impldecl="in declaration">../System.h</include>
+    <include location="local" impldecl="in implementation">gbacheatsearch.ui.h</include>
+</includes>
+<variables>
+    <variable>bool updateValues</variable>
+    <variable>int numberType</variable>
+    <variable>int valueType</variable>
+    <variable>int searchType</variable>
+    <variable>int sizeType</variable>
+</variables>
+<slots>
+    <slot access="private">init()</slot>
+    <slot>ok_clicked()</slot>
+    <slot>old_clicked()</slot>
+    <slot>specific_clicked()</slot>
+    <slot>size8_released()</slot>
+    <slot>size16_clicked()</slot>
+    <slot>size32_clicked()</slot>
+    <slot>equal_clicked()</slot>
+    <slot>notEqual_clicked()</slot>
+    <slot>lessThan_clicked()</slot>
+    <slot>lessOrEqual_clicked()</slot>
+    <slot>greaterThan_clicked()</slot>
+    <slot>greaterOrEqual_clicked()</slot>
+    <slot>typeSigned_clicked()</slot>
+    <slot>typeUnsigned_clicked()</slot>
+    <slot>typeHex_clicked()</slot>
+    <slot>update_toggled( bool on )</slot>
+    <slot>start_clicked()</slot>
+    <slot>search_clicked()</slot>
+    <slot access="private">addChanges( bool showMsgs )</slot>
+    <slot access="private">addChange( int index, u32 address, u32 oldValue, u32 newValue )</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>

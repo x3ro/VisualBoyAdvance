@@ -1,0 +1,450 @@
+<!DOCTYPE UI><UI version="3.0" stdsetdef="1">
+<class>Directories</class>
+<comment>/*
+ * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
+ * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+</comment>
+<widget class="QDialog">
+    <property name="name">
+        <cstring>Directories</cstring>
+    </property>
+    <property name="geometry">
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>494</width>
+            <height>196</height>
+        </rect>
+    </property>
+    <property name="caption">
+        <string>Directories</string>
+    </property>
+    <grid>
+        <property name="name">
+            <cstring>unnamed</cstring>
+        </property>
+        <property name="margin">
+            <number>11</number>
+        </property>
+        <property name="spacing">
+            <number>6</number>
+        </property>
+        <widget class="QLabel" row="2" column="0">
+            <property name="name">
+                <cstring>TextLabel2_3</cstring>
+            </property>
+            <property name="text">
+                <string>Battery:</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit" row="1" column="1">
+            <property name="name">
+                <cstring>gbRomDir</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QLineEdit" row="0" column="1">
+            <property name="name">
+                <cstring>romDir</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="4" column="2">
+            <property name="name">
+                <cstring>Layout27</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>browseCaptureDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Browse...</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>resetCaptureDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Reset</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLabel" row="4" column="0">
+            <property name="name">
+                <cstring>TextLabel2_5</cstring>
+            </property>
+            <property name="text">
+                <string>Capture:</string>
+            </property>
+        </widget>
+        <widget class="QLabel" row="0" column="0">
+            <property name="name">
+                <cstring>TextLabel2</cstring>
+            </property>
+            <property name="text">
+                <string>ROM:</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit" row="4" column="1">
+            <property name="name">
+                <cstring>captureDir</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QLabel" row="1" column="0">
+            <property name="name">
+                <cstring>TextLabel2_2</cstring>
+            </property>
+            <property name="text">
+                <string>GB ROM:</string>
+            </property>
+        </widget>
+        <widget class="QLineEdit" row="3" column="1">
+            <property name="name">
+                <cstring>saveDir</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="1" column="2">
+            <property name="name">
+                <cstring>Layout24</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>browseGbRomDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Browse...</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>resetGbRomDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Reset</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLayoutWidget" row="0" column="2">
+            <property name="name">
+                <cstring>Layout23</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>browseRomDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Browse...</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>resetRomDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Reset</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLineEdit" row="2" column="1">
+            <property name="name">
+                <cstring>batteryDir</cstring>
+            </property>
+            <property name="enabled">
+                <bool>false</bool>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="3" column="2">
+            <property name="name">
+                <cstring>Layout26</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>browseSaveDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Browse...</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>resetSaveDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Reset</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLayoutWidget" row="2" column="2">
+            <property name="name">
+                <cstring>Layout25</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>browseBatteryDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Browse...</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>resetBatteryDir</cstring>
+                    </property>
+                    <property name="text">
+                        <string>Reset</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+        <widget class="QLabel" row="3" column="0">
+            <property name="name">
+                <cstring>TextLabel2_4</cstring>
+            </property>
+            <property name="text">
+                <string>Save:</string>
+            </property>
+        </widget>
+        <widget class="QLayoutWidget" row="5" column="1">
+            <property name="name">
+                <cstring>Layout30</cstring>
+            </property>
+            <hbox>
+                <property name="name">
+                    <cstring>unnamed</cstring>
+                </property>
+                <property name="margin">
+                    <number>0</number>
+                </property>
+                <property name="spacing">
+                    <number>6</number>
+                </property>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>ok</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>0</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="text">
+                        <string>OK</string>
+                    </property>
+                </widget>
+                <widget class="QPushButton">
+                    <property name="name">
+                        <cstring>cancel</cstring>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>0</vsizetype>
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="text">
+                        <string>Cancel</string>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </grid>
+</widget>
+<connections>
+    <connection>
+        <sender>resetRomDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>resetRomDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>resetGbRomDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>resetGbRomDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>resetBatteryDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>resetBatteryDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>resetSaveDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>resetSaveDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>resetCaptureDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>resetCaptureDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>cancel</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>cancel_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>ok</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>ok_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>browseRomDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>browseRomDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>browseGbRomDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>browseGbRomDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>browseBatteryDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>browseBatteryDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>browseSaveDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>browseSaveDir_clicked()</slot>
+    </connection>
+    <connection>
+        <sender>browseCaptureDir</sender>
+        <signal>clicked()</signal>
+        <receiver>Directories</receiver>
+        <slot>browseCaptureDir_clicked()</slot>
+    </connection>
+</connections>
+<tabstops>
+    <tabstop>browseRomDir</tabstop>
+    <tabstop>resetRomDir</tabstop>
+    <tabstop>browseGbRomDir</tabstop>
+    <tabstop>resetGbRomDir</tabstop>
+    <tabstop>browseBatteryDir</tabstop>
+    <tabstop>resetBatteryDir</tabstop>
+    <tabstop>browseSaveDir</tabstop>
+    <tabstop>resetSaveDir</tabstop>
+    <tabstop>browseCaptureDir</tabstop>
+    <tabstop>resetCaptureDir</tabstop>
+    <tabstop>ok</tabstop>
+    <tabstop>cancel</tabstop>
+    <tabstop>romDir</tabstop>
+    <tabstop>gbRomDir</tabstop>
+    <tabstop>batteryDir</tabstop>
+    <tabstop>saveDir</tabstop>
+    <tabstop>captureDir</tabstop>
+</tabstops>
+<includes>
+    <include location="local" impldecl="in implementation">directories.ui.h</include>
+</includes>
+<slots>
+    <slot>resetRomDir_clicked()</slot>
+    <slot>resetGbRomDir_clicked()</slot>
+    <slot>resetBatteryDir_clicked()</slot>
+    <slot>resetSaveDir_clicked()</slot>
+    <slot>resetCaptureDir_clicked()</slot>
+    <slot>cancel_clicked()</slot>
+    <slot>ok_clicked()</slot>
+    <slot access="private">init()</slot>
+    <slot returnType="QString">browseForDir( QString title, QString dir )</slot>
+    <slot>browseRomDir_clicked()</slot>
+    <slot>browseGbRomDir_clicked()</slot>
+    <slot>browseBatteryDir_clicked()</slot>
+    <slot>browseSaveDir_clicked()</slot>
+    <slot>browseCaptureDir_clicked()</slot>
+</slots>
+<layoutdefaults spacing="6" margin="11"/>
+</UI>
