@@ -759,7 +759,7 @@ int cheatsCheckKeys(u32 keys, u32 extended)
         break;
       case CBA_SUPER:
 		{
-          int count = 2*((cheatsList[i].value -1) & 0xFFFF);
+          int count = 2*((cheatsList[i].value -1) & 0xFFFF)+1;
           u32 address = cheatsList[i].address;
           for(int x = 0; x <= count; x++) {
             u8 b;
