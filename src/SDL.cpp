@@ -348,7 +348,7 @@ struct option sdlOptions[] = {
   { "no-rtc", no_argument, &sdlRtcEnable, 0 },
   { "no-show-speed", no_argument, &showSpeed, 0 },
   { "no-throttle", no_argument, &throttle, 0 },
-  { "pause-when-inative", no_argument, &pauseWhenInactive, 1 },
+  { "pause-when-inactive", no_argument, &pauseWhenInactive, 1 },
   { "profile", optional_argument, 0, 'p' },
   { "rtc", no_argument, &sdlRtcEnable, 1 },
   { "save-type", required_argument, 0, 't' },
