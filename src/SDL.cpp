@@ -2735,6 +2735,12 @@ u32 systemReadJoypad(int which)
   if(sdlButtons[which][KEY_BUTTON_L])
     res |= 512;
 
+  // disallow L+R or U+D of being pressed at the same time
+  if((res & 48) == 48)
+    res &= ~16;
+  if((res & 192) == 192)
+    res &= ~128;
+
   if(sdlButtons[which][KEY_BUTTON_SPEED])
     res |= 1024;
   if(sdlButtons[which][KEY_BUTTON_CAPTURE])
