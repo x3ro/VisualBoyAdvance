@@ -1130,7 +1130,11 @@ void MainWnd::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
     systemDrawScreen();
 }
 
-void MainWnd::OnActivateApp(BOOL bActive, HTASK hTask) 
+#ifdef _MSC_VER <= 1200
+void MainWnd::OnActivateApp(BOOL bActive, HTASK hTask)
+#else
+void MainWnd::OnActivateApp(BOOL bActive, DWORD hTask)
+#endif
 {
   CWnd::OnActivateApp(bActive, hTask);
   
