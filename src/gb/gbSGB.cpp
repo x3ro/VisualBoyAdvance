@@ -90,9 +90,17 @@ void gbSgbReset()
   memset(gbSgbPacket, 0, 16 * 7);
   memset(gbSgbBorderChar, 0, 32*256);
   memset(gbSgbBorder, 0, 2048);
-
-  for(int i = 1; i < 2048; i+=2) {
+  
+  int i;
+  for(i = 1; i < 2048; i+=2) {
     gbSgbBorder[i] = 1 << 2;
+  }
+  
+  for(i = 0; i < 4; i++) {
+    gbPalette[i*4] = (0x1f) | (0x1f << 5) | (0x1f << 10);
+    gbPalette[i*4+1] = (0x15) | (0x15 << 5) | (0x15 << 10);
+    gbPalette[i*4+2] = (0x0c) | (0x0c << 5) | (0x0c << 10);
+    gbPalette[i*4+3] = 0;
   }
 }
 
@@ -246,33 +254,20 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
       if(flipY)
         yyy = 7 - yy;
 
-
-      /*      if(palette == 64 && color == 0) {
-        switch(colorDepth) {
-        case 16:
-          gbSgbDraw16Bit(dest + yyy*(256+1) + xxx, 0x7fff);
-          break;
-        case 24:
-          gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, 0x7fff);
-          break;
-        case 32:
-          gbSgbDraw32Bit(dest32 + yyy*256+xxx, 0x7fff);
-          break;
-        }
-        } else {*/
-        u16 c = gbPalette[palette + color];
-        switch(systemColorDepth) {
-        case 16:
-          gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
-          break;
-        case 24:
-          gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
-          break;
-        case 32:
-          gbSgbDraw32Bit(dest32 + yyy*(256+1)+xxx, c);
-          break;
-        }
-        //      }
+      u16 c = gbPalette[palette + color];
+      if(!color)
+        c = gbPalette[0];
+      switch(systemColorDepth) {
+      case 16:
+        gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
+        break;
+      case 24:
+        gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
+        break;
+      case 32:
+        gbSgbDraw32Bit(dest32 + yyy*(256+1)+xxx, c);
+        break;
+      }
 
       mask >>= 1;
 
@@ -318,10 +313,10 @@ void gbSgbPicture()
     systemGbBorderOn();
   }
 
-  if(gbBorderOn) 
-    gbSgbRenderBorder();
-
   gbSgbCGBSupport |= 4;
+
+  if(gbBorderOn && gbSgbCGBSupport > 4) 
+    gbSgbRenderBorder();
   
   if(gbSgbMode && gbCgbMode && gbSgbCGBSupport > 4) {
     gbSgbCGBSupport = 0;
@@ -329,6 +324,9 @@ void gbSgbPicture()
     gbSgbMask = 0;
     gbReset();
   }
+
+  if(gbSgbCGBSupport > 4)
+    gbSgbCGBSupport = 0;
 }
 
 void gbSgbSetPalette(int a,int b,u16 *p)
@@ -624,10 +622,7 @@ void gbSgbMaskEnable()
     break;
   case 2:
     gbSgbFillScreen(0x0000);
-    gbPalette[0] = 0x0000;
-    gbPalette[1] = 0x0000;
-    gbPalette[2] = 0x0000;
-    gbPalette[3] = 0x0000;
+    //    memset(&gbPalette[0], 0, 128*sizeof(u16));
     break;
   case 3:
     gbSgbFillScreen(gbPalette[0]);
@@ -653,7 +648,7 @@ void gbSgbChrTransfer()
     systemGbBorderOn();
   }
 
-  if(gbBorderOn)
+  if(gbBorderOn && gbSgbCGBSupport > 4)
     gbSgbRenderBorder();
 
   if(gbSgbMode && gbCgbMode && gbSgbCGBSupport == 7) {
@@ -662,6 +657,9 @@ void gbSgbChrTransfer()
     gbSgbMask = 0;
     gbReset();
   }  
+
+  if(gbSgbCGBSupport > 4)
+    gbSgbCGBSupport = 0;
 }
 
 void gbSgbMultiRequest()

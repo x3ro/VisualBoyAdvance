@@ -33,5 +33,6 @@ extern int gbSgbMultiplayer;
 extern u8  gbSgbNextController;
 extern int gbSgbPacketTimeout;
 extern u8  gbSgbReadingController;
+extern int gbSgbFourPlayers;
 
 
