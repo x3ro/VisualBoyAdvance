@@ -41,132 +41,85 @@
 extern "C" bool cpu_mmx;
 #endif
 
-/* Suggested in "Intel Optimization" for Pentium II */
-#define ASM_JUMP_ALIGN ".p2align 4\n"
-
-static void internal_scale2x_16_def(u16 *dst0, u16* dst1, const u16* src0, const u16* src1, const u16* src2, unsigned count) {
+static void internal_scale2x_16_def(u16 *dst, const u16* src0, const u16* src1, const u16* src2, unsigned count) {
   /* first pixel */
-  dst0[0] = src1[0];
-  dst1[0] = src1[0];
+  dst[0] = src1[0];
   if (src1[1] == src0[0] && src2[0] != src0[0])
-    dst0[1] =src0[0];
+    dst[1] = src0[0];
   else
-    dst0[1] =src1[0];
-  if (src1[1] == src2[0] && src0[0] != src2[0])
-    dst1[1] =src2[0];
-  else
-    dst1[1] =src1[0];
+    dst[1] = src1[0];
   ++src0;
   ++src1;
   ++src2;
-  dst0 += 2;
-  dst1 += 2;
+  dst += 2;
 
   /* central pixels */
   count -= 2;
   while (count) {
-    if (src1[-1] == src0[0] && src2[0] != src0[0] && src1[1] != src0[0])
-      dst0[0] = src0[0];
-    else
-      dst0[0] = src1[0];
-    if (src1[1] == src0[0] && src2[0] != src0[0] && src1[-1] != src0[0])
-      dst0[1] =src0[0];
-    else
-      dst0[1] =src1[0];
-
-    if (src1[-1] == src2[0] && src0[0] != src2[0] && src1[1] != src2[0])
-      dst1[0] =src2[0];
-    else
-      dst1[0] =src1[0];
-    if (src1[1] == src2[0] && src0[0] != src2[0] && src1[-1] != src2[0])
-      dst1[1] =src2[0];
-    else
-      dst1[1] =src1[0];
-
+    if (src0[0] != src2[0] && src1[-1] != src1[1]) {
+      dst[0] = src1[-1] == src0[0] ? src0[0] : src1[0];
+      dst[1] = src1[1] == src0[0] ? src0[0] : src1[0];
+    } else {
+      dst[0] = src1[0];
+      dst[1] = src1[0];
+    }
+    
     ++src0;
     ++src1;
     ++src2;
-    dst0 += 2;
-    dst1 += 2;
+    dst += 2;
     --count;
   }
-
+  
   /* last pixel */
   if (src1[-1] == src0[0] && src2[0] != src0[0])
-    dst0[0] =src0[0];
+    dst[0] = src0[0];
   else
-    dst0[0] =src1[0];
-  if (src1[-1] == src2[0] && src0[0] != src2[0])
-    dst1[0] =src2[0];
-  else
-    dst1[0] =src1[0];
-  dst0[1] =src1[0];
-  dst1[1] =src1[0];
+    dst[0] = src1[0];
+  dst[1] = src1[0];
 }
 
-static void internal_scale2x_32_def(u32* dst0,
-                                    u32* dst1,
+static void internal_scale2x_32_def(u32* dst,
                                     const u32* src0,
                                     const u32* src1,
                                     const u32* src2,
-                                    unsigned count) {
+                                    unsigned count) 
+{
   /* first pixel */
-  dst0[0] = src1[0];
-  dst1[0] = src1[0];
+  dst[0] = src1[0];
   if (src1[1] == src0[0] && src2[0] != src0[0])
-    dst0[1] = src0[0];
+    dst[1] = src0[0];
   else
-    dst0[1] = src1[0];
-  if (src1[1] == src2[0] && src0[0] != src2[0])
-    dst1[1] = src2[0];
-  else
-    dst1[1] = src1[0];
+    dst[1] = src1[0];
   ++src0;
   ++src1;
   ++src2;
-  dst0 += 2;
-  dst1 += 2;
-
+  dst += 2;
+  
   /* central pixels */
   count -= 2;
   while (count) {
-    if (src1[-1] == src0[0] && src2[0] != src0[0] && src1[1] != src0[0])
-      dst0[0] = src0[0];
-    else
-      dst0[0] = src1[0];
-    if (src1[1] == src0[0] && src2[0] != src0[0] && src1[-1] != src0[0])
-      dst0[1] = src0[0];
-    else
-      dst0[1] = src1[0];
-
-    if (src1[-1] == src2[0] && src0[0] != src2[0] && src1[1] != src2[0])
-      dst1[0] = src2[0];
-    else
-      dst1[0] = src1[0];
-    if (src1[1] == src2[0] && src0[0] != src2[0] && src1[-1] != src2[0])
-      dst1[1] = src2[0];
-    else
-      dst1[1] = src1[0];
-
+    if (src0[0] != src2[0] && src1[-1] != src1[1]) {
+      dst[0] = src1[-1] == src0[0] ? src0[0] : src1[0];
+      dst[1] = src1[1] == src0[0] ? src0[0] : src1[0];
+    } else {
+      dst[0] = src1[0];
+      dst[1] = src1[0];
+    }
+    
     ++src0;
     ++src1;
     ++src2;
-    dst0 += 2;
-    dst1 += 2;
+    dst += 2;
     --count;
   }
-
+  
   /* last pixel */
   if (src1[-1] == src0[0] && src2[0] != src0[0])
-    dst0[0] = src0[0];
+    dst[0] = src0[0];
   else
-    dst0[0] = src1[0];
-  if (src1[-1] == src2[0] && src0[0] != src2[0])
-    dst1[0] = src2[0];
-  else
-    dst1[0] = src1[0];
-  dst0[1] = src1[0];
-  dst1[1] = src1[0];
+    dst[0] = src1[0];
+  dst[1] = src1[0];
 }
 
 #ifdef MMX
@@ -178,11 +131,12 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
   __asm__ __volatile__(
                        /* first run */
                        /* set the current, current_pre, current_next registers */
-                       "pxor %%mm0,%%mm0\n" /* use a fake black out of screen */
+                       "movq 0(%1), %%mm0\n"
                        "movq 0(%1),%%mm7\n"
                        "movq 8(%1),%%mm1\n"
-                       "psrlq $48,%%mm0\n"
+                       "psllq $48,%%mm0\n"
                        "psllq $48,%%mm1\n"
+                       "psrlq $48, %%mm0\n"
                        "movq %%mm7,%%mm2\n"
                        "movq %%mm7,%%mm3\n"
                        "psllq $16,%%mm2\n"
@@ -193,8 +147,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -220,7 +174,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpcklwd %%mm4,%%mm2\n"
                        "punpckhwd %%mm4,%%mm3\n"
@@ -236,7 +190,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        /* central runs */
                        "shrl $2,%4\n"
                        "jz 1f\n"
-                       ASM_JUMP_ALIGN
+
                        "0:\n"
 
                        /* set the current, current_pre, current_next registers */
@@ -255,8 +209,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -282,7 +236,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpcklwd %%mm4,%%mm2\n"
                        "punpckhwd %%mm4,%%mm3\n"
@@ -301,9 +255,10 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
 
                        /* final run */
                        /* set the current, current_pre, current_next registers */
-                       "movq -8(%1),%%mm0\n"
+                       "movq (%1),%%mm1\n"
                        "movq (%1),%%mm7\n"
-                       "pxor %%mm1,%%mm1\n" /* use a fake black out of screen */
+                       "movq -8(%1),%%mm0\n"
+                       "psrlq $48,%%mm1\n"
                        "psrlq $48,%%mm0\n"
                        "psllq $48,%%mm1\n"
                        "movq %%mm7,%%mm2\n"
@@ -316,8 +271,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -343,7 +298,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpcklwd %%mm4,%%mm2\n"
                        "punpckhwd %%mm4,%%mm3\n"
@@ -365,11 +320,12 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
           
     /* first run */
     /* set the current, current_pre, current_next registers */
-    pxor mm0,mm0; /* use a fake black out of screen */
+    movq mm0, qword ptr [ebx];
     movq mm7, qword ptr [ebx];
     movq mm1, qword ptr [ebx + 8];
-    psrlq mm0, 48;
+    psllq mm0, 48;
     psllq mm1, 48;
+    psrlq mm0, 48;
     movq mm2, mm7;
     movq mm3, mm7;
     psllq mm2, 16;
@@ -380,8 +336,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
     /* current_upper */
     movq mm6, qword ptr [eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2, mm0;
     movq mm4, mm1;
     movq mm3, mm0;
@@ -442,8 +398,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
     /* current_upper */
     movq mm6, qword ptr [eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2,mm0;
     movq mm4,mm1;
     movq mm3,mm0;
@@ -469,7 +425,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
     por mm2,mm3;
     por mm4,mm5;
 
-    /* set *dst0 */
+    /* set *dst */
     movq mm3,mm2;
     punpcklwd mm2,mm4;
     punpckhwd mm3,mm4;
@@ -488,9 +444,10 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
 
     /* final run */
     /* set the current, current_pre, current_next registers */
-    movq mm0, qword ptr [ebx-8];
+    movq mm1, qword ptr [ebx];
     movq mm7, qword ptr [ebx];
-    pxor mm1,mm1; /* use a fake black out of screen */
+    movq mm0, qword ptr [ebx-8];
+    psrlq mm1,48;
     psrlq mm0,48;
     psllq mm1,48;
     movq mm2,mm7;
@@ -503,8 +460,8 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
     /* current_upper */
     movq mm6, qword ptr [eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2,mm0;
     movq mm4,mm1;
     movq mm3,mm0;
@@ -530,7 +487,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
     por mm2,mm3;
     por mm4,mm5;
 
-    /* set *dst0 */
+    /* set *dst */
     movq mm3,mm2;
     punpcklwd mm2,mm4;
     punpckhwd mm3,mm4;
@@ -556,11 +513,12 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
   __asm__ __volatile__(
                        /* first run */
                        /* set the current, current_pre, current_next registers */
-                       "pxor %%mm0,%%mm0\n" /* use a fake black out of screen */
+                       "movq 0(%1),%%mm0\n"
                        "movq 0(%1),%%mm7\n"
                        "movq 8(%1),%%mm1\n"
-                       "psrlq $32,%%mm0\n"
+                       "psllq $32,%%mm0\n"
                        "psllq $32,%%mm1\n"
+                       "psrlq $32,%%mm0\n"
                        "movq %%mm7,%%mm2\n"
                        "movq %%mm7,%%mm3\n"
                        "psllq $32,%%mm2\n"
@@ -571,8 +529,8 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -598,12 +556,12 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpckldq %%mm4,%%mm2\n"
                        "punpckhdq %%mm4,%%mm3\n"
                        "movq %%mm2,(%3)\n"
-                       "movq %%mm3,8(%3)\n"
+                       "movq %%mm3, 8(%3)\n"
 
                        /* next */
                        "addl $8,%0\n"
@@ -614,7 +572,7 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        /* central runs */
                        "shrl $1,%4\n"
                        "jz 1f\n"
-                       ASM_JUMP_ALIGN
+
                        "0:\n"
 
                        /* set the current, current_pre, current_next registers */
@@ -633,8 +591,8 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -660,7 +618,7 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpckldq %%mm4,%%mm2\n"
                        "punpckhdq %%mm4,%%mm3\n"
@@ -679,9 +637,10 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
 
                        /* final run */
                        /* set the current, current_pre, current_next registers */
-                       "movq -8(%1),%%mm0\n"
+                       "movq (%1),%%mm1\n"
                        "movq (%1),%%mm7\n"
-                       "pxor %%mm1,%%mm1\n" /* use a fake black out of screen */
+                       "movq -8(%1), %%mm0\n"
+                       "psrlq $32,%%mm1\n"
                        "psrlq $32,%%mm0\n"
                        "psllq $32,%%mm1\n"
                        "movq %%mm7,%%mm2\n"
@@ -694,8 +653,8 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        /* current_upper */
                        "movq (%0),%%mm6\n"
 
-                       /* compute the upper-left pixel for dst0 on %%mm2 */
-                       /* compute the upper-right pixel for dst0 on %%mm4 */
+                       /* compute the upper-left pixel for dst on %%mm2 */
+                       /* compute the upper-right pixel for dst on %%mm4 */
                        "movq %%mm0,%%mm2\n"
                        "movq %%mm1,%%mm4\n"
                        "movq %%mm0,%%mm3\n"
@@ -721,7 +680,7 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        "por %%mm3,%%mm2\n"
                        "por %%mm5,%%mm4\n"
 
-                       /* set *dst0 */
+                       /* set *dst */
                        "movq %%mm2,%%mm3\n"
                        "punpckldq %%mm4,%%mm2\n"
                        "punpckhdq %%mm4,%%mm3\n"
@@ -743,11 +702,12 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
     
     /* first run */
     /* set the current, current_pre, current_next registers */
-    pxor mm0,mm0;
+    movq mm0,qword ptr [ebx];
     movq mm7,qword ptr [ebx];
     movq mm1,qword ptr [ebx + 8];
-    psrlq mm0,32;
+    psllq mm0,32;
     psllq mm1,32;
+    psrlq mm0,32;
     movq mm2,mm7;
     movq mm3,mm7;
     psllq mm2,32;
@@ -758,8 +718,8 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
     /* current_upper */
     movq mm6,qword ptr [eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2,mm0;
     movq mm4,mm1;
     movq mm3,mm0;
@@ -785,7 +745,7 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
     por mm2,mm3;
     por mm4,mm5;
 
-    /* set *dst0 */
+    /* set *dst */
     movq mm3,mm2;
     punpckldq mm2,mm4;
     punpckhdq mm3,mm4;
@@ -819,8 +779,8 @@ label0:
     /* current_upper */
     movq mm6,qword ptr[eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2,mm0;
     movq mm4,mm1;
     movq mm3,mm0;
@@ -846,7 +806,7 @@ label0:
     por mm2,mm3;
     por mm4,mm5;
 
-    /* set *dst0 */
+    /* set *dst */
     movq mm3,mm2;
     punpckldq mm2,mm4;
     punpckhdq mm3,mm4;
@@ -865,9 +825,10 @@ label1:
     
     /* final run */
     /* set the current, current_pre, current_next registers */
-    movq mm0,qword ptr [ebx-8];
+    movq mm1,qword ptr [ebx];
     movq mm7,qword ptr [ebx];
-    pxor mm1,mm1;
+    movq mm0,qword ptr [ebx-8];
+    psrlq mm1,32;
     psrlq mm0,32;
     psllq mm1,32;
     movq mm2,mm7;
@@ -880,8 +841,8 @@ label1:
     /* current_upper */
     movq mm6,qword ptr [eax];
 
-    /* compute the upper-left pixel for dst0 on %%mm2 */
-    /* compute the upper-right pixel for dst0 on %%mm4 */
+    /* compute the upper-left pixel for dst on %%mm2 */
+    /* compute the upper-right pixel for dst on %%mm4 */
     movq mm2,mm0;
     movq mm4,mm1;
     movq mm3,mm0;
@@ -907,7 +868,7 @@ label1:
     por mm2,mm3;
     por mm4,mm5;
 
-    /* set *dst0 */
+    /* set *dst */
     movq mm3,mm2;
     punpckldq mm2,mm4;
     punpckhdq mm3,mm4;
@@ -968,7 +929,8 @@ void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     internal_scale2x_16_mmx(dst0, dst1, src0, src1, src1, width);
   } else {
 #endif
-    internal_scale2x_16_def(dst0, dst1, src0, src0, src1, width);
+    internal_scale2x_16_def(dst0, src0, src0, src1, width);
+    internal_scale2x_16_def(dst1, src1, src0, src0, width);
   
     int count = height;
 
@@ -976,7 +938,8 @@ void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     while(count) {
       dst0 += dstPitch;
       dst1 += dstPitch;
-      internal_scale2x_16_def(dst0, dst1, src0, src1, src2, width);
+      internal_scale2x_16_def(dst0, src0, src1, src2, width);
+      internal_scale2x_16_def(dst1, src2, src1, src0, width);
       src0 = src1;
       src1 = src2;
       src2 += srcPitch >> 1;
@@ -984,7 +947,8 @@ void AdMame2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     }
     dst0 += dstPitch;
     dst1 += dstPitch;
-    internal_scale2x_16_def(dst0, dst1, src0, src1, src1, width);
+    internal_scale2x_16_def(dst0, src0, src1, src1, width);
+    internal_scale2x_16_def(dst1, src1, src1, src0, width);
 #ifdef MMX
   }
 #endif
@@ -1020,7 +984,8 @@ void AdMame2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     internal_scale2x_32_mmx(dst0, dst1, src0, src1, src1, width);
   } else {
 #endif
-    internal_scale2x_32_def(dst0, dst1, src0, src0, src1, width);
+    internal_scale2x_32_def(dst0, src0, src0, src1, width);
+    internal_scale2x_32_def(dst1, src1, src0, src0, width);
   
     int count = height;
 
@@ -1028,7 +993,8 @@ void AdMame2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     while(count) {
       dst0 += dstPitch >> 1;
       dst1 += dstPitch >> 1;
-      internal_scale2x_32_def(dst0, dst1, src0, src1, src2, width);
+      internal_scale2x_32_def(dst0, src0, src1, src2, width);
+      internal_scale2x_32_def(dst1, src2, src1, src0, width);
       src0 = src1;
       src1 = src2;
       src2 += srcPitch >> 2;
@@ -1036,7 +1002,8 @@ void AdMame2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
     }
     dst0 += dstPitch >> 1;
     dst1 += dstPitch >> 1;
-    internal_scale2x_32_def(dst0, dst1, src0, src1, src1, width);
+    internal_scale2x_32_def(dst0, src0, src1, src1, width);
+    internal_scale2x_32_def(dst1, src1, src1, src0, width);
 #ifdef MMX
   }
 #endif
