@@ -31,7 +31,7 @@ void Simple2x(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
     u32 *nL = (u32 *) nextLine;
     u32 currentPixel;
     
-    finish = (u8 *) bP + ((width + 2) << 1);
+    finish = (u8 *) bP + ((width+1) << 1);
     currentPixel = *bP++;
     
     do {
@@ -81,7 +81,7 @@ void Simple2x32(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
     u32 *nL = (u32 *) nextLine;
     u32 currentPixel;
     
-    finish = (u8 *) bP + ((width) << 2);
+    finish = (u8 *) bP + ((width+1) << 2);
     currentPixel = *bP++;
     
     do {

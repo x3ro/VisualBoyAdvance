@@ -2094,8 +2094,8 @@ void systemDrawScreen()
                           filterWidth,
                           filterHeight);
       else
-        (*filterFunction)(pix,
-                          filterWidth*4,
+        (*filterFunction)(pix+filterWidth*4+4,
+                          filterWidth*4+4,
                           (u8*)delta,
                           (u8*)ddsDesc.lpSurface,
                           ddsDesc.lPitch,
@@ -2144,10 +2144,12 @@ void systemDrawScreen()
           jmp gbaLoopEnd;
         gbaOtherColor2:
           sub edx, 240*4;
+          add esi, 241*4;
         gbaLoop32bit:
           push ecx;
           mov ecx, 240;
           repz movsd;
+          add esi, 4;
           add edi, edx;
           pop ecx;
           dec ecx;
@@ -2204,15 +2206,18 @@ void systemDrawScreen()
             jnz loop456;
             jmp loopEnd;
           otherColor2:
+            add esi, 257*4;
+          loop789:
             push ecx;
             mov ecx, 256;
             repz movsd;
             add edi, edx;
+            add esi, 4;
             sub edi, 256 * 4;
             
             pop ecx;
             dec ecx;
-            jnz otherColor2;
+            jnz loop789;
           loopEnd:
             pop edx;
             pop ecx;
@@ -2264,15 +2269,18 @@ void systemDrawScreen()
             jnz loop4567;
             jmp loopEnd2;
           otherColor4:
+            add esi, 161 * 4;
+          loop7890:
             push ecx;
             mov ecx, 160;
             repz movsd;
+            add esi, 4;
             add edi, edx;
             sub edi, 160 * 4;
             
             pop ecx;
             dec ecx;
-            jnz otherColor4;
+            jnz loop7890;
           loopEnd2:
             pop edx;
             pop ecx;
@@ -6056,16 +6064,36 @@ void winSignal(int, int)
 
 void winOutput(char *s, u32 addr)
 {
-  if(s)
-    toolsLog(s);
-  else {
-    CStdString str = "";
-    
+  CStdString str = "";
+  int state = 0;
+  if(s) {
+    char c;
+
+    c = *s++;
+    while(c) {
+      if(c == '\n' && state == 0)
+        str += '\r';
+      else if(c == '\r')
+        state = 1;
+      else
+        state = 0;
+      str += c;
+      c = *s++;
+    }
+    toolsLog((char *)(LPCSTR)str);
+  } else {
     char c;
 
     c = CPUReadByteQuick(addr);
     addr++;
     while(c) {
+      if(c == '\n' && state == 0)
+        str += '\r';
+      else if(c == '\r')
+        state = 1;
+      else
+        state = 0;
+      
       str += c;
       c = CPUReadByteQuick(addr);
       addr++;

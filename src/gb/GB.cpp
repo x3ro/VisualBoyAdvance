@@ -1858,7 +1858,7 @@ void gbInit()
   gbMemory = (u8 *)malloc(65536);
   memset(gbMemory,0, 65536);
   
-  pix = (u8 *)calloc(1,4*256*224);
+  pix = (u8 *)calloc(1,4*257*226);
   
   gbLineBuffer = (u16 *)malloc(160 * sizeof(u16));
 }
@@ -2191,7 +2191,7 @@ bool gbReadSaveState(char *name)
   if(version < GBSAVE_GAME_VERSION_5) {
     gzseek(gzFile, 256*224*sizeof(u16), SEEK_CUR);
   }
-  memset(pix, 0, 240*160*sizeof(u32)); //256 * 224 * sizeof(u32));
+  memset(pix, 0, 257*226*sizeof(u32));
 
   if(version < GBSAVE_GAME_VERSION_6) {
     gzread(gzFile, gbPalette, 64 * sizeof(u16));
@@ -2914,8 +2914,8 @@ void gbEmulate(int ticksToStop)
                 case 32:
                   {
                     u32 * dest = (u32 *)pix +
-                      gbBorderLineSkip * (register_LY + gbBorderRowSkip) +
-                      gbBorderColumnSkip;
+                      (gbBorderLineSkip+1) * (register_LY + gbBorderRowSkip+1)
+                      + gbBorderColumnSkip;
                     for(int x = 0; x < 160;) {
                       *dest++ = systemColorMap32[gbLineMix[x++]];
                       *dest++ = systemColorMap32[gbLineMix[x++]];

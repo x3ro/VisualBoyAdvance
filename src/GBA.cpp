@@ -610,7 +610,7 @@ bool CPUWriteState(char *file)
   gzwrite(gzFile, workRAM, 0x40000);
   gzwrite(gzFile, vram, 0x20000);
   gzwrite(gzFile, oam, 0x400);
-  gzwrite(gzFile, pix, 4*240*160);
+  gzwrite(gzFile, pix, 4*241*162);
   gzwrite(gzFile, ioMem, 0x400);
 
   eepromSaveGame(gzFile);
@@ -687,7 +687,10 @@ bool CPUReadState(char * file)
   gzread(gzFile, workRAM, 0x40000);
   gzread(gzFile, vram, 0x20000);
   gzread(gzFile, oam, 0x400);
-  gzread(gzFile, pix, 4*240*160);
+  if(version < SAVE_GAME_VERSION_6)
+    gzread(gzFile, pix, 4*240*160);
+  else
+    gzread(gzFile, pix, 4*241*162);
   gzread(gzFile, ioMem, 0x400);
 
   eepromReadGame(gzFile, version);
@@ -1332,7 +1335,7 @@ bool CPULoadRom(char *szFile)
     CPUCleanUp();
     return false;
   }      
-  pix = (u8 *)calloc(1, 4 * 240 * 160);
+  pix = (u8 *)calloc(1, 4 * 241 * 162);
   if(pix == NULL) {
     systemMessage(MSG_OUT_OF_MEMORY, "Failed to allocate memory for %s",
                   "PIX");
@@ -3679,7 +3682,7 @@ void CPULoop(int ticks)
                 break;
               case 32:
                 {
-                  u32 *dest = (u32 *)pix + 240 * VCOUNT;
+                  u32 *dest = (u32 *)pix + 241 * (VCOUNT+1);
                   for(int x = 0; x < 240; ) {
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];

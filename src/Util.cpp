@@ -124,7 +124,7 @@ bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
     {
       u16 *p = (u16 *)(pix+(w+1)*2); // skip first black line
       for(int y = 0; y < sizeY; y++) {
-        for(int x = 0; x < sizeX; x++) {
+         for(int x = 0; x < sizeX; x++) {
           u16 v = *p++;
           
           *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
@@ -165,7 +165,7 @@ bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
     break;
   case 32:
     {
-      u32 *pixU32 = (u32 *)pix;
+      u32 *pixU32 = (u32 *)(pix+4*(w+1));
       for(int y = 0; y < sizeY; y++) {
         for(int x = 0; x < sizeX; x++) {
           u32 v = *pixU32++;
@@ -174,6 +174,7 @@ bool utilWritePNGFile(char *fileName, int w, int h, u8 *pix)
           *b++ = ((v >> systemGreenShift) & 0x001f) << 3; // G
           *b++ = ((v >> systemBlueShift) & 0x001f) << 3; // B
         }
+        pixU32++;
         
         png_write_row(png_ptr,writeBuffer);
         
@@ -260,7 +261,7 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
   switch(systemColorDepth) {
   case 16:
     {
-      u16 *p = (u16 *)(pix+(w+1)*(h-1)*2); // skip first black line
+      u16 *p = (u16 *)(pix+(w+1)*(h)*2); // skip first black line
       for(int y = 0; y < sizeY; y++) {
         for(int x = 0; x < sizeX; x++) {
           u16 v = *p++;
@@ -305,7 +306,7 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
     break;
   case 32:
     {
-      u32 *pixU32 = (u32 *)(pix+4*w*(h-1));
+      u32 *pixU32 = (u32 *)(pix+4*(w+1)*(h));
       for(int y = 0; y < sizeY; y++) {
         for(int x = 0; x < sizeX; x++) {
           u32 v = *pixU32++;
@@ -314,8 +315,8 @@ bool utilWriteBMPFile(char *fileName, int w, int h, u8 *pix)
           *b++ = ((v >> systemGreenShift) & 0x001f) << 3; // G
           *b++ = ((v >> systemRedShift) & 0x001f) << 3; // R
         }
-
-        pixU32 -= 2*w;
+        pixU32++;
+        pixU32 -= 2*(w+1);
         
         fwrite(writeBuffer, 1, 3*w, fp);
         

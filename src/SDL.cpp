@@ -2085,15 +2085,16 @@ int main(int argc, char **argv)
     if(systemColorDepth != 32)
       filter = NULL;
     RGB_LOW_BITS_MASK = 0x010101;
-    if(systemColorDepth == 32)
+    if(systemColorDepth == 32) {
       Init_2xSaI(32);
+    }
     for(int i = 0; i < 0x10000; i++) {
       systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
         (((i & 0x3e0) >> 5) << systemGreenShift) |
         (((i & 0x7c00) >> 10) << systemBlueShift);  
     }
     if(systemColorDepth == 32)
-      srcPitch = srcWidth*4;
+      srcPitch = srcWidth*4 + 4;
     else
       srcPitch = srcWidth*3;
   }
@@ -2236,6 +2237,7 @@ void systemDrawScreen()
     }
     if(((systemGetClock() - screenMessageTime) < 3000) &&
        !disableStatusMessages) {
+      int pitch = srcPitch;
       fontDisplayString(pix, srcPitch, 10, srcHeight - 20,
                         screenMessageBuffer); 
     } else {
@@ -2250,8 +2252,8 @@ void systemDrawScreen()
                      srcWidth,
                      srcHeight);
     else
-      filterFunction(pix,
-                     destWidth*2,
+      filterFunction(pix+destWidth*2+4,
+                     destWidth*2+4,
                      delta,
                      (u8*)surface->pixels,
                      surface->pitch,

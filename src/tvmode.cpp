@@ -79,7 +79,7 @@ void TVMode (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
     u32 currentDelta;
     u32 nextDelta;
     
-    finish = (u8 *) bP + ((width + 2) << 1);
+    finish = (u8 *) bP + ((width+1) << 1);
     nextPixel = *bP++;
     nextDelta = *xP++;
     
@@ -159,7 +159,7 @@ void TVMode32(u8 *srcPtr, u32 srcPitch, u8 */* deltaPtr */,
     //    u32 currentDelta;
     //    u32 nextDelta;
     
-    finish = (u8 *) bP + ((width) << 2);
+    finish = (u8 *) bP + ((width+1) << 2);
     nextPixel = *bP++;
     //    nextDelta = *xP++;
     

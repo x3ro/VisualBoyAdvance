@@ -1366,7 +1366,7 @@ BEGIN
             MENUITEM "&Below Normal",               ID_OPTIONS_PRIORITY_BELOWNORMAL
 
         END
-        POPUP "F&ilter (16-bit)"
+        POPUP "F&ilter"
         BEGIN
             MENUITEM "&Normal",                     ID_OPTIONS_FILTER_NORMAL
             MENUITEM "&TV Mode",                    ID_OPTIONS_FILTER_TVMODE

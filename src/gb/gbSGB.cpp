@@ -152,7 +152,7 @@ void gbSgbFillScreen(u16 color)
   case 32:
     {
       for(int y = 0; y < 144; y++) {
-        int yLine = (y+gbBorderRowSkip)*gbBorderLineSkip + gbBorderColumnSkip;
+        int yLine = (y+gbBorderRowSkip+1)*(gbBorderLineSkip+1) + gbBorderColumnSkip;
         u32 *dest = (u32 *)pix + yLine;
         for(register int x = 0; x < 160; x++) {
           gbSgbDraw32Bit(dest++, color);
@@ -205,7 +205,7 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
 {
   u16 *dest = (u16*)pix + ((y+1) * (256+1)) + x;
   u8 *dest8 = (u8*)pix + ((y*256)+x)*3;
-  u32 *dest32 = (u32*)pix + (y*256) + x;
+  u32 *dest32 = (u32*)pix + ((y+1)*257) + x;
   
   u8 *tileAddress = &gbSgbBorderChar[tile * 32];
   u8 *tileAddress2 = &gbSgbBorderChar[tile * 32 + 16];
@@ -275,7 +275,7 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
           gbSgbDraw24Bit(dest8 + (yyy*256+xxx)*3, c);
           break;
         case 32:
-          gbSgbDraw32Bit(dest32 + yyy*256+xxx, c);
+          gbSgbDraw32Bit(dest32 + yyy*(256+1)+xxx, c);
           break;
         }
         //      }
