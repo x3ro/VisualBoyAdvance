@@ -185,6 +185,8 @@ bool rtcWrite(u32 address, u16 value)
             }
           }
           break;
+		default:
+          break;
         }
       } else
         rtcClockData.byte0 = (u8)value;

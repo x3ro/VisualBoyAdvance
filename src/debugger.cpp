@@ -1419,7 +1419,7 @@ void debuggerMain()
 {
   char buffer[1024];
   char *commands[10];
-  char commandCount = 0;
+  int commandCount = 0;
   
   emuUpdateCPSR();
   debuggerRegisters(0, NULL);
