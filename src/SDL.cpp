@@ -191,7 +191,7 @@ static int rewindTopPos = 0;
 static int rewindCounter = 0;
 static int rewindCount = 0;
 static bool rewindSaveNeeded = false;
-static int rewindTimer = 600;
+static int rewindTimer = 0;
 
 #define REWIND_SIZE 400000
 
@@ -1201,9 +1201,10 @@ void sdlReadPreferences(FILE *f)
     } else if(!strcmp(key, "rtcEnabled")) {
       sdlRtcEnable = sdlFromHex(value);
     } else if(!strcmp(key, "rewindTimer")) {
-      rewindTimer = sdlFromHex(value) * 60; // convert value to frames
-      if(rewindTimer < 600 || rewindTimer > 60*60*10)
-        rewindTimer = 600;
+      rewindTimer = sdlFromHex(value);
+      if(rewindTimer < 0 || rewindTimer > 600)
+        rewindTimer = 0;
+      rewindTimer *= 6;  // convert value to 10 frames multiple
     } else {
       fprintf(stderr, "Unknown configuration key %s\n", key);
     }
@@ -2135,7 +2136,8 @@ int main(int argc, char **argv)
     cpu_mmx = 0;
 #endif
 
-  rewindMemory = (char *)malloc(8*REWIND_SIZE);
+  if(rewindTimer)
+    rewindMemory = (char *)malloc(8*REWIND_SIZE);
 
   if(sdlFlashSize == 0)
     flashSetSize(0x10000);
@@ -2849,12 +2851,6 @@ void systemShowSpeed(int speed)
 
 void systemFrame()
 {
-  if(rewindMemory) {
-    if(++rewindCounter >= rewindTimer) {
-      rewindSaveNeeded = true;
-      rewindCounter = 0;
-    }
-  }
 }
 
 void system10Frames(int rate)
@@ -2900,6 +2896,12 @@ void system10Frames(int rate)
       }
     }
     throttleLastTime = systemGetClock();
+  }
+  if(rewindMemory) {
+    if(++rewindCounter >= rewindTimer) {
+      rewindSaveNeeded = true;
+      rewindCounter = 0;
+    }
   }
   wasPaused = false;
   autoFrameSkipLastTime = time;
