@@ -746,8 +746,9 @@ static u8 *utilLoadFromZip(const char *file,
     return NULL;
   }
   
-  size = info.uncompressed_size;
-    
+  int fileSize = info.uncompressed_size;
+  if(size == 0)
+    size = fileSize;
   r = unzOpenCurrentFile(unz);
 
   if(r != UNZ_OK) {
@@ -767,22 +768,25 @@ static u8 *utilLoadFromZip(const char *file,
                     "data");
       return NULL;
     }
+    size = fileSize;
   }
-  
+  int read = fileSize <= size ? fileSize : size;
   r = unzReadCurrentFile(unz,
                          image,
-                         size);
+                         read);
 
   unzCloseCurrentFile(unz);
   unzClose(unz);
   
-  if(r != (int)size) {
+  if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
                   "Error reading image %s", buffer);
     if(data == NULL)
       free(image);
     return NULL;
   }
+
+  size = fileSize;
 
   return image;
 }
@@ -800,8 +804,10 @@ static u8 *utilLoadGzipFile(const char *file,
   }
 
   fseek(f, -4, SEEK_END);
-  size = fgetc(f) | (fgetc(f) << 8) | (fgetc(f) << 16) | (fgetc(f) << 24);
+  int fileSize = fgetc(f) | (fgetc(f) << 8) | (fgetc(f) << 16) | (fgetc(f) << 24);
   fclose(f);
+  if(size == 0)
+    size = fileSize;
 
   gzFile gz = gzopen(file, "rb");
 
@@ -821,18 +827,21 @@ static u8 *utilLoadGzipFile(const char *file,
       fclose(f);
       return NULL;
     }
+    size = fileSize;
   }
-
-  int r = gzread(gz, image, size);
+  int read = fileSize <= size ? fileSize : size;
+  int r = gzread(gz, image, read);
   gzclose(gz);
 
-  if(r != (int)size) {
+  if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
                   "Error reading image %s", file);
     if(data == NULL)
       free(image);
     return NULL;
   }  
+  
+  size = fileSize;
 
   return image;  
 }
@@ -913,8 +922,10 @@ u8 *utilLoad(const char *file,
   }
 
   fseek(f,0,SEEK_END);
-  size = ftell(f);
+  int fileSize = ftell(f);
   fseek(f,0,SEEK_SET);
+  if(size == 0)
+    size = fileSize;
 
   if(image == NULL) {
     image = (u8 *)malloc(utilGetSize(size));
@@ -924,12 +935,13 @@ u8 *utilLoad(const char *file,
       fclose(f);
       return NULL;
     }
+    size = fileSize;
   }
-
-  int r = fread(image, 1, size, f);
+  int read = fileSize <= size ? fileSize : size;
+  int r = fread(image, 1, read, f);
   fclose(f);
 
-  if(r != (int)size) {
+  if(r != (int)read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
                   "Error reading image %s", file);
     if(data == NULL)
@@ -937,6 +949,8 @@ u8 *utilLoad(const char *file,
     return NULL;
   }  
 
+  size = fileSize;
+  
   return image;
 }
 

@@ -1254,7 +1254,7 @@ void CPUCleanUp()
 
 int CPULoadRom(const char *szFile)
 {
-  int size = 0;  
+  int size = 0x2000000;
   
   if(rom != NULL) {
     CPUCleanUp();
