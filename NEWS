@@ -6,6 +6,7 @@ Core changes:
 - fixed crash when loading a second ELF file
 
 Windows version:
+- allows AMD CPUs to take advantage of MMX code
 - fixed tile viewer to display all tiles in 256 mode
 
 Version 1.3.1:

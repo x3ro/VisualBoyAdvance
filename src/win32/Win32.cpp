@@ -374,8 +374,11 @@ bool detectMMX()
     }
     return false;
   }
+  // Check for Intel or AMD CPUs
   if(strncmp(brand, "GenuineIntel", 12)) {
-    return false;
+    if(strncmp(brand, "AuthenticAMD", 12)) {
+      return false;
+    }
   }
 
   __asm {
