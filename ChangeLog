@@ -1,5 +1,6 @@
 2002-11-07  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/SDL.cpp (main): fixed crash when trying load file that does not exist
 	* src/SDL.cpp (systemUpdateMotionSensor): implemented motion sensor for the SDL version
 
 2002-11-06  Forgotten  <forgotten@users.sourceforge.net>

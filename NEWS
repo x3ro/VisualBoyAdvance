@@ -27,6 +27,7 @@ SDL version:
 - fixed crash when -b specified incorrectly
 - fixed warning when reading configuration file about disableMMX if compiled
   without MMX support
+- fixed crash when trying open file that does not exist
 
 Version 1.1:
 

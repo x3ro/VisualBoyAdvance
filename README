@@ -242,6 +242,12 @@ Command line options (override settings in configuration file)
     5 - Pixelate (experimental)
     6 - Motion Blur (experimental)
   -s<frameskip> Set frame skip (0...9)
+  -t<type> Set the available save type
+   0 - Automatic (EEPROM, SRAM, FLASH)\n");
+    1 - EEPROM
+    2 - SRAM
+    3 - FLASH
+    4 - EEPROM+Sensor
   -v<verbose> Set verbose level (add flags values for multiple):
       1 - SWI
       2 - Unaliagned memory access

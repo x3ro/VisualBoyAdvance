@@ -1654,56 +1654,62 @@ int main(int argc, char **argv)
     
     if(gbIsGameboyRom(szFile) || cartridgeType == 1) {
       failed = !gbLoadRom(szFile);
-      cartridgeType = 1;
-      emuWriteState = gbWriteSaveState;
-      emuReadState = gbReadSaveState;
-      emuWriteBattery = gbWriteBatteryFile;
-      emuReadBattery = gbReadBatteryFile;
-      emuReset = gbReset;
-      emuCleanUp = gbCleanUp;
-      emuWritePNG = gbWritePNGFile;
-      emuWriteBMP = gbWriteBMPFile;
-      emuMain = gbEmulate;
-      emuUpdateCPSR = NULL;
-      emuHasDebugger = false;
-      emuCount = 70000/4;
+      if(!failed) {
+        cartridgeType = 1;
+        emuWriteState = gbWriteSaveState;
+        emuReadState = gbReadSaveState;
+        emuWriteBattery = gbWriteBatteryFile;
+        emuReadBattery = gbReadBatteryFile;
+        emuReset = gbReset;
+        emuCleanUp = gbCleanUp;
+        emuWritePNG = gbWritePNGFile;
+        emuWriteBMP = gbWriteBMPFile;
+        emuMain = gbEmulate;
+        emuUpdateCPSR = NULL;
+        emuHasDebugger = false;
+        emuCount = 70000/4;
+      }
     } else if(CPUIsGBAImage(szFile) || cartridgeType == 0) {
       failed = !CPULoadRom(szFile);
-      cartridgeType = 0;
-      emuWriteState = CPUWriteState;
-      emuReadState = CPUReadState;
-      emuWriteBattery = CPUWriteBatteryFile;
-      emuReadBattery = CPUReadBatteryFile;
-      emuReset = CPUReset;
-      emuCleanUp = CPUCleanUp;
-      emuWritePNG = CPUWritePNGFile;
-      emuWriteBMP = CPUWriteBMPFile;
-      emuMain = CPULoop;
-      emuUpdateCPSR = CPUUpdateCPSR;
-      emuHasDebugger = true;
-      emuCount = 50000;
-
-      CPUInit(biosFileName, useBios);
-      CPUReset();
+      if(!failed) {
+        cartridgeType = 0;
+        emuWriteState = CPUWriteState;
+        emuReadState = CPUReadState;
+        emuWriteBattery = CPUWriteBatteryFile;
+        emuReadBattery = CPUReadBatteryFile;
+        emuReset = CPUReset;
+        emuCleanUp = CPUCleanUp;
+        emuWritePNG = CPUWritePNGFile;
+        emuWriteBMP = CPUWriteBMPFile;
+        emuMain = CPULoop;
+        emuUpdateCPSR = CPUUpdateCPSR;
+        emuHasDebugger = true;
+        emuCount = 50000;
+        
+        CPUInit(biosFileName, useBios);
+        CPUReset();
+      }
 #ifdef GP_EMULATION
     } else if(GPIsGPImage(szFile) || cartridgeType == 2) {
       failed = !GPLoadRom(szFile);
-      cartridgeType = 2;
-      emuWriteState = GPWriteState;
-      emuReadState = GPReadState;
-      emuWriteBattery = GPWriteBatteryFile;
-      emuReadBattery = GPReadBatteryFile;
-      emuReset = GPReset;
-      emuCleanUp = GPCleanUp;
-      emuWritePNG = GPWritePNGFile;
-      emuWriteBMP = GPWriteBMPFile;
-      emuMain = GPLoop;
-      emuUpdateCPSR = GPUpdateCPSR;
-      emuHasDebugger = true;
-      emuCount = 50000;
-
-      GPInit();
-      GPReset();
+      if(!failed) {
+        cartridgeType = 2;
+        emuWriteState = GPWriteState;
+        emuReadState = GPReadState;
+        emuWriteBattery = GPWriteBatteryFile;
+        emuReadBattery = GPReadBatteryFile;
+        emuReset = GPReset;
+        emuCleanUp = GPCleanUp;
+        emuWritePNG = GPWritePNGFile;
+        emuWriteBMP = GPWriteBMPFile;
+        emuMain = GPLoop;
+        emuUpdateCPSR = GPUpdateCPSR;
+        emuHasDebugger = true;
+        emuCount = 50000;
+        
+        GPInit();
+        GPReset();
+      }
 #endif
     } else {
       systemMessage(0, "Unknown file type %s", szFile);
