@@ -1,3 +1,33 @@
+Version 1.7.1:
+Core changes:
+- added SWI call (0xf9 in thumb mode) to exit emulator in SDL version
+- avoid crash when loading an invalid ELF file
+- avoid turning sound on if soundOffFlag is true
+- fixed memory leak in ELF support code
+- fixed memory corruption if loading a bigger file than the memory to hold it
+- fixed some compile warnings in the profiling code
+- merged some big endian fixes into the code
+- update battery files more often (a bit after the save memory is last updated)
+
+Gameboy:
+- fixed bug with window support introduced in version 1.7
+- fixed HALT bug when no matching bits for interrupt
+
+Windows:
+- added cartridge save strings to bug report
+- changed default button on disassembly views to Go instead of Close
+- changed power management/screen saver disabling code again to avoid problems
+- fixed compilation problems on VC 7
+- fixed multi-monitor support
+- fixed bug loading memory dumps
+- fixed crash onb map/oam/tile viewers
+- fixed problem 320x240 mode open/save dialogs
+- fixed bug where user selected Gameboy colors were reset and not stored
+- fixed bug rendering the translator URL
+- fixed memory leak in OpenGL code which caused nasty problems
+- store throttle value between restarts of the emulator
+- updated FAQ and URL links to the new site
+
 Version 1.7:
 Core changes:
 - added fixes to video filters done by Flea for Mac OS X
