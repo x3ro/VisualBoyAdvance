@@ -119,10 +119,10 @@ void MotionBlur(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
 }
 
 void MotionBlur32(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
-                u8 *dstPtr, u32 dstPitch, int width, int height)
+                  u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
-  u32 colorMask = ~RGB_LOW_BITS_MASK & 0xffFFff;
+  u32 colorMask = ~RGB_LOW_BITS_MASK;
   u32 lowPixelMask = RGB_LOW_BITS_MASK;
   
   nextLine = dstPtr + dstPitch;
