@@ -425,6 +425,7 @@ extern void configurePad(int);
 extern void motionConfigurePad();
 extern int winGSACodeSelect(HWND, LPARAM);
 extern void fileExportSPSSnapshot(char *, char *);
+extern void CPUUpdateRenderBuffers(bool force);
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -4025,6 +4026,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       layerSettings ^= 0x0100 <<
         ((wParam & 0xFFFF) - ID_OPTIONS_VIDEO_LAYERS_BG0);
       layerEnable = DISPCNT & layerSettings;
+      CPUUpdateRenderBuffers(false);
       break;
     case ID_OPTIONS_VIDEO_X1:
     case ID_OPTIONS_VIDEO_X2:

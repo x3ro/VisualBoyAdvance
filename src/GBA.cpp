@@ -595,18 +595,18 @@ extern u32 line3[240];
     }\
   }\
 
-static void CPUUpdateRenderBuffers()
+void CPUUpdateRenderBuffers(bool force)
 {
-  if(!(layerEnable & 0x0100)) {
+  if(!(layerEnable & 0x0100) || force) {
     CLEAR_ARRAY(line0);
   }
-  if(!(layerEnable & 0x0200)) {
+  if(!(layerEnable & 0x0200) || force) {
     CLEAR_ARRAY(line1);
   }
-  if(!(layerEnable & 0x0400)) {
+  if(!(layerEnable & 0x0400) || force) {
     CLEAR_ARRAY(line2);
   }
-  if(!(layerEnable & 0x0800)) {
+  if(!(layerEnable & 0x0800) || force) {
     CLEAR_ARRAY(line3);
   }
 }
@@ -742,7 +742,7 @@ bool CPUReadState(char * file)
   layerEnable = layerSettings & DISPCNT;
   
   CPUUpdateRender();
-  CPUUpdateRenderBuffers();
+  CPUUpdateRenderBuffers(true);
   CPUUpdateWindow0();
   CPUUpdateWindow1();
   gbaSaveType = 0;
@@ -1291,6 +1291,8 @@ bool CPULoadRom(char *szFile)
     CPUCleanUp();
     return false;
   }      
+
+  CPUUpdateRenderBuffers(true);
 
   return true;
 }
@@ -2166,7 +2168,7 @@ void CPUUpdateRegister(u32 address, u16 value)
       CPUUpdateRender();
       // we only care about changes in BG0-BG3
       if(changeBG)
-        CPUUpdateRenderBuffers();
+        CPUUpdateRenderBuffers(false);
       //      CPUUpdateTicks();
     }
     break;
@@ -3225,6 +3227,8 @@ void CPUReset()
   frameCount = 0;
   saveType = 0;
   layerEnable = DISPCNT & layerSettings;
+
+  CPUUpdateRenderBuffers(true);
   
   for(int i = 0; i < 256; i++) {
     map[i].address = (u8 *)&dummyAddress;

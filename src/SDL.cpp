@@ -107,6 +107,7 @@ extern void remoteSetProtocol(int);
 extern void remoteSetPort(int);
 extern void debuggerOutput(char *, u32);
 
+extern void CPUUpdateRenderBuffers(bool);
 extern void CPUUpdateCPSR();
 #ifdef GP_EMULATION
 extern void GPUpdateCPSR();
@@ -1772,6 +1773,7 @@ void sdlPollEvents()
           int mask = 0x0100 << (event.key.keysym.sym - SDLK_1);
           layerSettings ^= mask;
           layerEnable = DISPCNT & layerSettings;
+          CPUUpdateRenderBuffers(false);
         }
         break;
       case SDLK_5:

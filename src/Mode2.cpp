@@ -54,8 +54,6 @@ void mode2RenderLine()
 
   gfxDrawSprites(lineOBJ);
 
-  gfxDrawSprites(lineOBJ);
-
   u32 backdrop = palette[0] | 0x30000000;
 
   for(int x = 0; x < 240; x++) {
@@ -149,8 +147,6 @@ void mode2RenderLineNoWindow()
                      BG3PA, BG3PB, BG3PC, BG3PD, gfxBG3X, gfxBG3Y,
                      changed, line3);
   }
-
-  gfxDrawSprites(lineOBJ);
 
   gfxDrawSprites(lineOBJ);
 
