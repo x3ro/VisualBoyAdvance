@@ -39,5 +39,6 @@ extern void BIOS_RLUnCompVram();
 extern void BIOS_RLUnCompWram();
 extern void BIOS_SoftReset();
 extern void BIOS_Sqrt();
+extern void BIOS_MidiKey2Freq();
 
 #endif // VBA_BIOS_H

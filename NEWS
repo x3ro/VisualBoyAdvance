@@ -1,17 +1,21 @@
 Version 1.2 (in progress):
 
 Core changes:
-- fixed problem on big endian when setting IO memory reable positions
-- big endian support
-- C core for portability
-- don't reset LCD after disabling forced blank
-- speed up now uses frameskip 9 (6 FPS)
+- added MidiKey2Freq bios call (user contribution)
 - added AdvanceMAME Scale2x and Simple 2x filters
 - added support for higher frameskip (up to 9)
+- added C core for portability
+- added big endian support
+- fixed another value for the bios protection
+- fixed sound envelope reload bug (user contribution)
+- fixed problem on big endian when setting IO memory reable positions
+- fixed reset LCD after disabling forced blank
+- speed up now uses frameskip 9 (6 FPS)
 - improved message when BIOS function cannot be emulated
 Windows changes:
 - added freeze recent list option
 - added 800x600 support
+- support to export GamesharkAdvance save games
 SDL version:
 - fixed crash when printing void * variables
 - fixed crash when -b specified incorrectly

@@ -855,6 +855,9 @@ bool CPUWriteGSASnapshot(char *fileName, char *title, char *desc, char *notes)
 
   fwrite(&rom[0xa0], 1, 16, file); // write ROM internal name
   memset(buffer, 0, 12);
+  buffer[2] = rom[0xbd]; // complement check
+  buffer[3] = rom[0xb0]; // maker
+  buffer[4] = 1; // 1 save in the file?
   fwrite(buffer, 1, 12, file); // more flags... unknown
 
   fwrite(flashSaveMemory, 1, 0x10000, file); // write save
@@ -1476,6 +1479,7 @@ void CPUSoftwareInterrupt(int comment)
     CPUSoftwareInterrupt();
     return;
   }
+  // This would be correct, but it causes problems if uncommented
   //  else {
   //    biosProtected = 0xe3a02004;
   //  }
@@ -1593,6 +1597,9 @@ void CPUSoftwareInterrupt(int comment)
       systemSoundPause();
     else
       systemSoundResume();
+    break;
+  case 0x1F:
+    BIOS_MidiKey2Freq();
     break;
   default:
 #ifdef DEV_VERSION
@@ -3127,7 +3134,7 @@ void CPUInterrupt()
   reg[15].I += 4;
 
   //  if(!holdState)
-  //    biosProtected = 0xe55ec002;
+      biosProtected = 0xe55ec002;
 }
 
 #ifdef SDL

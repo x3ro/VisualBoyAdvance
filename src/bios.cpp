@@ -1078,3 +1078,20 @@ void BIOS_Sqrt()
   }
 #endif
 }
+
+void BIOS_MidiKey2Freq()
+{
+#ifdef DEV_VERSION
+  if(systemVerbose & VERBOSE_SWI) {
+    log("MidiKey2Freq: WaveData=%08x mk=%08x fp=%08x",
+        reg[0].I,
+        reg[1].I,
+        reg[2].I);
+  }
+#endif
+  int freq = CPUReadMemory(reg[0].I+4);
+  double tmp;
+  tmp = ((double)(180 - reg[1].I)) - ((double)reg[2].I / 256.f);
+  tmp = pow(2, tmp / 12.f);
+  reg[0].I = (int)((double)freq / tmp);
+}

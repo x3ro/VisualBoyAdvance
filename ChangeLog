@@ -1,6 +1,13 @@
+2002-10-31  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPUWriteGSASnapshot): fixed a few bytes in the snapshot
+	* src/Sound.cpp (soundEvent): fixed envelope reload bugs
+	* src/bios.cpp (BIOS_MidiKey2Freq): Added method (user contribution)
+	* src/Gfx.h: fixed problems in big endian machines
+
 2002-10-29  Forgotten  <forgotten@users.sourceforge.net>
 
-	* src\thumb.cpp: fixed bugs in C core 
+	* src/thumb.cpp: fixed bugs in C core 
 
 2002-10-28  Forgotten  <forgotten@users.sourceforge.net>
 
