@@ -134,6 +134,8 @@ void PaletteView::save(int which)
     return;
   }
 
+  captureBuffer = dlg.GetPathName();
+
   PaletteViewControl *p = NULL;
 
   if(which == 0)
