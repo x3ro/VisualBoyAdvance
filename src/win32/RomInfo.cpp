@@ -319,8 +319,10 @@ BOOL RomInfoGB::OnInitDialog(LPARAM l)
   buffer[2] = 0;
   ::SetWindowText(GetDlgItem(IDC_ROM_MAKER_CODE), buffer);
 
-  if(rom[0x14b] != 0x33)
-    sprintf(buffer, "%02x", rom[0x14b]);
+  if(rom[0x14b] != 0x33) {
+    sprintf(buffer, "%02X", rom[0x14b]);
+    ::SetWindowText(GetDlgItem(IDC_ROM_MAKER_CODE), buffer);    
+  }
   ::SetWindowText(GetDlgItem(IDC_ROM_MAKER_NAME2),
                 winGBARomInfoFindMakerCode(buffer));
   

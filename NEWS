@@ -6,6 +6,7 @@ Windows version:
 - automatically apply IPS patch if it exists
 - removed some test code introduced at version 1.1 that slows down the emulator
 - fixed missing check marks on layers menu
+- fixed bug showing maker code/name from some old games
 SDL version:
 - added support for long options
 - added support for passing configuration file name

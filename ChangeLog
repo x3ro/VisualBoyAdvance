@@ -1,3 +1,7 @@
+2002-11-25  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/RomInfo.cpp (OnInitDialog): fixed bug showing maker code/name in some old GB roms
+
 2002-11-24  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp: added flag for help and configuration file
