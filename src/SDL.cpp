@@ -257,6 +257,7 @@ struct option sdlOptions[] = {
   { "fullscreen", no_argument, &fullscreen, 1 },
   { "gdb", required_argument, 0, 'G' },
   { "help", no_argument, &sdlPrintUsage, 1 },
+  { "ips", required_argument, 0, 'i' },
   { "no-debug", no_argument, 0, 'N' },
   { "no-ips", no_argument, &sdlAutoIPS, 0 },
   { "profile", optional_argument, 0, 'p' },
@@ -1522,6 +1523,7 @@ void usage(char *cmd)
         printf("       --filter-advmame        7 - AdvanceMAME Scale2x\n");
         printf("       --filter-simple2x       8 - Simple2x\n");
         printf("  -h , --help                 Print this help\n");
+        printf("  -i , --ips=PATCH            Apply given IPS patch\n");
         printf("  -p , --profile=[HERTZ]      Enable profiling\n");
         printf("  -s , --frameskip=FRAMESKIP  Set frame skip (0...9)\n");
         printf("  -t , --save-type=TYPE       Set the available save type\n");
@@ -1557,6 +1559,7 @@ int main(int argc, char **argv)
   captureDir[0] = 0;
   saveDir[0] = 0;
   batteryDir[0] = 0;
+  ipsname[0] = 0;
   
   char buffer[1024];
 
@@ -1571,7 +1574,7 @@ int main(int argc, char **argv)
 
   sdlPrintUsage = 0;
   
-  while((op = getopt_long(argc, argv, "FNY:G:D:b:c:df:hp::s:t:v:1234",
+  while((op = getopt_long(argc, argv, "FNY:G:D:b:c:df:hi:p::s:t:v:1234",
                           sdlOptions, NULL)) != -1) {
     switch(op) {
     case 0:
@@ -1605,6 +1608,13 @@ int main(int argc, char **argv)
       break;
     case 'h':
       sdlPrintUsage = 1;
+      break;
+    case 'i':
+      if(optarg == NULL) {
+        fprintf(stderr, "Missing IPS name\n");
+        exit(-1);
+        strcpy(ipsname, optarg);
+      }
       break;
     case 'Y':
       yuv = true;
@@ -1804,7 +1814,8 @@ int main(int argc, char **argv)
     if(p)
       *p = 0;
 
-    sprintf(ipsname, "%s.ips", filename);
+    if(ipsname[0] == 0)
+      sprintf(ipsname, "%s.ips", filename);
     
     bool failed = false;
     if(CPUIsZipFile(szFile)) {
