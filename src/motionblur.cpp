@@ -117,3 +117,78 @@ void MotionBlur(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   }
   while (--height);
 }
+
+#define RGB32_LOW_BITS_MASK 0x010101
+
+void MotionBlur32(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
+                u8 *dstPtr, u32 dstPitch, int width, int height)
+{
+  u8 *nextLine, *finish;
+  u32 colorMask = ~RGB32_LOW_BITS_MASK;
+  u32 lowPixelMask = RGB32_LOW_BITS_MASK;
+  
+  nextLine = dstPtr + dstPitch;
+  
+  do {
+    u32 *bP = (u32 *) srcPtr;
+    u32 *xP = (u32 *) deltaPtr;
+    u32 *dP = (u32 *) dstPtr;
+    u32 *nL = (u32 *) nextLine;
+    u32 currentPixel;
+    u32 nextPixel;
+    u32 currentDelta;
+    u32 nextDelta;
+    
+    finish = (u8 *) bP + ((width) << 2);
+    nextPixel = *bP++;
+    nextDelta = *xP++;
+    
+    do {
+      currentPixel = nextPixel;
+      currentDelta = nextDelta;
+      nextPixel = *bP++;
+      nextDelta = *xP++;
+
+      u32 colorA, product, colorB;
+
+      *(xP - 2) = currentPixel;
+      colorA = currentPixel;
+      colorB = currentDelta;
+      
+      product =   ((((colorA & colorMask) >> 1) +
+                    ((colorB & colorMask) >> 1) +
+                    (colorA & colorB & lowPixelMask)));
+      
+      *(dP) = product;
+      *(dP+1) = product;
+      *(nL) = product;
+      *(nL+1) = product;
+
+      *(xP - 1) = nextPixel;
+
+      colorA = nextPixel;
+      colorB = nextDelta;
+      
+      product = ((((colorA & colorMask) >> 1) +
+                  ((colorB & colorMask) >> 1) +
+                  (colorA & colorB & lowPixelMask)));
+      
+      *(dP + 2) = product;
+      *(dP + 3) = product;
+      *(nL + 2) = product;
+      *(nL + 3) = product;
+
+      nextPixel = *bP++;
+      nextDelta = *xP++;
+      
+      dP += 4;
+      nL += 4;
+    } while ((u8 *) bP < finish);
+    
+    deltaPtr += srcPitch;
+    srcPtr += srcPitch;
+    dstPtr += dstPitch * 2;
+    nextLine += dstPitch * 2;
+  }
+  while (--height);
+}

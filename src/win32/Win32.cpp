@@ -111,7 +111,7 @@ BOOL mode320Available = FALSE;
 BOOL mode640Available = FALSE;
 BOOL mode800Available = FALSE;
 BOOL changingVideoSize = FALSE;
-u8 *delta[257*244*2];
+u8 *delta[257*244*4];
 void (*filterFunction)(u8*,u32,u8*,u8*,u32,int,int) = NULL;
 int filterType = 0;
 int filterWidth = 0;
@@ -305,13 +305,18 @@ BOOL initDirectInput();
 void winCenterWindow(HWND);
 extern int Init_2xSaI(u32);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
+extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
+extern void MotionBlur32(u8*,u32,u8*,u8*,u32,int,int);
 extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
+extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void winGBARomInfo(u8*);
 extern void winGBRomInfo(u8*);
 extern void winCheatsDialog();
@@ -1510,11 +1515,11 @@ void updateFilterMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_FILTER_NORMAL,
                 CHECKMENUSTATE(filterType == 0));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_NORMAL,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_TVMODE,
                 CHECKMENUSTATE(filterType == 1));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_TVMODE,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
                 CHECKMENUSTATE(filterType == 2));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
@@ -1530,19 +1535,19 @@ void updateFilterMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
                 CHECKMENUSTATE(filterType == 5));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL,
                 CHECKMENUSTATE(filterType == 6));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_MOTIONBLUREXPERIMENTAL,
-                 ENABLEMENU(systemColorDepth == 16));  
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X,
                 CHECKMENUSTATE(filterType == 7));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X,
-                 ENABLEMENU(systemColorDepth == 16));  
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_SIMPLE2X,
                 CHECKMENUSTATE(filterType == 8));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_SIMPLE2X,
-                 ENABLEMENU(systemColorDepth == 16));  
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_DISABLEMMX,
                 CHECKMENUSTATE(disableMMX));
 }
@@ -2077,13 +2082,23 @@ void systemDrawScreen()
     
   if(hret == DD_OK) {
     if(filterFunction) {
-      (*filterFunction)(pix+filterWidth*2+2,
-                        filterWidth*2+2,
-                        (u8*)delta,
-                        (u8*)ddsDesc.lpSurface,
-                        ddsDesc.lPitch,
-                        filterWidth,
-                        filterHeight);
+      if(systemColorDepth == 16)
+        (*filterFunction)(pix+filterWidth*2+2,
+                          filterWidth*2+2,
+                          (u8*)delta,
+                          (u8*)ddsDesc.lpSurface,
+                          ddsDesc.lPitch,
+                          filterWidth,
+                          filterHeight);
+      else
+        (*filterFunction)(pix,
+                          filterWidth*4,
+                          (u8*)delta,
+                          (u8*)ddsDesc.lpSurface,
+                          ddsDesc.lPitch,
+                          filterWidth,
+                          filterHeight);
+        
     } else {
       if(cartridgeType == 0) {
         __asm {
@@ -2469,7 +2484,41 @@ void updateFilter()
       rect.bottom = sizeY;
     }
   } else {
-    filterFunction = NULL;
+    if(systemColorDepth == 32 && videoOption > VIDEO_1X &&
+       videoOption != VIDEO_320x240) {
+      switch(filterType) {
+      default:
+      case 0:
+        filterFunction = NULL;
+        break;
+      case 1:
+        filterFunction = TVMode32;
+        break;
+      case 5:
+        filterFunction = Pixelate32;
+        break;
+      case 6:
+        filterFunction = MotionBlur32;
+        break;
+      case 7:
+        filterFunction = AdMame2x32;
+        break;
+      case 8:
+        filterFunction = Simple2x32;
+        break;
+      }
+      if(filterType != 0) {
+        filterWidth = sizeX;
+        filterHeight = sizeY;
+        rect.right = sizeX*2;
+        rect.bottom = sizeY*2;
+        memset(delta,255,sizeof(delta));
+      } else {
+        rect.right = sizeX;
+        rect.bottom = sizeY;
+      }
+    } else
+      filterFunction = NULL;
   }
 }
 

@@ -67,3 +67,40 @@ void Simple2x(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   }
   while (--height);
 }
+
+void Simple2x32(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
+                u8 *dstPtr, u32 dstPitch, int width, int height)
+{
+  u8 *nextLine, *finish;
+  
+  nextLine = dstPtr + dstPitch;
+  
+  do {
+    u32 *bP = (u32 *) srcPtr;
+    u32 *dP = (u32 *) dstPtr;
+    u32 *nL = (u32 *) nextLine;
+    u32 currentPixel;
+    
+    finish = (u8 *) bP + ((width) << 2);
+    currentPixel = *bP++;
+    
+    do {
+      u32 color = currentPixel;
+
+      *(dP) = color;
+      *(dP+1) = color;
+      *(nL) = color;
+      *(nL + 1) = color;
+      
+      currentPixel = *bP++;
+      
+      dP += 2;
+      nL += 2;
+    } while ((u8 *) bP < finish);
+    
+    srcPtr += srcPitch;
+    dstPtr += dstPitch * 2;
+    nextLine += dstPitch * 2;
+  }
+  while (--height);
+}

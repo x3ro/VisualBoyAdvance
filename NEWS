@@ -11,6 +11,7 @@ Core changes:
 Windows version:
 - automatically apply IPS patch if it exists (configurable)
 - added save/load support in the memory viewer
+- added support for filters in 32-bit mode (exception of Kreed's filters)
 - memory viewer now displays current edit address
 - removed some test code introduced at version 1.1 that slows down the emulator
 - fixed missing check marks on layers menu
@@ -19,6 +20,7 @@ SDL version:
 - added support for long options
 - added support for passing configuration file name
 - added profiling support (GMON format - see README)
+- added support for filters in 32-bit mode (exception of Kreed's filters)
 - automatically apply IPS patch if it exists
 - improved search for configuration file: current directory, user directory,
   executable directory (in order) are searched

@@ -65,10 +65,15 @@ extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);  
 extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
+extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
+extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
+extern void MotionBlur32(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
+extern void Simple2x32(u8*,u32,u8*,u8*,u32,int,int);
 
 void Init_Overlay(SDL_Surface *surface, int overlaytype);
 void Quit_Overlay(void);
@@ -1763,38 +1768,7 @@ int main(int argc, char **argv)
     }
   }
 
-  switch(filter) {
-  default:
-  case 0:
-    filterFunction = NULL;
-    break;
-  case 1:
-    filterFunction = TVMode;
-    break;
-  case 2:
-    filterFunction = _2xSaI;
-    break;
-  case 3:
-    filterFunction = Super2xSaI;
-    break;
-  case 4:
-    filterFunction = SuperEagle;
-    break;
-  case 5:
-    filterFunction = Pixelate;
-    break;
-  case 6:
-    filterFunction = MotionBlur;
-    break;
-  case 7:
-    filterFunction = AdMame2x;
-    break;
-  case 8:
-    filterFunction = Simple2x;
-    break;
-  }
-
-  if(filterFunction) {
+  if(filter) {
     sizeOption = 1;
   }
 
@@ -2105,7 +2079,9 @@ int main(int argc, char **argv)
     }
     srcPitch = srcWidth * 2+2;
   } else {
-    filterFunction = NULL;    
+    if(systemColorDepth != 32)
+      filter = NULL;
+    RGB_LOW_BITS_MASK = 0x010101;
     for(int i = 0; i < 0x10000; i++) {
       systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
         (((i & 0x3e0) >> 5) << systemGreenShift) |
@@ -2117,6 +2093,63 @@ int main(int argc, char **argv)
       srcPitch = srcWidth*3;
   }
 
+  if(systemColorDepth != 32) {
+    switch(filter) {
+    default:
+    case 0:
+      filterFunction = NULL;
+      break;
+    case 1:
+    filterFunction = TVMode;
+    break;
+    case 2:
+      filterFunction = _2xSaI;
+      break;
+    case 3:
+      filterFunction = Super2xSaI;
+      break;
+    case 4:
+      filterFunction = SuperEagle;
+      break;
+    case 5:
+      filterFunction = Pixelate;
+      break;
+    case 6:
+      filterFunction = MotionBlur;
+      break;
+    case 7:
+      filterFunction = AdMame2x;
+      break;
+    case 8:
+      filterFunction = Simple2x;
+      break;
+    }
+  } else {
+    switch(filter) {
+    case 0:
+      filterFunction = NULL;
+      break;
+    case 1:
+      filterFunction = TVMode32;
+      break;
+    case 5:
+      filterFunction = Pixelate32;
+      break;
+    case 6:
+      filterFunction = MotionBlur32;
+      break;
+    case 7:
+      filterFunction = AdMame2x32;
+      break;
+    case 8:
+      filterFunction = Simple2x32;
+      break;
+    default:
+      filterFunction = NULL;
+      break;
+    }
+  }
+  
   emulating = 1;
   soundInit();
   
@@ -2177,8 +2210,8 @@ void systemDrawScreen()
   }
   
   if(delta == NULL) {
-    delta = (u8*)malloc(322*242*2);
-    memset(delta,255,322*242*2);
+    delta = (u8*)malloc(322*242*4);
+    memset(delta, 255, 322*242*4);
   }
 
   SDL_LockSurface(surface);
@@ -2196,12 +2229,21 @@ void systemDrawScreen()
     }
   }
   
-  if(filterFunction)
-    filterFunction(pix+destWidth+2,destWidth+2, delta,
-                   (u8*)surface->pixels,surface->pitch,
-                   srcWidth,
-                   srcHeight);
-  else {
+  if(filterFunction) {
+    if(systemColorDepth == 16)
+      filterFunction(pix+destWidth+2,destWidth+2, delta,
+                     (u8*)surface->pixels,surface->pitch,
+                     srcWidth,
+                     srcHeight);
+    else
+      filterFunction(pix,
+                     destWidth*2,
+                     delta,
+                     (u8*)surface->pixels,
+                     surface->pitch,
+                     srcWidth,
+                     srcHeight);
+  } else {
     int destPitch = surface->pitch;
     u8 *src = pix;
     u8 *dest = (u8*)surface->pixels;

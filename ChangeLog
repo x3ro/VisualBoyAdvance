@@ -1,3 +1,13 @@
+2002-12-01  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/tvmode.cpp (TVMode32): 32-bit mode support
+	* src/simple2x.cpp (Simple2x32): 32-bit mode support
+	* src/pixel.cpp (Pixelate32): 32-bit mode support
+	* src/motionblur.cpp (MotionBlur32): 32-bit mode support
+	* src/admame.cpp (AdMame2x32): 32-bit mode support
+	* src/SDL.cpp (systemDrawScreen): added support for filters in 32-bit mode
+	* src/win32/Win32.cpp (updateFilter): added support for filters in 32-bit mode
+
 2002-11-29  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/Sound.cpp (soundMix): respect sound rations for CGB and DS
