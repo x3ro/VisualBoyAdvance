@@ -49,20 +49,29 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
       nextDelta = *xP++;
       
       if ((nextPixel != nextDelta) || (currentPixel != currentDelta)) {
-    u32 colorA, colorB, product;
-    
-    *(xP - 2) = currentPixel;
-    colorA = currentPixel & 0xffff;
+        u32 colorA, colorB, product;
+        
+        *(xP - 2) = currentPixel;
+#ifdef WORDS_BIGENDIAN
+        colorA = currentPixel >> 16;
+        colorB = (currentPixel << 16) >> 16;
+#else
+        colorA = currentPixel & 0xffff;
+        colorB = (currentPixel & 0xffff0000) >> 16;
+#endif
 
-    colorB = (currentPixel & 0xffff0000) >> 16;
-    product = (((colorA & colorMask) >> 1) & colorMask) >> 1;
-    *(nL) = product | (product << 16);
-    *(dP) = (colorA)|product<<16;
-
-    colorA = nextPixel & 0xffff;
-    product = (((colorB & colorMask) >> 1) & colorMask) >> 1;
-    *(nL + 1) = product | (product << 16);
-    *(dP + 1) = (colorB)| product<<16;
+        product = (((colorA & colorMask) >> 1) & colorMask) >> 1;
+        *(nL) = product | (product << 16);
+        *(dP) = (colorA)|product<<16;
+        
+#ifdef WORDS_BIGENDIAN
+        colorA = nextPixel >> 16;
+#else
+        colorA = nextPixel & 0xffff;
+#endif
+        product = (((colorB & colorMask) >> 1) & colorMask) >> 1;
+        *(nL + 1) = product | (product << 16);
+        *(dP + 1) = (colorB)| product<<16;
       }
       
       dP += 2;

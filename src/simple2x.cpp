@@ -35,14 +35,22 @@ void Simple2x(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
     currentPixel = *bP++;
     
     do {
+#ifdef WORDS_BIGENDIAN
+      u32 color = currentPixel >> 16;
+#else
       u32 color = currentPixel & 0xffff;
+#endif
 
       color = color | (color << 16);
 
       *(dP) = color;
       *(nL) = color;
 
+#ifdef WORDS_BIGENDIAN
+      color = (currentPixel << 16) >> 16;
+#else
       color = currentPixel >> 16;
+#endif
       color = color| (color << 16);      
       *(dP + 1) = color;
       *(nL + 1) = color;
