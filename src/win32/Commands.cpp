@@ -201,7 +201,7 @@ struct {
   { "CheatsList", ID_CHEATS_CHEATLIST },
   { "CheatsLoad", ID_CHEATS_LOADCHEATLIST },
   { "CheatsSave", ID_CHEATS_SAVECHEATLIST },
-  { "CheatsDiable", ID_CHEATS_DISABLECHEATS },
+  { "CheatsDisable", ID_CHEATS_DISABLECHEATS },
   { "ToolsDebugGDB", ID_TOOLS_DEBUG_GDB },
   { "ToolsDebugGDBLoad", ID_TOOLS_DEBUG_LOADANDWAIT },
   { "ToolsDebugGDBBreak", ID_TOOLS_DEBUG_BREAK },
