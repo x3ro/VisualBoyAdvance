@@ -80,6 +80,7 @@
 #define IDD_LOGGING                     137
 #define IDD_EXPORT_SPS                  138
 #define IDD_ADDR_SIZE                   139
+#define IDD_MODES                       140
 #define IDC_R0                          1000
 #define IDC_EDIT_UP                     1000
 #define IDC_R1                          1001
@@ -442,6 +443,7 @@
 #define IDC_CURRENT_ADDRESS_LABEL       1236
 #define IDC_LOAD                        1238
 #define IDC_SIZE_CONTROL                1240
+#define IDC_MODES                       1240
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -614,14 +616,15 @@
 #define ID_OPTIONS_FILTER_INTERFRAMEBLENDING_NONE 40188
 #define ID_OPTIONS_FILTER_INTERFRAMEBLENDING_MOTIONBLUR 40189
 #define ID_OPTIONS_FILTER_INTERFRAMEBLENDING_SMART 40190
+#define ID_OPTIONS_VIDEO_FULLSCREEN     40191
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        140
-#define _APS_NEXT_COMMAND_VALUE         40191
-#define _APS_NEXT_CONTROL_VALUE         1240
+#define _APS_NEXT_RESOURCE_VALUE        141
+#define _APS_NEXT_COMMAND_VALUE         40192
+#define _APS_NEXT_CONTROL_VALUE         1241
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -160,6 +160,10 @@ char ipsname[2048];
 char winBuffer[1024];
 char biosFileName[2048];
 
+bool fsForceChange = false;
+int fsWidth = 0;
+int fsHeight = 0;
+int fsColorDepth = 0;
 int sizeX = 0;
 int sizeY = 0;
 int surfaceSizeX = 0;
@@ -243,7 +247,7 @@ deviceInfo          *pDevices     = NULL;
 
 enum {
   VIDEO_1X, VIDEO_2X, VIDEO_3X, VIDEO_4X,
-  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600
+  VIDEO_320x240, VIDEO_640x480, VIDEO_800x600, VIDEO_OTHER
 };
 
 enum {
@@ -348,6 +352,7 @@ extern void winGbCheatsListDialog();
 extern void configurePad();
 extern void motionConfigurePad();
 extern int winGSACodeSelect(HWND, LPARAM);
+extern int winVideoModeSelect(HWND, LPDIRECTDRAW7);
 extern void fileExportSPSSnapshot(char *, char *);
 
 #ifdef MMX
@@ -1357,7 +1362,9 @@ void updateVideoMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
                 CHECKMENUSTATE((videoOption == VIDEO_800x600)));
   EnableMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN800X600,
-                 ENABLEMENU(mode800Available));  
+                 ENABLEMENU(mode800Available));
+  CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREEN,
+                CHECKMENUSTATE(videoOption == VIDEO_OTHER));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_DISABLESFX,
                 CHECKMENUSTATE(cpuDisableSfx));
   CheckMenuItem(menu, ID_OPTIONS_VIDEO_FULLSCREENSTRETCHTOFIT,
@@ -1370,6 +1377,8 @@ void updateVideoMenu(HMENU menu)
   HMENU sub = GetSubMenu(menu, 15);
   if(sub == NULL)
     sub= GetSubMenu(menu, 16);
+  if(sub == NULL)
+    sub = GetSubMenu(menu, 17);
   if(sub != NULL)
     updateLayersMenu(sub);
 }
@@ -2560,7 +2569,22 @@ void adjustDestRect()
       dest.right = 800;
       dest.bottom = 600;
     }          
-  }  
+  }
+
+  if(videoOption == VIDEO_OTHER) {
+    int top = (fsHeight - surfaceSizeY) / 2;
+    int left = (fsWidth - surfaceSizeX) / 2;
+    dest.top += top;
+    dest.bottom += top;
+    dest.left += left;
+    dest.right += left;
+    if(fullScreenStretch) {
+      dest.top = 0+menuSkip;
+      dest.left = 0;
+      dest.right = fsWidth;
+      dest.bottom = fsHeight;
+    }          
+  }    
 }
 
 void updateIFB()
@@ -2597,6 +2621,9 @@ void updateIFB()
 
 void updateFilter()
 {
+  filterWidth = sizeX;
+  filterHeight = sizeY;
+  
   if(systemColorDepth == 16 && (videoOption > VIDEO_1X &&
                           videoOption != VIDEO_320x240)) {
     switch(filterType) {
@@ -2635,9 +2662,8 @@ void updateFilter()
       filterFunction = BilinearPlus;
       break;
     }
+    
     if(filterType != 0) {
-      filterWidth = sizeX;
-      filterHeight = sizeY;
       rect.right = sizeX*2;
       rect.bottom = sizeY*2;
       memset(delta,255,sizeof(delta));
@@ -2685,8 +2711,6 @@ void updateFilter()
         break;
       }
       if(filterType != 0) {
-        filterWidth = sizeX;
-        filterHeight = sizeY;
         rect.right = sizeX*2;
         rect.bottom = sizeY*2;
         memset(delta,255,sizeof(delta));
@@ -2737,14 +2761,20 @@ void winCheckMenuBarInfo(int& winSizeX, int& winSizeY)
 
 void updateWindowSize(int value)
 {
-  if(value != videoOption) {
-    regSetDwordValue("video", value);
+  regSetDwordValue("video", value);
+
+  if(value == VIDEO_OTHER) {
+    regSetDwordValue("fsWidth", fsWidth);
+    regSetDwordValue("fsHeight", fsHeight);
+    regSetDwordValue("fsColorDepth", fsColorDepth);
   }
   
   if(((value >= VIDEO_320x240) &&
-     (videoOption != value)) ||
+      (videoOption != value)) ||
      (videoOption >= VIDEO_320x240 &&
-      value <= VIDEO_4X)) {
+      value <= VIDEO_4X) ||
+     fsForceChange) {
+    fsForceChange = false;
     changingVideoSize = TRUE;
     shutdownDirectDraw();
     shutdownDirectInput();
@@ -2752,11 +2782,14 @@ void updateWindowSize(int value)
     DestroyWindow(hWindow);
     hWindow = NULL;
     videoOption = value;
+    OutputDebugString("Shutdown complete\n");
     if(!initDirectDraw()) {
       if(videoOption == VIDEO_320x240 ||
          videoOption == VIDEO_640x480 ||
-         videoOption == VIDEO_800x600)
+         videoOption == VIDEO_800x600 ||
+         videoOption == VIDEO_OTHER)
         regSetDwordValue("video", VIDEO_1X);
+      OutputDebugString("InitDDraw failed\n");
       changingVideoSize = FALSE;
       fileExit();
       return;
@@ -2796,7 +2829,7 @@ void updateWindowSize(int value)
   
   surfaceSizeX = sizeX;
   surfaceSizeY = sizeY;
-  
+
   switch(videoOption) {
   case VIDEO_1X:
     surfaceSizeX = sizeX;
@@ -2858,6 +2891,21 @@ void updateWindowSize(int value)
       surfaceSizeY = 600;
     }
     break;
+  case VIDEO_OTHER:
+    {
+      int scaleX = 1;
+      int scaleY = 1;
+      scaleX = (fsWidth / sizeX);
+      scaleY = (fsHeight / sizeY);
+      int min = scaleX < scaleY ? scaleX : scaleY;
+      surfaceSizeX = min * sizeX;
+      surfaceSizeY = min * sizeY;
+      if(fullScreenStretch) {
+        surfaceSizeX = fsWidth;
+        surfaceSizeY = fsHeight;
+      }
+    }
+    break;
   }
 
   rect.right = sizeX;
@@ -2896,6 +2944,7 @@ void updateWindowSize(int value)
   adjustDestRect();
 
   updateFilter();
+  updateIFB();
   
   RedrawWindow(hWindow,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);  
 }
@@ -2926,9 +2975,12 @@ void updateVideoSize(UINT id)
   case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
     value = VIDEO_800x600;
     break;
+  case ID_OPTIONS_VIDEO_FULLSCREEN:
+    value = VIDEO_OTHER;
+    break;
   }
 
-  if(videoOption == value)
+  if(videoOption == value && value != VIDEO_OTHER)
     return;
 
   updateWindowSize(value);
@@ -3723,6 +3775,25 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
       updateVideoSize(wParam&0xffff);
       break;
+    case ID_OPTIONS_VIDEO_FULLSCREEN:
+      {
+        int size = winVideoModeSelect(hWindow, pDirectDraw);
+        if(size != -1) {
+          int width = (size >> 12) & 4095;
+          int height = (size & 4095);
+          int colorDepth = (size >> 24);
+          if(width != fsWidth ||
+             height != fsHeight ||
+             colorDepth != fsColorDepth) {
+            fsForceChange = true;
+            fsWidth = width;
+            fsHeight = height;
+            fsColorDepth = colorDepth;
+            updateVideoSize(wParam & 0xffff);
+          }
+        }
+      }
+      break;
     case ID_OPTIONS_VIDEO_DISABLESFX:
       cpuDisableSfx = !cpuDisableSfx;
       regSetDwordValue("disableSfx", cpuDisableSfx);
@@ -4291,6 +4362,19 @@ BOOL initDirectDraw()
       surfaceSizeY = 600;
     }    
     break;
+  case VIDEO_OTHER:
+    {
+      int scaleX = (fsWidth / sizeX);
+      int scaleY = (fsHeight / sizeY);
+      int min = scaleX < scaleY ? scaleX : scaleY;
+      surfaceSizeX = sizeX * min;
+      surfaceSizeY = sizeY * min;
+      if(fullScreenStretch) {
+        surfaceSizeX = fsWidth;
+        surfaceSizeY = fsHeight;
+      }
+    }
+    break;
   }
   
   rect.left = 0;
@@ -4456,6 +4540,27 @@ BOOL initDirectDraw()
       return FALSE;
     }
   }
+
+  if(videoOption == VIDEO_OTHER) {
+    char buffer[50];
+    OutputDebugString("Setting resoulution\n");
+    sprintf(buffer, "W: %d H: %d D: %d\n", fsWidth, fsHeight, fsColorDepth);
+    OutputDebugString(buffer);
+    hret = pDirectDraw->SetDisplayMode(fsWidth,
+                                       fsHeight,
+                                       fsColorDepth,
+                                       0,
+                                       0);
+    if(hret != DD_OK) {
+      sprintf(buffer, "SDM %08x\n", hret);
+      OutputDebugString(buffer);
+      log("Error SetDisplayMode %08x\n", hret);      
+      videoOption = VIDEO_1X;
+      regSetDwordValue("video", videoOption);
+      //      errorMessage(myLoadString(IDS_ERROR_DISP_DRAWSET), hret);
+      return FALSE;
+    }
+  }
   
   DDSURFACEDESC2 ddsd;
   ZeroMemory(&ddsd,sizeof(ddsd));
@@ -4609,6 +4714,7 @@ BOOL initDirectDraw()
     systemGbPalette[i++] = 0;
   }
   updateFilter();
+  updateIFB();
   
   DragAcceptFiles(hWindow, TRUE);
   
@@ -4725,7 +4831,16 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
 
   videoOption = regQueryDwordValue("video", 0);
 
-  if(videoOption < 0 || videoOption > VIDEO_800x600)
+  if(videoOption < 0 || videoOption > VIDEO_OTHER)
+    videoOption = 0;
+
+  fsWidth = regQueryDwordValue("fsWidth", 0);
+  fsHeight = regQueryDwordValue("fsHeight", 0);
+  fsColorDepth = regQueryDwordValue("fsColorDepth", 0);
+
+  if(fsWidth < 0 || fsWidth > 4095 || fsHeight < 0 || fsHeight > 4095)
+    videoOption = 0;
+  if(fsColorDepth != 16 && fsColorDepth != 24 && fsColorDepth != 32)
     videoOption = 0;
 
   windowPositionX = regQueryDwordValue("windowX", 0);
@@ -5896,7 +6011,7 @@ void systemMessage(int number, char *defaultMsg, ...)
   va_start(valist, defaultMsg);
   vsprintf(buffer, msg, valist);
   
-  MessageBox(GetTopWindow(hWindow), buffer, winResLoadString(IDS_ERROR),
+  MessageBox(hWindow, buffer, winResLoadString(IDS_ERROR),
              MB_OK | MB_ICONERROR);
   va_end(valist);
 }
