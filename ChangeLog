@@ -1,3 +1,7 @@
+2002-10-23  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src\win32\Win32.cpp (initApp): remember freeze recent list flag
+
 2002-10-22  Forgotten  <forgotten@users.sourceforge.net>
 	
 	* win32\.cvsignore: added output directories and MSVC files to ignore

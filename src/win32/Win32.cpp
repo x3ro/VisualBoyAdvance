@@ -3230,6 +3230,7 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_FILE_RECENT_FREEZE:
       recentFreeze = !recentFreeze;
+      regSetDwordValue("recentFreeze", recentFreeze);
       break;
     case ID_FILE_MRU_FILE1:
     case ID_FILE_MRU_FILE2:
@@ -4275,6 +4276,8 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
   captureFormat = regQueryDwordValue("captureFormat", 0);
 
   removeIntros = regQueryDwordValue("removeIntros", 0);
+
+  recentFreeze = regQueryDwordValue("recentFreeze", 0);
 
   if(!initDirectDraw()) {
     if(videoOption == VIDEO_320x240 ||
