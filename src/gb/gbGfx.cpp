@@ -192,7 +192,10 @@ void gbRenderLine()
         tile_pattern_address = tile_pattern + tile * 16 + by * 2;
       }
     } else {
-      memset(gbLineMix, 0, 160*2);
+      for(int i = 0; i < 160; i++) {
+        gbLineMix[i] = gbPalette[0];
+        gbLineBuffer[i] = 0;
+      }
     }
     
     // do the window display
@@ -316,7 +319,10 @@ void gbRenderLine()
       }
     }
   } else {
-    memset(gbLineMix, 0xff, 160*2);
+    for(int i = 0; i < 160; i++) {
+      gbLineMix[i] = gbPalette[0];
+      gbLineBuffer[i] = 0;
+    }
   }
 }
 
@@ -406,7 +412,7 @@ void gbDrawSpriteTile(int tile, int x,int y,int t, int flags,
           if(sprite < spriteNumber)
             continue;
         } else {
-          if(spriteX < x)
+          if(spriteX < x+8)
             continue;
         }
       }
@@ -416,7 +422,7 @@ void gbDrawSpriteTile(int tile, int x,int y,int t, int flags,
     gbLineBuffer[xxx] = 0x200 + spriteNumber;
 
     // make sure that sprites will work even in CGB mode
-    if(gbCgbMode && !gbSgbMode) {
+    if(gbCgbMode) {
       c = c + (flags & 0x07)*4 + 32;
     } else {
       c = pal[c];
@@ -443,8 +449,9 @@ void gbDrawSpriteTile(int tile, int x,int y,int t, int flags,
 
 void gbDrawSprites()
 {
-  int x =0;
-  int y =0;
+  int x = 0;
+  int y = 0;
+  int count = 0;
   
   int size = (register_LCDC & 4);
 
@@ -468,9 +475,15 @@ void gbDrawSprites()
         int t = yc -y + 16;
         if(size && t >=0 && t < 16) {
           gbDrawSpriteTile(tile,x-8,yc,t,flags,size,i);
-        } else if(!size && t >= 0 && t < 8)
+          count++;
+        } else if(!size && t >= 0 && t < 8) {
           gbDrawSpriteTile(tile, x-8, yc, t, flags,size,i);
+          count++;
+        }
       }
+      // sprite limit reached!
+      if(count >= 10)
+        break;
     }   
   }
 }
