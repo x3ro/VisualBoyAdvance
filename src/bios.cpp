@@ -231,6 +231,9 @@ void BIOS_CpuSet()
 
   // 32-bit ?
   if((cnt >> 26) & 1) {
+    // needed for 32-bit mode!
+    source &= 0xFFFFFFFC;
+    dest &= 0xFFFFFFFC;
     // fill ?
     if((cnt >> 24) & 1) {
       u32 value = CPUReadMemory(source);
@@ -285,6 +288,10 @@ void BIOS_CpuFastSet()
   if(((source & 0xe000000) == 0) ||
      ((source + (((cnt << 11)>>9) & 0x1fffff)) & 0xe000000) == 0)
     return;
+
+  // needed for 32-bit mode!
+  source &= 0xFFFFFFFC;
+  dest &= 0xFFFFFFFC;
   
   int count = cnt & 0x1FFFFF;
   

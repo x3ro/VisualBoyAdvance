@@ -2224,9 +2224,9 @@ int main(int argc, char **argv)
       int size = CPULoadRom(szFile);
       failed = (size == 0);
       if(!failed) {
-        if(cpuEnhancedDetection && cpuSaveType == 0) {
-          utilGBAFindSave(rom, size);
-        }
+        //        if(cpuEnhancedDetection && cpuSaveType == 0) {
+        //          utilGBAFindSave(rom, size);
+        //        }
 
         sdlApplyPerImagePreferences();
         

@@ -1,3 +1,9 @@
+2003-08-23  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Win32.cpp (updateRenderMethod0): return true if render type did not change
+	* src/bios.cpp (BIOS_CpuSet): fixed bug introduced in previous fix
+	* src/GBA.cpp (CPULoop): fixed slowdown problem introduced in version 1.6
+
 2003-08-09  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/GBA.cpp (CPUCheckDMA): fix minor DMA problem introduced with previous fixes

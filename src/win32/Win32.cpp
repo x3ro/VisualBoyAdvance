@@ -1229,7 +1229,7 @@ bool updateRenderMethod0(bool force)
     }
     changingVideoSize = FALSE;
   }
-  return false;
+  return true;
 }
 
 bool updateRenderMethod(bool force)
@@ -1699,6 +1699,8 @@ void updateSaveTypeMenu(HMENU menu)
                 CHECKMENUSTATE(winFlashSize == 0x20000));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION,
                 CHECKMENUSTATE(cpuEnhancedDetection));
+  EnableMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION,
+                 ENABLEMENU(FALSE));
 }
 
 void updateEmulatorMenu(HMENU menu)
@@ -5451,9 +5453,9 @@ BOOL fileOpen()
     rtcEnable(winRtcEnable);
     cpuSaveType = winSaveType;
 
-    if(cpuEnhancedDetection && winSaveType == 0) {
-      utilGBAFindSave(rom, size);
-    }
+    //    if(cpuEnhancedDetection && winSaveType == 0) {
+    //      utilGBAFindSave(rom, size);
+    //    }
     GetModuleFileName(NULL, winBuffer, 2048);
 
     char *p = strrchr(winBuffer, '\\');

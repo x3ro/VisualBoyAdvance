@@ -78,7 +78,6 @@ bool cpuSramEnabled = true;
 bool cpuFlashEnabled = true;
 bool cpuEEPROMEnabled = true;
 bool cpuEEPROMSensorEnabled = false;
-bool cpuBreakThumb = false;
 
 #ifdef PROFILING
 int profilingTicks = 0;
@@ -1605,7 +1604,6 @@ void CPUUndefinedException()
   armIrqEnable = false;
   armNextPC = 0x04;
   reg[15].I += 4;  
-  cpuBreakThumb = true;
 }
 
 void CPUSoftwareInterrupt()
@@ -1619,7 +1617,6 @@ void CPUSoftwareInterrupt()
   armIrqEnable = false;
   armNextPC = 0x08;
   reg[15].I += 4;
-  cpuBreakThumb = true;
 }
 
 void CPUSoftwareInterrupt(int comment)
@@ -3277,8 +3274,6 @@ void CPUInterrupt()
   armNextPC = reg[15].I;
   reg[15].I += 4;
 
-  cpuBreakThumb = true;
-
   //  if(!holdState)
   biosProtected[0] = 0x02;
   biosProtected[1] = 0xc0;
@@ -3359,12 +3354,7 @@ void CPULoop(int ticks)
       if(armState) {
 #include "arm-new.h"
       } else {
-        cpuBreakThumb = false;
-        while(cpuLoopTicks > 0 && !cpuBreakThumb) {
 #include "thumb.h"
-          cpuLoopTicks -= clockTicks;
-        }
-        clockTicks = 0;
       }
     } else {
       clockTicks = lcdTicks;
