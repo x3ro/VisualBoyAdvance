@@ -1658,9 +1658,9 @@ void updateSaveTypeMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR,
                 CHECKMENUSTATE(winSaveType == 4));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K,
-                CHECKMENUSTATE(flashSize == 0x10000));
+                CHECKMENUSTATE(winFlashSize == 0x10000));
   CheckMenuItem(menu, ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M,
-                CHECKMENUSTATE(flashSize == 0x20000));
+                CHECKMENUSTATE(winFlashSize == 0x20000));
 }
 
 void updateEmulatorMenu(HMENU menu)
@@ -3596,12 +3596,12 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_LBUTTONUP:
     winMouseOn();
     break;
-  case WM_RBUTTONDOWN:
-    winMouseOn();
-    break;
   case WM_RBUTTONUP:
     winMouseOn();
     break;
+  case WM_RBUTTONDOWN:
+    winMouseOn();
+    break;    
   case WM_CONTEXTMENU:
     winMouseOn();
     if(skin) {
@@ -3609,20 +3609,50 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         popup = CreatePopupMenu();
         if(menu != NULL) {
           int count = GetMenuItemCount(menu);
-          for(int i = 0; i < count; i++) {
-            wchar_t buffer[256];
-            MENUITEMINFOW info;
-            ZeroMemory(&info, sizeof(info));
-            info.cbSize = sizeof(info);
-            info.fMask = MIIM_STRING | MIIM_SUBMENU;
-            info.dwTypeData = buffer;
-            info.cch = 256;
-            GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info);
-            AppendMenuW(popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer);
+          OSVERSIONINFO info;
+          info.dwOSVersionInfoSize = sizeof(info);
+          GetVersionEx(&info);
+
+          if(info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+            for(int i = 0; i < count; i++) {
+              char buffer[256];
+              MENUITEMINFO info;
+              ZeroMemory(&info, sizeof(info));
+              info.cbSize = sizeof(info) - sizeof(HBITMAP);
+              info.fMask = MIIM_STRING | MIIM_SUBMENU;
+              info.dwTypeData = buffer;
+              info.cch = 256;
+              if(!GetMenuItemInfo(menu, i, MF_BYPOSITION, &info)) {
+              }
+              if(!AppendMenu(popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer)) {
+              }
+            }
+          } else {
+            for(int i = 0; i < count; i++) {
+              wchar_t buffer[256];
+              MENUITEMINFOW info;
+              ZeroMemory(&info, sizeof(info));
+              info.cbSize = sizeof(info) - sizeof(HBITMAP);
+              info.fMask = MIIM_STRING | MIIM_SUBMENU;
+              info.dwTypeData = buffer;
+              info.cch = 256;
+              if(!GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info)) {
+              }
+              if(!AppendMenuW(popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer)) {
+              }
+            }
           }
         }
       }
-      TrackPopupMenu(popup, 0, LOWORD(lParam), HIWORD(lParam), 0, hWindow, NULL);
+      int x = LOWORD(lParam);
+      int y = HIWORD(lParam);
+      if(x == -1 && y == -1) {
+        x = (dest.left + dest.right) / 2;
+        y = (dest.top + dest.bottom) / 2;
+      }
+      if(!TrackPopupMenu(popup, 0, x, y, 0, hWindow, NULL)) {
+      }
+      return 0;
     }
     break;
   case WM_MBUTTONDOWN:
@@ -4806,6 +4836,11 @@ BOOL initApp(HINSTANCE hInstance, int nCmdShow)
     TRUE : FALSE;
 
   winGbPrinterEnabled = regQueryDwordValue("gbPrinter", 0);
+
+  if(winGbPrinterEnabled)
+    gbSerialFunction = gbPrinterSend;
+  else
+    gbSerialFunction = NULL;  
 
   pauseWhenInactive = regQueryDwordValue("pauseWhenInactive", 1) ?
     true : false;

@@ -1,3 +1,11 @@
+Version 1.5a:
+
+Windows:
+- fixed skin problems on Win 95/98/Me/2000
+- fixed right-click problem on Win 95/98/Me/2000
+- fixed problem when Gameboy Printer was enabled
+- fixed problem on Flash size menu not showing correct setting
+
 Version 1.5:
 
 Core changes:

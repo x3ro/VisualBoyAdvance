@@ -1,4 +1,4 @@
-Welcome to VisualBoyAdvance version 1.4.
+Welcome to VisualBoyAdvance version 1.5a.
 
 Compiling the sources
 ---------------------
@@ -63,9 +63,8 @@ Skins consist of a bitmap (.bmp), a region file (.rgn), a draw rectangle
 on the region and an INI file.
 
 Once you have the bitmap, you the region creator which can be found at
-http://www.flipcode.com/articles/article_win32skins_regioncreator.zip
-to create the region from the bitmap. This allows for irregular skins
-with holes or any shape.
+the downloads section of emulator website along with a sample skin.
+This allows for irregular skins with holes or any shape.
 
 Create the INI file like this:
 [skin]
@@ -82,6 +81,16 @@ draw=20,20,144,160
 
 Skins are only supported in DirectDraw and GDI modes and are also not supported
 in fullscreen mode.
+
+To avoid scaling problems, please not the following:
+
+GBA screen size: 240x160
+GBC screen size without border: 160x144
+GBC screen size with border: 256x224
+
+Not using multiples to these values will cause distortion on the image drawn
+by the emulator. This is not a BUG on the emulator and rather a problem of
+the skin size.
 
 Per game settings
 -----------------

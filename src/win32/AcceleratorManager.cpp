@@ -501,47 +501,98 @@ void CAcceleratorManager::UpdateMenu(HMENU menu)
 {
   int count = GetMenuItemCount(menu);
 
-  MENUITEMINFO info;
-  wchar_t ss[128];
-  ZeroMemory(&info, sizeof(info));
-  info.cbSize = sizeof(info);
-  info.fMask = MIIM_ID | MIIM_SUBMENU;
-  for(int i = 0; i < count; i++) {
-    GetMenuItemInfo(menu, i, TRUE, &info);
-
-    if(info.hSubMenu != NULL) {
-      UpdateMenu(info.hSubMenu);
-    } else {
-      if(info.wID != -1) {
-        MENUITEMINFOW info2;
-        ZeroMemory(&info2, sizeof(info2));
-        info2.cbSize = sizeof(info2);
-        info2.fMask = MIIM_STRING;
-        info2.dwTypeData = ss;
-        info2.cch = 128;
-        GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info2);
-        CStdStringW str = ss;
-        int index = str.Find('\t');
-        if(index != -1)
-          str = str.Left(index);
-
-        CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(info.wID);
-
-        if(it != m_mapAccelTable.end()) {
-          CCmdAccelOb *o = it->second;
-          if(o->m_Accels.begin() != o->m_Accels.end()) {
-            std::list<CAccelsOb*>::iterator j = o->m_Accels.begin();
-
-            CAccelsOb *accel = *j;
-
-            CStdString s;
-            accel->GetString(s);
-            str += "\t";
-            str += s;
+  OSVERSIONINFO info;
+  info.dwOSVersionInfoSize = sizeof(info);
+  GetVersionEx(&info);
+  
+  if(info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+    MENUITEMINFO info;
+    char ss[128];
+    ZeroMemory(&info, sizeof(info));
+    info.cbSize = sizeof(info) - sizeof(HBITMAP);
+    info.fMask = MIIM_ID | MIIM_SUBMENU;
+    for(int i = 0; i < count; i++) {
+      GetMenuItemInfo(menu, i, TRUE, &info);
+      
+      if(info.hSubMenu != NULL) {
+        UpdateMenu(info.hSubMenu);
+      } else {
+        if(info.wID != -1) {
+          MENUITEMINFO info2;
+          ZeroMemory(&info2, sizeof(info2));
+          info2.cbSize = sizeof(info2) - sizeof(HBITMAP);
+          info2.fMask = MIIM_STRING;
+          info2.dwTypeData = ss;
+          info2.cch = 128;
+          GetMenuItemInfo(menu, i, MF_BYPOSITION, &info2);
+          CStdString str = ss;
+          int index = str.Find('\t');
+          if(index != -1)
+            str = str.Left(index);
+          
+          CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(info.wID);
+          
+          if(it != m_mapAccelTable.end()) {
+            CCmdAccelOb *o = it->second;
+            if(o->m_Accels.begin() != o->m_Accels.end()) {
+              std::list<CAccelsOb*>::iterator j = o->m_Accels.begin();
+              
+              CAccelsOb *accel = *j;
+              
+              CStdString s;
+              accel->GetString(s);
+              str += "\t";
+              str += s;
+            }
           }
+          if(str != ss)
+            ModifyMenu(menu, i, MF_BYPOSITION | MF_STRING, info.wID, str);
         }
-        if(str != ss)
-          ModifyMenuW(menu, i, MF_BYPOSITION | MF_STRING, info.wID, str);
+      }
+    }
+  } else {
+    MENUITEMINFO info;
+    wchar_t ss[128];
+    ZeroMemory(&info, sizeof(info));
+    info.cbSize = sizeof(info);
+    info.fMask = MIIM_ID | MIIM_SUBMENU;
+    for(int i = 0; i < count; i++) {
+      GetMenuItemInfo(menu, i, TRUE, &info);
+      
+      if(info.hSubMenu != NULL) {
+        UpdateMenu(info.hSubMenu);
+      } else {
+        if(info.wID != -1) {
+          MENUITEMINFOW info2;
+          ZeroMemory(&info2, sizeof(info2));
+          info2.cbSize = sizeof(info2);
+          info2.fMask = MIIM_STRING;
+          info2.dwTypeData = ss;
+          info2.cch = 128;
+          GetMenuItemInfoW(menu, i, MF_BYPOSITION, &info2);
+          CStdStringW str = ss;
+          int index = str.Find('\t');
+          if(index != -1)
+            str = str.Left(index);
+          
+          CMapWordToCCmdAccelOb::iterator it = m_mapAccelTable.find(info.wID);
+          
+          if(it != m_mapAccelTable.end()) {
+            CCmdAccelOb *o = it->second;
+            if(o->m_Accels.begin() != o->m_Accels.end()) {
+              std::list<CAccelsOb*>::iterator j = o->m_Accels.begin();
+              
+              CAccelsOb *accel = *j;
+              
+              CStdString s;
+              accel->GetString(s);
+              str += "\t";
+              str += s;
+            }
+          }
+          if(str != ss)
+            ModifyMenuW(menu, i, MF_BYPOSITION | MF_STRING, info.wID, str);
+        }
       }
     }
   }

@@ -116,9 +116,6 @@ bool CSkin::Hook(HWND hWnd)
   // this will be our new subclassed window
   m_hWnd = hWnd;
 
-  // set the skin region to the window
-  SetWindowRgn(m_hWnd, m_rgnSkin, true);    
-
   // --------------------------------------------------
   // change window style (get rid of the caption bar)
   // --------------------------------------------------
@@ -138,7 +135,10 @@ bool CSkin::Hook(HWND hWnd)
              FALSE);
   
   SetMenu(m_hWnd, NULL);
-  
+
+   // set the skin region to the window
+  SetWindowRgn(m_hWnd, m_rgnSkin, true);    
+
   // subclass the window procedure
   m_OldWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)SkinWndProc);
 
@@ -155,7 +155,7 @@ bool CSkin::Hook(HWND hWnd)
   m_bHooked = ( m_OldWndProc ? true : false );
 
   // force window repainting
-  InvalidateRect(m_hWnd, NULL, TRUE);
+  RedrawWindow(NULL,NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);  
 
   // successful return if we're hooked.
   return m_bHooked;
@@ -305,7 +305,7 @@ bool CSkin::GetSkinData(const char *skinFile)
   bmpName = path + bmpName;
   rgn = path + rgn;
   
-  m_hBmp = (HBITMAP)LoadImage(NULL, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+  m_hBmp = (HBITMAP)LoadImage(NULL, bmpName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE|LR_CREATEDIBSECTION);
   if (!m_hBmp) return false;
 
   // get skin info
