@@ -39,6 +39,7 @@ ScreenArea::ScreenArea(int _iWidth, int _iHeight, int _iScale) :
 
   set_events(Gdk::EXPOSURE_MASK
              | Gdk::POINTER_MOTION_MASK
+             | Gdk::ENTER_NOTIFY_MASK
              | Gdk::LEAVE_NOTIFY_MASK);
 
   char aiEmptyData[8];
@@ -201,6 +202,19 @@ void ScreenArea::vUpdateSize()
   set_size_request(m_iAreaWidth, m_iAreaHeight);
 }
 
+void ScreenArea::vStartCursorTimeout()
+{
+  m_oCursorSig.disconnect();
+  m_oCursorSig = Glib::signal_timeout().connect(
+    SigC::slot(*this, &ScreenArea::bOnCursorTimeout),
+    3000);
+}
+
+void ScreenArea::vStopCursorTimeout()
+{
+  m_oCursorSig.disconnect();
+}
+
 void ScreenArea::vHideCursor()
 {
   get_window()->set_cursor(*m_poEmptyCursor);
@@ -250,17 +264,23 @@ bool ScreenArea::on_motion_notify_event(GdkEventMotion * _pstEvent)
   {
     vShowCursor();
   }
+  vStartCursorTimeout();
+  return false;
+}
 
-  m_oCursorSig.disconnect();
-  m_oCursorSig = Glib::signal_timeout().connect(SigC::slot(*this, &ScreenArea::bOnCursorTimeout),
-                                                3000, Glib::PRIORITY_DEFAULT_IDLE);
+bool ScreenArea::on_enter_notify_event(GdkEventCrossing * _pstEvent)
+{
+  vStartCursorTimeout();
   return false;
 }
 
 bool ScreenArea::on_leave_notify_event(GdkEventCrossing * _pstEvent)
 {
-  m_oCursorSig.disconnect();
-  vShowCursor();
+  vStopCursorTimeout();
+  if (! m_bShowCursor)
+  {
+    vShowCursor();
+  }
   return false;
 }
 

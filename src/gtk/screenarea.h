@@ -47,8 +47,9 @@ public:
 
 protected:
   virtual bool on_expose_event(GdkEventExpose * _pstEvent);
-  virtual bool on_leave_notify_event(GdkEventCrossing * _pstEvent);
   virtual bool on_motion_notify_event(GdkEventMotion * _pstEvent);
+  virtual bool on_enter_notify_event(GdkEventCrossing * _pstEvent);
+  virtual bool on_leave_notify_event(GdkEventCrossing * _pstEvent);
   virtual bool bOnCursorTimeout();
 
 private:
@@ -68,6 +69,8 @@ private:
   SigC::Connection m_oCursorSig;
 
   void vUpdateSize();
+  void vStartCursorTimeout();
+  void vStopCursorTimeout();
   void vHideCursor();
   void vShowCursor();
 };
