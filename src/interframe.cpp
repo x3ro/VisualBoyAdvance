@@ -400,6 +400,7 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "0:\n"
                   "movq 0(%0), %%mm0\n" // src0
                   "movq 0(%1), %%mm1\n" // src1
+                  "movq %%mm0, 0(%1)\n" // src1 = src0
                   "pand %%mm7, %%mm0\n" // color & colorMask
                   "pand %%mm7, %%mm1\n" // src1 & colorMask
                   "psrlw $1, %%mm0\n" // (color & colorMask) >> 1 (E)
@@ -407,7 +408,6 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "paddw %%mm1, %%mm0\n" // E+F
 
                   "movq %%mm0, 0(%0)\n" // src0 = res
-                  "movq %%mm0, 0(%1)\n" // src1 = res
                   
                   "addl $8, %0\n"
                   "addl $8, %1\n"
@@ -427,6 +427,7 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
     label0:
       movq mm0, qword ptr [eax]; // src0
       movq mm1, qword ptr [ebx]; // src1
+      movq qword ptr [ebx], mm0; // src1 = src0
       pand mm0, mm7; // color & colorMask
       pand mm1, mm7; // src1 & colorMask
       psrlw mm0, 1; // (color & colorMask) >> 1 (E)
@@ -434,7 +435,6 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
       paddw mm0, mm1; // E+F
 
       movq qword ptr [eax], mm0; // src0 = res
-      movq qword ptr [ebx], mm0; // src1 = res
                   
       add eax, 8;
       add ebx, 8;
@@ -476,8 +476,9 @@ void MotionBlurIB(u8 *srcPtr, u32 srcPitch, int width, int height)
   for (int j = 0; j < height;  j++)
     for (int i = 0; i < sPitch; i++) {
       u16 color = src0[pos];
-      src0[pos] = src1[pos] =
+      src0[pos] =
         (((color & colorMask) >> 1) + ((src1[pos] & colorMask) >> 1));
+      src1[pos] = color;
       pos++;
     }
 }
@@ -502,6 +503,7 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "0:\n"
                   "movq 0(%0), %%mm0\n" // src0
                   "movq 0(%1), %%mm1\n" // src1
+                  "movq %%mm0, 0(%1)\n" // src1 = src0
                   "pand %%mm7, %%mm0\n" // color & colorMask
                   "pand %%mm7, %%mm1\n" // src1 & colorMask
                   "psrld $1, %%mm0\n" // (color & colorMask) >> 1 (E)
@@ -509,7 +511,6 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "paddd %%mm1, %%mm0\n" // E+F
 
                   "movq %%mm0, 0(%0)\n" // src0 = res
-                  "movq %%mm0, 0(%1)\n" // src1 = res
                   
                   "addl $8, %0\n"
                   "addl $8, %1\n"
@@ -529,6 +530,7 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
     label0:
       movq mm0, qword ptr [eax]; // src0
       movq mm1, qword ptr [ebx]; // src1
+      movq qword ptr [ebx], mm0; // src1 = src0
       pand mm0, mm7; // color & colorMask
       pand mm1, mm7; // src1 & colorMask
       psrld mm0, 1; // (color & colorMask) >> 1 (E)
@@ -536,7 +538,6 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
       paddd mm0, mm1; // E+F
 
       movq qword ptr [eax], mm0; // src0 = res
-      movq qword ptr [ebx], mm0; // src1 = res
                   
       add eax, 8;
       add ebx, 8;
@@ -578,8 +579,9 @@ void MotionBlurIB32(u8 *srcPtr, u32 srcPitch, int width, int height)
   for (int j = 0; j < height;  j++)
     for (int i = 0; i < sPitch; i++) {
       u32 color = src0[pos];
-      src0[pos] = src1[pos] = (((color & colorMask) >> 1) +
+      src0[pos] = (((color & colorMask) >> 1) +
                    ((src1[pos] & colorMask) >> 1));
+      src1[pos] = color;
       pos++;
     }
 }
