@@ -2,6 +2,9 @@ Version 1.3:
 
 Core changes:
 - added support for Flash 128K (thanks DesktopMan)
+- added checks for out of memory condition
+- fixed message when failed to write battery file (previously always saying
+  failure to open file NULL)
 Windows version:
 - automatically apply IPS patch if it exists
 - added save/load support in the memory viewer

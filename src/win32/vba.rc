@@ -1680,6 +1680,7 @@ BEGIN
     IDS_GSA_CODE_WARNING    "Warning: cheats are for game %s. Current game is %s.\nCodes may not work correctly."
     IDS_INVALID_CBA_CODE    "Invalid CBA code. Format is XXXXXXXX YYYY."
     IDS_CBA_CODE_WARNING    "Warning: Codes seem to be for a different game.\nCodes may not work correctly."
+    IDS_OUT_OF_MEMORY       "Failed to allocate memory for %s"
 END
 
 STRINGTABLE DISCARDABLE 

@@ -1,3 +1,8 @@
+2002-11-26  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/GBA.cpp (CPULoadRom): check for memory allocation error
+	* src/GBA.cpp (CPUWriteBatteryFile): fixed error message when failed to write battery file
+
 2002-11-25  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp (systemSoundInit): correct sound type for big endian systems

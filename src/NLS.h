@@ -56,3 +56,4 @@
 #define MSG_GBA_CODE_WARNING               38
 #define MSG_INVALID_CBA_CODE               39
 #define MSG_CBA_CODE_WARNING               40
+#define MSG_OUT_OF_MEMORY                  41
