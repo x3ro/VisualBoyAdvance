@@ -1206,8 +1206,6 @@ void updateFileMenu(HMENU menu)
                  ENABLEMENU(emulating));
   EnableMenuItem(menu, ID_FILE_SAVE,
                  ENABLEMENU(emulating));
-  EnableMenuItem(menu, ID_FILE_PAUSE,
-                 ENABLEMENU(emulating));
   EnableMenuItem(menu, ID_FILE_RESET,
                  ENABLEMENU(emulating));
   EnableMenuItem(menu, ID_FILE_CLOSE,
@@ -3542,13 +3540,15 @@ WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
     case ID_FILE_PAUSE:
       paused = !paused;
-      if(paused) {
-        soundPause();
-        setScreenSaverEnable(screenSaverState);
-      } else {
-        soundResume();
-        if(screenSaverState)
-          setScreenSaverEnable(FALSE);
+      if(emulating) {
+        if(paused) {
+          soundPause();
+          setScreenSaverEnable(screenSaverState);
+        } else {
+          soundResume();
+          if(screenSaverState)
+            setScreenSaverEnable(FALSE);
+        }
       }
       break;
     case ID_FILE_RESET:

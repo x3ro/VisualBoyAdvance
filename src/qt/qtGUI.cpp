@@ -679,8 +679,8 @@ void qtGUI::fileRecent(int id)
 
 void qtGUI::filePause()
 {
+  paused = !paused;  
   if(emulating) {
-    paused = !paused;
     if(paused)
       timer->stop();
     else
@@ -879,7 +879,6 @@ void qtGUI::updateFilter()
 void qtGUI::updateFileMenu()
 {
   fileMenu->setItemEnabled(0, emulating);
-  fileMenu->setItemEnabled(1, emulating);
   fileMenu->setItemChecked(1, paused);
   fileMenu->setItemEnabled(2, emulating);
   fileMenu->setItemEnabled(3, emulating);

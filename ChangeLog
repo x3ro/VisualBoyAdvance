@@ -1,5 +1,6 @@
 2002-12-09  Forgotten  <forgotten@users.sourceforge.net>
 
+	* src/win32/Win32.cpp (updateFileMenu): allow pausing even if not emulating yet
 	* src/win32/Win32.cpp: added AVI writing support
 
 2002-12-02  Forgotten  <forgotten@users.sourceforge.net>
