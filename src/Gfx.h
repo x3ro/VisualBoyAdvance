@@ -251,9 +251,15 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
     }
   }
   if(mosaicOn) {
-    for(int i = 0; i < 240; i+=2) {
-      for(int m = 1; m < mosaicX; m++) {
-        line[i] = line[i-1]; i++;
+    if(mosaicX > 1) {
+      int m = 1;
+      for(int i = 0; i < 239; i++) {
+        line[i+1] = line[i];
+        m++;
+        if(m == mosaicX) {
+          m = 1;
+          i++;
+        }
       }
     }
   }
@@ -411,9 +417,15 @@ inline void gfxDrawRotScreen(u16 control,
 
   if(control & 0x40) {    
     int mosaicX = (MOSAIC & 0xF) + 1;
-    for(int i = 0; i < 240; i+=2) {
-      for(int m = 1; m < mosaicX; m++) {
-        line[i] = line[i-1]; i++;
+    if(mosaicX > 1) {
+      int m = 1;
+      for(int i = 0; i < 239; i++) {
+        line[i+1] = line[i];
+        m++;
+        if(m == mosaicX) {
+          m = 1;
+          i++;
+        }
       }
     }
   }  
@@ -502,9 +514,15 @@ inline void gfxDrawRotScreen16Bit(u16 control,
 
   if(control & 0x40) {    
     int mosaicX = (MOSAIC & 0xF) + 1;
-    for(int i = 0; i < 240; i+=2) {
-      for(int m = 1; m < mosaicX; m++) {
-        line[i] = line[i-1]; i++;
+    if(mosaicX > 1) {
+      int m = 1;
+      for(int i = 0; i < 239; i++) {
+        line[i+1] = line[i];
+        m++;
+        if(m == mosaicX) {
+          m = 1;
+          i++;
+        }
       }
     }
   }  
@@ -597,9 +615,15 @@ inline void gfxDrawRotScreen256(u16 control,
 
   if(control & 0x40) {    
     int mosaicX = (MOSAIC & 0xF) + 1;
-    for(int i = 0; i < 240; i+=2) {
-      for(int m = 1; m < mosaicX; m++) {
-        line[i] = line[i-1]; i++;
+    if(mosaicX > 1) {
+      int m = 1;
+      for(int i = 0; i < 239; i++) {
+        line[i+1] = line[i];
+        m++;
+        if(m == mosaicX) {
+          m = 1;
+          i++;
+        }
       }
     }
   }    
@@ -690,9 +714,15 @@ inline void gfxDrawRotScreen16Bit160(u16 control,
 
   if(control & 0x40) {    
     int mosaicX = (MOSAIC & 0xF) + 1;
-    for(int i = 0; i < 240; i+=2) {
-      for(int m = 1; m < mosaicX; m++) {
-        line[i] = line[i-1]; i++;
+    if(mosaicX > 1) {
+      int m = 1;
+      for(int i = 0; i < 239; i++) {
+        line[i+1] = line[i];
+        m++;
+        if(m == mosaicX) {
+          m = 1;
+          i++;
+        }
       }
     }
   }      
