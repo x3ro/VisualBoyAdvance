@@ -753,10 +753,6 @@ InputName=2xSaImmx
 # End Source File
 # Begin Source File
 
-SOURCE=..\src\VisualBoyAdvance.exe.manifest
-# End Source File
-# Begin Source File
-
 SOURCE=..\src\win32\VisualBoyAdvance.exe.manifest
 # End Source File
 # Begin Source File
