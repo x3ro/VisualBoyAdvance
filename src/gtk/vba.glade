@@ -50,7 +50,7 @@
 			  <accelerator key="O" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image108">
+			    <widget class="GtkImage" id="image114">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-open</property>
 			      <property name="icon_size">1</property>
@@ -408,6 +408,19 @@
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">_Import</property>
 			  <property name="use_underline">True</property>
+
+			  <child>
+			    <widget class="GtkMenu" id="ImportMenu_menu">
+
+			      <child>
+				<widget class="GtkMenuItem" id="ImportBatteryFile">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">_Battery file...</property>
+				  <property name="use_underline">True</property>
+				</widget>
+			      </child>
+			    </widget>
+			  </child>
 			</widget>
 		      </child>
 
@@ -416,6 +429,19 @@
 			  <property name="visible">True</property>
 			  <property name="label" translatable="yes">E_xport</property>
 			  <property name="use_underline">True</property>
+
+			  <child>
+			    <widget class="GtkMenu" id="ExportMenu_menu">
+
+			      <child>
+				<widget class="GtkMenuItem" id="ExportBatteryFile">
+				  <property name="visible">True</property>
+				  <property name="label" translatable="yes">_Battery file...</property>
+				  <property name="use_underline">True</property>
+				</widget>
+			      </child>
+			    </widget>
+			  </child>
 			</widget>
 		      </child>
 
@@ -454,7 +480,7 @@
 			  <property name="use_underline">True</property>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image109">
+			    <widget class="GtkImage" id="image115">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-close</property>
 			      <property name="icon_size">1</property>
@@ -475,7 +501,7 @@
 			  <accelerator key="X" modifiers="GDK_CONTROL_MASK" signal="activate"/>
 
 			  <child internal-child="image">
-			    <widget class="GtkImage" id="image110">
+			    <widget class="GtkImage" id="image116">
 			      <property name="visible">True</property>
 			      <property name="stock">gtk-quit</property>
 			      <property name="icon_size">1</property>

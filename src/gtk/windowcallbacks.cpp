@@ -244,17 +244,16 @@ void Window::vOnSaveGame()
       sFile += ".sgm";
     }
 
-    if (Glib::file_test(oDialog.get_filename(), Glib::FILE_TEST_EXISTS))
+    if (Glib::file_test(sFile, Glib::FILE_TEST_EXISTS))
     {
-      Gtk::MessageDialog oConfirm(*this,
-                                  _("File already exists. Overwrite it?"),
+      Gtk::MessageDialog oConfirmDialog(*this,
+                                        _("File already exists. Overwrite it?"),
 #ifndef GTKMM20
-                                  false,
+                                        false,
 #endif // ! GTKMM20
-                                  Gtk::MESSAGE_QUESTION,
-                                  Gtk::BUTTONS_YES_NO,
-                                  true);
-      if (oConfirm.run() != Gtk::RESPONSE_YES)
+                                        Gtk::MESSAGE_QUESTION,
+                                        Gtk::BUTTONS_YES_NO);
+      if (oConfirmDialog.run() != Gtk::RESPONSE_YES)
       {
         continue;
       }
@@ -374,9 +373,207 @@ void Window::vOnRecentFreezeToggled(Gtk::CheckMenuItem * _poCMI)
   m_poHistoryConfig->vSetKey("freeze", _poCMI->get_active());
 }
 
-void Window::vOnRecent(std::string _sFile)
+void Window::vOnRecentFile(std::string _sFile)
 {
   bLoadROM(_sFile);
+}
+
+void Window::vOnImportBatteryFile()
+{
+  std::string sSaveDir = m_poDirConfig->sGetKey("saves");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Import battery file"));
+  oDialog.set_transient_for(*this);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
+  }
+  else
+  {
+    oDialog.set_filename(sSaveDir + "/");
+  }
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Import battery file"));
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::OPEN,   Gtk::RESPONSE_OK);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_current_folder(sSaveDir);
+    oDialog.add_shortcut_folder(sSaveDir);
+  }
+
+  Gtk::FileFilter oBatteryFilter;
+  oBatteryFilter.set_name(_("Battery file"));
+  oBatteryFilter.add_pattern("*.[sS][aA][vV]");
+
+  Gtk::FileFilter oFlashFilter;
+  oFlashFilter.set_name(_("Flash save"));
+  oFlashFilter.add_pattern("*.[dD][aA][tT]");
+
+  oDialog.add_filter(oBatteryFilter);
+  oDialog.add_filter(oFlashFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    Gtk::MessageDialog oConfirmDialog(*this,
+                                      _("Importing a battery file will erase any saved games and reset the emulator. Do you want to continue?"),
+#ifndef GTKMM20
+                                      false,
+#endif // ! GTKMM20
+                                      Gtk::MESSAGE_QUESTION,
+                                      Gtk::BUTTONS_YES_NO);
+    if (oConfirmDialog.run() != Gtk::RESPONSE_YES)
+    {
+      continue;
+    }
+
+    if (m_stEmulator.emuReadBattery(oDialog.get_filename().c_str()))
+    {
+      m_stEmulator.emuReset();
+      break;
+    }
+    else
+    {
+      Gtk::MessageDialog oErrorDialog(*this,
+                                      _("Importing the battery file failed."),
+#ifndef GTKMM20
+                                      false,
+#endif // ! GTKMM20
+                                      Gtk::MESSAGE_ERROR,
+                                      Gtk::BUTTONS_CLOSE);
+      oErrorDialog.run();
+    }
+  }
+}
+
+void Window::vOnExportBatteryFile()
+{
+  std::string sSaveDir = m_poDirConfig->sGetKey("saves");
+
+#ifdef GTKMM20
+
+  Gtk::FileSelection oDialog(_("Export battery file"));
+  oDialog.set_transient_for(*this);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_filename(Glib::path_get_dirname(m_sRomFile) + "/");
+  }
+  else
+  {
+    oDialog.set_filename(sSaveDir + "/");
+  }
+
+#else // ! GTKMM20
+
+  Gtk::FileChooserDialog oDialog(*this, _("Export battery file"),
+                                 Gtk::FILE_CHOOSER_ACTION_SAVE);
+  oDialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  oDialog.add_button(Gtk::Stock::SAVE,   Gtk::RESPONSE_OK);
+
+  if (sSaveDir == "")
+  {
+    oDialog.set_current_folder(Glib::path_get_dirname(m_sRomFile));
+  }
+  else
+  {
+    oDialog.set_current_folder(sSaveDir);
+    oDialog.add_shortcut_folder(sSaveDir);
+  }
+
+  Gtk::FileFilter oBatteryFilter;
+  oBatteryFilter.set_name(_("Battery file"));
+  oBatteryFilter.add_pattern("*.[sS][aA][vV]");
+
+  Gtk::FileFilter oFlashFilter;
+  oFlashFilter.set_name(_("Flash save"));
+  oFlashFilter.add_pattern("*.[dD][aA][tT]");
+
+  oDialog.add_filter(oBatteryFilter);
+  oDialog.add_filter(oFlashFilter);
+
+#endif // ! GTKMM20
+
+  while (oDialog.run() == Gtk::RESPONSE_OK)
+  {
+    Glib::ustring sFile = oDialog.get_filename();
+    Glib::ustring sExt;
+
+#ifdef GTKMM20
+
+    sExt = ".sav";
+
+#else // ! GTKMM20
+
+    if (oDialog.get_filter() == &oBatteryFilter)
+    {
+      sExt = ".sav";
+    }
+    else
+    {
+      sExt = ".dat";
+    }
+
+#endif // ! GTKMM20
+
+    if (! bHasSuffix(sFile, sExt, false))
+    {
+      sFile += sExt;
+    }
+
+    if (Glib::file_test(sFile, Glib::FILE_TEST_EXISTS))
+    {
+      Gtk::MessageDialog oConfirmDialog(*this,
+                                        _("File already exists. Overwrite it?"),
+#ifndef GTKMM20
+                                        false,
+#endif // ! GTKMM20
+                                        Gtk::MESSAGE_QUESTION,
+                                        Gtk::BUTTONS_YES_NO);
+      if (oConfirmDialog.run() != Gtk::RESPONSE_YES)
+      {
+        continue;
+      }
+    }
+
+    bool bResult;
+    if (m_eCartridge == CartridgeGB)
+    {
+      bResult = gbWriteBatteryFile(sFile.c_str(), false);
+    }
+    else
+    {
+      bResult = m_stEmulator.emuWriteBattery(sFile.c_str());
+    }
+
+    if (bResult)
+    {
+      break;
+    }
+    else
+    {
+      Gtk::MessageDialog oErrorDialog(*this,
+                                      _("Exporting the battery file failed."),
+#ifndef GTKMM20
+                                      false,
+#endif // ! GTKMM20
+                                      Gtk::MESSAGE_ERROR,
+                                      Gtk::BUTTONS_CLOSE);
+      oErrorDialog.run();
+    }
+  }
 }
 
 void Window::vOnFileClose()
@@ -994,9 +1191,6 @@ bool Window::on_key_press_event(GdkEventKey * _pstEvent)
   {
     return Gtk::Window::on_key_press_event(_pstEvent);
   }
-
-  // TEST
-  printf("scan code: %hd\n", _pstEvent->hardware_keycode);
 
   switch (eKey)
   {

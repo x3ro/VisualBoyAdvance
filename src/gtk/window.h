@@ -138,7 +138,9 @@ protected:
   virtual void vOnFileReset();
   virtual void vOnRecentReset();
   virtual void vOnRecentFreezeToggled(Gtk::CheckMenuItem * _poCMI);
-  virtual void vOnRecent(std::string _sFile);
+  virtual void vOnRecentFile(std::string _sFile);
+  virtual void vOnImportBatteryFile();
+  virtual void vOnExportBatteryFile();
   virtual void vOnFileClose();
   virtual void vOnFileExit();
   virtual void vOnFrameskipToggled(Gtk::CheckMenuItem * _poCMI, int _iValue);

@@ -204,6 +204,18 @@ Window::Window(GtkWindow * _pstWindow, const Glib::RefPtr<Xml> & _poXml) :
                                     SigC::slot(*this, &Window::vOnRecentFreezeToggled),
                                     poCMI));
 
+  // Import menu
+  //
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("ImportBatteryFile"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnImportBatteryFile));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
+  // Export menu
+  //
+  poMI = dynamic_cast<Gtk::MenuItem *>(_poXml->get_widget("ExportBatteryFile"));
+  poMI->signal_activate().connect(SigC::slot(*this, &Window::vOnExportBatteryFile));
+  m_listSensitiveWhenPlaying.push_back(poMI);
+
   // Frameskip menu
   //
   struct
@@ -1144,7 +1156,7 @@ void Window::vUpdateHistoryMenu()
     m_oTooltips.set_tip(*poIMI, *it);
 
     poIMI->signal_activate().connect(SigC::bind<std::string>(
-                                      SigC::slot(*this, &Window::vOnRecent),
+                                      SigC::slot(*this, &Window::vOnRecentFile),
                                       *it));
 
     poIMI->set_accel_key(Gtk::AccelKey(uiAccelKey, Gdk::CONTROL_MASK));
