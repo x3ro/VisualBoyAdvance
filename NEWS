@@ -1,3 +1,26 @@
+Version 1.5.1:
+
+Core changes:
+- minor rendering optimization
+- added support for AR codes (thanks parasytic and pokemonhacker)
+- no longer allow L+R or U+D to be reported as pressed
+- fixed RTC problem on last day of the month
+
+Windows:
+- added skin button support
+- added AVI sound support (thanks to phaeron)
+- all accelerators can now be customized or removed
+- fixed full screen problem in OpenGL mode
+- fixed some problems with stretch to fit
+- main skin region is now optional for pure rectangular skins
+
+SDL version:
+- changed default separator on config file to a equal sign
+- changed pause when inactive default to false to fix problems debugging
+
+Porting:
+- added PowerPC assembly code (thanks Jeffrey Lim)
+
 Version 1.5a:
 
 Windows:

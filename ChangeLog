@@ -1,6 +1,46 @@
+2003-06-03  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/RTC.cpp (rtcWrite): fixed problem on last day of the month
+
 2003-06-02  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/SDL.cpp: changed pause when inactive default to false
+
+2003-05-28  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/arm-new.h: added PowerPC assembly code contributed by Jeffrey Lim
+	* src/thumb.h: added PowerPC assembly code contributed by Jeffrey Lim
+
+2003-05-26  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/skin.cpp: make skin region optional
+	* src/Cheats.cpp (cheatsCheckKeys): extra AR support
+	* src/win32/Win32.cpp (systemReadJoypad): disallow L+R,U+D to be pressed together
+	* src/SDL.cpp (systemReadJoypad): disallow L+R,U+D to be pressed together
+
+2003-05-22  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/Cheats.cpp: add support for AR codes (thanks P.S.)
+
+2003-05-20  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/skinButton.cpp (OnMouseLeave): try to detect when mouse is not over button better
+
+2003-05-14  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/OpenGL.cpp: fix fullscreen problem
+	* src/win32/Win32.cpp: fix stretch to fit problem
+	* src/win32/Direct3D.cpp: fix stretch to fit problem
+	* src/win32/GDIDisplay.cpp: fix speed display
+
+2003-05-13  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/VisualBoyAdvance.cfg: changed separator to equal sign
+	* src/win32/Wnd.cpp: added default and create message support
+	* src/win32/Win32.cpp (WindowProc): update menu with accelerators when changing modes
+	* src/win32/Commands.cpp (winAccelGetID): added method to retrieve accelerator IDs and minimize function
+	* src/win32/skin.cpp: added button support and error messages
+	* src/win32/skinButton.cpp: created
 
 2003-04-24  Forgotten  <forgotten@users.sourceforge.net>
 

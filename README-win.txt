@@ -1,4 +1,4 @@
-Welcome to VisualBoyAdvance version 1.5a.
+Welcome to VisualBoyAdvance version 1.5.1.
 
 Compiling the sources
 ---------------------
@@ -71,6 +71,50 @@ Create the INI file like this:
 image=<relative path from ini to image bitmap>
 region=<relative path from ini to image region>
 draw=<draw rectangle defined as x,y,width,height separated by commas>
+buttons=<number of buttons in the skin> (optional)
+
+Then, for each button with n starting a 0:
+
+[button-<n>]
+normal=<relative path to button normal bitmap>
+down=<relative path to button pressed bitmap>
+over=<relative path to button hover bitmap - mouse over the button> (optional)
+id=<id of button action, menu or emulator joypad button - see below)
+rect=<rectangle where the button is to be drawn>
+region=<region to create a non rectangular button> (optional)
+
+The id member can be one of the values found under Tools->Customize to have an
+action button.
+
+If the intended use for the button is to open a menu, it can be one of the
+following values:
+
+MENUFILE    - The File Menu
+MENUOPTIONS - The Options Menu
+MENUCHEAT   - The Cheat Menu
+MENUTOOLS   - The Tools Menu
+MENUHELP    - The Help Menu
+
+If the intended use for the button is to provide a joypad button, then the
+it can be one of the following values:
+
+A        - A button
+B        - B button
+SEL      - SELECT button 
+START    - START button
+R        - right
+L        - left
+U        - up
+D        - down
+BR       - RIGHT button (shoulder)
+BL       - LEFT button (shoulder)
+SPEED    - speed up button (emulator)
+CAPTURE  - screen capture (emulator)
+GS       - GS/AR button (cheating)
+UR       - up and right combination
+UL       - up and left combination
+DR       - down and right combination
+DL       - down and left combination
 
 Example:
 
