@@ -5189,7 +5189,7 @@ BOOL fileOpen()
     strncpy(buffer, (const char *)&rom[0xac], 4);
     buffer[4] = 0;
 
-    strcat(winBuffer, "\\vba-games.ini");
+    strcat(winBuffer, "\\vba-over.ini");
     
     UINT i = GetPrivateProfileInt(buffer,
                                   "rtcEnabled",

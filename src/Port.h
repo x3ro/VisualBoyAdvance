@@ -32,6 +32,44 @@ static inline u32 swap32(u32 v)
 }
 
 #ifdef WORDS_BIGENDIAN
+#if defined(__GNUC__) && defined(__ppc__)
+inline u32 READ32LE(const void* address)
+{
+  register int ReturnValue;
+  asm volatile("lwbrx %0, 0, %1\n"
+               : "=r" (ReturnValue)
+               : "r" (address)
+               );
+  return ReturnValue;
+}
+inline u32 READ16LE(const void* address)
+{
+  register int ReturnValue;
+  asm volatile("lhbrx %0, 0, %1\n"
+               : "=r" (ReturnValue)
+               : "r" (address)
+               );
+  return ReturnValue;
+}
+
+inline void WRITE32LE(void* address, u32 Value)
+{
+  asm volatile("stwbrx %0, 0, %1\n"
+               : // No outputs
+               : "r" (Value), "r" (address)
+               : "memory"
+               );
+}
+
+inline void WRITE16LE(void* address, u32 Value)
+{
+  asm volatile("sthbrx %0, 0, %1\n"
+               : // No outputs
+               : "r" (Value), "r" (address)
+               : "memory"
+               );
+}
+#else
 #define READ16LE(x) \
   swap16(*((u16 *)(x)))
 #define READ32LE(x) \
@@ -40,6 +78,7 @@ static inline u32 swap32(u32 v)
   *((u16 *)x) = swap16((v))
 #define WRITE32LE(x,v) \
   *((u32 *)x) = swap32((v))
+#endif
 #else
 #define READ16LE(x) \
   *((u16 *)x)

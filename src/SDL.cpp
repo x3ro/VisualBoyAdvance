@@ -1196,12 +1196,12 @@ void sdlReadPreferences()
 
 static void sdlApplyPerImagePreferences()
 {
-  FILE *f = sdlFindFile("vba-games.ini");
+  FILE *f = sdlFindFile("vba-over.ini");
   if(!f) {
-    fprintf(stderr, "vba-games.ini NOT FOUND (using emulator settings)\n");
+    fprintf(stderr, "vba-over.ini NOT FOUND (using emulator settings)\n");
     return;
   } else
-    fprintf(stderr, "Reading vba-games.ini\n");
+    fprintf(stderr, "Reading vba-over.ini\n");
 
   char buffer[7];
   buffer[0] = '[';

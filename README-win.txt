@@ -88,7 +88,7 @@ Per game settings
 
 Version 1.5 introduced the support for per game settings for GBA games. You
 can defined the following settings on a per game basis by using an INI file
-in the same directory as the emulator:
+called vba-over.ini in the same directory as the emulator:
 
 rtcEnabled=<0 for false, anything else for true>
 flashSize=<65536 or 131072>

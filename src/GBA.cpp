@@ -1763,8 +1763,8 @@ void CPUCompareVCOUNT()
 
 void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 {
-  // int sm = s >> 24;
-  // int dm = d >> 24;
+  //  int sm = s >> 24;
+  //  int dm = d >> 24;
 
   int sc = c;
 
@@ -3403,6 +3403,7 @@ void CPULoop(int ticks)
       } else {
 #include "thumb.h"
       }
+      clockTicks += cpuMemoryWait[(reg[15].I >> 24) & 15];      
     } else {
       clockTicks = lcdTicks;
 
@@ -3429,8 +3430,6 @@ void CPULoop(int ticks)
       }
 #endif
     }
-
-    clockTicks += cpuMemoryWait[(reg[15].I >> 24) & 15];
     
     cpuLoopTicks -= clockTicks;
     if((cpuLoopTicks <= 0)) {
