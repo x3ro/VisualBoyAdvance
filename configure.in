@@ -90,7 +90,7 @@ AC_SUBST(VBA_MMX)
 AC_SUBST(VBA_EXTRA)
 AC_SUBST(VBA_GP)
 
-CXXFLAGS="$CXXFLAGS -DSDL -DBKPT_SUPPORT -fno-exceptions"
+CXXFLAGS="$CXXFLAGS -DSDL -DPROFILING -DBKPT_SUPPORT -fno-exceptions"
 
 if test "${ac_cv_use_c_core}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
@@ -114,4 +114,4 @@ fi
 
 dnl Checks for library functions.
 
-AC_OUTPUT(Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile)
+AC_OUTPUT(Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile)

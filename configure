@@ -2819,7 +2819,7 @@ fi
 
 
 
-CXXFLAGS="$CXXFLAGS -DSDL -DBKPT_SUPPORT -fno-exceptions"
+CXXFLAGS="$CXXFLAGS -DSDL -DPROFILING -DBKPT_SUPPORT -fno-exceptions"
 
 if test "${ac_cv_use_c_core}" = "yes"; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
@@ -2955,7 +2955,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -3069,7 +3069,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile"}
+CONFIG_FILES=\${CONFIG_FILES-"Makefile win32/Makefile src/Makefile src/gb/Makefile src/gp/Makefile src/i386/Makefile src/prof/Makefile"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then

@@ -83,7 +83,7 @@ VBA_MMX = @VBA_MMX@
 VERSION = @VERSION@
 YACC = @YACC@
 
-SUBDIRS = gb @VBA_EXTRA@
+SUBDIRS = gb prof @VBA_EXTRA@
 EXTRA_SUBDIRS = gp i386
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
@@ -99,7 +99,7 @@ VisualBoyAdvance_SOURCES = \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
 
 
-VisualBoyAdvance_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+VisualBoyAdvance_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
 
 TestEmu_SOURCES = \
@@ -114,7 +114,7 @@ TestEmu_SOURCES = \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
 
 
-TestEmu_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+TestEmu_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
@@ -135,13 +135,13 @@ admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
 Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
 Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
 debugger.o remote.o
-VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a
+VisualBoyAdvance_DEPENDENCIES =  gb/libgb.a prof/libprof.a
 TestEmu_OBJECTS =  TestEmu.o 2xSaI.o tvmode.o pixel.o motionblur.o \
 admame.o simple2x.o Font.o unzip.o Cheats.o EEprom.o Flash.o GBA.o \
 Gfx.o Globals.o Mode0.o Mode1.o Mode2.o Mode3.o Mode4.o Mode5.o Sound.o \
 Sram.o Util.o armdis.o bios.o elf.o expr.o expr-lex.o exprNode.o \
 debugger.o remote.o
-TestEmu_DEPENDENCIES =  gb/libgb.a
+TestEmu_DEPENDENCIES =  gb/libgb.a prof/libprof.a
 CXXFLAGS = @CXXFLAGS@
 CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 CXXLD = $(CXX)

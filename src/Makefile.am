@@ -1,4 +1,4 @@
-SUBDIRS = gb @VBA_EXTRA@
+SUBDIRS = gb prof @VBA_EXTRA@
 EXTRA_SUBDIRS = gp i386
 bin_PROGRAMS = VisualBoyAdvance TestEmu
 
@@ -13,7 +13,7 @@ VisualBoyAdvance_SOURCES = \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
 
-VisualBoyAdvance_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+VisualBoyAdvance_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
 VisualBoyAdvance_LDFLAGS = `sdl-config --libs`
 
 TestEmu_SOURCES = \
@@ -27,7 +27,7 @@ TestEmu_SOURCES = \
 	Gfx.h Globals.h NLS.h Port.h Sound.h Sram.h System.h Util.h armdis.h \
 	bios.h debugger.h elf.h expr.cpp.h exprNode.h unzip.h
 
-TestEmu_LDADD = gb/libgb.a @VBA_GP@ @VBA_MMX@
+TestEmu_LDADD = gb/libgb.a prof/libprof.a @VBA_GP@ @VBA_MMX@
 TestEmu_LDFLAGS = 
 
 EXTRA_DIST = \
