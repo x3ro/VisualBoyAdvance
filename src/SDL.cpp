@@ -61,9 +61,12 @@ extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
 extern int Init_2xSaI(u32);
-extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);  
+extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
+extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);  
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
-extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);  
+extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
+extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);
+extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);  
 extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
 extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
@@ -2082,6 +2085,8 @@ int main(int argc, char **argv)
     if(systemColorDepth != 32)
       filter = NULL;
     RGB_LOW_BITS_MASK = 0x010101;
+    if(systemColorDepth == 32)
+      Init_2xSaI(32);
     for(int i = 0; i < 0x10000; i++) {
       systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
         (((i & 0x3e0) >> 5) << systemGreenShift) |
@@ -2100,8 +2105,8 @@ int main(int argc, char **argv)
       filterFunction = NULL;
       break;
     case 1:
-    filterFunction = TVMode;
-    break;
+      filterFunction = TVMode;
+      break;
     case 2:
       filterFunction = _2xSaI;
       break;
@@ -2131,6 +2136,15 @@ int main(int argc, char **argv)
       break;
     case 1:
       filterFunction = TVMode32;
+      break;
+    case 2:
+      filterFunction = _2xSaI32;
+      break;
+    case 3:
+      filterFunction = Super2xSaI32;
+      break;
+    case 4:
+      filterFunction = SuperEagle32;
       break;
     case 5:
       filterFunction = Pixelate32;

@@ -311,8 +311,11 @@ extern void MotionBlur32(u8*,u32,u8*,u8*,u32,int,int);
 extern void TVMode(u8*,u32,u8*,u8*,u32,int,int);
 extern void TVMode32(u8*,u32,u8*,u8*,u32,int,int);
 extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
+extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
+extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);
+extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void AdMame2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Simple2x(u8*,u32,u8*,u8*,u32,int,int);
@@ -1523,15 +1526,15 @@ void updateFilterMenu(HMENU menu)
   CheckMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
                 CHECKMENUSTATE(filterType == 2));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_2XSAI,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_SUPER2XSAI,
                 CHECKMENUSTATE(filterType == 3));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_SUPER2XSAI,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER_SUPEREAGLE,
                 CHECKMENUSTATE(filterType == 4));
   EnableMenuItem(menu, ID_OPTIONS_FILTER_SUPEREAGLE,
-                 ENABLEMENU(systemColorDepth == 16));
+                 ENABLEMENU(systemColorDepth == 16 || systemColorDepth == 32));
   CheckMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
                 CHECKMENUSTATE(filterType == 5));
   EnableMenuItem(menu, ID_OPTIONS_FILTER16BIT_PIXELATEEXPERIMENTAL,
@@ -2494,6 +2497,15 @@ void updateFilter()
       case 1:
         filterFunction = TVMode32;
         break;
+      case 2:
+        filterFunction = _2xSaI32;
+        break;
+      case 3:
+        filterFunction = Super2xSaI32;
+        break;
+      case 4:
+        filterFunction = SuperEagle32;
+        break;        
       case 5:
         filterFunction = Pixelate32;
         break;
@@ -4339,6 +4351,8 @@ BOOL initDirectDraw()
       systemRedShift += 3;
       systemGreenShift += 3;
       systemBlueShift += 3;
+      if(systemColorDepth == 32)
+        Init_2xSaI(32);
     }
   }
 

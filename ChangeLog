@@ -1,3 +1,10 @@
+2002-12-02  Forgotten  <forgotten@users.sourceforge.net>
+
+	* src/win32/Commands.cpp: added missing options
+	* src/win32/Win32.cpp (updateFilter): added 32-bit mode support for Kreed filters
+	* src/SDL.cpp (main): added 32-bit mode support for Kreed filters
+	* src/2xSaI.cpp (Scale_2xSaI): added 32-bit mode support
+
 2002-12-01  Forgotten  <forgotten@users.sourceforge.net>
 
 	* src/tvmode.cpp (TVMode32): 32-bit mode support

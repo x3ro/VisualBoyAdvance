@@ -92,23 +92,31 @@ static u32 greenMask = 0x7E0;
 
 int Init_2xSaI(u32 BitFormat)
 {
-  if (BitFormat == 565) {
-    colorMask = 0xF7DEF7DE;
-    lowPixelMask = 0x08210821;
-    qcolorMask = 0xE79CE79C;
-    qlowpixelMask = 0x18631863;
-    redblueMask = 0xF81F;
-    greenMask = 0x7E0;
-  } else if (BitFormat == 555) {
-    colorMask = 0x7BDE7BDE;
-    lowPixelMask = 0x04210421;
-    qcolorMask = 0x739C739C;
-    qlowpixelMask = 0x0C630C63;
-    redblueMask = 0x7C1F;
-    greenMask = 0x3E0;
-  } else {
+  if(systemColorDepth == 16) {
+    if (BitFormat == 565) {
+      colorMask = 0xF7DEF7DE;
+      lowPixelMask = 0x08210821;
+      qcolorMask = 0xE79CE79C;
+      qlowpixelMask = 0x18631863;
+      redblueMask = 0xF81F;
+      greenMask = 0x7E0;
+    } else if (BitFormat == 555) {
+      colorMask = 0x7BDE7BDE;
+      lowPixelMask = 0x04210421;
+      qcolorMask = 0x739C739C;
+      qlowpixelMask = 0x0C630C63;
+      redblueMask = 0x7C1F;
+      greenMask = 0x3E0;
+    } else {
+      return 0;
+    }
+  } else if(systemColorDepth == 32) {
+    colorMask = 0xfefefe;
+    lowPixelMask = 0x010101;
+    qcolorMask = 0xfcfcfc;
+    qlowpixelMask = 0x030303;
+  } else
     return 0;
-  }
 
 #ifdef MMX
     Init_2xSaIMMX (BitFormat);
@@ -201,6 +209,50 @@ static inline u32 Q_INTERPOLATE (u32 A, u32 B, u32 C, u32 D)
   
   y = (y >> 2) & qlowpixelMask;
   return x + y;
+}
+
+static inline int GetResult1_32 (u32 A, u32 B, u32 C, u32 D,
+                                 u32 /* E */)
+{
+    int x = 0;
+    int y = 0;
+    int r = 0;
+
+    if (A == C)
+      x += 1;
+    else if (B == C)
+      y += 1;
+    if (A == D)
+      x += 1;
+    else if (B == D)
+      y += 1;
+    if (x <= 1)
+      r += 1;
+    if (y <= 1)
+      r -= 1;
+    return r;
+}
+
+static inline int GetResult2_32 (u32 A, u32 B, u32 C, u32 D,
+                                 u32 /* E */)
+{
+  int x = 0;
+  int y = 0;
+  int r = 0;
+  
+  if (A == C)
+    x += 1;
+  else if (B == C)
+    y += 1;
+  if (A == D)
+    x += 1;
+  else if (B == D)
+    y += 1;
+  if (x <= 1)
+    r -= 1;
+  if (y <= 1)
+    r += 1;
+  return r;
 }
 
 #define BLUE_MASK565 0x001F001F
@@ -350,6 +402,130 @@ void Super2xSaI (u8 *srcPtr, u32 srcPitch,
     }
 }
 
+void Super2xSaI32 (u8 *srcPtr, u32 srcPitch,
+                   u8 *deltaPtr, u8 *dstPtr, u32 dstPitch,
+                   int width, int height)
+{
+  u32 *bP;
+  u32 *dP;
+  u32 inc_bP;
+  u32 Nextline = srcPitch >> 2;
+  inc_bP = 1;
+  
+  for (; height; height--) {
+    bP = (u32 *) srcPtr;
+    dP = (u32 *) dstPtr;
+    
+    for (u32 finish = width; finish; finish -= inc_bP) {
+      u32 color4, color5, color6;
+      u32 color1, color2, color3;
+      u32 colorA0, colorA1, colorA2, colorA3,
+        colorB0, colorB1, colorB2, colorB3, colorS1, colorS2;
+      u32 product1a, product1b, product2a, product2b;
+      
+      //---------------------------------------    B1 B2
+      //                                         4  5  6 S2
+      //                                         1  2  3 S1
+      //                                           A1 A2
+      
+      colorB0 = *(bP - Nextline - 1);
+      colorB1 = *(bP - Nextline);
+      colorB2 = *(bP - Nextline + 1);
+      colorB3 = *(bP - Nextline + 2);
+      
+      color4 = *(bP - 1);
+      color5 = *(bP);
+      color6 = *(bP + 1);
+      colorS2 = *(bP + 2);
+      
+      color1 = *(bP + Nextline - 1);
+      color2 = *(bP + Nextline);
+      color3 = *(bP + Nextline + 1);
+      colorS1 = *(bP + Nextline + 2);
+      
+      colorA0 = *(bP + Nextline + Nextline - 1);
+      colorA1 = *(bP + Nextline + Nextline);
+      colorA2 = *(bP + Nextline + Nextline + 1);
+      colorA3 = *(bP + Nextline + Nextline + 2);
+      
+      //--------------------------------------
+      if (color2 == color6 && color5 != color3) {
+        product2b = product1b = color2;
+      } else if (color5 == color3 && color2 != color6) {
+        product2b = product1b = color5;
+      } else if (color5 == color3 && color2 == color6) {
+        register int r = 0;
+        
+        r += GetResult (color6, color5, color1, colorA1);
+        r += GetResult (color6, color5, color4, colorB1);
+        r += GetResult (color6, color5, colorA2, colorS1);
+        r += GetResult (color6, color5, colorB2, colorS2);
+        
+        if (r > 0)
+          product2b = product1b = color6;
+        else if (r < 0)
+          product2b = product1b = color5;
+        else {
+          product2b = product1b = INTERPOLATE (color5, color6);
+        }
+      } else {
+        if (color6 == color3 && color3 == colorA1
+            && color2 != colorA2 && color3 != colorA0)
+          product2b =
+            Q_INTERPOLATE (color3, color3, color3, color2);
+        else if (color5 == color2 && color2 == colorA2
+                 && colorA1 != color3 && color2 != colorA3)
+          product2b =
+            Q_INTERPOLATE (color2, color2, color2, color3);
+        else
+          product2b = INTERPOLATE (color2, color3);
+        
+        if (color6 == color3 && color6 == colorB1
+            && color5 != colorB2 && color6 != colorB0)
+          product1b =
+            Q_INTERPOLATE (color6, color6, color6, color5);
+        else if (color5 == color2 && color5 == colorB2
+                 && colorB1 != color6 && color5 != colorB3)
+          product1b =
+            Q_INTERPOLATE (color6, color5, color5, color5);
+        else
+          product1b = INTERPOLATE (color5, color6);
+      }
+      
+      if (color5 == color3 && color2 != color6 && color4 == color5
+          && color5 != colorA2)
+        product2a = INTERPOLATE (color2, color5);
+      else
+        if (color5 == color1 && color6 == color5
+            && color4 != color2 && color5 != colorA0)
+          product2a = INTERPOLATE (color2, color5);
+        else
+          product2a = color2;
+      
+      if (color2 == color6 && color5 != color3 && color1 == color2
+          && color2 != colorB2)
+        product1a = INTERPOLATE (color2, color5);
+      else
+        if (color4 == color2 && color3 == color2
+            && color1 != color5 && color2 != colorB0)
+          product1a = INTERPOLATE (color2, color5);
+        else
+          product1a = color5;
+      *(dP) = product1a;
+      *(dP+1) = product1b;
+      *(dP + dstPitch/4) = product2a;
+      *(dP + dstPitch/4 + 1) = product2b;
+      
+      bP += inc_bP;
+      dP += 2;
+    }                       // end of for ( finish= width etc..)
+        
+    srcPtr   += srcPitch;
+    dstPtr   += dstPitch * 2;
+    //        deltaPtr += srcPitch;
+  }                 // endof: for (; height; height--)
+}
+
 void SuperEagle (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr, 
                  u8 *dstPtr, u32 dstPitch, int width, int height)
 {
@@ -490,6 +666,134 @@ void SuperEagle (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
       deltaPtr += srcPitch;
     }                   // endof: for (height; height; height--)
   }
+}
+
+void SuperEagle32 (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr, 
+                   u8 *dstPtr, u32 dstPitch, int width, int height)
+{
+  u32  *dP;
+  u32 *bP;
+  u32 *xP;
+  u32 inc_bP;
+
+  inc_bP = 1;
+  
+  u32 Nextline = srcPitch >> 2;
+    
+  for (; height; height--) {
+    bP = (u32 *) srcPtr;
+    xP = (u32 *) deltaPtr;
+    dP = (u32 *)dstPtr;
+    for (u32 finish = width; finish; finish -= inc_bP) {
+      u32 color4, color5, color6;
+      u32 color1, color2, color3;
+      u32 colorA1, colorA2, colorB1, colorB2, colorS1, colorS2;
+      u32 product1a, product1b, product2a, product2b;
+      
+      colorB1 = *(bP - Nextline);
+      colorB2 = *(bP - Nextline + 1);
+      
+      color4 = *(bP - 1);
+      color5 = *(bP);
+      color6 = *(bP + 1);
+      colorS2 = *(bP + 2);
+      
+      color1 = *(bP + Nextline - 1);
+      color2 = *(bP + Nextline);
+      color3 = *(bP + Nextline + 1);
+      colorS1 = *(bP + Nextline + 2);
+      
+      colorA1 = *(bP + Nextline + Nextline);
+      colorA2 = *(bP + Nextline + Nextline + 1);
+      
+      // --------------------------------------
+      if (color2 == color6 && color5 != color3) {
+        product1b = product2a = color2;
+        if ((color1 == color2) || (color6 == colorB2)) {
+          product1a = INTERPOLATE (color2, color5);
+          product1a = INTERPOLATE (color2, product1a);
+          //                       product1a = color2;
+        } else {
+          product1a = INTERPOLATE (color5, color6);
+        }
+        
+        if ((color6 == colorS2) || (color2 == colorA1)) {
+          product2b = INTERPOLATE (color2, color3);
+          product2b = INTERPOLATE (color2, product2b);
+          //                       product2b = color2;
+        } else {
+          product2b = INTERPOLATE (color2, color3);
+        }
+      } else if (color5 == color3 && color2 != color6) {
+        product2b = product1a = color5;
+        
+        if ((colorB1 == color5) || (color3 == colorS1)) {
+          product1b = INTERPOLATE (color5, color6);
+          product1b = INTERPOLATE (color5, product1b);
+          //                       product1b = color5;
+        } else {
+          product1b = INTERPOLATE (color5, color6);
+        }
+        
+        if ((color3 == colorA2) || (color4 == color5)) {
+          product2a = INTERPOLATE (color5, color2);
+          product2a = INTERPOLATE (color5, product2a);
+          //                       product2a = color5;
+        } else {
+          product2a = INTERPOLATE (color2, color3);
+        }
+        
+      } else if (color5 == color3 && color2 == color6) {
+        register int r = 0;
+        
+        r += GetResult (color6, color5, color1, colorA1);
+        r += GetResult (color6, color5, color4, colorB1);
+        r += GetResult (color6, color5, colorA2, colorS1);
+        r += GetResult (color6, color5, colorB2, colorS2);
+        
+        if (r > 0) {
+          product1b = product2a = color2;
+          product1a = product2b = INTERPOLATE (color5, color6);
+        } else if (r < 0) {
+          product2b = product1a = color5;
+          product1b = product2a = INTERPOLATE (color5, color6);
+        } else {
+          product2b = product1a = color5;
+          product1b = product2a = color2;
+        }
+      } else {
+        product2b = product1a = INTERPOLATE (color2, color6);
+        product2b =
+          Q_INTERPOLATE (color3, color3, color3, product2b);
+        product1a =
+          Q_INTERPOLATE (color5, color5, color5, product1a);
+        
+        product2a = product1b = INTERPOLATE (color5, color3);
+        product2a =
+          Q_INTERPOLATE (color2, color2, color2, product2a);
+        product1b =
+          Q_INTERPOLATE (color6, color6, color6, product1b);
+        
+        //                    product1a = color5;
+        //                    product1b = color6;
+        //                    product2a = color2;
+        //                    product2b = color3;
+      }
+      *(dP) = product1a;
+      *(dP+1) = product1b;
+      *(dP + dstPitch/4) = product2a;
+      *(dP + dstPitch/4+1) = product2b;
+      *xP = color5;
+      
+      bP += inc_bP;
+      xP += inc_bP;
+      dP += 2;
+    }                 // end of for ( finish= width etc..)
+      
+    srcPtr += srcPitch;
+    dstPtr += dstPitch * 2;
+    deltaPtr += srcPitch;
+  }                   // endof: for (height; height; height--)
 }
 
 void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
@@ -661,6 +965,159 @@ void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   }
 }
 
+void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
+               u8 *dstPtr, u32 dstPitch, int width, int height)
+{
+  u32  *dP;
+  u32 *bP;
+  u32 inc_bP = 1;
+    
+  u32 Nextline = srcPitch >> 2;
+    
+  for (; height; height--) {
+    bP = (u32 *) srcPtr;
+    dP = (u32 *) dstPtr;
+      
+    for (u32 finish = width; finish; finish -= inc_bP) {
+      register u32 colorA, colorB;
+      u32 colorC, colorD,
+        colorE, colorF, colorG, colorH,
+        colorI, colorJ, colorK, colorL,
+        
+        colorM, colorN, colorO, colorP;
+      u32 product, product1, product2;
+      
+      //---------------------------------------
+      // Map of the pixels:                    I|E F|J
+      //                                       G|A B|K
+      //                                       H|C D|L
+      //                                       M|N O|P
+      colorI = *(bP - Nextline - 1);
+      colorE = *(bP - Nextline);
+      colorF = *(bP - Nextline + 1);
+      colorJ = *(bP - Nextline + 2);
+        
+      colorG = *(bP - 1);
+      colorA = *(bP);
+      colorB = *(bP + 1);
+      colorK = *(bP + 2);
+        
+      colorH = *(bP + Nextline - 1);
+      colorC = *(bP + Nextline);
+      colorD = *(bP + Nextline + 1);
+      colorL = *(bP + Nextline + 2);
+      
+      colorM = *(bP + Nextline + Nextline - 1);
+      colorN = *(bP + Nextline + Nextline);
+      colorO = *(bP + Nextline + Nextline + 1);
+      colorP = *(bP + Nextline + Nextline + 2);
+      
+      if ((colorA == colorD) && (colorB != colorC)) {
+        if (((colorA == colorE) && (colorB == colorL)) ||
+            ((colorA == colorC) && (colorA == colorF)
+             && (colorB != colorE) && (colorB == colorJ))) {
+          product = colorA;
+        } else {
+          product = INTERPOLATE (colorA, colorB);
+        }
+          
+        if (((colorA == colorG) && (colorC == colorO)) ||
+            ((colorA == colorB) && (colorA == colorH)
+             && (colorG != colorC) && (colorC == colorM))) {
+          product1 = colorA;
+        } else {
+          product1 = INTERPOLATE (colorA, colorC);
+        }
+        product2 = colorA;
+      } else if ((colorB == colorC) && (colorA != colorD)) {
+        if (((colorB == colorF) && (colorA == colorH)) ||
+            ((colorB == colorE) && (colorB == colorD)
+             && (colorA != colorF) && (colorA == colorI))) {
+          product = colorB;
+        } else {
+          product = INTERPOLATE (colorA, colorB);
+        }
+        
+        if (((colorC == colorH) && (colorA == colorF)) ||
+            ((colorC == colorG) && (colorC == colorD)
+             && (colorA != colorH) && (colorA == colorI))) {
+          product1 = colorC;
+        } else {
+          product1 = INTERPOLATE (colorA, colorC);
+        }
+        product2 = colorB;
+      } else if ((colorA == colorD) && (colorB == colorC)) {
+        if (colorA == colorB) {
+          product = colorA;
+          product1 = colorA;
+          product2 = colorA;
+        } else {
+          register int r = 0;
+          
+          product1 = INTERPOLATE (colorA, colorC);
+          product = INTERPOLATE (colorA, colorB);
+          
+          r +=
+            GetResult1 (colorA, colorB, colorG, colorE,
+                        colorI);
+          r +=
+            GetResult2 (colorB, colorA, colorK, colorF,
+                        colorJ);
+          r +=
+            GetResult2 (colorB, colorA, colorH, colorN,
+                           colorM);
+          r +=
+            GetResult1 (colorA, colorB, colorL, colorO,
+                           colorP);
+            
+          if (r > 0)
+            product2 = colorA;
+          else if (r < 0)
+            product2 = colorB;
+          else {
+            product2 =
+              Q_INTERPOLATE (colorA, colorB, colorC,
+                               colorD);
+            }
+        }
+      } else {
+        product2 = Q_INTERPOLATE (colorA, colorB, colorC, colorD);
+        
+        if ((colorA == colorC) && (colorA == colorF)
+            && (colorB != colorE) && (colorB == colorJ)) {
+          product = colorA;
+        } else if ((colorB == colorE) && (colorB == colorD)
+                   && (colorA != colorF) && (colorA == colorI)) {
+          product = colorB;
+        } else {
+          product = INTERPOLATE (colorA, colorB);
+        }
+        
+        if ((colorA == colorB) && (colorA == colorH)
+            && (colorG != colorC) && (colorC == colorM)) {
+          product1 = colorA;
+        } else if ((colorC == colorG) && (colorC == colorD)
+                   && (colorA != colorH) && (colorA == colorI)) {
+          product1 = colorC;
+        } else {
+          product1 = INTERPOLATE (colorA, colorC);
+        }
+      }
+      *(dP) = colorA;
+      *(dP + 1) = product;
+      *(dP + dstPitch/4) = product1;
+      *(dP + dstPitch/4 + 1) = product2;
+      
+      bP += inc_bP;
+      dP += 2;
+    }                 // end of for ( finish= width etc..)
+    
+    srcPtr += srcPitch;
+    dstPtr += dstPitch * 2;
+    //    deltaPtr += srcPitch;
+  }                   // endof: for (height; height; height--)
+}
+
 static u32 Bilinear (u32 A, u32 B, u32 x)
 {
   unsigned long areaA, areaB;
@@ -711,7 +1168,7 @@ void Scale_2xSaI (u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
 {
   u8  *dP;
   u16 *bP;
-  
+
   u32 w;
   u32 h;
   u32 dw;
