@@ -243,7 +243,7 @@ int elfSymbolsCount = 0;
 ELFSectionHeader **elfSectionHeaders = NULL;
 char *elfSectionHeadersStringTable = NULL;
 int elfSectionHeadersCount = 0;
-char *elfFileData = NULL;
+u8 *elfFileData = NULL;
 
 CompileUnit *elfCompileUnits = NULL;
 DebugInfo *elfDebugInfo = NULL;
