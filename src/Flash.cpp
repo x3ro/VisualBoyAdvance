@@ -78,8 +78,8 @@ void flashSetSize(int size)
 {
   flashSize = size;
   if(size == 0x10000) {
-    flashDeviceID = 0x32;
-    flashManufacturerID = 0x1b;
+    flashDeviceID = 0x1b;
+    flashManufacturerID = 0x32;
   } else {
     flashDeviceID = 0x09;
     flashManufacturerID = 0xc2;
