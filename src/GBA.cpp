@@ -66,26 +66,19 @@
 #define _stricmp strcasecmp
 #endif
 
-#define CPU_BREAK_LOOP \
-  cpuSavedTicks = cpuSavedTicks - *extCpuLoopTicks;\
-  *extCpuLoopTicks = *extClockTicks;
-
-#define CPU_BREAK_LOOP_2 \
-  cpuSavedTicks = cpuSavedTicks - *extCpuLoopTicks;\
-  *extCpuLoopTicks = *extClockTicks;\
-  *extTicks = *extClockTicks;
 
 extern int emulating;
 
 int cpuDmaTicksToUpdate = 0;
 int cpuDmaCount = 0;
-bool cpuDmaHack = 0;
+bool cpuDmaHack = false;
+bool cpuDmaHack2 = false;
 u32 cpuDmaLast = 0;
 int dummyAddress = 0;
 
-int *extCpuLoopTicks = NULL;
-int *extClockTicks = NULL;
-int *extTicks = NULL;
+bool cpuBreakLoop = true;
+int cpuNextEvent = 0;
+int cpuTotalTicks = 0;
 
 int gbaSaveType = 0; // used to remember the save type on reset
 bool intState = false;
@@ -107,8 +100,8 @@ static int profilSize = 0;
 static u32 profilLowPC = 0;
 static int profilScale = 0;
 #endif
-bool freezeWorkRAM[0x40000];
-bool freezeInternalRAM[0x8000];
+u8 freezeWorkRAM[0x40000];
+u8 freezeInternalRAM[0x8000];
 int lcdTicks = 960;
 bool timer0On = false;
 int timer0Ticks = 0;
@@ -340,7 +333,6 @@ u32 myROM[] = {
 0xE3A00001,
 0xE3A01001,
 0xE92D4010,
-0xE3A0C301,
 0xE3A03000,
 0xE3A04001,
 0xE3500000,
@@ -350,11 +342,12 @@ u32 myROM[] = {
 0x0AFFFFFC,
 0xE8BD4010,
 0xE12FFF1E,
+0xE3A0C301,
 0xE5CC3208,
 0xE15C20B8,
 0xE0110002,
-0x10200002,
-0x114C00B8,
+0x10222000,
+0x114C20B8,
 0xE5CC4208,
 0xE12FFF1E,
 0xE92D500F,
@@ -507,8 +500,6 @@ variable_desc saveGameStruct[] = {
   { NULL, 0 } 
 };
 
-//int cpuLoopTicks = 0;
-int cpuSavedTicks = 0;
 static int romSize = 0x2000000;
 
 #ifdef PROFILING
@@ -556,7 +547,7 @@ inline int CPUUpdateTicks()
   if(soundTicks < cpuLoopTicks)
     cpuLoopTicks = soundTicks;
   
-  if(timer0On && !(TM0CNT & 4) && (timer0Ticks < cpuLoopTicks)) {
+  if(timer0On && (timer0Ticks < cpuLoopTicks)) {
     cpuLoopTicks = timer0Ticks;
   }
   if(timer1On && !(TM1CNT & 4) && (timer1Ticks < cpuLoopTicks)) {
@@ -575,7 +566,6 @@ inline int CPUUpdateTicks()
     }
   }
 #endif
-  cpuSavedTicks = cpuLoopTicks;
   return cpuLoopTicks;
 }
 
@@ -837,6 +827,8 @@ static bool CPUReadState(gzFile gzFile)
   } else {
     THUMB_PREFETCH;
   }
+
+  CPUUpdateRegister(0x204, CPUReadHalfWordQuick(0x4000204));
   
   return true;  
 }
@@ -1498,7 +1490,7 @@ void CPUUpdateFlags(bool breakLoop)
   armIrqEnable = (CPSR & 0x80) ? false : true;
   if(breakLoop) {
     if(armIrqEnable && (IF & IE) && (IME & 1)) {
-      CPU_BREAK_LOOP_2;
+      cpuNextEvent = 0;
     }
   }
 }
@@ -1707,7 +1699,8 @@ void CPUSoftwareInterrupt(int comment)
 #ifdef SDL
   if(comment == 0xf9) {
     emulating = 0;
-    CPU_BREAK_LOOP_2;
+    cpuNextEvent = 0;
+    cpuBreakLoop = true;
     return;
   }
 #endif
@@ -1746,6 +1739,7 @@ void CPUSoftwareInterrupt(int comment)
 #endif    
     holdState = true;
     holdType = -1;
+    cpuNextEvent = 0;
     break;
   case 0x03:
 #ifdef DEV_VERSION
@@ -1757,6 +1751,7 @@ void CPUSoftwareInterrupt(int comment)
     holdState = true;
     holdType = -1;
     stopState = true;
+    cpuNextEvent = 0;
     break;
   case 0x04:
 #ifdef DEV_VERSION
@@ -1909,7 +1904,8 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
       }
     } else {
       while(c != 0) {
-        CPUWriteMemory(d, CPUReadMemory(s));
+        cpuDmaLast = CPUReadMemory(s);
+        CPUWriteMemory(d, cpuDmaLast);
         d += di;
         s += si;
         c--;
@@ -1929,6 +1925,7 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
       while(c != 0) {
         cpuDmaLast = CPUReadHalfWord(s);
         CPUWriteHalfWord(d, cpuDmaLast);
+        cpuDmaLast |= (cpuDmaLast<<16);
         d += di;
         s += si;
         c--;
@@ -1954,17 +1951,17 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 
   cpuDmaTicksToUpdate += totalTicks;
 
-  if(*extCpuLoopTicks >= 0) {
-    CPU_BREAK_LOOP;
-  }
+  cpuNextEvent = 0;
 }
 
-void CPUCheckDMA(int reason, int dmamask)
+bool CPUCheckDMA(int reason, int dmamask)
 {
+  bool res = false;
   cpuDmaHack = 0;
   // DMA 0
   if((DM0CNT_H & 0x8000) && (dmamask & 1)) {
     if(((DM0CNT_H >> 12) & 3) == reason) {
+      res = true;
       u32 sourceIncrement = 4;
       u32 destIncrement = 4;
       switch((DM0CNT_H >> 7) & 3) {
@@ -2000,7 +1997,7 @@ void CPUCheckDMA(int reason, int dmamask)
       doDMA(dma0Source, dma0Dest, sourceIncrement, destIncrement,
             DM0CNT_L ? DM0CNT_L : 0x4000,
             DM0CNT_H & 0x0400);
-      cpuDmaHack = 1;
+      cpuDmaHack = true;
       if(DM0CNT_H & 0x4000) {
         IF |= 0x0100;
         UPDATE_REG(0x202, IF);
@@ -2020,6 +2017,7 @@ void CPUCheckDMA(int reason, int dmamask)
   // DMA 1
   if((DM1CNT_H & 0x8000) && (dmamask & 2)) {
     if(((DM1CNT_H >> 12) & 3) == reason) {
+      res = true;
       u32 sourceIncrement = 4;
       u32 destIncrement = 4;
       switch((DM1CNT_H >> 7) & 3) {
@@ -2067,7 +2065,7 @@ void CPUCheckDMA(int reason, int dmamask)
               DM1CNT_L ? DM1CNT_L : 0x4000,
               DM1CNT_H & 0x0400);
       }
-      cpuDmaHack = 1;
+      cpuDmaHack = true;
         
       if(DM1CNT_H & 0x4000) {
         IF |= 0x0200;
@@ -2088,6 +2086,7 @@ void CPUCheckDMA(int reason, int dmamask)
   // DMA 2
   if((DM2CNT_H & 0x8000) && (dmamask & 4)) {
     if(((DM2CNT_H >> 12) & 3) == reason) {
+      res = true;
       u32 sourceIncrement = 4;
       u32 destIncrement = 4;
       switch((DM2CNT_H >> 7) & 3) {
@@ -2136,7 +2135,7 @@ void CPUCheckDMA(int reason, int dmamask)
               DM2CNT_L ? DM2CNT_L : 0x4000,
               DM2CNT_H & 0x0400);
       }
-      cpuDmaHack = 1;
+      cpuDmaHack = true;
       if(DM2CNT_H & 0x4000) {
         IF |= 0x0400;
         UPDATE_REG(0x202, IF);
@@ -2156,6 +2155,7 @@ void CPUCheckDMA(int reason, int dmamask)
   // DMA 3
   if((DM3CNT_H & 0x8000) && (dmamask & 8)) {
     if(((DM3CNT_H >> 12) & 3) == reason) {
+      res = true;
       u32 sourceIncrement = 4;
       u32 destIncrement = 4;
       switch((DM3CNT_H >> 7) & 3) {
@@ -2206,7 +2206,8 @@ void CPUCheckDMA(int reason, int dmamask)
       }
     }
   }
-  cpuDmaHack = 0;
+  cpuDmaHack = false;
+  return res;
 }
 
 void CPUUpdateRegister(u32 address, u16 value)
@@ -2594,6 +2595,9 @@ void CPUUpdateRegister(u32 address, u16 value)
       if(timer0ClockReload == 1)
         timer0Ticks = 0x10000 - TM0D;
       UPDATE_REG(0x100, TM0D);
+      int event = cpuTotalTicks + timer0Ticks;
+      if(event < cpuNextEvent)
+        cpuNextEvent = event;
     }
     timer0On = value & 0x80 ? true : false;
     TM0CNT = value & 0xC7;
@@ -2611,6 +2615,9 @@ void CPUUpdateRegister(u32 address, u16 value)
       if(timer1ClockReload == 1)
         timer1Ticks = 0x10000 - TM1D;
       UPDATE_REG(0x104, TM1D);
+      int event = cpuTotalTicks + timer1Ticks;
+      if(event < cpuNextEvent)
+        cpuNextEvent = event;
     }
     timer1On = value & 0x80 ? true : false;
     TM1CNT = value & 0xC7;
@@ -2627,6 +2634,9 @@ void CPUUpdateRegister(u32 address, u16 value)
       if(timer2ClockReload == 1)
         timer2Ticks = 0x10000 - TM2D;
       UPDATE_REG(0x108, TM2D);
+      int event = cpuTotalTicks + timer2Ticks;
+      if(event < cpuNextEvent)
+        cpuNextEvent = event;
     }
     timer2On = value & 0x80 ? true : false;
     TM2CNT = value & 0xC7;
@@ -2643,6 +2653,9 @@ void CPUUpdateRegister(u32 address, u16 value)
       if(timer3ClockReload == 1)
         timer3Ticks = 0x10000 - TM3D;
       UPDATE_REG(0x10C, TM3D);
+      int event = cpuTotalTicks + timer3Ticks;
+      if(event < cpuNextEvent)
+        cpuNextEvent = event;
     }
     timer3On = value & 0x80 ? true : false;
     TM3CNT = value & 0xC7;
@@ -2671,7 +2684,7 @@ void CPUUpdateRegister(u32 address, u16 value)
     IE = value & 0x3FFF;
     UPDATE_REG(0x200, IE);
     if((IME & 1) && (IF & IE) && armIrqEnable) {
-      CPU_BREAK_LOOP_2;
+      cpuNextEvent = 0;
     }    
     break;
   case 0x202:
@@ -2715,7 +2728,7 @@ void CPUUpdateRegister(u32 address, u16 value)
       
       if(value & 0x4000) {
         for(i = 8; i < 16; i++) {
-          memoryWaitFetch32[i] = 2*cpuMemoryWait[i];
+          memoryWaitFetch32[i] = cpuMemoryWait32[i];
           memoryWaitFetch[i] = cpuMemoryWait[i];
         }
       }
@@ -2726,7 +2739,7 @@ void CPUUpdateRegister(u32 address, u16 value)
     IME = value & 1;
     UPDATE_REG(0x208, IME);
     if((IME & 1) && (IF & IE) && armIrqEnable) {
-      CPU_BREAK_LOOP_2;
+      cpuNextEvent = 0;
     }
     break;
   case 0x300:
@@ -2757,9 +2770,8 @@ void CPUWriteHalfWord(u32 address, u16 value)
   case 2:
 #ifdef SDL
     if(*((u16 *)&freezeWorkRAM[address & 0x3FFFE]))
-      cheatsWriteHalfWord((u16 *)&workRAM[address & 0x3FFFE],
-                          value,
-                          *((u16 *)&freezeWorkRAM[address & 0x3FFFE]));
+      cheatsWriteHalfWord(address & 0x203FFFE,
+                          value);
     else
 #endif
       WRITE16LE(((u16 *)&workRAM[address & 0x3FFFE]),value);
@@ -2767,15 +2779,16 @@ void CPUWriteHalfWord(u32 address, u16 value)
   case 3:
 #ifdef SDL
     if(*((u16 *)&freezeInternalRAM[address & 0x7ffe]))
-      cheatsWriteHalfWord((u16 *)&internalRAM[address & 0x7ffe],
-                          value,
-                          *((u16 *)&freezeInternalRAM[address & 0x7ffe]));
+      cheatsWriteHalfWord(address & 0x3007ffe,
+                          value);
     else
 #endif
       WRITE16LE(((u16 *)&internalRAM[address & 0x7ffe]), value);
     break;    
   case 4:
-    CPUUpdateRegister(address & 0x3fe, value);
+    if(address < 0x4000400)
+      CPUUpdateRegister(address & 0x3fe, value);
+    else goto unwritable;
     break;
   case 5:
     WRITE16LE(((u16 *)&paletteRAM[address & 0x3fe]), value);
@@ -2828,7 +2841,7 @@ void CPUWriteByte(u32 address, u8 b)
   case 2:
 #ifdef SDL
       if(freezeWorkRAM[address & 0x3FFFF])
-        cheatsWriteByte(&workRAM[address & 0x3FFFF], b);
+        cheatsWriteByte(address & 0x203FFFF, b);
       else
 #endif  
         workRAM[address & 0x3FFFF] = b;
@@ -2836,89 +2849,92 @@ void CPUWriteByte(u32 address, u8 b)
   case 3:
 #ifdef SDL
     if(freezeInternalRAM[address & 0x7fff])
-      cheatsWriteByte(&internalRAM[address & 0x7fff], b);
+      cheatsWriteByte(address & 0x3007fff, b);
     else
 #endif
       internalRAM[address & 0x7fff] = b;
     break;
   case 4:
-    switch(address & 0x3FF) {
-    case 0x301:
-      if(b == 0x80)
-        stopState = true;
-      holdState = 1;
-      holdType = -1;
+    if(address < 0x4000400) {
+      switch(address & 0x3FF) {
+      case 0x301:
+	if(b == 0x80)
+	  stopState = true;
+	holdState = 1;
+	holdType = -1;
+	cpuNextEvent = 0;
+	break;
+      case 0x60:
+      case 0x61:
+      case 0x62:
+      case 0x63:
+      case 0x64:
+      case 0x65:
+      case 0x68:
+      case 0x69:
+      case 0x6c:
+      case 0x6d:
+      case 0x70:
+      case 0x71:
+      case 0x72:
+      case 0x73:
+      case 0x74:
+      case 0x75:
+      case 0x78:
+      case 0x79:
+      case 0x7c:
+      case 0x7d:
+      case 0x80:
+      case 0x81:
+      case 0x84:
+      case 0x85:
+      case 0x90:
+      case 0x91:
+      case 0x92:
+      case 0x93:
+      case 0x94:
+      case 0x95:
+      case 0x96:
+      case 0x97:
+      case 0x98:
+      case 0x99:
+      case 0x9a:
+      case 0x9b:
+      case 0x9c:
+      case 0x9d:
+      case 0x9e:
+      case 0x9f:      
+	soundEvent(address&0xFF, b);
+	break;
+      default:
+	if(address & 1)
+	  CPUUpdateRegister(address & 0x3fe,
+			    ((READ16LE(((u16 *)&ioMem[address & 0x3fe])))
+			     & 0x00FF) |
+			    b<<8);
+	else
+	  CPUUpdateRegister(address & 0x3fe,
+			    ((READ16LE(((u16 *)&ioMem[address & 0x3fe])) & 0xFF00) | b));
+      }
       break;
-    case 0x60:
-    case 0x61:
-    case 0x62:
-    case 0x63:
-    case 0x64:
-    case 0x65:
-    case 0x68:
-    case 0x69:
-    case 0x6c:
-    case 0x6d:
-    case 0x70:
-    case 0x71:
-    case 0x72:
-    case 0x73:
-    case 0x74:
-    case 0x75:
-    case 0x78:
-    case 0x79:
-    case 0x7c:
-    case 0x7d:
-    case 0x80:
-    case 0x81:
-    case 0x84:
-    case 0x85:
-    case 0x90:
-    case 0x91:
-    case 0x92:
-    case 0x93:
-    case 0x94:
-    case 0x95:
-    case 0x96:
-    case 0x97:
-    case 0x98:
-    case 0x99:
-    case 0x9a:
-    case 0x9b:
-    case 0x9c:
-    case 0x9d:
-    case 0x9e:
-    case 0x9f:      
-      soundEvent(address&0xFF, b);
-      break;
-    default:
-      //      if(address & 1) {
-      //        CPUWriteHalfWord(address-1, (CPUReadHalfWord(address-1)&0x00FF)|((int)b<<8));
-      //      } else
-      if(address & 1)
-        CPUUpdateRegister(address & 0x3fe,
-                          ((READ16LE(((u16 *)&ioMem[address & 0x3fe])))
-                           & 0x00FF) |
-                          b<<8);
-      else
-        CPUUpdateRegister(address & 0x3fe,
-                          ((READ16LE(((u16 *)&ioMem[address & 0x3fe])) & 0xFF00) | b));
-    }
+    } else goto unwritable;
     break;
   case 5:
     // no need to switch
     *((u16 *)&paletteRAM[address & 0x3FE]) = (b << 8) | b;
     break;
   case 6:
-    // no need to switch
-    if(address & 0x10000)
-      *((u16 *)&vram[address & 0x17FFE]) = (b << 8) | b;
-    else
-      *((u16 *)&vram[address & 0x1FFFE]) = (b << 8) | b;
+    // no need to switch 
+    // byte writes to OBJ VRAM are ignored
+    if(!(address & 0x10000))
+      //      *((u16 *)&vram[address & 0x17FFE]) = (b << 8) | b;
+      //    else
+      *((u16 *)&vram[address & 0xFFFE]) = (b << 8) | b;
     break;
   case 7:
     // no need to switch
-    *((u16 *)&oam[address & 0x3FE]) = (b << 8) | b;
+    // byte writes to OAM are ignored
+    //    *((u16 *)&oam[address & 0x3FE]) = (b << 8) | b;
     break;    
   case 13:
     if(cpuEEPROMEnabled) {
@@ -3333,6 +3349,8 @@ void CPUReset()
   ARM_PREFETCH;
 
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
+
+  cpuDmaHack2 = false;
   
   lastTime = systemGetClock();
 }
@@ -3384,25 +3402,20 @@ extern void winlog(const char *, ...);
 void CPULoop(int ticks)
 {  
   int clockTicks;
-  int cpuLoopTicks = 0;
+  int totalTicks = 0;
   int timerOverflow = 0;
   // variables used by the CPU core
-
-  extCpuLoopTicks = &cpuLoopTicks;
-  extClockTicks = &clockTicks;
-  extTicks = &ticks;
-
-  cpuLoopTicks = CPUUpdateTicks();
-  if(cpuLoopTicks > ticks) {
-    cpuLoopTicks = ticks;
-    cpuSavedTicks = ticks;
+  cpuNextEvent = CPUUpdateTicks();
+  if(cpuNextEvent > ticks) {
+    cpuNextEvent = ticks;
   }
 
   if(intState) {
-    cpuLoopTicks = 5;
-    cpuSavedTicks = 5;
+    cpuNextEvent = 5;
   }
-  
+  if(cpuDmaHack2)
+    cpuNextEvent = 1;
+  cpuBreakLoop = false;
   for(;;) {
 #ifndef FINAL_VERSION
     if(systemDebug) {
@@ -3444,13 +3457,13 @@ void CPULoop(int ticks)
       if(timer0On && (timer0Ticks < clockTicks)) {
         clockTicks = timer0Ticks;
       }
-      if(timer1On && (timer1Ticks < clockTicks)) {
+      if(timer1On && !(TM1CNT & 4) && (timer1Ticks < clockTicks)) {
         clockTicks = timer1Ticks;
       }
-      if(timer2On && (timer2Ticks < clockTicks)) {
+      if(timer2On && !(TM2CNT & 4) && (timer2Ticks < clockTicks)) {
         clockTicks = timer2Ticks;
       }
-      if(timer3On && (timer3Ticks < clockTicks)) {
+      if(timer3On && !(TM3CNT & 4) && (timer3Ticks < clockTicks)) {
         clockTicks = timer3Ticks;
       }
 #ifdef PROFILING
@@ -3460,14 +3473,18 @@ void CPULoop(int ticks)
         }
       }
 #endif
+      //      if((clockTicks+totalTicks) > cpuNextEvent) {
+      //        clockTicks = cpuNextEvent - totalTicks;
+      //      }
     }
-    
-    cpuLoopTicks -= clockTicks;
-    if((cpuLoopTicks <= 0)) {
-      if(cpuSavedTicks) {
-        clockTicks = cpuSavedTicks;// + cpuLoopTicks;
-      }
-      cpuDmaTicksToUpdate = -cpuLoopTicks;
+    totalTicks += clockTicks;
+    cpuTotalTicks = totalTicks;
+    if(totalTicks >= cpuNextEvent) {
+      cpuDmaHack2 = false;
+      int remainingTicks = totalTicks - cpuNextEvent;
+      clockTicks = cpuNextEvent;
+      int oldTotalTicks = totalTicks;
+      cpuTotalTicks = totalTicks = 0;
 
     updateLoop:
       lcdTicks -= clockTicks;
@@ -3557,10 +3574,8 @@ void CPULoop(int ticks)
               }
               
               u32 ext = (joy >> 10);
-              int cheatTicks = 0;
               if(cheatsEnabled)
-                cheatsCheckKeys(P1^0x3FF, ext);
-              cpuDmaTicksToUpdate += cheatTicks;
+                remainingTicks += cheatsCheckKeys(P1^0x3FF, ext);
               speedup = (ext & 1) ? true : false;
               capture = (ext & 2) ? true : false;
               
@@ -3577,7 +3592,7 @@ void CPULoop(int ticks)
                 IF |= 1;
                 UPDATE_REG(0x202, IF);
               }
-              CPUCheckDMA(1, 0x0f);
+              cpuDmaHack2 = CPUCheckDMA(1, 0x0f);
               if(frameCount >= framesToSkip) {
                 systemDrawScreen();
                 frameCount = 0;
@@ -3697,7 +3712,7 @@ void CPULoop(int ticks)
             DISPSTAT |= 2;
             UPDATE_REG(0x04, DISPSTAT);
             lcdTicks += 272;
-            CPUCheckDMA(2, 0x0f);
+            cpuDmaHack2 = CPUCheckDMA(2, 0x0f);
             if(DISPSTAT & 16) {
               IF |= 2;
               UPDATE_REG(0x202, IF);
@@ -3720,6 +3735,8 @@ void CPULoop(int ticks)
               }
             }
             TM0D = tm0d;
+            if(TM0D < timer0Reload)
+              TM0D = timer0Reload;
             timer0Ticks = 0x10000 - TM0D;
             UPDATE_REG(0x100, TM0D);            
           } else {
@@ -3769,6 +3786,8 @@ void CPULoop(int ticks)
                 }
               }
               TM1D = tm1d;
+              if(TM1D < timer1Reload)
+                TM1D = timer1Reload;
               timer1Ticks = 0x10000 - TM1D;
               UPDATE_REG(0x104, TM1D);                    
             } else {
@@ -3818,6 +3837,8 @@ void CPULoop(int ticks)
                 }
               }
               TM2D = tm2d;
+              if(TM2D < timer2Reload)
+                TM2D = timer2Reload;
               timer2Ticks = 0x10000 - TM2D;
               UPDATE_REG(0x108, TM2D);                    
             } else {
@@ -3864,6 +3885,8 @@ void CPULoop(int ticks)
                 }
               }
               TM3D = tm3d;
+              if(TM3D < timer3Reload)
+                TM3D = timer3Reload;
               timer3Ticks = 0x10000 - TM3D;
               UPDATE_REG(0x10C, TM3D);                            
             } else {
@@ -3911,17 +3934,20 @@ void CPULoop(int ticks)
 
       ticks -= clockTicks;
 
-      cpuLoopTicks = CPUUpdateTicks();
+      cpuNextEvent = CPUUpdateTicks();
       
       if(cpuDmaTicksToUpdate > 0) {
-        clockTicks = cpuSavedTicks;
-        if(clockTicks > cpuDmaTicksToUpdate)
-          clockTicks = cpuDmaTicksToUpdate;
-        cpuDmaTicksToUpdate -= clockTicks;
+        if(cpuDmaTicksToUpdate < cpuNextEvent)
+          cpuNextEvent = cpuDmaTicksToUpdate;
+        cpuDmaTicksToUpdate -= cpuNextEvent;
+        clockTicks = cpuNextEvent;
         if(cpuDmaTicksToUpdate < 0)
           cpuDmaTicksToUpdate = 0;
         goto updateLoop;
       }
+      
+      if(cpuDmaHack2)
+        cpuNextEvent = 1;
 
       if(IF && (IME & 1) && armIrqEnable) {
         int res = IF & IE;
@@ -3938,8 +3964,7 @@ void CPULoop(int ticks)
           } else {
             if(!holdState) {
               intState = true;
-              cpuLoopTicks = 5;
-              cpuSavedTicks = 5;
+              cpuNextEvent = 5;
             } else {
               CPUInterrupt();         
               if(holdState) {
@@ -3951,7 +3976,17 @@ void CPULoop(int ticks)
         }
       }
       
-      if(ticks <= 0)
+      if(remainingTicks > 0) {
+        if(remainingTicks < cpuNextEvent)
+          cpuNextEvent = remainingTicks;
+        remainingTicks -= cpuNextEvent;
+        clockTicks = cpuNextEvent;
+        if(remainingTicks < 0)
+          remainingTicks = 0;
+        goto updateLoop;
+      }
+      
+      if(ticks <= 0 || cpuBreakLoop)
         break;
     }
   }

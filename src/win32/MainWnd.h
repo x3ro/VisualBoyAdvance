@@ -411,7 +411,8 @@ class MainWnd : public CWnd
   afx_msg void OnOptionsVideoFullscreenmaxscale();
   afx_msg void OnOptionsEmulatorGameoverrides();
   afx_msg void OnUpdateOptionsEmulatorGameoverrides(CCmdUI* pCmdUI);
-  //}}AFX_MSG
+	afx_msg void OnHelpGnupubliclicense();
+	//}}AFX_MSG
   DECLARE_MESSAGE_MAP()
     
     afx_msg BOOL OnFileRecentFile(UINT nID);

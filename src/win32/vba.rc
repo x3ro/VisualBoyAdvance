@@ -101,7 +101,7 @@ BEGIN
     CTEXT           "http://vba.ngemu.com",IDC_URL,43,55,76,8
     CTEXT           "Contribution by Costis",IDC_STATIC,30,45,102,8
     CTEXT           "Version",IDC_STATIC,46,16,70,8
-    CTEXT           "",IDC_VERSION,60,25,43,8
+    CTEXT           "",IDC_VERSION,60,25,43,8,SS_NOPREFIX
 END
 
 IDD_DIRECTORIES DIALOG DISCARDABLE  0, 0, 284, 129
@@ -309,15 +309,15 @@ BEGIN
     LTEXT           "Device type:",IDC_STATIC,7,80,60,8
     LTEXT           "ROM version:",IDC_STATIC,7,94,60,8
     LTEXT           "CRC:",IDC_STATIC,7,108,60,8
-    LTEXT           "",IDC_ROM_TITLE,80,10,133,8
-    LTEXT           "",IDC_ROM_GAME_CODE,80,24,133,8
-    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8
-    LTEXT           "",IDC_ROM_UNIT_CODE,80,66,133,8
-    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,80,133,8
-    LTEXT           "",IDC_ROM_VERSION,80,94,133,8
-    LTEXT           "",IDC_ROM_CRC,80,108,133,8
-    LTEXT           "",IDC_ROM_MAKER_NAME,80,52,133,8
     LTEXT           "Maker name:",IDC_STATIC,7,52,60,8
+    LTEXT           "",IDC_ROM_TITLE,80,10,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_GAME_CODE,80,24,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_UNIT_CODE,80,66,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,80,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_VERSION,80,94,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_CRC,80,108,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_MAKER_NAME,80,52,133,8,SS_NOPREFIX
 END
 
 IDD_GB_ROM_INFO DIALOG DISCARDABLE  0, 0, 220, 225
@@ -332,25 +332,25 @@ BEGIN
     LTEXT           "Cartridge type:",IDC_STATIC,7,82,60,8
     LTEXT           "ROM version:",IDC_STATIC,7,152,60,8
     LTEXT           "CRC:",IDC_STATIC,7,166,60,8
-    LTEXT           "",IDC_ROM_TITLE,80,10,133,8
-    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8
-    LTEXT           "",IDC_ROM_UNIT_CODE,80,68,133,8
-    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,82,133,8
-    LTEXT           "",IDC_ROM_VERSION,80,152,133,8
-    LTEXT           "",IDC_ROM_CRC,80,166,133,8
+    LTEXT           "",IDC_ROM_TITLE,80,10,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_MAKER_CODE,80,38,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_UNIT_CODE,80,68,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_DEVICE_TYPE,80,82,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_VERSION,80,152,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_CRC,80,166,133,8,SS_NOPREFIX
     LTEXT           "Color:",IDC_STATIC,7,24,60,8
-    LTEXT           "",IDC_ROM_COLOR,80,24,133,8
+    LTEXT           "",IDC_ROM_COLOR,80,24,133,8,SS_NOPREFIX
     LTEXT           "ROM size:",IDC_STATIC,7,96,60,8
-    LTEXT           "",IDC_ROM_SIZE,80,96,133,8
+    LTEXT           "",IDC_ROM_SIZE,80,96,133,8,SS_NOPREFIX
     LTEXT           "RAM size:",IDC_STATIC,7,110,60,8
-    LTEXT           "",IDC_ROM_RAM_SIZE,80,110,133,8
+    LTEXT           "",IDC_ROM_RAM_SIZE,80,110,133,8,SS_NOPREFIX
     LTEXT           "Dest. code:",IDC_STATIC,7,124,60,8
-    LTEXT           "",IDC_ROM_DEST_CODE,80,124,133,8
+    LTEXT           "",IDC_ROM_DEST_CODE,80,124,133,8,SS_NOPREFIX
     LTEXT           "License code:",IDC_STATIC,7,138,60,8
-    LTEXT           "",IDC_ROM_LIC_CODE,80,138,133,8
+    LTEXT           "",IDC_ROM_LIC_CODE,80,138,133,8,SS_NOPREFIX
     LTEXT           "Checksum:",IDC_STATIC,7,180,60,8
-    LTEXT           "",IDC_ROM_CHECKSUM,80,180,133,8
-    LTEXT           "",IDC_ROM_MAKER_NAME2,80,52,133,8
+    LTEXT           "",IDC_ROM_CHECKSUM,80,180,133,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROM_MAKER_NAME2,80,52,133,8,SS_NOPREFIX
     LTEXT           "Maker name:",IDC_STATIC,7,52,60,8
 END
 
@@ -433,7 +433,7 @@ BEGIN
     PUSHBUTTON      "Cancel",ID_CANCEL,104,49,50,14
     LTEXT           "Current system language is:",IDC_STATIC,6,9,123,8
     LTEXT           "Enter language name (3 letter):",IDC_STATIC,6,30,127,8
-    LTEXT           "",IDC_LANG_NAME,140,9,40,8
+    LTEXT           "",IDC_LANG_NAME,140,9,40,8,SS_NOPREFIX
 END
 
 IDD_CODE_SELECT DIALOG DISCARDABLE  0, 0, 316, 235
@@ -475,36 +475,36 @@ BEGIN
                     WS_TABSTOP,7,148,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,187,164,
                     48,47
-    LTEXT           "",IDC_R,245,173,50,8
-    LTEXT           "",IDC_G,245,185,50,8
-    LTEXT           "",IDC_B,245,197,50,8
+    LTEXT           "",IDC_R,245,173,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,245,185,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,245,197,50,8,SS_NOPREFIX
     GROUPBOX        "Frame",IDC_STATIC,7,11,63,37
     GROUPBOX        "Background",IDC_STATIC,7,52,63,67
-    LTEXT           "",IDC_XY,129,95,53,8
+    LTEXT           "",IDC_XY,129,95,53,8,SS_NOPREFIX
     LTEXT           "Mode:",IDC_STATIC,80,15,34,8
-    LTEXT           "",IDC_MODE,130,15,53,8
+    LTEXT           "",IDC_MODE,130,15,53,8,SS_NOPREFIX
     LTEXT           "Map Base:",IDC_STATIC,80,25,35,8
-    LTEXT           "",IDC_MAPBASE,130,25,53,8
+    LTEXT           "",IDC_MAPBASE,130,25,53,8,SS_NOPREFIX
     LTEXT           "Char Base:",IDC_STATIC,80,35,36,8
-    LTEXT           "",IDC_CHARBASE,130,35,53,8
+    LTEXT           "",IDC_CHARBASE,130,35,53,8,SS_NOPREFIX
     LTEXT           "Size:",IDC_STATIC,80,45,37,8
-    LTEXT           "",IDC_DIM,130,45,53,8
+    LTEXT           "",IDC_DIM,130,45,53,8,SS_NOPREFIX
     LTEXT           "Colors:",IDC_STATIC,80,55,37,8
-    LTEXT           "",IDC_NUMCOLORS,130,55,53,8
+    LTEXT           "",IDC_NUMCOLORS,130,55,53,8,SS_NOPREFIX
     LTEXT           "Priority:",IDC_STATIC,80,65,37,8
-    LTEXT           "",IDC_PRIORITY,130,65,53,8
+    LTEXT           "",IDC_PRIORITY,130,65,53,8,SS_NOPREFIX
     LTEXT           "Mosaic:",IDC_STATIC,80,75,37,8
-    LTEXT           "",IDC_MOSAIC,130,75,53,8
+    LTEXT           "",IDC_MOSAIC,130,75,53,8,SS_NOPREFIX
     LTEXT           "Overflow:",IDC_STATIC,80,85,37,8
-    LTEXT           "",IDC_OVERFLOW,130,85,53,8
+    LTEXT           "",IDC_OVERFLOW,130,85,53,8,SS_NOPREFIX
     LTEXT           "Address:",IDC_STATIC,80,105,37,8
-    LTEXT           "",IDC_ADDRESS,130,105,53,8
+    LTEXT           "",IDC_ADDRESS,130,105,53,8,SS_NOPREFIX
     LTEXT           "Tile:",IDC_STATIC,80,115,37,8
-    LTEXT           "",IDC_TILE_NUM,130,115,53,8
+    LTEXT           "",IDC_TILE_NUM,130,115,53,8,SS_NOPREFIX
     LTEXT           "Flip:",IDC_STATIC,80,125,37,8
-    LTEXT           "",IDC_FLIP,130,125,53,8
+    LTEXT           "",IDC_FLIP,130,125,53,8,SS_NOPREFIX
     LTEXT           "Palette:",IDC_STATIC,80,135,37,8
-    LTEXT           "",IDC_PALETTE_NUM,130,135,53,8
+    LTEXT           "",IDC_PALETTE_NUM,130,135,53,8,SS_NOPREFIX
 END
 
 IDD_PALETTE_VIEW DIALOG DISCARDABLE  0, 0, 316, 266
@@ -516,11 +516,11 @@ BEGIN
     PUSHBUTTON      "Save OBJ...",IDC_SAVE_OBJ,98,245,50,14
     PUSHBUTTON      "&Refresh",IDC_REFRESH2,166,245,50,14
     PUSHBUTTON      "&Close",IDC_CLOSE,234,245,50,14
-    LTEXT           "",IDC_ADDRESS,53,168,50,8
-    LTEXT           "",IDC_R,53,180,50,8
-    LTEXT           "",IDC_G,53,192,50,8
-    LTEXT           "",IDC_B,53,204,50,8
-    LTEXT           "",IDC_VALUE,53,216,50,8
+    LTEXT           "",IDC_ADDRESS,53,168,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_R,53,180,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,53,192,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,53,204,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_VALUE,53,216,50,8,SS_NOPREFIX
     CONTROL         "Custom1",IDC_COLOR,"VbaColorControl",WS_TABSTOP,161,168,
                     50,50
     CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW,"VbaPaletteViewControl",
@@ -589,18 +589,18 @@ BEGIN
                     WS_TABSTOP,163,7,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,87,79,48,
                     47
-    LTEXT           "",IDC_POS,31,47,50,8
-    LTEXT           "",IDC_MODE,31,57,50,8
-    LTEXT           "",IDC_COLORS,31,67,50,8
-    LTEXT           "",IDC_PALETTE,31,77,50,8
-    LTEXT           "",IDC_TILE,31,87,50,8
-    LTEXT           "",IDC_PRIO,31,97,50,8
-    LTEXT           "",IDC_SIZE2,31,107,50,8
-    LTEXT           "",IDC_ROT,31,117,50,8
-    LTEXT           "",IDC_FLAGS,31,127,50,8
-    LTEXT           "",IDC_R,145,88,50,8
-    LTEXT           "",IDC_G,145,100,50,8
-    LTEXT           "",IDC_B,145,112,50,8
+    LTEXT           "",IDC_POS,31,47,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_MODE,31,57,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_COLORS,31,67,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_PALETTE,31,77,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_TILE,31,87,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_PRIO,31,97,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_SIZE2,31,107,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_ROT,31,117,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_FLAGS,31,127,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_R,145,88,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,145,100,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,145,112,50,8,SS_NOPREFIX
     LTEXT           "Pos:",IDC_STATIC,7,47,24,8
     LTEXT           "Mode:",IDC_STATIC,7,57,24,8
     LTEXT           "Colors:",IDC_STATIC,7,67,24,8
@@ -672,16 +672,16 @@ BEGIN
                     WS_TABSTOP,7,174,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,98,183,48,
                     47
-    LTEXT           "",IDC_R,156,192,50,8
-    LTEXT           "",IDC_G,156,204,50,8
-    LTEXT           "",IDC_B,156,216,50,8
+    LTEXT           "",IDC_R,156,192,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,156,204,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,156,216,50,8,SS_NOPREFIX
     LTEXT           "Palette:",IDC_STATIC,7,113,65,8
     CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,160,71,10
     LTEXT           "Tile:",IDC_STATIC,79,14,41,8
     LTEXT           "Address:",IDC_STATIC,79,26,41,8
-    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8
-    LTEXT           "",IDC_ADDRESS,135,26,50,8
+    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_ADDRESS,135,26,50,8,SS_NOPREFIX
 END
 
 IDD_GB_COLORS DIALOG DISCARDABLE  0, 0, 169, 121
@@ -740,22 +740,22 @@ BEGIN
     LTEXT           "R5:",IDC_STATIC,309,47,18,8
     LTEXT           "R6:",IDC_STATIC,309,55,18,8
     LTEXT           "R7:",IDC_STATIC,309,63,18,8
-    LTEXT           "",IDC_R0,344,7,52,8
-    LTEXT           "",IDC_R1,344,15,52,8
-    LTEXT           "",IDC_R2,344,23,52,8
-    LTEXT           "",IDC_R3,344,31,52,8
-    LTEXT           "",IDC_R4,344,39,52,8
-    LTEXT           "",IDC_R5,344,47,52,8
-    LTEXT           "",IDC_R6,344,55,52,8
-    LTEXT           "",IDC_R7,344,63,52,8
-    LTEXT           "",IDC_R8,344,71,52,8
-    LTEXT           "",IDC_R9,344,79,52,8
-    LTEXT           "",IDC_R10,344,87,52,8
-    LTEXT           "",IDC_R11,344,95,52,8
-    LTEXT           "",IDC_R12,344,103,52,8
-    LTEXT           "",IDC_R13,344,111,52,8
-    LTEXT           "",IDC_R14,344,119,52,8
-    LTEXT           "",IDC_R15,344,127,52,8
+    LTEXT           "",IDC_R0,344,7,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R1,344,15,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R2,344,23,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R3,344,31,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R4,344,39,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R5,344,47,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R6,344,55,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R7,344,63,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R8,344,71,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R9,344,79,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R10,344,87,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R11,344,95,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R12,344,103,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R13,344,111,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R14,344,119,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R15,344,127,52,8,SS_NOPREFIX
     LTEXT           "R8:",IDC_STATIC,309,71,18,8
     LTEXT           "R9:",IDC_STATIC,309,79,18,8
     LTEXT           "R10:",IDC_STATIC,309,87,18,8
@@ -764,7 +764,7 @@ BEGIN
     LTEXT           "R13:",IDC_STATIC,309,111,18,8
     LTEXT           "R14:",IDC_STATIC,309,119,18,8
     LTEXT           "R15:",IDC_STATIC,309,127,18,8
-    LTEXT           "",IDC_R16,344,135,52,8
+    LTEXT           "",IDC_R16,344,135,52,8,SS_NOPREFIX
     LTEXT           "R16:",IDC_STATIC,309,135,20,8
     CONTROL         "N",IDC_N,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
                     WS_TABSTOP,309,146,21,10
@@ -781,7 +781,7 @@ BEGIN
     CONTROL         "T",IDC_T,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
                     WS_TABSTOP,342,166,21,10
     LTEXT           "Mode:",IDC_STATIC,341,176,21,8
-    LTEXT           "",IDC_MODE,376,176,20,8
+    LTEXT           "",IDC_MODE,376,176,20,8,SS_NOPREFIX
     SCROLLBAR       IDC_VSCROLL,283,25,10,161,SBS_VERT
     PUSHBUTTON      "Goto R15",IDC_GOPC,7,204,50,14
 END
@@ -804,7 +804,7 @@ FONT 8, "MS Sans Serif"
 BEGIN
     PUSHBUTTON      "Cancel",ID_CANCEL,67,23,50,14
     LTEXT           "Waiting for connection on port:",IDC_STATIC,7,7,117,8
-    LTEXT           "",IDC_PORT,143,7,36,8
+    LTEXT           "",IDC_PORT,143,7,36,8,SS_NOPREFIX
 END
 
 IDD_LOGGING DIALOG DISCARDABLE  0, 0, 366, 218
@@ -925,11 +925,11 @@ BEGIN
     LTEXT           "DE:",IDC_STATIC,250,45,18,8
     LTEXT           "HL:",IDC_STATIC,250,55,18,8
     LTEXT           "IFF:",IDC_STATIC,250,85,18,8
-    LTEXT           "",IDC_R0,285,25,52,8
-    LTEXT           "",IDC_R1,285,35,52,8
-    LTEXT           "",IDC_R2,285,45,52,8
-    LTEXT           "",IDC_R3,285,55,52,8
-    LTEXT           "",IDC_R6,285,85,52,8
+    LTEXT           "",IDC_R0,285,25,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R1,285,35,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R2,285,45,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R3,285,55,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_R6,285,85,52,8,SS_NOPREFIX
     CONTROL         "N",IDC_N,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
                     WS_TABSTOP,250,109,21,10
     CONTROL         "Z",IDC_Z,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
@@ -941,9 +941,9 @@ BEGIN
     SCROLLBAR       IDC_VSCROLL,229,25,10,161,SBS_VERT
     PUSHBUTTON      "Goto PC",IDC_GOPC,7,204,50,14
     LTEXT           "SP:",IDC_STATIC,250,65,18,8
-    LTEXT           "",IDC_R4,285,65,52,8
+    LTEXT           "",IDC_R4,285,65,52,8,SS_NOPREFIX
     LTEXT           "PC:",IDC_STATIC,250,75,18,8
-    LTEXT           "",IDC_R5,285,75,52,8
+    LTEXT           "",IDC_R5,285,75,52,8,SS_NOPREFIX
 END
 
 IDD_GB_OAM_VIEW DIALOG DISCARDABLE  0, 0, 234, 185
@@ -965,15 +965,15 @@ BEGIN
                     WS_TABSTOP,163,7,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,87,79,48,
                     47
-    LTEXT           "",IDC_POS,31,47,50,8
-    LTEXT           "",IDC_PALETTE,31,87,50,8
-    LTEXT           "",IDC_TILE,31,57,50,8
-    LTEXT           "",IDC_PRIO,31,67,50,8
-    LTEXT           "",IDC_OAP,31,77,50,8
-    LTEXT           "",IDC_FLAGS,31,97,50,8
-    LTEXT           "",IDC_R,145,88,50,8
-    LTEXT           "",IDC_G,145,100,50,8
-    LTEXT           "",IDC_B,145,112,50,8
+    LTEXT           "",IDC_POS,31,47,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_PALETTE,31,87,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_TILE,31,57,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_PRIO,31,67,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_OAP,31,77,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_FLAGS,31,97,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_R,145,88,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,145,100,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,145,112,50,8,SS_NOPREFIX
     LTEXT           "Pos:",IDC_STATIC,7,47,24,8
     LTEXT           "Pal:",IDC_STATIC,7,87,24,8
     LTEXT           "Tile:",IDC_STATIC,7,57,24,8
@@ -983,7 +983,7 @@ BEGIN
     LTEXT           "Flags:",IDC_STATIC,7,97,24,8
     CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,150,71,10
-    LTEXT           "",IDC_BANK,31,107,50,8
+    LTEXT           "",IDC_BANK,31,107,50,8,SS_NOPREFIX
     LTEXT           "Bank:",IDC_STATIC,7,107,24,8
 END
 
@@ -1012,16 +1012,16 @@ BEGIN
                     WS_TABSTOP,7,147,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,98,156,48,
                     47
-    LTEXT           "",IDC_R,156,164,50,8
-    LTEXT           "",IDC_G,156,176,50,8
-    LTEXT           "",IDC_B,156,188,50,8
+    LTEXT           "",IDC_R,156,164,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,156,176,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,156,188,50,8,SS_NOPREFIX
     LTEXT           "Palette:",IDC_STATIC,7,86,65,8
     CONTROL         "Automatic update",IDC_AUTO_UPDATE,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,133,71,10
     LTEXT           "Tile:",IDC_STATIC,79,14,41,8
     LTEXT           "Address:",IDC_STATIC,79,26,41,8
-    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8
-    LTEXT           "",IDC_ADDRESS,135,26,50,8
+    LTEXT           "",IDC_TILE_NUMBER,135,14,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_ADDRESS,135,26,50,8,SS_NOPREFIX
     CONTROL         "Slider1",IDC_PALETTE_SLIDER,"msctls_trackbar32",
                     TBS_AUTOTICKS | WS_GROUP | WS_TABSTOP,1,98,76,22
 END
@@ -1049,24 +1049,24 @@ BEGIN
                     WS_TABSTOP,7,148,64,64
     CONTROL         "Color",IDC_COLOR,"VbaColorControl",WS_TABSTOP,187,164,
                     48,47
-    LTEXT           "",IDC_R,245,173,50,8
-    LTEXT           "",IDC_G,245,185,50,8
-    LTEXT           "",IDC_B,245,197,50,8
+    LTEXT           "",IDC_R,245,173,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,245,185,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,245,197,50,8,SS_NOPREFIX
     GROUPBOX        "Char Base",IDC_STATIC,7,11,63,37
     GROUPBOX        "Map Base",IDC_STATIC,7,52,63,41
     CONTROL         "Auto update",IDC_AUTO_UPDATE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,134,55,10
-    LTEXT           "",IDC_XY,129,18,53,8
+    LTEXT           "",IDC_XY,129,18,53,8,SS_NOPREFIX
     LTEXT           "Priority:",IDC_STATIC,80,68,37,8
-    LTEXT           "",IDC_PRIORITY,130,68,53,8
+    LTEXT           "",IDC_PRIORITY,130,68,53,8,SS_NOPREFIX
     LTEXT           "Address:",IDC_STATIC,80,28,37,8
-    LTEXT           "",IDC_ADDRESS,130,28,53,8
+    LTEXT           "",IDC_ADDRESS,130,28,53,8,SS_NOPREFIX
     LTEXT           "Tile:",IDC_STATIC,80,38,37,8
-    LTEXT           "",IDC_TILE_NUM,130,38,53,8
+    LTEXT           "",IDC_TILE_NUM,130,38,53,8,SS_NOPREFIX
     LTEXT           "Flip:",IDC_STATIC,80,48,37,8
-    LTEXT           "",IDC_FLIP,130,48,53,8
+    LTEXT           "",IDC_FLIP,130,48,53,8,SS_NOPREFIX
     LTEXT           "Palette:",IDC_STATIC,80,58,37,8
-    LTEXT           "",IDC_PALETTE_NUM,130,58,53,8
+    LTEXT           "",IDC_PALETTE_NUM,130,58,53,8,SS_NOPREFIX
 END
 
 IDD_GB_PALETTE_VIEW DIALOG DISCARDABLE  0, 0, 196, 234
@@ -1078,11 +1078,11 @@ BEGIN
     PUSHBUTTON      "Save OBJ...",IDC_SAVE_OBJ,73,191,50,14
     PUSHBUTTON      "&Refresh",IDC_REFRESH2,139,191,50,14
     PUSHBUTTON      "&Close",IDC_CLOSE,73,213,50,14
-    LTEXT           "",IDC_ADDRESS,53,117,50,8
-    LTEXT           "",IDC_R,53,129,50,8
-    LTEXT           "",IDC_G,53,141,50,8
-    LTEXT           "",IDC_B,53,153,50,8
-    LTEXT           "",IDC_VALUE,53,165,50,8
+    LTEXT           "",IDC_ADDRESS,53,117,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_R,53,129,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_G,53,141,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_B,53,153,50,8,SS_NOPREFIX
+    LTEXT           "",IDC_VALUE,53,165,50,8,SS_NOPREFIX
     CONTROL         "Custom1",IDC_COLOR,"VbaColorControl",WS_TABSTOP,119,117,
                     50,50
     CONTROL         "PaletteViewBG",IDC_PALETTE_VIEW,"VbaPaletteViewControl",
@@ -1111,7 +1111,7 @@ BEGIN
     PUSHBUTTON      "Cancel",ID_CANCEL,103,36,50,14
     CTEXT           "Do you want to keep the current mode?",IDC_STATIC,7,7,
                     172,8
-    CTEXT           "",IDC_TIMER,7,19,172,8
+    CTEXT           "",IDC_TIMER,7,19,172,8,SS_NOPREFIX,WS_EX_TOOLWINDOW
 END
 
 IDD_REWIND_INTERVAL DIALOG DISCARDABLE  0, 0, 186, 68
@@ -2096,6 +2096,7 @@ BEGIN
     BEGIN
         MENUITEM "Bug Report",                  ID_HELP_BUGREPORT
         MENUITEM "FAQ (website)",               ID_HELP_FAQ
+        MENUITEM "GNU Public License...",       ID_HELP_GNUPUBLICLICENSE
         MENUITEM SEPARATOR
         MENUITEM "&About...",                   ID_HELP_ABOUT
     END

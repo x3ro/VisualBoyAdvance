@@ -83,8 +83,8 @@ extern bool armState;
 extern int armMode;
 extern void (*cpuSaveGameFunc)(u32,u8);
 
-extern bool freezeWorkRAM[0x40000];
-extern bool freezeInternalRAM[0x8000];
+extern u8 freezeWorkRAM[0x40000];
+extern u8 freezeInternalRAM[0x8000];
 extern bool CPUReadGSASnapshot(const char *);
 extern bool CPUWriteGSASnapshot(const char *, const char *, const char *, const char *);
 extern bool CPUWriteBatteryFile(const char *);
@@ -106,7 +106,7 @@ extern void CPUWriteByte(u32, u8);
 extern void CPUInit(const char *,bool);
 extern void CPUReset();
 extern void CPULoop(int);
-extern void CPUCheckDMA(int,int);
+extern bool CPUCheckDMA(int,int);
 extern bool CPUIsGBAImage(const char *);
 extern bool CPUIsZipFile(const char *);
 #ifdef PROFILING

@@ -745,13 +745,14 @@
 #define ID_OPTIONS_FILTER_HQ2X          40274
 #define ID_OPTIONS_FILTER_LQ2X          40275
 #define ID_OPTIONS_EMULATOR_GAMEOVERRIDES 40276
+#define ID_HELP_GNUPUBLICLICENSE        40277
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
-#define _APS_NEXT_COMMAND_VALUE         40277
+#define _APS_NEXT_COMMAND_VALUE         40278
 #define _APS_NEXT_CONTROL_VALUE         1256
 #define _APS_NEXT_SYMED_VALUE           103
 #endif

@@ -28,6 +28,9 @@ extern bool cpuSramEnabled;
 extern bool cpuFlashEnabled;
 extern bool cpuEEPROMEnabled;
 extern bool cpuEEPROMSensorEnabled;
+extern bool cpuDmaHack;
+extern bool cpuDmaHack2;
+extern u32 cpuDmaLast;
 
 #define CPUReadByteQuick(addr) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
@@ -116,18 +119,17 @@ inline u32 CPUReadMemory(u32 address)
           armNextPC - 4 : armNextPC - 2);
     }
 #endif
-    
-    //    if(ioMem[0x205] & 0x40) {
+
+    if(cpuDmaHack || cpuDmaHack2) {
+      value = cpuDmaLast;
+    } else {
       if(armState) {
         value = CPUReadMemoryQuick(reg[15].I);
       } else {
         value = CPUReadHalfWordQuick(reg[15].I) |
           CPUReadHalfWordQuick(reg[15].I) << 16;
       }
-      //  } else {
-      //      value = *((u32 *)&bios[address & 0x3ffc]);
-      //    }
-      //        return 0xFFFFFFFF;
+    }
   }
 
   if(address & 3) {
@@ -232,11 +234,8 @@ inline u32 CPUReadHalfWord(u32 address)
           armNextPC - 4 : armNextPC - 2);
     }
 #endif
-    extern bool cpuDmaHack;
-    extern u32 cpuDmaLast;
-    extern int cpuDmaCount;
-    if(cpuDmaHack && cpuDmaCount) {
-      value = (u16)cpuDmaLast;
+    if(cpuDmaHack2 || cpuDmaHack) {
+      value = cpuDmaLast & 0xFFFF;
     } else {
       if(armState) {
         value = CPUReadHalfWordQuick(reg[15].I + (address & 2));
@@ -244,10 +243,6 @@ inline u32 CPUReadHalfWord(u32 address)
         value = CPUReadHalfWordQuick(reg[15].I);
       }
     }
-    //    return value;
-    //    if(address & 1)
-    //      value = (value >> 8) | ((value & 0xFF) << 24);
-    //    return 0xFFFF;
     break;
   }
 
@@ -325,18 +320,20 @@ inline u8 CPUReadByte(u32 address)
   default:
   unreadable:
 #ifdef DEV_VERSION
-        if(systemVerbose & VERBOSE_ILLEGAL_READ) {
-          log("Illegal byte read: %08x at %08x\n", address, armMode ?
-              armNextPC - 4 : armNextPC - 2);
-        }
-#endif
-    
-    if(armState) {
-      return CPUReadByteQuick(reg[15].I+(address & 3));
-    } else {
-      return CPUReadByteQuick(reg[15].I+(address & 1));
+    if(systemVerbose & VERBOSE_ILLEGAL_READ) {
+      log("Illegal byte read: %08x at %08x\n", address, armMode ?
+          armNextPC - 4 : armNextPC - 2);
     }
-    //    return 0xFF;
+#endif
+    if(cpuDmaHack || cpuDmaHack2) {
+      return cpuDmaLast & 0xFF;
+    } else {
+      if(armState) {
+        return CPUReadByteQuick(reg[15].I+(address & 3));
+      } else {
+        return CPUReadByteQuick(reg[15].I+(address & 1));
+      }
+    }
     break;
   }
 }
@@ -358,9 +355,8 @@ inline void CPUWriteMemory(u32 address, u32 value)
   case 0x02:
 #ifdef SDL
     if(*((u32 *)&freezeWorkRAM[address & 0x3FFFC]))
-      cheatsWriteMemory((u32 *)&workRAM[address & 0x3FFFC],
-                        value,
-                        *((u32 *)&freezeWorkRAM[address & 0x3FFFC]));
+      cheatsWriteMemory(address & 0x203FFFC,
+                        value);
     else
 #endif
       WRITE32LE(((u32 *)&workRAM[address & 0x3FFFC]), value);
@@ -368,16 +364,17 @@ inline void CPUWriteMemory(u32 address, u32 value)
   case 0x03:
 #ifdef SDL
     if(*((u32 *)&freezeInternalRAM[address & 0x7ffc]))
-      cheatsWriteMemory((u32 *)&internalRAM[address & 0x7FFC],
-                        value,
-                        *((u32 *)&freezeInternalRAM[address & 0x7ffc]));
+      cheatsWriteMemory(address & 0x3007FFC,
+                        value);
     else
 #endif
       WRITE32LE(((u32 *)&internalRAM[address & 0x7ffC]), value);
     break;
   case 0x04:
-    CPUUpdateRegister((address & 0x3FC), value & 0xFFFF);
-    CPUUpdateRegister((address & 0x3FC) + 2, (value >> 16));
+    if(address < 0x4000400) {
+      CPUUpdateRegister((address & 0x3FC), value & 0xFFFF);
+      CPUUpdateRegister((address & 0x3FC) + 2, (value >> 16));
+    } else goto unwritable;
     break;
   case 0x05:
     WRITE32LE(((u32 *)&paletteRAM[address & 0x3FC]), value);

@@ -559,7 +559,7 @@ void lq2x(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   while(count) {
     dst0 += dstPitch;
     dst1 += dstPitch;
-    hq2x_16_def(dst0, dst1, src0, src1, src2, width);
+    lq2x_16_def(dst0, dst1, src0, src1, src2, width);
     src0 = src1;
     src1 = src2;
     src2 += srcPitch >> 1;
@@ -587,7 +587,7 @@ void lq2x32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   while(count) {
     dst0 += dstPitch >> 1;
     dst1 += dstPitch >> 1;
-    hq2x_32_def(dst0, dst1, src0, src1, src2, width);
+    lq2x_32_def(dst0, dst1, src0, src1, src2, width);
     src0 = src1;
     src1 = src2;
     src2 += srcPitch >> 2;

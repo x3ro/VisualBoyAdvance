@@ -29,6 +29,7 @@
 #define NOISE_MAGIC 5
 
 extern bool stopState;
+extern bool cpuDmaHack2;
 
 u8 soundWavePattern[4][32] = {
   {0x01,0x01,0x01,0x01,
@@ -851,7 +852,7 @@ void soundDirectSoundATimer()
 {
   if(soundDSAEnabled) {
     if(soundDSFifoACount <= 16) {
-      CPUCheckDMA(3, 2);
+      cpuDmaHack2 = CPUCheckDMA(3, 2);
       if(soundDSFifoACount <= 16) {
         soundEvent(FIFOA_L, (u16)0);
         soundEvent(FIFOA_H, (u16)0);
@@ -880,7 +881,7 @@ void soundDirectSoundBTimer()
 {
   if(soundDSBEnabled) {
     if(soundDSFifoBCount <= 16) {
-      CPUCheckDMA(3, 4);
+      cpuDmaHack2 = CPUCheckDMA(3, 4);
       if(soundDSFifoBCount <= 16) {
         soundEvent(FIFOB_L, (u16)0);
         soundEvent(FIFOB_H, (u16)0);
