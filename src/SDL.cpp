@@ -38,9 +38,6 @@
 #include "Util.h"
 #include "gb/GB.h"
 #include "gb/gbGlobals.h"
-#ifdef GP_EMULATION
-#include "gp/GP.h"
-#endif
 
 #ifdef __GNUC__
 #include <unistd.h>
@@ -112,10 +109,6 @@ extern void remoteSetPort(int);
 extern void debuggerOutput(char *, u32);
 
 extern void CPUUpdateRenderBuffers(bool);
-extern void CPUUpdateCPSR();
-#ifdef GP_EMULATION
-extern void GPUpdateCPSR();
-#endif
 
 struct EmulatedSystem emulator = {
   NULL,
