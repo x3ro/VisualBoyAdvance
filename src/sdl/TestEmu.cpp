@@ -33,13 +33,13 @@
 #include "gb/GB.h"
 #include "gb/gbGlobals.h"
 
-#ifdef __GNUC__
-#include <unistd.h>
-#define GETCWD getcwd
-#else
-#include <direct.h>
-#define GETCWD _getcwd
-#endif
+#ifndef WIN32
+# include <unistd.h>
+# define GETCWD getcwd
+#else // WIN32
+# include <direct.h>
+# define GETCWD _getcwd
+#endif // WIN32
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -58,14 +58,6 @@ extern void remoteSetPort(int);
 extern void debuggerOutput(char *, u32);
 
 struct EmulatedSystem emulator;
-
-static u8 COPYRIGHT[] = {
-  0xa9, 0x96, 0x8c, 0x8a, 0x9e, 0x93, 0xbd, 0x90, 0x86, 0xbe, 0x9b, 0x89,
-  0x9e, 0x91, 0x9c, 0x9a, 0xdf, 0xd7, 0xbc, 0xd6, 0xdf, 0xce, 0xc6, 0xc6,
-  0xc6, 0xd3, 0xcd, 0xcf, 0xcf, 0xcf, 0xd3, 0xcd, 0xcf, 0xcf, 0xce, 0xdf,
-  0x9d, 0x86, 0xdf, 0xb9, 0x90, 0x8d, 0x98, 0x90, 0x8b, 0x8b, 0x9a, 0x91,
-  0x00
-};
 
 int systemRedShift = 0;
 int systemBlueShift = 16;
@@ -137,11 +129,6 @@ void usage(char *cmd)
 int main(int argc, char **argv)
 {
   fprintf(stderr,"VisualBoyAdvance-Test version %s\n", VERSION);
-#ifdef __GNUC__
-  fprintf(stderr,"Linux version\n");
-#else
-  fprintf(stderr,"Windows version\n");
-#endif
 
   captureDir[0] = 0;
   saveDir[0] = 0;

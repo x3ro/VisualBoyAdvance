@@ -308,8 +308,9 @@ TestEmu_LDADD = @VBA_LIBS@ @SDL_LIBS@
 TestEmu_DEPENDENCIES = @VBA_LIBS@
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src	\
-	-DSDL
+	-I$(top_srcdir)/src		\
+	-DSDL				\
+	-DSYSCONFDIR=\"$(sysconfdir)\"
 
 
 AM_CXXFLAGS = -fno-exceptions @SDL_CFLAGS@

@@ -20,26 +20,26 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __GNUC__
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#ifdef HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#ifdef HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#else
-#define socklen_t int
-#endif
-#else
-#include <winsock.h>
-#include <io.h>
-#define socklen_t int
-#define close closesocket
-#define read _read
-#define write _write
-#endif // __GNUC__
+#ifndef WIN32
+# include <unistd.h>
+# include <sys/socket.h>
+# include <netdb.h>
+# ifdef HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+# endif // HAVE_NETINET_IN_H
+# ifdef HAVE_ARPA_INET_H
+#  include <arpa/inet.h>
+# else // ! HAVE_ARPA_INET_H
+#  define socklen_t int
+# endif // ! HAVE_ARPA_INET_H
+#else // WIN32
+# include <winsock.h>
+# include <io.h>
+# define socklen_t int
+# define close closesocket
+# define read _read
+# define write _write
+#endif // WIN32
 
 #include "GBA.h"
 
@@ -85,11 +85,10 @@ int remoteTcpRecv(char *data, int len)
 bool remoteTcpInit()
 {
   if(remoteSocket == -1) {
-#ifndef __GNUC__
+#ifdef WIN32
     WSADATA wsaData;
-    
     int error = WSAStartup(MAKEWORD(1,1),&wsaData);
-#endif
+#endif // WIN32
     int s = socket(PF_INET, SOCK_STREAM, 0);
     
     remoteListenSocket = s;
@@ -132,19 +131,19 @@ bool remoteTcpInit()
     }
     socklen_t len = sizeof(addr);
 
-#ifndef __GNUC__
+#ifdef WIN32
     int flag = 0;    
     ioctlsocket(s, FIONBIO, (unsigned long *)&flag);
-#endif    
+#endif // WIN32
     int s2 = accept(s, (sockaddr *)&addr, &len);
     if(s2 > 0) {
       fprintf(stderr, "Got a connection from %s %d\n",
               inet_ntoa((in_addr)addr.sin_addr),
               ntohs(addr.sin_port));
     } else {
-#ifndef __GNUC__
+#ifdef WIN32
       int error = WSAGetLastError();
-#endif
+#endif // WIN32
     }
     char dummy;
     recv(s2, &dummy, 1, 0);

@@ -15,6 +15,9 @@ Windows:
 - fixed the GB map view flickering
 - fixed skin bugs
 
+SDL versions:
+- now it exits when closing the window
+
 Other:
 - added a new interface using GTK+, which implements a first part of the Windows version
 

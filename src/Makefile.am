@@ -6,9 +6,10 @@ SUBDIRS = $(CORE_SUBDIRS) @VBA_SRC_EXTRA@
 
 DIST_SUBDIRS = $(CORE_SUBDIRS) $(EXTRA_SUBDIRS)
 
+dist_sysconf_DATA = VisualBoyAdvance.cfg
+
 EXTRA_DIST = \
 	win32			\
-	VisualBoyAdvance.cfg	\
 	expr.l			\
 	expr.y			\
 	CheatSearch.cpp		\

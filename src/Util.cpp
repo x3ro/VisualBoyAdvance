@@ -43,9 +43,9 @@ extern "C" {
 #include "memgzio.h"
 }
 
-#ifdef __GNUC__
+#ifndef _MSC_VER
 #define _stricmp strcasecmp
-#endif
+#endif // ! _MSC_VER
 
 static int (*utilGzWriteFunc)(gzFile, const voidp, unsigned int) = NULL;
 static int (*utilGzReadFunc)(gzFile, voidp, unsigned int) = NULL;

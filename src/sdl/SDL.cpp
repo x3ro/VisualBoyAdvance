@@ -39,22 +39,22 @@
 #include "gb/GB.h"
 #include "gb/gbGlobals.h"
 
-#ifdef __GNUC__
-#include <unistd.h>
-#define GETCWD getcwd
-#else
-#include <direct.h>
-#define GETCWD _getcwd
-#endif
+#ifndef WIN32
+# include <unistd.h>
+# define GETCWD getcwd
+#else // WIN32
+# include <direct.h>
+# define GETCWD _getcwd
+#endif // WIN32
 
 #ifndef __GNUC__
-#define HAVE_DECL_GETOPT 0
-#define __STDC__ 1
-#include "getopt.h"
-#else
-#define HAVE_DECL_GETOPT 1
-#include "getopt.h"
-#endif
+# define HAVE_DECL_GETOPT 0
+# define __STDC__ 1
+# include "getopt.h"
+#else // ! __GNUC__
+# define HAVE_DECL_GETOPT 1
+# include "getopt.h"
+#endif // ! __GNUC__
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -125,14 +125,6 @@ struct EmulatedSystem emulator = {
   NULL,
   false,
   0
-};
-
-static u8 COPYRIGHT[] = {
-  0xa9, 0x96, 0x8c, 0x8a, 0x9e, 0x93, 0xbd, 0x90, 0x86, 0xbe, 0x9b, 0x89,
-  0x9e, 0x91, 0x9c, 0x9a, 0xdf, 0xd7, 0xbc, 0xd6, 0xdf, 0xce, 0xc6, 0xc6,
-  0xc6, 0xd3, 0xcd, 0xcf, 0xcf, 0xcf, 0xd3, 0xcd, 0xcf, 0xcf, 0xce, 0xdf,
-  0x9d, 0x86, 0xdf, 0xb9, 0x90, 0x8d, 0x98, 0x90, 0x8b, 0x8b, 0x9a, 0x91,
-  0x00
 };
 
 SDL_Surface *surface = NULL;
@@ -870,24 +862,23 @@ FILE *sdlFindFile(const char *name)
   char buffer[4096];
   char path[2048];
 
-#ifdef __GNUC__
-#define PATH_SEP ":"
-#define FILE_SEP '/'
-#define EXE_NAME "VisualBoyAdvance"
-#else
+#ifdef WIN32
 #define PATH_SEP ";"
 #define FILE_SEP '\\'
 #define EXE_NAME "VisualBoyAdvance-SDL.exe"
-#endif
+#else // ! WIN32
+#define PATH_SEP ":"
+#define FILE_SEP '/'
+#define EXE_NAME "VisualBoyAdvance"
+#endif // ! WIN32
 
-  fprintf(stderr, "Seaching for file %s\n", name);
+  fprintf(stderr, "Searching for file %s\n", name);
   
   if(GETCWD(buffer, 2048)) {
-    fprintf(stderr, "Searching current dir: %s\n", buffer);
+    fprintf(stderr, "Searching current directory: %s\n", buffer);
   }
   
-  FILE *f = fopen(name,"r");
-
+  FILE *f = fopen(name, "r");
   if(f != NULL) {
     return f;
   }
@@ -895,25 +886,30 @@ FILE *sdlFindFile(const char *name)
   char *home = getenv("HOME");
 
   if(home != NULL) {
-    fprintf(stderr, "Seaching home directory: %s\n", home);
+    fprintf(stderr, "Searching home directory: %s\n", home);
     sprintf(path, "%s%c%s", home, FILE_SEP, name);
     f = fopen(path, "r");
-    
-    if(f)
+    if(f != NULL)
       return f;
   }
 
-#ifdef _MSC_VER
+#ifdef WIN32
   home = getenv("USERPROFILE");
   if(home != NULL) {
     fprintf(stderr, "Searching user profile directory: %s\n", home);
     sprintf(path, "%s%c%s", home, FILE_SEP, name);
     f = fopen(path, "r");
-    if(f)
+    if(f != NULL)
       return f;
   }
-#endif
-  
+#else // ! WIN32
+    fprintf(stderr, "Searching system config directory: %s\n", SYSCONFDIR);
+    sprintf(path, "%s%c%s", SYSCONFDIR, FILE_SEP, name);
+    f = fopen(path, "r");
+    if(f != NULL)
+      return f;
+#endif // ! WIN32
+
   if(!strchr(arg0, '/') &&
      !strchr(arg0, '\\')) {
     char *path = getenv("PATH");
@@ -932,7 +928,7 @@ FILE *sdlFindFile(const char *name)
           fclose(f);
           sprintf(path2, "%s%c%s", tok, FILE_SEP, name);
           f = fopen(path2, "r");
-          if(f) {
+          if(f != NULL) {
             fprintf(stderr, "Found at %s\n", path2);
             return f;
           }
@@ -949,7 +945,7 @@ FILE *sdlFindFile(const char *name)
       *p = 0;
       sprintf(path, "%s%c%s", buffer, FILE_SEP, name);
       f = fopen(path, "r");
-      if(f)
+      if(f != NULL)
         return f;
     }
   }
@@ -1658,6 +1654,9 @@ void sdlPollEvents()
   SDL_Event event;
   while(SDL_PollEvent(&event)) {
     switch(event.type) {
+    case SDL_QUIT:
+      emulating = 0;
+      break;
     case SDL_ACTIVEEVENT:
       if(pauseWhenInactive && (event.active.state & SDL_APPINPUTFOCUS)) {
         active = event.active.gain;
@@ -1933,11 +1932,7 @@ void usage(char *cmd)
 int main(int argc, char **argv)
 {
   fprintf(stderr,"VisualBoyAdvance-SDL version %s\n", VERSION);
-#ifdef __GNUC__
-  fprintf(stderr,"Linux version\n");
-#else
-  fprintf(stderr,"Windows version\n");
-#endif
+
   arg0 = argv[0];
   
   captureDir[0] = 0;

@@ -1,4 +1,8 @@
-2004-15-03  kxu  <kxu@users.sourceforge.net>
+2004-05-20  kxu  <kxu@users.sourceforge.net>
+
+	* src/sdl/SDL.cpp (sdlPollEvents): added SDL_QUIT event support
+
+2004-05-15  kxu  <kxu@users.sourceforge.net>
 
 	* finalized the first release of the GTK+ interface
 
