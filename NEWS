@@ -6,6 +6,7 @@ Core changes:
 - no longer allow L+R or U+D to be reported as pressed
 - fixed RTC problem on last day of the month
 - fixed bug with some cheat codes that caused an invalid ROM patch
+- fixed sound mixing problem with DS ratio
 
 Windows:
 - added skin button support
