@@ -1836,6 +1836,8 @@ void sdlPollEvents()
           pauseNextFrame = true;
         }
         break;
+      default:
+        break;
       }
       sdlUpdateKey(event.key.keysym.sym, false);
       break;
@@ -2633,7 +2635,6 @@ void systemDrawScreen()
     }
     if(((systemGetClock() - screenMessageTime) < 3000) &&
        !disableStatusMessages) {
-      int pitch = srcPitch;
       drawText(pix, srcPitch, 10, srcHeight - 20,
                screenMessageBuffer); 
     } else {

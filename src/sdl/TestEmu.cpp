@@ -149,8 +149,6 @@ int main(int argc, char **argv)
   
   char buffer[1024];
 
-  int op = -1;
-
   systemFrameSkip = frameSkip = 2;
   gbBorderOn = 0;
 
