@@ -34,6 +34,8 @@ static u32 greenMask = 0x7E0;
 
 u32 qRGB_COLOR_MASK[2] = { 0xF7DEF7DE, 0xF7DEF7DE };
 
+extern void hq2x_init(unsigned);
+
 int Init_2xSaI(u32 BitFormat)
 {
   if(systemColorDepth == 16) {
@@ -45,6 +47,7 @@ int Init_2xSaI(u32 BitFormat)
       redblueMask = 0xF81F;
       greenMask = 0x7E0;
       qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0xF7DEF7DE;
+      hq2x_init(16);
     } else if (BitFormat == 555) {
       colorMask = 0x7BDE7BDE;
       lowPixelMask = 0x04210421;
@@ -53,6 +56,7 @@ int Init_2xSaI(u32 BitFormat)
       redblueMask = 0x7C1F;
       greenMask = 0x3E0;
       qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0x7BDE7BDE;
+      hq2x_init(15);
     } else {
       return 0;
     }
@@ -62,6 +66,7 @@ int Init_2xSaI(u32 BitFormat)
     qcolorMask = 0xfcfcfc;
     qlowpixelMask = 0x030303;
     qRGB_COLOR_MASK[0] = qRGB_COLOR_MASK[1] = 0xfefefe;
+    hq2x_init(32);
   } else
     return 0;
 
