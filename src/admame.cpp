@@ -349,6 +349,7 @@ static void internal_scale2x_16_mmx_single(u16* dst, const u16* src0, const u16*
                        "punpckhwd %%mm4,%%mm3\n"
                        "movq %%mm2,(%3)\n"
                        "movq %%mm3,8(%3)\n"
+                       "emms\n"
 
                        : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (dst), "+r" (count)
                        :
@@ -726,6 +727,7 @@ static void internal_scale2x_32_mmx_single(u32* dst, const u32* src0, const u32*
                        "punpckhdq %%mm4,%%mm3\n"
                        "movq %%mm2,(%3)\n"
                        "movq %%mm3,8(%3)\n"
+                       "emms\n"
 
                        : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (dst), "+r" (count)
                        :

@@ -105,6 +105,7 @@ void SmartIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "decl %4\n"
                   "jnz 0b\n"
                   "pop %4\n"
+                  "emms\n"
                   : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (src3)
                   : "r" (count), "r" (mask)
                   );
@@ -269,6 +270,7 @@ void SmartIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "decl %4\n"
                   "jnz 0b\n"
                   "pop %4\n"
+                  "emms\n"
                   : "+r" (src0), "+r" (src1), "+r" (src2), "+r" (src3)
                   : "r" (count), "r" (mask)
                   );
@@ -415,6 +417,7 @@ void MotionBlurIB_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "decl %2\n"
                   "jnz 0b\n"
                   "pop %2\n"
+                  "emms\n"
                   : "+r" (src0), "+r" (src1)
                   : "r" (count), "r" (mask)
                   );
@@ -518,6 +521,7 @@ void MotionBlurIB32_MMX(u8 *srcPtr, u32 srcPitch, int width, int height)
                   "decl %2\n"
                   "jnz 0b\n"
                   "pop %2\n"
+                  "emms\n"
                   : "+r" (src0), "+r" (src1)
                   : "r" (count), "r" (mask)
                   );
