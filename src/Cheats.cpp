@@ -799,19 +799,19 @@ void cheatsCBAReverseArray(u8 *array, u8 *dest)
 
 void chatsCBAScramble(u8 *array, int count, u8 b)
 {
-  u8 *r6 = array + (count >> 3);
-  u8 *r0 = array + (b >> 3);
-  u32 r1 = *r6 & (1 << (count & 7));
-  u32 r2 = (*r6 & (~(1 << (count & 7))));
-  if (r1 != 0)
-    r1 = 1;
-  if ((*r0 & (1 << (b & 7))) != 0)
-    r2 |= (1 << (count & 7));
-  *r6 = r2;
-  u32 r3 = *r0 & (~(1 << (b & 7)));
-  if (r1 != 0)
-    r3 |= (1 << (b & 7));
-  *r0 = r3;
+  u8 *x = array + (count >> 3);
+  u8 *y = array + (b >> 3);
+  u32 z = *x & (1 << (count & 7));
+  u32 x0 = (*x & (~(1 << (count & 7))));
+  if (z != 0)
+    z = 1;
+  if ((*y & (1 << (b & 7))) != 0)
+    x0 |= (1 << (count & 7));
+  *x = x0;
+  u32 temp = *y & (~(1 << (b & 7)));
+  if (z != 0)
+    temp |= (1 << (b & 7));
+  *y = temp;
 }
 
 u32 cheatsCBAGetValue(u8 *array)
@@ -848,88 +848,88 @@ void cheatsCBAParseSeedCode(u32 address, u32 value, u32 *array)
 
 u32 cheatsCBAEncWorker()
 {
-  u32 r3 = (cheatsCBATemporaryValue * 0x41c64e6d) + 0x3039;
-  u32 r2 = (r3 * 0x41c64e6d) + 0x3039;
-  u32 r0 = r3 >> 0x10;
-  r3 = ((r2 >> 0x10) & 0x7fff) << 0x0f;
-  r0 = (r0 << 0x1e) | r3;
-  r3 = (r2 * 0x41c64e6d) + 0x3039;
-  cheatsCBATemporaryValue = r3;
-  return r0 | ((r3 >> 0x10) & 0x7fff);
+  u32 x = (cheatsCBATemporaryValue * 0x41c64e6d) + 0x3039;
+  u32 y = (x * 0x41c64e6d) + 0x3039;
+  u32 z = x >> 0x10;
+  x = ((y >> 0x10) & 0x7fff) << 0x0f;
+  z = (z << 0x1e) | x;
+  x = (y * 0x41c64e6d) + 0x3039;
+  cheatsCBATemporaryValue = x;
+  return z | ((x >> 0x10) & 0x7fff);
 }
 
 #define ROR(v, s) \
   (((v) >> (s)) | (((v) & ((1 << (s))-1)) << (32 - (s))))
 
-u32 cheatsCBACalcIndex(u32 r0, u32 r1)
+u32 cheatsCBACalcIndex(u32 x, u32 y)
 {
-  if(r1 != 0) {
-    if(r1 == 1)
-      r0 = 0;
-    else if(r0 == r1)
-      r0 = 0;
-    if(r1 < 1)
-      return r0;
-    else if(r0 < r1)
-      return r0;
-    u32 r3 = 1;
+  if(y != 0) {
+    if(y == 1)
+      x = 0;
+    else if(x == y)
+      x = 0;
+    if(y < 1)
+      return x;
+    else if(x < y)
+      return x;
+    u32 x0 = 1;
 
-    while(r1 < 0x10000000) {
-      if(r1 < r0) {
-        r1 = r1 << 4;
-        r3 = r3 << 4;
+    while(y < 0x10000000) {
+      if(y < x) {
+        y = y << 4;
+        x0 = x0 << 4;
       } else break;
     }
 
-    while(r1 < 0x80000000) {
-      if(r1 < r0) {
-        r1 = r1 << 1;
-        r3 = r3 << 1;
+    while(y < 0x80000000) {
+      if(y < x) {
+        y = y << 1;
+        x0 = x0 << 1;
       } else break;
     }
 
   loop:
-    u32 r2 = 0;
-    if(r0 >= r1)
-      r0 -= r1;
-    if(r0 >= (r1 >> 1)) {
-      r0 -= (r1 >> 1);
-      r2 |= ROR(r3, 1);
+    u32 z = 0;
+    if(x >= y)
+      x -= y;
+    if(x >= (y >> 1)) {
+      x -= (y >> 1);
+      z |= ROR(x0, 1);
     }
-    if(r0 >= (r1 >> 2)) {
-      r0 -= (r1 >> 2);
-      r2 |= ROR(r3, 2);
+    if(x >= (y >> 2)) {
+      x -= (y >> 2);
+      z |= ROR(x0, 2);
     }
-    if(r0 >= (r1 >> 3)) {
-      r0 -= (r1 >> 3);
-      r2 |= ROR(r3, 3);
+    if(x >= (y >> 3)) {
+      x -= (y >> 3);
+      z |= ROR(x0, 3);
     }
 
-    u32 r12 = r3;
+    u32 temp = x0;
 
-    if(r0 != 0) {
-      r3 = r3 >> 4;
-      if(r3 != 0) {
-        r1 = r1 >> 4;
+    if(x != 0) {
+      x0 = x0 >> 4;
+      if(x0 != 0) {
+        y = y >> 4;
         goto loop;
       }
     }
 
-    r2 = r2 & 0xe0000000;
+    z = z & 0xe0000000;
 
-    if(r2 != 0) {
-      if((r12 & 7) == 0)
-        return r0;
+    if(z != 0) {
+      if((temp & 7) == 0)
+        return x;
     } else
-      return r0;
+      return x;
 
-    if((r2 & ROR(r12, 3)) != 0)
-      r0 += r1 >> 3;
-    if((r2 & ROR(r12, 2)) != 0)
-      r0 += r1 >> 2;
-    if((r2 & ROR(r12, 1)) != 0)
-      r0 += r1 >> 1;
-    return r0;
+    if((z & ROR(temp, 3)) != 0)
+      x += y >> 3;
+    if((z & ROR(temp, 2)) != 0)
+      x += y >> 2;
+    if((z & ROR(temp, 1)) != 0)
+      x += y >> 1;
+    return x;
   } else {
   }
   // should not happen in the current code
@@ -978,29 +978,29 @@ void cheatsCBAChangeEncryption(u32 *seed)
   *((u32 *)&cheatsCBACurrentSeed[8]) = 0;
 }
 
-u16 cheatsCBAGenValue(u32 r0, u32 r1, u32 r2)
+u16 cheatsCBAGenValue(u32 x, u32 y, u32 z)
 {
-  r1 <<= 0x10;
-  r2 <<= 0x10;
-  r0 <<= 0x18;
-  u32 r4 = (int)r1 >> 0x10;
-  r2 = (int)r2 >> 0x10;
-  r0 = (int)r0 >> 0x10;
+  y <<= 0x10;
+  z <<= 0x10;
+  x <<= 0x18;
+  u32 x0 = (int)y >> 0x10;
+  z = (int)z >> 0x10;
+  x = (int)x >> 0x10;
   for(int i = 0; i < 8; i++) {
-    u32 r3 = r2 ^ r0;
-    if ((int)r3 >= 0) {
-      r3 = r2 << 0x11;
+    u32 temp = z ^ x;
+    if ((int)temp >= 0) {
+      temp = z << 0x11;
     }
     else {
-      r3 = r2 << 0x01;
-      r3 ^= r4;
-      r3 = r3 << 0x10;
+      temp = z << 0x01;
+      temp ^= x0;
+      temp = temp << 0x10;
     }
-    r2 = (int)r3 >> 0x10;
-    r3 = r0 << 0x11;
-    r0 = (int)r3 >> 0x10;
+    z = (int)temp >> 0x10;
+    temp = x << 0x11;
+    x = (int)temp >> 0x10;
   }
-  return r2 & 0xffff;
+  return z & 0xffff;
 }
 
 void cheatsCBAGenTable() {

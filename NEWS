@@ -5,6 +5,7 @@ Core changes:
 - C core for portability
 - don't reset LCD after disabling forced blank
 - speed up now uses frameskip 5
+- added AdvanceMAME Scale2x and Simple 2x filters
 Windows changes:
 - added freeze recent list option
 SDL version:
