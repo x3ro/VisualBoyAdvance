@@ -26,6 +26,7 @@
 #include "../GBA.h"
 #include "../Globals.h"
 #include "../Text.h"
+#include "../Util.h"
 
 #include "VBA.h"
 #include "MainWnd.h"
@@ -39,7 +40,6 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 extern int Init_2xSaI(u32);
-extern int RGB_LOW_BITS_MASK;
 extern void winlog(const char *,...);
 extern int systemSpeed;
 extern int winVideoModeSelect(CWnd *, GUID **);
@@ -551,26 +551,22 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
      px.dwBBitMask == 0x001F) {
     systemGreenShift++;
     Init_2xSaI(565);
-    RGB_LOW_BITS_MASK=0x821;
   } else if((px.dwFlags&DDPF_RGB) != 0 &&
             px.dwRBitMask == 0x7C00 &&
             px.dwGBitMask == 0x03E0 &&
             px.dwBBitMask == 0x001F) {
     Init_2xSaI(555);
-    RGB_LOW_BITS_MASK=0x421;
   } else if((px.dwFlags&DDPF_RGB) != 0 &&
             px.dwRBitMask == 0x001F &&
             px.dwGBitMask == 0x07E0 &&
             px.dwBBitMask == 0xF800) {
     systemGreenShift++;
     Init_2xSaI(565);
-    RGB_LOW_BITS_MASK=0x821;
   } else if((px.dwFlags&DDPF_RGB) != 0 &&
             px.dwRBitMask == 0x001F &&
             px.dwGBitMask == 0x03E0 &&
             px.dwBBitMask == 0x7C00) {
     Init_2xSaI(555);
-    RGB_LOW_BITS_MASK=0x421;
   } else {
     // 32-bit or 24-bit
     if(systemColorDepth == 32 || systemColorDepth == 24) {
@@ -588,27 +584,7 @@ bool DirectDrawDisplay::initializeOffscreen(int w, int h)
     winlog("B shift: %d\n", systemBlueShift);
   }
   
-  switch(systemColorDepth) {
-  case 16:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }
-    }
-    break;
-  case 24:
-  case 32:
-    {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);
-      }      
-    }
-    break;
-  }
+  utilUpdateSystemColorMaps();
   width = w;
   height = h;
   return true;
@@ -652,10 +628,6 @@ void DirectDrawDisplay::render()
      ddsPrimary == NULL)
     return;
 
-  if(theApp.vsync && !speedup) {
-    hret = pDirectDraw->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-  }
-  
   DDSURFACEDESC2 ddsDesc;
   
   ZeroMemory(&ddsDesc, sizeof(ddsDesc));
@@ -804,6 +776,9 @@ void DirectDrawDisplay::render()
   hret = ddsOffscreen->Unlock(NULL);
 
   if(hret == DD_OK) {
+   if(theApp.vsync && !(theApp.tripleBuffering && theApp.videoOption > VIDEO_4X) && !speedup) { // isn't the Flip() call synced unless a certain flag is passed to it?
+      hret = pDirectDraw->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
+    }
     ddsOffscreen->PageLock(0);
     if(theApp.tripleBuffering && theApp.videoOption > VIDEO_4X) {
       hret = ddsFlip->Blt(&theApp.dest, ddsOffscreen, NULL, DDBLT_WAIT, NULL);
