@@ -343,6 +343,33 @@ void qtGUI::resizeEvent(QResizeEvent *e)
   destRect.setRect(0, drawY, size.width(), size.height()-drawY);
 }
 
+bool qtGUI::fileRun(QString fileName)
+{
+  bool failed = !CPULoadRom((char *)((const char *)fileName));
+  
+  if(!failed) {
+    filename = (const char *)fileName;
+    fileinfo.setFile(fileName);
+    int index = filename.findRev('.');
+    if(index != -1)
+      filename.truncate(index);
+    
+    addRecentFile(fileName);
+    
+    CPUInit(NULL, useBios);
+    CPUReset();
+    
+    readBattery();
+    
+    emulating = 1;
+    timer->start(0);
+    return true;
+  } else {
+    QMessageBox::warning(this, tr("VisualBoyQt"), tr("Failed to load image"));
+  }
+  return false;
+}
+
 void qtGUI::fileOpen()
 {
   QFileDialog dlg(this);
@@ -355,28 +382,9 @@ void qtGUI::fileOpen()
   
   if(dlg.exec() == QDialog::Accepted) {
     QString selected = dlg.selectedFile();
-    const char *fileName = selected;
-    bool failed = !CPULoadRom((char *)fileName);
 
-    if(!failed) {
+    if(fileRun(selected))
       settings->writeEntry("/VisualBoyAdvance/romdir", dlg.dirPath());
-      romdir = (const char *)dlg.dirPath();
-      filename = (const char *)fileName;
-      fileinfo.setFile(selected);
-      int index = filename.findRev('.');
-      if(index != -1)
-        filename.truncate(index);
-      
-      CPUInit(NULL, useBios);
-      CPUReset();
-
-      readBattery();
-    
-      emulating = 1;
-      timer->start(0);      
-    } else {
-      QMessageBox::warning(this, tr("VisualBoyQt"), tr("Failed to load image"));
-    }
   }
 }
 
@@ -392,27 +400,9 @@ void qtGUI::fileOpenGB()
   
   if(dlg.exec() == QDialog::Accepted) {
     QString selected = dlg.selectedFile();
-    const char *fileName = selected;
-    bool failed = !CPULoadRom((char *)fileName);
-
-    if(!failed) {
-      settings->writeEntry("/VisualBoyAdvance/gbromdir", dlg.dirPath());
-      romdir = (const char *)dlg.dirPath();
-      filename = (const char *)fileName;
-      fileinfo.setFile(selected);
-      int index = filename.findRev('.');
-      if(index != -1)
-        filename.truncate(index);
-      
-      CPUInit(NULL, useBios);
-      CPUReset();
-
-      readBattery();
     
-      emulating = 1;
-      timer->start(0);      
-    } else {
-      QMessageBox::warning(this, tr("VisualBoyQt"), tr("Failed to load image"));
+    if(fileRun(selected)) {
+      settings->writeEntry("/VisualBoyAdvance/gbromdir", dlg.dirPath());
     }
   }
 }
@@ -583,7 +573,9 @@ void qtGUI::addRecentFile(const char *s)
 
 void qtGUI::fileRecent(int id)
 {
-
+  if(id >= 0 && id < 10) {
+    fileRun(recentFiles[id]);
+  }
 }
 
 void qtGUI::filePause()
@@ -770,8 +762,10 @@ void qtGUI::updateRecentMenu()
 
   recentMenu->setItemChecked(10, recentFreeze);
   
-  for(i = 0; i < 10; i++)
-    recentMenu->removeItem(i);
+  for(i = 0; i < 10; i++) {
+    if(recentMenu->indexOf(i) != -1)
+      recentMenu->removeItem(i);
+  }
 
   for(i = 0; i < 10; i++) {
     if(recentFiles[i].length() == 0)

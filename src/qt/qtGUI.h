@@ -80,6 +80,8 @@ private:
   void writeBattery();
   void readSettings();
 
+  bool fileRun(QString);
+
   void addRecentFile(const char *);
   
   QTimer *timer;

@@ -351,7 +351,7 @@ bool elfFindLineInModule(u32 *addr, char *name, int line)
   return false;
 }
 
-int elfFindLine(CompileUnit *unit, Function *func, u32 addr, char **f)
+int elfFindLine(CompileUnit *unit, Function */* func */, u32 addr, char **f)
 {
   int currentLine = -1;
   if(unit->hasLineInfo) {
@@ -2872,6 +2872,11 @@ void elfCleanUp(Type *t)
       free(t->enumeration);
     }
     break;
+  case TYPE_base:
+  case TYPE_pointer:
+  case TYPE_void:
+  case TYPE_reference:
+    break; // nothing to do
   }
 }
 

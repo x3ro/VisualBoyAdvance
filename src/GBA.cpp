@@ -815,7 +815,7 @@ bool CPUReadGSASnapshot(char *fileName)
   // check file size to know what we should read
   fseek(file, 0, SEEK_END);
 
-  long size = ftell(file);
+  // long size = ftell(file);
   fseek(file, 0x0, SEEK_SET);
   fread(&i, 1, 4, file);
   fseek(file, i, SEEK_CUR); // Skip SharkPortSave
@@ -1796,8 +1796,8 @@ void CPUCompareVCOUNT()
 
 void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
 {
-  int sm = s >> 24;
-  int dm = d >> 24;
+  // int sm = s >> 24;
+  // int dm = d >> 24;
 
   int sc = c;
 

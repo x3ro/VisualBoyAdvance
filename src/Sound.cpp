@@ -1032,7 +1032,7 @@ void soundMix()
     break;
   }
 
-  if(!dsaRatio)
+  if(!dsbRatio)
     res >>= 1;
   
   res += cgbRes;

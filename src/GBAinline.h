@@ -36,7 +36,7 @@ extern bool cpuEEPROMSensorEnabled;
 #define CPUReadMemoryQuick(addr) \
   FROM32LE((*(u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
-u32 inline CPUReadMemory(u32 address)
+inline u32 CPUReadMemory(u32 address)
 {
 
 #ifdef DEV_VERSION
@@ -154,7 +154,7 @@ u32 inline CPUReadMemory(u32 address)
 
 extern u32 myROM[];
 
-u32 inline CPUReadHalfWord(u32 address)
+inline u32 CPUReadHalfWord(u32 address)
 {
 #ifdef DEV_VERSION      
   if(address & 1) {
@@ -247,7 +247,7 @@ u32 inline CPUReadHalfWord(u32 address)
   return value;
 }
 
-u16 inline CPUReadHalfWordSigned(u32 address)
+inline u16 CPUReadHalfWordSigned(u32 address)
 {
   u16 value = CPUReadHalfWord(address);
   if((address & 1))
@@ -255,7 +255,7 @@ u16 inline CPUReadHalfWordSigned(u32 address)
   return value;
 }
 
-u8 inline CPUReadByte(u32 address)
+inline u8 CPUReadByte(u32 address)
 {
   switch(address >> 24) {
   case 0:
@@ -330,7 +330,7 @@ u8 inline CPUReadByte(u32 address)
   }
 }
 
-void inline CPUWriteMemory(u32 address, u32 value)
+inline void CPUWriteMemory(u32 address, u32 value)
 {
 #ifdef DEV_VERSION
   if(address & 3) {

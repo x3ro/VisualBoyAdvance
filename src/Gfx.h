@@ -116,14 +116,14 @@ extern int gfxBG3LastX;
 extern int gfxBG3LastY;
 extern int gfxLastVCOUNT;
 
-void inline gfxClearArray(u32 *array)
+inline void gfxClearArray(u32 *array)
 {
   for(int i = 0; i < 240; i++) {
     *array++ = 0x80000000;
   }
 }
 
-void inline gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
+inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
                               u32 *line)
 {
   u16 *palette = (u16 *)paletteRAM;
@@ -264,7 +264,7 @@ void inline gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
   }
 }
 
-void inline gfxDrawRotScreen(u16 control, 
+inline void gfxDrawRotScreen(u16 control, 
                              u16 x_l, u16 x_h,
                              u16 y_l, u16 y_h,
                              u16 pa,  u16 pb,
@@ -427,7 +427,7 @@ void inline gfxDrawRotScreen(u16 control,
   }  
 }
 
-void inline gfxDrawRotScreen16Bit(u16 control,
+inline void gfxDrawRotScreen16Bit(u16 control,
                                   u16 x_l, u16 x_h,
                                   u16 y_l, u16 y_h,
                                   u16 pa,  u16 pb,
@@ -521,7 +521,7 @@ void inline gfxDrawRotScreen16Bit(u16 control,
   }  
 }
 
-void inline gfxDrawRotScreen256(u16 control, 
+inline void gfxDrawRotScreen256(u16 control, 
                                 u16 x_l, u16 x_h,
                                 u16 y_l, u16 y_h,
                                 u16 pa,  u16 pb,
@@ -619,7 +619,7 @@ void inline gfxDrawRotScreen256(u16 control,
   }    
 }
 
-void inline gfxDrawRotScreen16Bit160(u16 control,
+inline void gfxDrawRotScreen16Bit160(u16 control,
                                      u16 x_l, u16 x_h,
                                      u16 y_l, u16 y_h,
                                      u16 pa,  u16 pb,
@@ -715,7 +715,7 @@ void inline gfxDrawRotScreen16Bit160(u16 control,
   }      
 }
 
-void inline gfxDrawSprites(u32 *lineOBJ)
+inline void gfxDrawSprites(u32 *lineOBJ)
 {
   int m=0;
   gfxClearArray(lineOBJ);
@@ -1068,7 +1068,7 @@ void inline gfxDrawSprites(u32 *lineOBJ)
   }
 }
 
-void inline gfxDrawOBJWin(u32 *lineOBJWin)
+inline void gfxDrawOBJWin(u32 *lineOBJWin)
 {
   gfxClearArray(lineOBJWin);
   if(layerEnable & 0x8000) {
@@ -1369,7 +1369,7 @@ void inline gfxDrawOBJWin(u32 *lineOBJWin)
   }
 }
 
-u32 inline gfxIncreaseBrightness(u32 color, int coeff)
+inline u32 gfxIncreaseBrightness(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1388,7 +1388,7 @@ u32 inline gfxIncreaseBrightness(u32 color, int coeff)
   return color;
 }
 
-void inline gfxIncreaseBrightness(u32 *line, int coeff)
+inline void gfxIncreaseBrightness(u32 *line, int coeff)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *line;
@@ -1409,7 +1409,7 @@ void inline gfxIncreaseBrightness(u32 *line, int coeff)
   }
 }
 
-u32 inline gfxDecreaseBrightness(u32 color, int coeff)
+inline u32 gfxDecreaseBrightness(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1429,7 +1429,7 @@ u32 inline gfxDecreaseBrightness(u32 color, int coeff)
   return color;
 }
 
-void inline gfxDecreaseBrightness(u32 *line, int coeff)
+inline void gfxDecreaseBrightness(u32 *line, int coeff)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *line;
@@ -1450,7 +1450,7 @@ void inline gfxDecreaseBrightness(u32 *line, int coeff)
   }
 }
 
-u32 inline gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
+inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
 {
   if(color < 0x80000000) {
     int r = (color & 0x1F);
@@ -1476,7 +1476,7 @@ u32 inline gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
   return color;
 }
 
-void inline gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb)
+inline void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *ta;

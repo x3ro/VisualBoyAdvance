@@ -1451,7 +1451,11 @@ void cheatsWriteHalfWord(u16 *address, u16 value, u16 mask)
   *address = (*address & finalMask) | (value & (~finalMask));
 }
 
+#if defined BKPT_SUPPORT && defined SDL
 void cheatsWriteByte(u8 *address, u8 value)
+#else
+void cheatsWriteByte(u8 *, u8)
+#endif
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL

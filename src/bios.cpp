@@ -114,7 +114,7 @@ void BIOS_BitUnPack()
   // check address
   int bits = CPUReadByte(header+2);
   int revbits = 8 - bits; 
-  u32 value = 0;
+  // u32 value = 0;
   u32 base = CPUReadMemory(header+4);
   bool addBase = (base & 0x80000000) ? true : false;
   base &= 0x7fffffff;

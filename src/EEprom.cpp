@@ -71,7 +71,7 @@ void eepromReadGame(gzFile gzFile, int version)
 }
 
 
-int eepromRead(u32 address)
+int eepromRead(u32 /* address */)
 {
   switch(eepromMode) {
   case EEPROM_IDLE:
@@ -107,7 +107,7 @@ int eepromRead(u32 address)
   return 1;
 }
 
-void eepromWrite(u32 address, u8 value)
+void eepromWrite(u32 /* address */, u8 value)
 {
   if(cpuDmaCount == 0)
     return;
