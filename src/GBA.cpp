@@ -582,6 +582,35 @@ void CPUUpdateWindow1()
   }
 }
 
+extern u32 line0[240];
+extern u32 line1[240];
+extern u32 line2[240];
+extern u32 line3[240];
+
+#define CLEAR_ARRAY(a) \
+  {\
+    u32 *array = (a);\
+    for(int i = 0; i < 240; i++) {\
+      *array++ = 0x80000000;\
+    }\
+  }\
+
+static void CPUUpdateRenderBuffers()
+{
+  if(!(layerEnable & 0x0100)) {
+    CLEAR_ARRAY(line0);
+  }
+  if(!(layerEnable & 0x0200)) {
+    CLEAR_ARRAY(line1);
+  }
+  if(!(layerEnable & 0x0400)) {
+    CLEAR_ARRAY(line2);
+  }
+  if(!(layerEnable & 0x0800)) {
+    CLEAR_ARRAY(line3);
+  }
+}
+
 void CPUWriteInt(gzFile gzFile, int i)
 {
   gzwrite(gzFile, &i, sizeof(int));
@@ -728,9 +757,20 @@ bool CPUReadState(char * file)
   eepromReadGame(gzFile, version);
   flashReadGame(gzFile, version);
   soundReadGame(gzFile, version);
+  
+  if(version > SAVE_GAME_VERSION_1) {
+    cheatsReadGame(gzFile);
+  }
+  if(version > SAVE_GAME_VERSION_6) {
+    rtcReadGame(gzFile);
+  }
+  gzclose(gzFile);
 
   // set pointers!
+  layerEnable = layerSettings & DISPCNT;
+  
   CPUUpdateRender();
+  CPUUpdateRenderBuffers();
   CPUUpdateWindow0();
   CPUUpdateWindow1();
   gbaSaveType = 0;
@@ -753,16 +793,6 @@ bool CPUReadState(char * file)
   }
   if(eepromInUse)
     gbaSaveType = 3;
-  
-  if(version > SAVE_GAME_VERSION_1) {
-    cheatsReadGame(gzFile);
-  }
-  if(version > SAVE_GAME_VERSION_6) {
-    rtcReadGame(gzFile);
-  }
-  gzclose(gzFile);
-
-  layerEnable = layerSettings & DISPCNT;
   
   return true;  
 }
@@ -2153,6 +2183,7 @@ void CPUUpdateRegister(u32 address, u16 value)
   case 0x00:
     {
       bool change = ((DISPCNT ^ value) & 0x80) ? true : false;
+      bool changeBG = ((DISPCNT ^ value) & 0x0F00) ? true : false;
       DISPCNT = (value & 0xFFF7);
       UPDATE_REG(0x00, DISPCNT);
       layerEnable = layerSettings & value;
@@ -2169,6 +2200,9 @@ void CPUUpdateRegister(u32 address, u16 value)
         //        (*renderLine)();
       }
       CPUUpdateRender();
+      // we only care about changes in BG0-BG3
+      if(changeBG)
+        CPUUpdateRenderBuffers();
       //      CPUUpdateTicks();
     }
     break;

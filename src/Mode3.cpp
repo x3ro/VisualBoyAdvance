@@ -43,8 +43,6 @@ void mode3RenderLine()
                           BG2PC, BG2PD,
                           gfxBG2X, gfxBG2Y, changed,                      
                           line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -122,8 +120,6 @@ void mode3RenderLineNoWindow()
                           BG2PC, BG2PD,
                           gfxBG2X, gfxBG2Y, changed,                      
                           line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -264,8 +260,6 @@ void mode3RenderLineAll()
                           BG2PC, BG2PD,
                           gfxBG2X, gfxBG2Y, changed,                      
                           line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);

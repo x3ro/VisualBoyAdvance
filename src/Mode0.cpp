@@ -33,26 +33,18 @@ void mode0RenderLine()
   
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {
-    gfxClearArray(line0);
   }
 
   if(layerEnable & 0x0200) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
   
   if(layerEnable & 0x0400) {
     gfxDrawTextScreen(BG2CNT, BG2HOFS, BG2VOFS, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if(layerEnable & 0x0800) {
     gfxDrawTextScreen(BG3CNT, BG3HOFS, BG3VOFS, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -148,26 +140,18 @@ void mode0RenderLineNoWindow()
   
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {
-    gfxClearArray(line0);
   }
 
   if(layerEnable & 0x0200) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
   
   if(layerEnable & 0x0400) {
     gfxDrawTextScreen(BG2CNT, BG2HOFS, BG2VOFS, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if(layerEnable & 0x0800) {
     gfxDrawTextScreen(BG3CNT, BG3HOFS, BG3VOFS, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -348,26 +332,18 @@ void mode0RenderLineAll()
   
   if((layerEnable & 0x0100)) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {
-    gfxClearArray(line0);
   }
 
   if((layerEnable & 0x0200)) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
   
   if((layerEnable & 0x0400)) {
     gfxDrawTextScreen(BG2CNT, BG2HOFS, BG2VOFS, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if((layerEnable & 0x0800)) {
     gfxDrawTextScreen(BG3CNT, BG3HOFS, BG3VOFS, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);

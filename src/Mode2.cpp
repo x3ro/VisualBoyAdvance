@@ -40,8 +40,6 @@ void mode2RenderLine()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD, gfxBG2X, gfxBG2Y,
                      changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if(layerEnable & 0x0800) {
@@ -52,8 +50,6 @@ void mode2RenderLine()
     gfxDrawRotScreen(BG3CNT, BG3X_L, BG3X_H, BG3Y_L, BG3Y_H,
                      BG3PA, BG3PB, BG3PC, BG3PD, gfxBG3X, gfxBG3Y,
                      changed, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -142,8 +138,6 @@ void mode2RenderLineNoWindow()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD, gfxBG2X, gfxBG2Y,
                      changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if(layerEnable & 0x0800) {
@@ -154,8 +148,6 @@ void mode2RenderLineNoWindow()
     gfxDrawRotScreen(BG3CNT, BG3X_L, BG3X_H, BG3Y_L, BG3Y_H,
                      BG3PA, BG3PB, BG3PC, BG3PD, gfxBG3X, gfxBG3Y,
                      changed, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -313,8 +305,6 @@ void mode2RenderLineAll()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD, gfxBG2X, gfxBG2Y,
                      changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   if(layerEnable & 0x0800) {
@@ -325,8 +315,6 @@ void mode2RenderLineAll()
     gfxDrawRotScreen(BG3CNT, BG3X_L, BG3X_H, BG3Y_L, BG3Y_H,
                      BG3PA, BG3PB, BG3PC, BG3PD, gfxBG3X, gfxBG3Y,
                      changed, line3);
-  } else {
-    gfxClearArray(line3);
   }
 
   gfxDrawSprites(lineOBJ);

@@ -1,3 +1,21 @@
+/*
+ * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
+ * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 #include "GBA.h"
 #include "Globals.h"
 #include "Gfx.h"
@@ -16,32 +34,10 @@ void mode1RenderLine()
 
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {/*
- * VisualBoyAdvanced - Nintendo Gameboy/GameboyAdvance (TM) emulator
- * Copyrigh(c) 1999-2002 Forgotten (vb@emuhq.com)
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
-    gfxClearArray(line0);
   }
   
   if(layerEnable & 0x0200) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
 
   if(layerEnable & 0x0400) {
@@ -51,8 +47,6 @@ void mode1RenderLine()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD,
                      gfxBG2X, gfxBG2Y, changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -141,14 +135,11 @@ void mode1RenderLineNoWindow()
 
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {
-    gfxClearArray(line0);
   }
+
   
   if(layerEnable & 0x0200) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
 
   if(layerEnable & 0x0400) {
@@ -158,8 +149,6 @@ void mode1RenderLineNoWindow()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD,
                      gfxBG2X, gfxBG2Y, changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);
@@ -323,14 +312,10 @@ void mode1RenderLineAll()
   
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
-  } else {
-    gfxClearArray(line0);
   }
   
   if(layerEnable & 0x0200) {
     gfxDrawTextScreen(BG1CNT, BG1HOFS, BG1VOFS, line1);
-  } else {
-    gfxClearArray(line1);
   }
 
   if(layerEnable & 0x0400) {
@@ -340,8 +325,6 @@ void mode1RenderLineAll()
     gfxDrawRotScreen(BG2CNT, BG2X_L, BG2X_H, BG2Y_L, BG2Y_H,
                      BG2PA, BG2PB, BG2PC, BG2PD,
                      gfxBG2X, gfxBG2Y, changed, line2);
-  } else {
-    gfxClearArray(line2);
   }
 
   gfxDrawSprites(lineOBJ);
