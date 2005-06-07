@@ -100,16 +100,16 @@ void BIOS_ArcTan2()
   }
 #endif
   
-  s16 x = reg[0].I;
-  s16 y = reg[1].I;
-  s16 res = 0;
+  s32 x = reg[0].I;
+  s32 y = reg[1].I;
+  u32 res = 0;
   if (y == 0) {
-    res = 0x8000 & x;
+    res = ((x>>16) & 0x8000);
   } else {
     if (x == 0) {
-      res = (0x8000 & y) + 0x4000;
+      res = ((y>>16) & 0x8000) + 0x4000;
     } else {
-      if (abs(x) > abs(y)) {
+		if ((abs(x) > abs(y)) || ((abs(x) == abs(y)) && (!((x<0) && (y<0))))) {
         reg[1].I = x;
         reg[0].I = y << 14;
         BIOS_Div();
@@ -117,16 +117,16 @@ void BIOS_ArcTan2()
         if (x < 0)
           res = 0x8000 + reg[0].I;
         else
-          res = ((y & 0x8000) << 1 ) + reg[0].I;
+          res = (((y>>16) & 0x8000)<<1) + reg[0].I;
       } else {
         reg[0].I = x << 14;
         BIOS_Div();
         BIOS_ArcTan();
-        res = (0x4000 + (y & 0x8000)) - reg[0].I;
+        res = (0x4000 + ((y>>16) & 0x8000)) - reg[0].I;
       }
     }
   }
-  reg[0].I = ((u32)res) & 0xffff;
+  reg[0].I = res;
   
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
@@ -134,7 +134,7 @@ void BIOS_ArcTan2()
         reg[0].I);
   }
 #endif
-} 
+}  
 
 void BIOS_BitUnPack()
 {
