@@ -2732,7 +2732,7 @@ void CPUUpdateRegister(u32 address, u16 value)
           memoryWaitFetch[i] = cpuMemoryWait[i];
         }
       }
-      UPDATE_REG(0x204, value);
+      UPDATE_REG(0x204, value & 0x7FFF);
     }
     break;
   case 0x208:
