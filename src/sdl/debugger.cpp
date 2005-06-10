@@ -1721,11 +1721,14 @@ static void debuggerQuit(int, char **)
 static void debuggerWriteState(int n, char **args)
 {
   int num;
-  
-  sscanf(args[1],"%d",&num);
-  
-  if(num > 0 && num < 11)
-    sdlWriteState(num-1);
+
+  if(n == 2) {
+    sscanf(args[1],"%d",&num);
+    if(num > 0 && num < 11)
+      sdlWriteState(num-1);
+    else
+      debuggerUsage("save");
+  }
   else
     debuggerUsage("save");
 }
@@ -1733,11 +1736,14 @@ static void debuggerWriteState(int n, char **args)
 static void debuggerReadState(int n, char **args)
 {
   int num;
-  
-  sscanf(args[1],"%d",&num);
-  
-  if(num > 0 && num < 11)
-    sdlReadState(num-1);
+
+  if(n == 2) {
+    sscanf(args[1],"%d",&num);
+    if(num > 0 && num < 11)
+      sdlReadState(num-1);
+    else
+      debuggerUsage("load");
+  }
   else
     debuggerUsage("load");
 }
