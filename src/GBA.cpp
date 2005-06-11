@@ -1726,6 +1726,7 @@ void CPUSoftwareInterrupt(int comment)
   switch(comment) {
   case 0x00:
     BIOS_SoftReset();
+    ARM_PREFETCH;
     break;
   case 0x01:
     BIOS_RegisterRamReset();
