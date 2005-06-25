@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -142,8 +142,8 @@ static DebuggerCommand debuggerCommands[] = {
   { "dt", debuggerDisassembleThumb, "Disassemble THUMB instructions", "[<address> [<number>]]" },
   { "eb", debuggerEditByte,   "Modify memory location (byte)", "<address> <hex value>" },
   { "eh", debuggerEditHalfWord,"Modify memory location (half-word)","<address> <hex value>" },
-  { "er", debuggerEditRegister,       "Modify register", "<register number> <hex value" },
-  { "ew", debuggerEdit,       "Modify memory location (word)", "<address> <hex value" },
+  { "er", debuggerEditRegister,       "Modify register", "<register number> <hex value>" },
+  { "ew", debuggerEdit,       "Modify memory location (word)", "<address> <hex value>" },
   { "fd", debuggerFileDisassemble, "Disassemble instructions to file", "<file> [<address> [<number>]]" },
   { "fda", debuggerFileDisassembleArm, "Disassemble ARM instructions to file", "<file> [<address> [<number>]]" },
   { "fdt", debuggerFileDisassembleThumb, "Disassemble THUMB instructions to file", "<file> [<address> [<number>]]" },
@@ -879,8 +879,8 @@ static void debuggerBreakDelete(int n, char **args)
   if(n == 2) {
     int n = 0;
     sscanf(args[1], "%d", &n);
-    printf("Deleting breakpoint %d (%d)\n", n, debuggerNumOfBreakpoints);
     if(n >= 0 && n < debuggerNumOfBreakpoints) {
+      printf("Deleting breakpoint %d (%d)\n", n, debuggerNumOfBreakpoints);
       n++;
       if(n < debuggerNumOfBreakpoints) {
         for(int i = n; i < debuggerNumOfBreakpoints; i++) {
@@ -894,6 +894,8 @@ static void debuggerBreakDelete(int n, char **args)
       }
       debuggerNumOfBreakpoints--;
     }
+    else
+      printf("No breakpoints are set\n");
   } else
     debuggerUsage("bd");    
 }
@@ -1534,8 +1536,8 @@ static void debuggerIo(int n, char **args)
 static void debuggerEditByte(int n, char **args)
 {
   if(n == 3) {
-    u32 address;
-    u32 byte;
+    u32 address = 0x10000;
+    u32 byte = 0;
     sscanf(args[1], "%x", &address);
     sscanf(args[2], "%x", &byte);
     debuggerWriteByte(address, (u8)byte);
@@ -1546,15 +1548,15 @@ static void debuggerEditByte(int n, char **args)
 static void debuggerEditHalfWord(int n, char **args)
 {
   if(n == 3) {
-    u32 address;
-    u32 byte;
+    u32 address = 0x10000;
+    u32 HalfWord = 0;
     sscanf(args[1], "%x", &address);
     if(address & 1) {
       printf("Error: address must be half-word aligned\n");
       return;
     }
-    sscanf(args[2], "%x", &byte);
-    debuggerWriteHalfWord(address, (u16)byte);
+    sscanf(args[2], "%x", &HalfWord);
+    debuggerWriteHalfWord(address, (u16)HalfWord);
   } else
     debuggerUsage("eh");        
 }
@@ -1562,7 +1564,7 @@ static void debuggerEditHalfWord(int n, char **args)
 static void debuggerEditRegister(int n, char **args)
 {
   if(n == 3) {
-    int r;
+    int r = 15;
     u32 val;
     sscanf(args[1], "%d", &r);
     if(r > 16 || r == 15) {
@@ -1720,14 +1722,14 @@ static void debuggerQuit(int, char **)
 
 static void debuggerWriteState(int n, char **args)
 {
-  int num;
+  int num = 12;
 
   if(n == 2) {
     sscanf(args[1],"%d",&num);
     if(num > 0 && num < 11)
       sdlWriteState(num-1);
     else
-      debuggerUsage("save");
+      printf("Savestate number must be in the 1-10 range");
   }
   else
     debuggerUsage("save");
@@ -1735,14 +1737,14 @@ static void debuggerWriteState(int n, char **args)
 
 static void debuggerReadState(int n, char **args)
 {
-  int num;
+  int num = 12;
 
   if(n == 2) {
     sscanf(args[1],"%d",&num);
     if(num > 0 && num < 11)
       sdlReadState(num-1);
     else
-      debuggerUsage("load");
+      printf("Savestate number must be in the 1-10 range");
   }
   else
     debuggerUsage("load");
@@ -1750,7 +1752,7 @@ static void debuggerReadState(int n, char **args)
 
 static void debuggerDumpLoad(int n, char** args)
 {
-  u32 address;
+  u32 address = 0;
   char *file;
   FILE *f;
   int c;
@@ -1785,8 +1787,8 @@ static void debuggerDumpLoad(int n, char** args)
 
 static void debuggerDumpSave(int n, char** args)
 {
-  u32 address;
-  u32 size;
+  u32 address = 0;
+  u32 size = 0;
   char *file;
   FILE *f;
   
@@ -2191,6 +2193,7 @@ static bool debuggerCondEvaluate(int num)
   
   while(debugger) {
     systemSoundPause();
+    debuggerDisableBreakpoints();
     printf("debugger> ");
     commandCount = 0;
     char *s = fgets(buffer, 1024, stdin);

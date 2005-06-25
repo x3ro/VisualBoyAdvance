@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -231,6 +231,7 @@ int sdlFlashSize = 0;
 int sdlAutoIPS = 1;
 int sdlRtcEnable = 0;
 int sdlAgbPrint = 0;
+int sdlMirroringEnable = 0;
 
 int sdlDefaultJoypad = 0;
 
@@ -1306,6 +1307,8 @@ static void sdlApplyPerImagePreferences()
         int save = atoi(value);
         if(save >= 0 && save <= 5)
           cpuSaveType = save;
+      } else if(!strcmp(token, "mirroringEnabled")) {
+        mirroringEnable = (atoi(value) == 0 ? false : true);
       }
     }
   }
@@ -2226,6 +2229,8 @@ int main(int argc, char **argv)
         //        }
 
         sdlApplyPerImagePreferences();
+
+        doMirroring(mirroringEnable);
         
         cartridgeType = 0;
         emulator = GBASystem;
