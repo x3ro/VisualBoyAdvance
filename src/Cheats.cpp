@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -192,6 +192,9 @@
 #define GSA_16_BIT_MIF_FALSE          109
 #define GSA_16_BIT_MIF_LOWER_OR_EQ_U  110
 #define GSA_16_BIT_MIF_HIGHER_OR_EQ_U 111
+#define MASTER_CODE                   112
+#define CHEATS_16_BIT_WRITE           114
+#define CHEATS_32_BIT_WRITE           115
 
 CheatsData cheatsList[100];
 int cheatsNumber = 0;
@@ -205,6 +208,7 @@ u32 cheatsCBATemporaryValue = 0;
 u16 cheatsCBATable[256];
 bool cheatsCBATableGenerated = false;
 u16 super = 0;
+extern u32 mastercode;
 
 u8 cheatsCBACurrentSeed[12] = {
   0x00, 0x00, 0x00, 0x00,
@@ -315,7 +319,10 @@ u8 v3_deadtable2[256] = {
 #define CHEAT_IS_HEX(a) ( ((a)>='A' && (a) <='F') || ((a) >='0' && (a) <= '9'))
 
 #define CHEAT_PATCH_ROM_16BIT(a,v) \
-  WRITE16LE(((u16 *)&rom[(a) & 0x1ffffff]), v); 
+  WRITE16LE(((u16 *)&rom[(a) & 0x1ffffff]), v);
+
+#define CHEAT_PATCH_ROM_32BIT(a,v) \
+  WRITE32LE(((u32 *)&rom[(a) & 0x1ffffff]), v);  
 
 static bool isMultilineWithData(int i)
 {
@@ -434,6 +441,9 @@ static bool isMultilineWithData(int i)
     case GSA_16_BIT_MIF_FALSE:
     case GSA_16_BIT_MIF_LOWER_OR_EQ_U:
     case GSA_16_BIT_MIF_HIGHER_OR_EQ_U:
+    case MASTER_CODE:
+    case CHEATS_16_BIT_WRITE:
+    case CHEATS_32_BIT_WRITE:
       return false;
       // the codes below have two lines of data
     case CBA_SLIDE_CODE:
@@ -558,6 +568,9 @@ static int getCodeLength(int num)
   case GSA_16_BIT_MIF_FALSE:
   case GSA_16_BIT_MIF_LOWER_OR_EQ_U:
   case GSA_16_BIT_MIF_HIGHER_OR_EQ_U:
+  case MASTER_CODE:
+  case CHEATS_16_BIT_WRITE:
+  case CHEATS_32_BIT_WRITE:
     return 1;
   case CBA_IF_KEYS_PRESSED:
   case CBA_SLIDE_CODE:
@@ -571,8 +584,10 @@ static int getCodeLength(int num)
 int cheatsCheckKeys(u32 keys, u32 extended)
 {
   bool onoff = true;
-  int ticks = 1;
+  int ticks = 0;
   int i;
+  mastercode = 0;
+
   for (i = 0; i<4; i++)
     if (rompatch2addr [i] != 0) {
       CHEAT_PATCH_ROM_16BIT(rompatch2addr [i],rompatch2oldval [i]);
@@ -711,6 +726,9 @@ int cheatsCheckKeys(u32 keys, u32 extended)
 		  rompatch2val [3] = cheatsList[i].rawaddress & 0xFFFF;
       }
 	i++;
+      break;
+    case MASTER_CODE:
+        mastercode = cheatsList[i].address;
       break;
     }
     if (onoff) {
@@ -1289,6 +1307,20 @@ int cheatsCheckKeys(u32 keys, u32 extended)
           i+=(cheatsList[i].rawaddress >> 0x10) & 0xFF;
         }
         break;
+      case CHEATS_16_BIT_WRITE:
+        if ((cheatsList[i].address>>24)>=0x08) {
+          CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
+        } else {
+          CPUWriteHalfWord(cheatsList[i].address, cheatsList[i].value);
+        }
+        break;
+      case CHEATS_32_BIT_WRITE:
+        if ((cheatsList[i].address>>24)>=0x08) {
+          CHEAT_PATCH_ROM_32BIT(cheatsList[i].address, cheatsList[i].value);
+        } else {
+          CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
+        }
+        break;
       }
     }
   }
@@ -1330,6 +1362,12 @@ void cheatsAdd(const char *codeStr,
     case INT_32_BIT_WRITE:
       cheatsList[x].oldValue = CPUReadMemory(address);
       break;
+    case CHEATS_16_BIT_WRITE:
+      cheatsList[x].oldValue = CPUReadHalfWord(address);
+      break;
+    case CHEATS_32_BIT_WRITE:
+      cheatsList[x].oldValue = CPUReadMemory(address);
+      break;
     }
     cheatsNumber++;
   }
@@ -1351,6 +1389,19 @@ void cheatsDelete(int number, bool restore)
       case INT_32_BIT_WRITE:
         CPUWriteMemory(cheatsList[x].address, cheatsList[x].oldValue);
         break;
+      case CHEATS_16_BIT_WRITE:
+        if ((cheatsList[x].address>>24)>=0x08) {
+          CHEAT_PATCH_ROM_16BIT(cheatsList[x].address, cheatsList[x].oldValue);
+        } else {
+          CPUWriteHalfWord(cheatsList[x].address, cheatsList[x].oldValue);
+        }
+        break;
+      case CHEATS_32_BIT_WRITE:
+        if ((cheatsList[x].address>>24)>=0x08) {
+          CHEAT_PATCH_ROM_32BIT(cheatsList[x].address, cheatsList[x].oldValue);
+        } else {
+          CPUWriteMemory(cheatsList[x].address, cheatsList[x].oldValue);
+        }
       case GSA_16_BIT_ROM_PATCH:
         if(cheatsList[x].status & 1) {
           cheatsList[x].status &= ~1;
@@ -1359,12 +1410,15 @@ void cheatsDelete(int number, bool restore)
         }
         break;
       case GSA_16_BIT_ROM_PATCH2C:
-	  case GSA_16_BIT_ROM_PATCH2D:
-	  case GSA_16_BIT_ROM_PATCH2E:
-	  case GSA_16_BIT_ROM_PATCH2F:
+      case GSA_16_BIT_ROM_PATCH2D:
+      case GSA_16_BIT_ROM_PATCH2E:
+      case GSA_16_BIT_ROM_PATCH2F:
         if(cheatsList[x].status & 1) {
           cheatsList[x].status &= ~1;
         }
+        break;
+      case MASTER_CODE:
+        mastercode=0;
         break;
       }
     }
@@ -1387,6 +1441,7 @@ void cheatsEnable(int i)
 {
   if(i >= 0 && i < cheatsNumber) {
     cheatsList[i].enabled = true;
+    mastercode = 0;
   }
 }
 
@@ -1408,6 +1463,9 @@ void cheatsDisable(int i)
       if(cheatsList[i].status & 1) {
         cheatsList[i].status &= ~1;
       }
+      break;
+    case MASTER_CODE:
+        mastercode=0;
       break;
     }
     cheatsList[i].enabled = false;
@@ -1454,8 +1512,18 @@ bool cheatsVerifyCheatCode(const char *code, const char *desc)
   sscanf(buffer, "%x", &address);
 
   switch(address >> 24) {
-  case 2:
-  case 3:
+  case 0x02:
+  case 0x03:
+  case 0x04:
+  case 0x05:
+  case 0x06:
+  case 0x07:
+  case 0x08:
+  case 0x09:
+  case 0x0A:
+  case 0x0B:
+  case 0x0C:
+  case 0x0D:
     break;
   default:
     systemMessage(MSG_INVALID_CHEAT_CODE_ADDRESS,
@@ -1468,9 +1536,9 @@ bool cheatsVerifyCheatCode(const char *code, const char *desc)
   sscanf(buffer, "%x", &value);
   int type = 0;
   if(len == 13)
-    type = 1;
+    type = 114;
   if(len == 17)
-    type = 2;
+    type = 115;
   cheatsAdd(code, desc, address, address, value, type, type);
   return true;
 }
@@ -1587,6 +1655,15 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
   if(v3) {
     int type = ((address >> 25) & 127) | ((address >> 17) & 0x80);
     u32 addr = (address & 0x00F00000) << 4 | (address & 0x0003FFFF);
+    u16 mcode = (address>>24 & 0xFF);
+
+    if ((mcode & 0xFE) == 0xC4)
+    {
+      cheatsAdd(code, desc, address, (address & 0x1FFFFFF) | (0x08000000),
+        value, 257, MASTER_CODE);
+      mastercode = (address & 0x1FFFFFF) | (0x08000000);
+    }
+    else
     switch(type) {
     case 0x00:
       if(address == 0) {
@@ -1801,7 +1878,7 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
     case 0x46:
       cheatsAdd(code, desc, address, addr, value, 257, GSA_32_BIT_IF_TRUE3);
       break;
-	case 0x47:
+	  case 0x47:
       cheatsAdd(code, desc, address, addr, value, 257, GSA_ALWAYS3);
       break;
     case 0x48:
@@ -1932,7 +2009,7 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
 		// This code is buggy : the value is always set to 0 !
         cheatsAdd(code, desc, address, address & 0x0F0FFFFF, 0, 256, 
                   GSA_32_BIT_GS_WRITE);
-		break;
+        break;
       case 15:
         cheatsAdd(code, desc, address, 0, value & 0xFFFF, 256, GSA_SLOWDOWN);
         break;
@@ -1995,9 +2072,13 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
         cheatsAdd(code, desc, address, address, value, 256, 
                   UNKNOWN_CODE);
         break;
-	  }
-	break;
-    default:
+      }
+      break;
+      case 0x0f:
+        cheatsAdd(code, desc, address, (address & 0xFFFFFFF), value, 256, MASTER_CODE);
+        mastercode = (address & 0xFFFFFFF);
+        break;
+      default:
       // unsupported code
       cheatsAdd(code, desc, address, address, value, 256, 
                 UNKNOWN_CODE);
@@ -2465,6 +2546,10 @@ void cheatsAddCBACode(const char *code, const char *desc)
         cheatsAdd(code, desc, address, address & 0x0FFFFFFF, value, 512, 
                   UNKNOWN_CODE);
       }
+      break;
+    case 0x01:
+      cheatsAdd(code, desc, address, (address & 0x1FFFFFF) | 0x08000000, value, 512, MASTER_CODE);
+      mastercode = (address & 0x1FFFFFF) | 0x08000000;
       break;
     case 0x02:
       cheatsAdd(code, desc, address, address & 0x0FFFFFFE, value, 512, 
