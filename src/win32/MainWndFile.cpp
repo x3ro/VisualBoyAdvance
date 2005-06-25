@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -168,7 +168,7 @@ void MainWnd::OnFileOpengameboy()
 
   theApp.szFile = "";
 
-  LPCTSTR exts[] = { "" };
+  LPCTSTR exts[] = { "", "", "", "" };
   CString filter = winLoadFilter(IDS_FILTER_GBROM);
   CString title = winResLoadString(IDS_SELECT_ROM);
 
@@ -421,7 +421,7 @@ void MainWnd::OnUpdateFileImportGamesharkcodefile(CCmdUI* pCmdUI)
 void MainWnd::OnFileImportGamesharksnapshot() 
 {
   theApp.winCheckFullscreen();
-  LPCTSTR exts[] = { "" };
+  LPCTSTR exts[] = { ".gbs" };
   CString filter = theApp.cartridgeType == 1 ? winLoadFilter(IDS_FILTER_GBS) : winLoadFilter(IDS_FILTER_SPS);
   CString title = winResLoadString(IDS_SELECT_SNAPSHOT_FILE);
 
@@ -565,7 +565,7 @@ void MainWnd::OnFileScreencapture()
 
   CString capdir = regQueryStringValue("captureDir", "");
   if(capdir.IsEmpty())
-    capdir = getDirFromFile(name);
+    capdir = getDirFromFile(theApp.filename);
 
   CString ext = "png";
 

@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 
 // FileDlg.cpp: implementation of the FileDlg class.
 //
-//////////////////////////////////////////////////////////////////////
+
 #include "stdafx.h"
 #include <commdlg.h>
 #include <dlgs.h>
@@ -166,13 +166,16 @@ void FileDlg::OnTypeChange(HWND hwnd)
   LPCTSTR typeName = extensions[sel];
   
   if(filename.GetLength() == 0) {
-    filename.Format("*%s", typeName);
+    if(strlen(typeName) != 0)
+      filename.Format("*%s", typeName);
   } else {
-    int index = filename.Find('.');
-    if (index == -1) {
-      filename = filename + typeName;
-    } else {
-      filename = filename.Left(index) + typeName;
+    if(strlen(typeName) != 0) {
+      int index = filename.Find('.');
+      if (index == -1) {
+        filename = filename + typeName;
+      } else {
+        filename = filename.Left(index) + typeName;
+      }
     }
   }
   SetWindowText(fileNameControl, filename);

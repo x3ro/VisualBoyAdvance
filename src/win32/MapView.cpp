@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -465,6 +465,7 @@ void MapView::renderMode5()
   bg = 2;
 }
 
+
 void MapView::OnRefresh() 
 {
   paint();  
@@ -509,6 +510,12 @@ void MapView::paint()
     renderMode4();
     break;
   case 5:
+    renderMode5();
+    break;
+  case 6:
+    renderMode5();
+    break;
+  case 7:
     renderMode5();
     break;
   }
@@ -759,7 +766,7 @@ u32 MapView::GetClickAddress(int x, int y)
   u32 base = ((control >> 8) & 0x1f) * 0x800 + 0x6000000;
   
   // all text bgs (16 bits)
-  if(mode == 0 ||(mode < 3 && bg < 2)) {
+  if(mode == 0 ||(mode < 3 && bg < 2) || mode == 6 || mode == 7) {
     return GetTextClickAddress(base, x, y);
   }
   // rot bgs (8 bits)
@@ -791,7 +798,7 @@ LRESULT MapView::OnMapInfo(WPARAM wParam, LPARAM lParam)
   GetDlgItem(IDC_ADDRESS)->SetWindowText(buffer);
 
   int mode = DISPCNT & 7;  
-  if(mode >= 3) {
+  if(mode >= 3 && mode <=5) {
     // bitmap modes
     GetDlgItem(IDC_TILE_NUM)->SetWindowText("---");
     GetDlgItem(IDC_FLIP)->SetWindowText("--");

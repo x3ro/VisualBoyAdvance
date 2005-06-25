@@ -504,6 +504,7 @@
 #define IDC_BIT_13                      1263
 #define IDC_BIT_14                      1264
 #define IDC_BIT_15                      1265
+#define IDC_MIRRORING                   1266
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003

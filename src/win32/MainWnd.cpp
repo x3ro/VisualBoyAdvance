@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -425,6 +425,7 @@ BEGIN_MESSAGE_MAP(MainWnd, CWnd)
 
 void MainWnd::OnClose() 
 {
+  emulating = false;
   CWnd::OnClose();
 
   delete this;
@@ -495,7 +496,7 @@ bool MainWnd::FileRun()
       return false;
 
     theApp.romSize = size;
-    
+   
     flashSetSize(theApp.winFlashSize);
     rtcEnable(theApp.winRtcEnable);
     cpuSaveType = theApp.winSaveType;
@@ -535,6 +536,12 @@ bool MainWnd::FileRun()
                              tempName);
     if(i != (UINT)-1 && (i <= 5))
       cpuSaveType = (int)i;
+    i = GetPrivateProfileInt(buffer,
+                             "mirroringEnabled",
+                             -1,
+                             tempName);
+    if(i != (UINT)-1)
+      doMirroring (i == 0 ? false : true);
     
     theApp.emulator = GBASystem;
     /* disabled due to problems
@@ -967,7 +974,7 @@ bool MainWnd::fileOpenSelect()
 
   theApp.szFile = "";
 
-  LPCTSTR exts[] = { "" };
+  LPCTSTR exts[] = { "", "", "" };
   CString filter = winLoadFilter(IDS_FILTER_ROM);
   CString title = winResLoadString(IDS_SELECT_ROM);
 
