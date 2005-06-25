@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -278,7 +278,7 @@ void BIOS_CpuSet()
     dest &= 0xFFFFFFFC;
     // fill ?
     if((cnt >> 24) & 1) {
-      u32 value = CPUReadMemory(source);
+        u32 value = (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(source));
       while(count) {
         CPUWriteMemory(dest, value);
         dest += 4;
@@ -287,7 +287,7 @@ void BIOS_CpuSet()
     } else {
       // copy
       while(count) {
-        CPUWriteMemory(dest, CPUReadMemory(source));
+        CPUWriteMemory(dest, (source>0x0EFFFFFF ? 0x1CAD1CAD : CPUReadMemory(source)));
         source += 4;
         dest += 4;
         count--;
@@ -296,7 +296,7 @@ void BIOS_CpuSet()
   } else {
     // 16-bit fill?
     if((cnt >> 24) & 1) {
-      u16 value = CPUReadHalfWord(source);
+      u16 value = (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(source));
       while(count) {
         CPUWriteHalfWord(dest, value);
         dest += 2;
@@ -305,7 +305,7 @@ void BIOS_CpuSet()
     } else {
       // copy
       while(count) {
-        CPUWriteHalfWord(dest, CPUReadHalfWord(source));
+        CPUWriteHalfWord(dest, (source>0x0EFFFFFF ? 0x1CAD : CPUReadHalfWord(source)));
         source += 2;
         dest += 2;
         count--;
@@ -341,7 +341,7 @@ void BIOS_CpuFastSet()
   if((cnt >> 24) & 1) {
     while(count > 0) {
       // BIOS always transfers 32 bytes at a time
-      u32 value = CPUReadMemory(source);
+      u32 value = (source>0x0EFFFFFF ? 0xBAFFFFFB : CPUReadMemory(source));
       for(int i = 0; i < 8; i++) {
         CPUWriteMemory(dest, value);
         dest += 4;
@@ -353,7 +353,7 @@ void BIOS_CpuFastSet()
     while(count > 0) {
       // BIOS always transfers 32 bytes at a time
       for(int i = 0; i < 8; i++) {
-        CPUWriteMemory(dest, CPUReadMemory(source));
+        CPUWriteMemory(dest, (source>0x0EFFFFFF ? 0xBAFFFFFB :CPUReadMemory(source)));
         source += 4;
         dest += 4;
       }
@@ -963,7 +963,7 @@ void BIOS_RLUnCompVram()
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(source);
+  u32 header = CPUReadMemory(source & 0xFFFFFFFC);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
@@ -1032,7 +1032,7 @@ void BIOS_RLUnCompWram()
   u32 source = reg[0].I;
   u32 dest = reg[1].I;
 
-  u32 header = CPUReadMemory(source);
+  u32 header = CPUReadMemory(source & 0xFFFFFFFC);
   source += 4;
 
   if(((source & 0xe000000) == 0) ||
