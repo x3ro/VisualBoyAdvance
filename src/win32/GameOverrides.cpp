@@ -1,3 +1,21 @@
+// VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
+// Copyright (C) 1999-2003 Forgotten
+// Copyright (C) 2005 Forgotten and the VBA development team
+
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2, or(at your option)
+// any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
 // GameOverrides.cpp : implementation file
 //
 
@@ -30,6 +48,7 @@ void GameOverrides::DoDataExchange(CDataExchange* pDX)
   CDialog::DoDataExchange(pDX);
   //{{AFX_DATA_MAP(GameOverrides)
   DDX_Control(pDX, IDC_NAME, m_name);
+  DDX_Control(pDX, IDC_MIRRORING, m_mirroring);
   DDX_Control(pDX, IDC_FLASH_SIZE, m_flashSize);
   DDX_Control(pDX, IDC_SAVE_TYPE, m_saveType);
   DDX_Control(pDX, IDC_RTC, m_rtc);
@@ -65,7 +84,8 @@ void GameOverrides::OnOK()
   int rtc = m_rtc.GetCurSel();
   int flash = m_flashSize.GetCurSel();
   int save = m_saveType.GetCurSel();
-  if(rtc == 0 && flash == 0 && save == 0)
+  int mirroring = m_mirroring.GetCurSel();
+  if(rtc == 0 && flash == 0 && save == 0 && mirroring == 0)
     WritePrivateProfileString(buffer, NULL, NULL, tempName);
   else {
     char *value = NULL;
@@ -110,6 +130,16 @@ void GameOverrides::OnOK()
       break;
     }
     WritePrivateProfileString(buffer, "saveType", value, tempName);
+    value = NULL;
+    switch(mirroring) {
+    case 1:
+      value = "0";
+      break;
+    case 2:
+      value = "1";
+      break;
+    }
+    WritePrivateProfileString(buffer, "mirroringEnabled", value, tempName);
   }
   CDialog::OnOK();
 }
@@ -119,6 +149,7 @@ void GameOverrides::OnDefaults()
   m_rtc.SetCurSel(0);
   m_flashSize.SetCurSel(0);
   m_saveType.SetCurSel(0);
+  m_mirroring.SetCurSel(0);
 }
 
 void GameOverrides::OnCancel() 
@@ -151,6 +182,11 @@ BOOL GameOverrides::OnInitDialog()
     "EEPROM+Sensor",
     "None"
   };
+  const char *mirroringValues[] = {
+    "Default",
+    "Disabled",
+    "Enabled"
+  };
 
   int i;
 
@@ -163,7 +199,10 @@ BOOL GameOverrides::OnInitDialog()
   for(i = 0; i < 7; i++) {
     m_saveType.AddString(saveValues[i]);
   }
-  
+  for(i = 0; i < 3; i++) {
+    m_mirroring.AddString(mirroringValues[i]);
+  }
+
   GetModuleFileName(NULL, tempName, 2048);
   
   char *p = strrchr(tempName, '\\');
@@ -218,6 +257,21 @@ BOOL GameOverrides::OnInitDialog()
   else
     m_saveType.SetCurSel(0);
   
+  v = GetPrivateProfileInt(buffer,
+                           "mirroringEnabled",
+                            -1,
+                            tempName);
+  switch(v) {
+  case 0:
+    m_mirroring.SetCurSel(1);
+    break;
+  case 1:
+    m_mirroring.SetCurSel(2);
+    break;
+  default:
+    m_mirroring.SetCurSel(0);
+  }
+
   return TRUE;  // return TRUE unless you set the focus to a control
   // EXCEPTION: OCX Property Pages should return FALSE
 }
