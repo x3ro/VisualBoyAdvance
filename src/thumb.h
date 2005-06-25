@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -765,7 +765,14 @@
 
 u32 opcode = cpuPrefetch[0];
 cpuPrefetch[0] = cpuPrefetch[1];
-clockTicks = thumbCycles[opcode >> 8] + memoryWaitFetch[(armNextPC >> 24) & 15];
+
+busPrefetch = false;
+  if (busPrefetchCount<0)
+      busPrefetchCount=0;
+  if (busPrefetchCount>16)
+      busPrefetchCount=8;
+
+clockTicks = codeTicksAccessSeq16(armNextPC)+1;
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
   armNextPC = armNextPC++;
@@ -1095,7 +1102,7 @@ switch(opcode >> 8) {
        }
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
        Z_FLAG = reg[dest].I ? false : true;
-       clockTicks++;
+       clockTicks = codeTicksAccess16(armNextPC)+2;
      }
      break;
    case 0x03:
@@ -1117,7 +1124,7 @@ switch(opcode >> 8) {
        }
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
        Z_FLAG = reg[dest].I ? false : true;
-       clockTicks++;
+       clockTicks = codeTicksAccess16(armNextPC)+2;
      }
      break;
    }
@@ -1146,7 +1153,7 @@ switch(opcode >> 8) {
        }
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
        Z_FLAG = reg[dest].I ? false : true;
-       clockTicks++;
+       clockTicks = codeTicksAccess16(armNextPC)+2;
      }
      break;
    case 0x01:
@@ -1183,7 +1190,7 @@ switch(opcode >> 8) {
            reg[dest].I = value;
          }
        }
-       clockTicks++;
+       clockTicks = codeTicksAccess16(armNextPC)+2;
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
        Z_FLAG = reg[dest].I ? false : true;
      }
@@ -1241,19 +1248,21 @@ switch(opcode >> 8) {
    case 0x01:
      {
        // MUL Rd, Rs
+       clockTicks = codeTicksAccess16(armNextPC)+2;
        int dest = opcode & 7;
-       u32 rm = reg[(opcode >> 3) & 7].I;
-       reg[dest].I = reg[dest].I * rm;
+       u32 rm = reg[dest].I;
+       reg[dest].I = reg[(opcode >> 3) & 7].I * rm;
        if (((s32)rm) < 0)
          rm = ~rm;
        if ((rm & 0xFFFFFF00) == 0)
-         clockTicks += 1;
+         clockTicks += 0;
        else if ((rm & 0xFFFF0000) == 0)
-         clockTicks += 2;
+         clockTicks += 1;
        else if ((rm & 0xFF000000) == 0)
-         clockTicks += 3;
+         clockTicks += 2;
        else
-         clockTicks += 4;
+         clockTicks += 3;
+       busPrefetchCount += clockTicks - codeTicksAccess16(armNextPC) -1;
        Z_FLAG = reg[dest].I ? false : true;
        N_FLAG = reg[dest].I & 0x80000000 ? true : false;
      }
@@ -1297,7 +1306,7 @@ switch(opcode >> 8) {
          armNextPC = reg[15].I;
          reg[15].I += 2;
          THUMB_PREFETCH;
-         clockTicks++;
+         clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1;
        }       
        break;
      case 3:
@@ -1308,7 +1317,7 @@ switch(opcode >> 8) {
          armNextPC = reg[15].I;
          reg[15].I += 2;
          THUMB_PREFETCH;
-         clockTicks++;     
+         clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1;     
        }
        break;
      }
@@ -1367,7 +1376,7 @@ switch(opcode >> 8) {
          armNextPC = reg[15].I;
          reg[15].I += 2;
          THUMB_PREFETCH;
-         clockTicks++;
+         clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1; 
        }
        break;
      case 3:
@@ -1378,7 +1387,7 @@ switch(opcode >> 8) {
          armNextPC = reg[15].I;
          reg[15].I += 2;
          THUMB_PREFETCH;
-         clockTicks++;
+         clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1; 
        }   
        break;
      }
@@ -1403,6 +1412,8 @@ switch(opcode >> 8) {
          reg[15].I += 4;
          ARM_PREFETCH;
        }
+       busPrefetchCount=0;
+       clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1; 
        break;
      case 1:
        // BX Hs
@@ -1419,6 +1430,8 @@ switch(opcode >> 8) {
          reg[15].I += 4;
          ARM_PREFETCH;
        }
+       busPrefetchCount=0;
+       clockTicks += clockTicks+codeTicksAccess16(armNextPC)+1; 
        break;
      default:
        goto unknown_thumb;
@@ -1428,141 +1441,180 @@ switch(opcode >> 8) {
  case 0x48:
    // LDR R0,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);
      reg[0].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x49:
    // LDR R1,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);   
      reg[1].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);
+       busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4a:
    // LDR R2,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[2].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4b:
    // LDR R3,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[3].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4c:
    // LDR R4,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[4].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4d:
    // LDR R5,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[5].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4e:
    // LDR R6,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[6].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x4f:
    // LDR R7,[PC, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);      
      reg[7].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     busPrefetchCount=0;
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x50:
  case 0x51:
    // STR Rd, [Rs, Rn]
    {
-     u32 
-       address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
+     busPrefetch = busPrefetchEnable;
+     u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      CPUWriteMemory(address,
                     reg[opcode & 7].I);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address) +2;
    }
    break;
  case 0x52:
  case 0x53:
    // STRH Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      CPUWriteHalfWord(address,
                       reg[opcode&7].W.W0);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess16(address) +2;
    }
    break;
  case 0x54:
  case 0x55:
    // STRB Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode >>6)&7].I;
      CPUWriteByte(address,
                   reg[opcode & 7].B.B0);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess16(address) +2;
    }
    break;
  case 0x56:
  case 0x57:
    // LDSB Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = (s8)CPUReadByte(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess16(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x58:
  case 0x59:
    // LDR Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadMemory(address);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x5a:
  case 0x5b:
    // LDRH Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadHalfWord(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x5c:
  case 0x5d:
    // LDRB Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadByte(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess16(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x5e:
  case 0x5f:
    // LDSH Rd, [Rs, Rn]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = (s16)CPUReadHalfWordSigned(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess16(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x60:
@@ -1575,10 +1627,12 @@ switch(opcode >> 8) {
  case 0x67:
    // STR Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
      CPUWriteMemory(address,
                     reg[opcode&7].I);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;
  case 0x68:
@@ -1591,9 +1645,11 @@ switch(opcode >> 8) {
  case 0x6f:
    // LDR Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
      reg[opcode&7].I = CPUReadMemory(address);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x70:
@@ -1606,10 +1662,12 @@ switch(opcode >> 8) {
  case 0x77:
    // STRB Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
      CPUWriteByte(address,
                   reg[opcode&7].B.B0);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess16(address)+2;
    }
    break;
  case 0x78:
@@ -1622,9 +1680,11 @@ switch(opcode >> 8) {
  case 0x7f:
    // LDRB Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
      reg[opcode&7].I = CPUReadByte(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess16(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x80:
@@ -1637,10 +1697,12 @@ switch(opcode >> 8) {
  case 0x87:
    // STRH Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
      CPUWriteHalfWord(address,
                       reg[opcode&7].W.W0);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess16(address)+2;
    }
    break;   
  case 0x88:
@@ -1653,137 +1715,171 @@ switch(opcode >> 8) {
  case 0x8f:
    // LDRH Rd, [Rs, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
      reg[opcode&7].I = CPUReadHalfWord(address);
-     clockTicks += CPUUpdateTicksAccess16(address);
+     clockTicks = 3 + dataTicksAccess16(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x90:
    // STR R0, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);
      CPUWriteMemory(address, reg[0].I);
-     clockTicks += CPUUpdateTicksAccess32(address);
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x91:
    // STR R1, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[1].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2; 
    }
    break;      
  case 0x92:
    // STR R2, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[2].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x93:
    // STR R3, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[3].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x94:
    // STR R4, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[4].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x95:
    // STR R5, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[5].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x96:
    // STR R6, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[6].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;      
  case 0x97:
    // STR R7, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      CPUWriteMemory(address, reg[7].I);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = codeTicksAccess16(armNextPC) +
+         dataTicksAccess32(address)+2;
    }
    break;   
  case 0x98:
    // LDR R0, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[0].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x99:
    // LDR R1, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[1].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x9a:
    // LDR R2, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[2].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC); 
    }
    break;
  case 0x9b:
    // LDR R3, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[3].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x9c:
    // LDR R4, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[4].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x9d:
    // LDR R5, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[5].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x9e:
    // LDR R6, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[6].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0x9f:
    // LDR R7, [SP, #Imm]
    {
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[7].I = CPUReadMemoryQuick(address);
-     clockTicks += CPUUpdateTicksAccess32(address);   
+     clockTicks = 3 + dataTicksAccess32(address) +
+         codeTicksAccess16(armNextPC);
    }
    break;
  case 0xa0:
@@ -1863,18 +1959,20 @@ switch(opcode >> 8) {
   if(opcode & (val)) {\
     CPUWriteMemory(address, reg[(r)].I);\
     if(offset)\
-      clockTicks += 1 + CPUUpdateTicksAccessSeq32(address);\
+      clockTicks += 1 + dataTicksAccessSeq32(address);\
     else\
-      clockTicks += 1 + CPUUpdateTicksAccess32(address);\
+      clockTicks += 1 + dataTicksAccess32(address);\
     offset = 1;\
     address += 4;\
   }
  case 0xb4:
    // PUSH {Rlist}
    {
+     busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 temp = reg[13].I - 4 * cpuBitsSet[opcode & 0xff];
      u32 address = temp & 0xFFFFFFFC;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      PUSH_REG(1, 0);
      PUSH_REG(2, 1);
      PUSH_REG(4, 2);
@@ -1889,9 +1987,11 @@ switch(opcode >> 8) {
  case 0xb5:
    // PUSH {Rlist, LR}
    {
+     busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 temp = reg[13].I - 4 - 4 * cpuBitsSet[opcode & 0xff];
      u32 address = temp & 0xFFFFFFFC;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      PUSH_REG(1, 0);
      PUSH_REG(2, 1);
      PUSH_REG(4, 2);
@@ -1908,18 +2008,20 @@ switch(opcode >> 8) {
   if(opcode & (val)) {\
     reg[(r)].I = CPUReadMemory(address);\
     if(offset)\
-      clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);\
+      clockTicks += 1 + dataTicksAccessSeq32(address);\
     else\
-      clockTicks += 2 + CPUUpdateTicksAccess32(address);\
+      clockTicks += 1 + dataTicksAccess32(address);\
     offset = 1;\
     address += 4;\
   }
  case 0xbc:
    // POP {Rlist}
    {
+     busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 address = reg[13].I & 0xFFFFFFFC;
      u32 temp = reg[13].I + 4*cpuBitsSet[opcode & 0xFF];
+     clockTicks = 0;
      POP_REG(1, 0);
      POP_REG(2, 1);
      POP_REG(4, 2);
@@ -1929,14 +2031,17 @@ switch(opcode >> 8) {
      POP_REG(64, 6);
      POP_REG(128, 7);
      reg[13].I = temp;
+     clockTicks += codeTicksAccess16(armNextPC)+2;
    }
    break;   
  case 0xbd:
    // POP {Rlist, PC}
    {
+     busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 address = reg[13].I & 0xFFFFFFFC;
      u32 temp = reg[13].I + 4 + 4*cpuBitsSet[opcode & 0xFF];
+     clockTicks = 0;
      POP_REG(1, 0);
      POP_REG(2, 1);
      POP_REG(4, 2);
@@ -1947,13 +2052,15 @@ switch(opcode >> 8) {
      POP_REG(128, 7);
      reg[15].I = (CPUReadMemory(address) & 0xFFFFFFFE);
      if(offset)
-       clockTicks += CPUUpdateTicksAccessSeq32(address);
+       clockTicks += 1 + dataTicksAccessSeq32(address);
      else
-       clockTicks += CPUUpdateTicksAccess32(address);
+       clockTicks += 1 + dataTicksAccess32(address);
      armNextPC = reg[15].I;
      reg[15].I += 2;
      reg[13].I = temp;
      THUMB_PREFETCH;
+     busPrefetchCount=0;
+     clockTicks += 2*(codeTicksAccess16(armNextPC))+3;
    }
    break;      
 #define THUMB_STM_REG(val,r,b) \
@@ -1961,18 +2068,20 @@ switch(opcode >> 8) {
     CPUWriteMemory(address, reg[(r)].I);\
     if(!offset) {\
       reg[(b)].I = temp;\
-      clockTicks += 1 + CPUUpdateTicksAccess32(address);\
+      clockTicks += 1 + dataTicksAccess32(address);\
     } else \
-      clockTicks += 1 + CPUUpdateTicksAccessSeq32(address);\
+      clockTicks += 1 + dataTicksAccessSeq32(address);\
     offset = 1;\
     address += 4;\
   }
  case 0xc0:
    {
      // STM R0!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[0].I & 0xFFFFFFFC;
      u32 temp = reg[0].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 0);
      THUMB_STM_REG(2, 1, 0);
@@ -1987,9 +2096,11 @@ switch(opcode >> 8) {
  case 0xc1:
    {
      // STM R1!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[1].I & 0xFFFFFFFC;
      u32 temp = reg[1].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 1);
      THUMB_STM_REG(2, 1, 1);
@@ -2004,9 +2115,11 @@ switch(opcode >> 8) {
  case 0xc2:
    {
      // STM R2!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[2].I & 0xFFFFFFFC;
      u32 temp = reg[2].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 2);
      THUMB_STM_REG(2, 1, 2);
@@ -2021,9 +2134,11 @@ switch(opcode >> 8) {
  case 0xc3:
    {
      // STM R3!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[3].I & 0xFFFFFFFC;
      u32 temp = reg[3].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 3);
      THUMB_STM_REG(2, 1, 3);
@@ -2038,9 +2153,11 @@ switch(opcode >> 8) {
  case 0xc4:
    {
      // STM R4!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[4].I & 0xFFFFFFFC;
      u32 temp = reg[4].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 4);
      THUMB_STM_REG(2, 1, 4);
@@ -2055,9 +2172,11 @@ switch(opcode >> 8) {
  case 0xc5:
    {
      // STM R5!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[5].I & 0xFFFFFFFC;
      u32 temp = reg[5].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 5);
      THUMB_STM_REG(2, 1, 5);
@@ -2072,9 +2191,11 @@ switch(opcode >> 8) {
  case 0xc6:
    {
      // STM R6!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[6].I & 0xFFFFFFFC;
      u32 temp = reg[6].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 6);
      THUMB_STM_REG(2, 1, 6);
@@ -2089,9 +2210,11 @@ switch(opcode >> 8) {
  case 0xc7:
    {
      // STM R7!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[7].I & 0xFFFFFFFC;
      u32 temp = reg[7].I + 4*cpuBitsSet[opcode & 0xff];
      int offset = 0;
+     clockTicks = codeTicksAccess16(armNextPC)+1;
      // store
      THUMB_STM_REG(1, 0, 7);
      THUMB_STM_REG(2, 1, 7);
@@ -2107,18 +2230,20 @@ switch(opcode >> 8) {
   if(opcode & (val)) {\
     reg[(r)].I = CPUReadMemory(address);\
     if(offset)\
-      clockTicks += 2 + CPUUpdateTicksAccessSeq32(address);\
-    else\
-      clockTicks += 2 + CPUUpdateTicksAccess32(address);\
+      clockTicks += 1 + dataTicksAccessSeq32(address);\
+    else \
+      clockTicks += 1 + dataTicksAccess32(address);\
     offset = 1;\
     address += 4;\
   }
  case 0xc8:
    {
      // LDM R0!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[0].I & 0xFFFFFFFC;
      u32 temp = reg[0].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2128,6 +2253,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 1))
        reg[0].I = temp;
    }
@@ -2135,9 +2261,11 @@ switch(opcode >> 8) {
  case 0xc9:
    {
      // LDM R1!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[1].I & 0xFFFFFFFC;
      u32 temp = reg[1].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2147,6 +2275,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 2))
        reg[1].I = temp;
    }
@@ -2154,9 +2283,11 @@ switch(opcode >> 8) {
  case 0xca:
    {
      // LDM R2!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[2].I & 0xFFFFFFFC;
      u32 temp = reg[2].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2166,6 +2297,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 4))
        reg[2].I = temp;
    }
@@ -2173,9 +2305,11 @@ switch(opcode >> 8) {
  case 0xcb:
    {
      // LDM R3!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[3].I & 0xFFFFFFFC;
      u32 temp = reg[3].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2185,6 +2319,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 8))
        reg[3].I = temp;
    }
@@ -2192,9 +2327,11 @@ switch(opcode >> 8) {
  case 0xcc:
    {
      // LDM R4!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[4].I & 0xFFFFFFFC;
      u32 temp = reg[4].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2204,6 +2341,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);   
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 16))
        reg[4].I = temp;
    }
@@ -2211,9 +2349,11 @@ switch(opcode >> 8) {
  case 0xcd:
    {
      // LDM R5!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[5].I & 0xFFFFFFFC;
      u32 temp = reg[5].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2223,6 +2363,7 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
      THUMB_LDM_REG(128, 7);   
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 32))
        reg[5].I = temp;
    }
@@ -2230,9 +2371,11 @@ switch(opcode >> 8) {
  case 0xce:
    {
      // LDM R6!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[6].I & 0xFFFFFFFC;
      u32 temp = reg[6].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2241,7 +2384,8 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(16, 4);
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
-     THUMB_LDM_REG(128, 7);   
+     THUMB_LDM_REG(128, 7); 
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 64))
        reg[6].I = temp;
    }
@@ -2249,9 +2393,11 @@ switch(opcode >> 8) {
  case 0xcf:
    {
      // LDM R7!, {Rlist}
+     busPrefetch = busPrefetchEnable;
      u32 address = reg[7].I & 0xFFFFFFFC;
      u32 temp = reg[7].I + 4*cpuBitsSet[opcode & 0xFF];
      int offset = 0;
+     clockTicks = 0;
      // load
      THUMB_LDM_REG(1, 0);
      THUMB_LDM_REG(2, 1);
@@ -2260,7 +2406,8 @@ switch(opcode >> 8) {
      THUMB_LDM_REG(16, 4);
      THUMB_LDM_REG(32, 5);
      THUMB_LDM_REG(64, 6);
-     THUMB_LDM_REG(128, 7);   
+     THUMB_LDM_REG(128, 7);  
+     clockTicks += codeTicksAccess16(armNextPC)+2;
      if(!(opcode & 128))
        reg[7].I = temp;
    }
@@ -2272,7 +2419,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;      
  case 0xd1:
@@ -2282,7 +2430,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd2:
@@ -2292,7 +2441,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd3:
@@ -2302,7 +2452,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd4:
@@ -2312,7 +2463,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd5:
@@ -2322,7 +2474,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd6:
@@ -2332,7 +2485,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd7:
@@ -2342,7 +2496,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd8:
@@ -2352,7 +2507,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xd9:
@@ -2362,7 +2518,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xda:
@@ -2372,7 +2529,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xdb:
@@ -2382,7 +2540,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xdc:
@@ -2392,7 +2551,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xdd:
@@ -2402,13 +2562,19 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
-     clockTicks += 2;       
+     busPrefetchCount=0;
+     clockTicks = 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;   
  case 0xdf:
+     {
    // SWI #comment
+   u32 address = 0;
+   busPrefetchCount=0;
+   clockTicks = 2*codeTicksAccessSeq16(address) + codeTicksAccess16(address)+3;
    CPUSoftwareInterrupt(opcode & 0xFF);
    break;
+     }
  case 0xe0:
  case 0xe1:
  case 0xe2:
@@ -2426,6 +2592,8 @@ switch(opcode >> 8) {
      armNextPC = reg[15].I;
      reg[15].I += 2;
      THUMB_PREFETCH;
+     busPrefetchCount=0;
+     clockTicks += clockTicks + codeTicksAccess16(armNextPC)+1;
    }
    break;
  case 0xf0:
@@ -2465,6 +2633,8 @@ switch(opcode >> 8) {
      reg[15].I += 2;
      reg[14].I = temp|1;
      THUMB_PREFETCH;
+     busPrefetchCount=0;
+     clockTicks += 2*codeTicksAccessSeq16(armNextPC) + codeTicksAccess16(armNextPC)+3;
    }
    break;
 #ifdef BKPT_SUPPORT
