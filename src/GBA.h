@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -100,13 +100,14 @@ extern bool CPUReadState(const char *);
 extern bool CPUWriteMemState(char *, int);
 extern bool CPUWriteState(const char *);
 extern int CPULoadRom(const char *);
+extern void doMirroring(bool);
 extern void CPUUpdateRegister(u32, u16);
 extern void CPUWriteHalfWord(u32, u16);
 extern void CPUWriteByte(u32, u8);
 extern void CPUInit(const char *,bool);
 extern void CPUReset();
 extern void CPULoop(int);
-extern bool CPUCheckDMA(int,int);
+extern void CPUCheckDMA(int,int);
 extern bool CPUIsGBAImage(const char *);
 extern bool CPUIsZipFile(const char *);
 #ifdef PROFILING

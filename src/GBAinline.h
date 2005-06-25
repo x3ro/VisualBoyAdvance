@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -29,7 +29,6 @@ extern bool cpuFlashEnabled;
 extern bool cpuEEPROMEnabled;
 extern bool cpuEEPROMSensorEnabled;
 extern bool cpuDmaHack;
-extern bool cpuDmaHack2;
 extern u32 cpuDmaLast;
 
 #define CPUReadByteQuick(addr) \
@@ -120,7 +119,7 @@ inline u32 CPUReadMemory(u32 address)
     }
 #endif
 
-    if(cpuDmaHack || cpuDmaHack2) {
+    if(cpuDmaHack) {
       value = cpuDmaLast;
     } else {
       if(armState) {
@@ -234,7 +233,7 @@ inline u32 CPUReadHalfWord(u32 address)
           armNextPC - 4 : armNextPC - 2);
     }
 #endif
-    if(cpuDmaHack2 || cpuDmaHack) {
+    if(cpuDmaHack) {
       value = cpuDmaLast & 0xFFFF;
     } else {
       if(armState) {
@@ -325,7 +324,7 @@ inline u8 CPUReadByte(u32 address)
           armNextPC - 4 : armNextPC - 2);
     }
 #endif
-    if(cpuDmaHack || cpuDmaHack2) {
+    if(cpuDmaHack) {
       return cpuDmaLast & 0xFF;
     } else {
       if(armState) {
