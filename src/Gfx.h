@@ -305,7 +305,7 @@ inline void gfxDrawRotScreen(u16 control,
   int dy = pc & 0x7FFF;
   if(pc & 0x8000)
     dy |= 0xFFFF8000;
-  int dmy = pd & 0x7FFFF;
+  int dmy = pd & 0x7FFF;
   if(pd & 0x8000)
     dmy |= 0xFFFF8000;
 
@@ -462,7 +462,7 @@ inline void gfxDrawRotScreen16Bit(u16 control,
   int dy = pc & 0x7FFF;
   if(pc & 0x8000)
     dy |= 0xFFFF8000;
-  int dmy = pd & 0x7FFFF;
+  int dmy = pd & 0x7FFF;
   if(pd & 0x8000)
     dmy |= 0xFFFF8000;
 
@@ -560,7 +560,7 @@ inline void gfxDrawRotScreen256(u16 control,
   int dy = pc & 0x7FFF;
   if(pc & 0x8000)
     dy |= 0xFFFF8000;
-  int dmy = pd & 0x7FFFF;
+  int dmy = pd & 0x7FFF;
   if(pd & 0x8000)
     dmy |= 0xFFFF8000;
 
@@ -661,7 +661,7 @@ inline void gfxDrawRotScreen16Bit160(u16 control,
   int dy = pc & 0x7FFF;
   if(pc & 0x8000)
     dy |= 0xFFFF8000;
-  int dmy = pd & 0x7FFFF;
+  int dmy = pd & 0x7FFF;
   if(pd & 0x8000)
     dmy |= 0xFFFF8000;
 
