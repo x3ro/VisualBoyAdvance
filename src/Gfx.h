@@ -100,6 +100,7 @@ extern u32 lineOBJWin[240];
 extern u32 lineMix[240];
 extern bool gfxInWin0[240];
 extern bool gfxInWin1[240];
+extern int lineOBJpixleft[128];
 
 extern int gfxBG2Changed;
 extern int gfxBG3Changed;
@@ -731,6 +732,10 @@ inline void gfxDrawRotScreen16Bit160(u16 control,
 
 inline void gfxDrawSprites(u32 *lineOBJ)
 {
+  // lineOBJpix is used to keep track of the drawn OBJs
+  // and to stop drawing them if the 'maximum number of OBJ per line'
+  // has been reached.
+  int lineOBJpix = (DISPCNT & 0x20) ? 954 : 1226;
   int m=0;
   gfxClearArray(lineOBJ);
   if(layerEnable & 0x1000) {
@@ -744,55 +749,37 @@ inline void gfxDrawSprites(u32 *lineOBJ)
       u16 a2 = READ16LE(sprites++);
       sprites++;
 
-      // ignore OBJ-WIN
-      if((a0 & 0x0c00) == 0x0800)
-         continue;
-      
-      int sizeY = 8;
-      int sizeX = 8;
-      
-      switch(((a0 >>12) & 0x0c)|(a1>>14)) {
-      case 0:
-        break;
-      case 1:
-        sizeX = sizeY = 16;
-        break;
-      case 2:
-        sizeX = sizeY = 32;
-        break;
-      case 3:
-        sizeX = sizeY = 64;
-        break;
-      case 4:
-        sizeX = 16;
-        break;
-      case 5:
-        sizeX = 32;
-        break;
-      case 6:
-        sizeX = 32;
-        sizeY = 16;
-        break;
-      case 7:
-        sizeX = 64;
-        sizeY = 32;
-        break;
-      case 8:
-        sizeY = 16;
-        break;
-      case 9:
-        sizeY = 32;
-        break;
-      case 10:
-        sizeX = 16;
-        sizeY = 32;
-        break;
-      case 11:
-        sizeX = 32;
-        sizeY = 64;
-        break;
-      default:
+      lineOBJpixleft[x]=lineOBJpix;
+
+      lineOBJpix-=2;
+      if (lineOBJpix<=0)
         continue;
+
+      if ((a0 & 0x0c00) == 0x0c00)
+        a0 &=0xF3FF;
+
+      if ((a0>>14) == 3)
+      {
+        a0 &= 0x3FFF;
+        a1 &= 0x3FFF;
+      }
+      
+      int sizeX = 8<<(a1>>14);
+      int sizeY = sizeX;
+
+      if ((a0>>14) & 1)
+      {
+        if (sizeX<32)
+          sizeX<<=1;
+        if (sizeY>8)
+          sizeY>>=1;
+      }
+      else if ((a0>>14) & 2)
+      {
+        if (sizeX>8)
+          sizeX>>=1;
+        if (sizeY<32)
+          sizeY<<=1;
       }
 
 #ifdef SPRITE_DEBUG
@@ -801,9 +788,45 @@ inline void gfxDrawSprites(u32 *lineOBJ)
 #endif
 
       int sy = (a0 & 255);
+      int sx = (a1 & 0x1FF);
 
-      if(sy > 160)
-        sy -= 256;
+      // computes ticks used by OBJ-WIN if OBJWIN is enabled
+      if (((a0 & 0x0c00) == 0x0800) && (layerEnable & 0x8000))
+      {
+        if ((a0 & 0x0300) == 0x0300)
+        {
+          sizeX<<=1;
+          sizeY<<=1;
+        }
+        if((sy+sizeY) > 256)
+          sy -= 256;
+        if ((sx+sizeX)> 512)
+          sx-=512;
+        if (sx<0)
+        {
+            sizeX+=sx;
+            sx = 0;
+        }
+        else if ((sx+sizeX)>240)
+            sizeX=240-sx;
+        if ((VCOUNT>=sy) && (VCOUNT<sy+sizeY) && (sx<240))
+        {
+          if (a0 & 0x0100)
+            lineOBJpix-=8+2*sizeX;
+          else
+            lineOBJpix-=sizeX-2;
+        }
+        continue;
+      }
+      // else ignores OBJ-WIN if OBJWIN is disabled, and ignored disabled OBJ
+      else
+      if(((a0 & 0x0c00) == 0x0800) || ((a0 & 0x0300) == 0x0200))
+        continue;
+
+      if (lineOBJpix<0)
+        continue;
+
+
       
       if(a0 & 0x0100) {
         int fieldX = sizeX;
@@ -812,11 +835,18 @@ inline void gfxDrawSprites(u32 *lineOBJ)
           fieldX <<= 1;
           fieldY <<= 1;
         }
-        
+        if((sy+fieldY) > 256)
+          sy -= 256;
         int t = VCOUNT - sy;
         if((t >= 0) && (t < fieldY)) {
-          int sx = (a1 & 0x1FF);
-          if((sx < 240) || (((sx + fieldX) & 511) < 240)) {
+          int startpix = 0;
+          if ((sx+fieldX)> 512)
+          {
+            startpix=512-sx;
+          }
+          if (lineOBJpix>0)
+          if((sx < 240) || startpix) {
+            lineOBJpix-=8; 
             // int t2 = t - (fieldY >> 1);
             int rot = (a1 >> 9) & 0x1F;
             u16 *OAM = (u16 *)oam;
@@ -854,6 +884,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
               else
                 c &= 0x3FE;
               for(int x = 0; x < fieldX; x++) {
+                if (x >= startpix)
+                  lineOBJpix-=2;
+                if (lineOBJpix<0)
+                  continue;
                 int xxx = realX >> 8;
                 int yyy = realY >> 8;
                 
@@ -885,7 +919,7 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                     lineOBJ[sx] = 0x001F;
 #endif
                 }
-                sx = (sx+1)&511;;
+                sx = (sx+1)&511;
                 realX += dx;
                 realY += dy;
               }
@@ -897,8 +931,12 @@ inline void gfxDrawSprites(u32 *lineOBJ)
               int inc = 32;
               if(DISPCNT & 0x40)
                 inc = sizeX >> 3;
-              int palette = (a2 >> 8) & 0xF0;                 
+              int palette = (a2 >> 8) & 0xF0;
               for(int x = 0; x < fieldX; x++) {
+                if (x >= startpix)
+                  lineOBJpix-=2;
+                if (lineOBJpix<0)
+                  continue;
                 int xxx = realX >> 8;
                 int yyy = realY >> 8;
                 if(xxx < 0 || xxx >= sizeX ||
@@ -934,7 +972,7 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                   if(t == 0 || t == maskY || x == 0 || x == maskX)
                     lineOBJ[sx] = 0x001F;
 #endif
-                sx = (sx+1)&511;;
+                sx = (sx+1)&511;
                 realX += dx;
                 realY += dy;
                 
@@ -943,10 +981,17 @@ inline void gfxDrawSprites(u32 *lineOBJ)
           }
         }
       } else {
+        if(sy+sizeY > 256)
+          sy -= 256;
         int t = VCOUNT - sy;
         if((t >= 0) && (t < sizeY)) {
-          int sx = (a1 & 0x1FF);
-          if(((sx < 240)||(((sx+sizeX)&511)<240)) && !(a0 & 0x0200)) {
+          int startpix = 0;
+          if ((sx+sizeX)> 512)
+          {
+            startpix=512-sx;
+          }
+          if((sx < 240) || startpix) {
+            lineOBJpix+=2;
             if(a0 & 0x2000) {
               if(a1 & 0x2000)
                 t = sizeY - t - 1;
@@ -976,6 +1021,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
               u32 prio = (((a2 >> 10) & 3) << 25) | ((a0 & 0x0c00)<<6);
                 
               for(int xx = 0; xx < sizeX; xx++) {
+                if (xx >= startpix)
+                  lineOBJpix--;
+                if (lineOBJpix<0)
+                  continue;
                 if(sx < 240) {
                   u8 color = vram[address];
                   if ((color==0) && (((prio >> 25)&3) < 
@@ -1048,6 +1097,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
               if(a1 & 0x1000) {
                 xxx = 7;
                 for(int xx = sizeX - 1; xx >= 0; xx--) {
+                  if (xx >= startpix)
+                    lineOBJpix--;
+                  if (lineOBJpix<0)
+                    continue;
                   if(sx < 240) {
                     u8 color = vram[address];
                     if(xx & 1) {
@@ -1088,6 +1141,10 @@ inline void gfxDrawSprites(u32 *lineOBJ)
                 }           
               } else {        
                 for(int xx = 0; xx < sizeX; xx++) {
+                  if (xx >= startpix)
+                    lineOBJpix--;
+                  if (lineOBJpix<0)
+                    continue;
                   if(sx < 240) {
                     u8 color = vram[address];
                     if(xx & 1) {
@@ -1139,70 +1196,51 @@ inline void gfxDrawSprites(u32 *lineOBJ)
 inline void gfxDrawOBJWin(u32 *lineOBJWin)
 {
   gfxClearArray(lineOBJWin);
-  if(layerEnable & 0x8000) {
+  if((layerEnable & 0x9000) == 0x9000) {
     u16 *sprites = (u16 *)oam;
     // u16 *spritePalette = &((u16 *)paletteRAM)[256];
     for(int x = 0; x < 128 ; x++) {
+      int lineOBJpix = lineOBJpixleft[x];
       u16 a0 = READ16LE(sprites++);
       u16 a1 = READ16LE(sprites++);
       u16 a2 = READ16LE(sprites++);
       sprites++;
 
-      // ignore non OBJ-WIN
-      if((a0 & 0x0c00) != 0x0800)
+      if (lineOBJpix<=0)
         continue;
-      
-      int sizeY = 8;
-      int sizeX = 8;
-      
-      switch(((a0 >>12) & 0x0c)|(a1>>14)) {
-      case 0:
-        break;
-      case 1:
-        sizeX = sizeY = 16;
-        break;
-      case 2:
-        sizeX = sizeY = 32;
-        break;
-      case 3:
-        sizeX = sizeY = 64;
-        break;
-      case 4:
-        sizeX = 16;
-        break;
-      case 5:
-        sizeX = 32;
-        break;
-      case 6:
-        sizeX = 32;
-        sizeY = 16;
-        break;
-      case 7:
-        sizeX = 64;
-        sizeY = 32;
-        break;
-      case 8:
-        sizeY = 16;
-        break;
-      case 9:
-        sizeY = 32;
-        break;
-      case 10:
-        sizeX = 16;
-        sizeY = 32;
-        break;
-      case 11:
-        sizeX = 32;
-        sizeY = 64;
-        break;
-      default:
+
+      // ignores non OBJ-WIN and disabled OBJ-WIN
+      if(((a0 & 0x0c00) != 0x0800) || ((a0 & 0x0300) == 0x0200))
         continue;
+
+      if ((a0 & 0x0c00) == 0x0c00)
+        a0 &=0xF3FF;
+      
+      if ((a0>>14) == 3)
+      {
+        a0 &= 0x3FFF;
+        a1 &= 0x3FFF;
+      }
+      
+      int sizeX = 8<<(a1>>14);
+      int sizeY = sizeX;
+
+      if ((a0>>14) & 1)
+      {
+        if (sizeX<32)
+          sizeX<<=1;
+        if (sizeY>8)
+          sizeY>>=1;
+      }
+      else if ((a0>>14) & 2)
+      {
+        if (sizeX>8)
+          sizeX>>=1;
+        if (sizeY<32)
+          sizeY<<=1;
       }
 
       int sy = (a0 & 255);
-
-      if(sy > 160)
-        sy -= 256;
       
       if(a0 & 0x0100) {
         int fieldX = sizeX;
@@ -1211,11 +1249,18 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
           fieldX <<= 1;
           fieldY <<= 1;
         }
-        
+        if((sy+fieldY) > 256)
+          sy -= 256;
         int t = VCOUNT - sy;
         if((t >= 0) && (t < fieldY)) {
           int sx = (a1 & 0x1FF);
-          if((sx < 240) || (((sx + fieldX) & 511) < 240)) {
+          int startpix = 0;
+          if ((sx+fieldX)> 512)
+          {
+            startpix=512-sx;
+          }
+          if((sx < 240) || startpix) {
+            lineOBJpix-=8;
             // int t2 = t - (fieldY >> 1);
             int rot = (a1 >> 9) & 0x1F;
             u16 *OAM = (u16 *)oam;
@@ -1249,6 +1294,10 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
               else
                 c &= 0x3FE;
               for(int x = 0; x < fieldX; x++) {
+                if (x >= startpix)
+                  lineOBJpix-=2;
+                if (lineOBJpix<0)
+                  continue;
                 int xxx = realX >> 8;
                 int yyy = realY >> 8;
                 
@@ -1263,7 +1312,7 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                     lineOBJWin[sx] = 1;
                   }
                 }
-                sx = (sx+1)&511;;
+                sx = (sx+1)&511;
                 realX += dx;
                 realY += dy;
               }
@@ -1277,6 +1326,10 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 inc = sizeX >> 3;
               // int palette = (a2 >> 8) & 0xF0;                      
               for(int x = 0; x < fieldX; x++) {
+                if (x >= startpix)
+                  lineOBJpix-=2;
+                if (lineOBJpix<0)
+                  continue;
                 int xxx = realX >> 8;
                 int yyy = realY >> 8;
 
@@ -1286,7 +1339,7 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 //              } else {
                   if(xxx < 0 || xxx >= sizeX ||
                      yyy < 0 || yyy >= sizeY ||
-                     sx >= 240){
+                     sx >= 240) {
                   } else {
                     u32 color = vram[0x10000 + ((((c + (yyy>>3) * inc)<<5)
                                      + ((yyy & 7)<<2) + ((xxx >> 3)<<5) +
@@ -1301,7 +1354,7 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                     }
                   }
                   //            }
-                sx = (sx+1)&511;;
+                sx = (sx+1)&511;
                 realX += dx;
                 realY += dy;
               }       
@@ -1309,10 +1362,18 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
           }
         }
       } else {
+        if((sy+sizeY) > 256)
+          sy -= 256;
         int t = VCOUNT - sy;
         if((t >= 0) && (t < sizeY)) {
           int sx = (a1 & 0x1FF);
-          if(((sx < 240)||(((sx+sizeX)&511)<240)) && !(a0 & 0x0200)) {
+          int startpix = 0;
+          if ((sx+sizeX)> 512)
+          {
+            startpix=512-sx;
+          }
+          if((sx < 240) || startpix) {
+            lineOBJpix+=2;
             if(a0 & 0x2000) {
               if(a1 & 0x2000)
                 t = sizeY - t - 1;
@@ -1335,6 +1396,10 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 xxx = 7;
               // u32 prio = (((a2 >> 10) & 3) << 25) | ((a0 & 0x0c00)<<6);
               for(int xx = 0; xx < sizeX; xx++) {
+                if (xx >= startpix)
+                  lineOBJpix--;
+                if (lineOBJpix<0)
+                  continue;
                 if(sx < 240) {
                   u8 color = vram[address];
                   if(color) {
@@ -1384,6 +1449,10 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
               if(a1 & 0x1000) {
                 xxx = 7;
                 for(int xx = sizeX - 1; xx >= 0; xx--) {
+                  if (xx >= startpix)
+                    lineOBJpix--;
+                  if (lineOBJpix<0)
+                    continue;
                   if(sx < 240) {
                     u8 color = vram[address];
                     if(xx & 1) {
@@ -1408,6 +1477,10 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
                 }           
               } else {        
                 for(int xx = 0; xx < sizeX; xx++) {
+                  if (xx >= startpix)
+                    lineOBJpix--;
+                  if (lineOBJpix<0)
+                    continue;
                   if(sx < 240) {
                     u8 color = vram[address];
                     if(xx & 1) {

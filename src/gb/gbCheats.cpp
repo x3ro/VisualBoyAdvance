@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -338,7 +338,9 @@ void gbAddGgCheat(const char *code, const char *desc)
     compare ^= 0x45;
 
     gbCheatList[i].compare = compare;
-    gbCheatList[i].code = 0;
+    //gbCheatList[i].code = 0;
+    gbCheatList[i].code = 0x100; // fix for compare value
+
   }
 
   gbCheatList[i].enabled = true;

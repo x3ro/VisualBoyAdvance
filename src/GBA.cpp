@@ -42,7 +42,10 @@
 #include "prof/prof.h"
 #endif
 
-#define UPDATE_REG(address, value) WRITE16LE(((u16 *)&ioMem[address]),value)
+#define UPDATE_REG(address, value)\
+  {\
+    WRITE16LE(((u16 *)&ioMem[address]),value);\
+  }\
 
 #define ARM_PREFETCH \
   {\
@@ -68,20 +71,21 @@
 
 
 extern int emulating;
+int SWITicks = 0;
+int IRQTicks = 0;
 
 u32 mastercode = 0;
 int layerEnableDelay = 0;
 bool busPrefetch = false;
 bool busPrefetchEnable = false;
-int busPrefetchCount = 0;
+u32 busPrefetchCount = 0;
 int cpuDmaTicksToUpdate = 0;
 int cpuDmaCount = 0;
 bool cpuDmaHack = false;
-bool instaEvent = false;
 u32 cpuDmaLast = 0;
 int dummyAddress = 0;
 
-bool cpuBreakLoop = true;
+bool cpuBreakLoop = false;
 int cpuNextEvent = 0;
 
 int gbaSaveType = 0; // used to remember the save type on reset
@@ -96,6 +100,7 @@ bool cpuEEPROMSensorEnabled = false;
 
 u32 cpuPrefetch[2];
 
+int cpuTotalTicks = 0;
 #ifdef PROFILING
 int profilingTicks = 0;
 int profilingTicksReload = 0;
@@ -106,19 +111,24 @@ static int profilScale = 0;
 #endif
 u8 freezeWorkRAM[0x40000];
 u8 freezeInternalRAM[0x8000];
-int lcdTicks = (useBios && !skipBios) ? 960 : 160;
+int lcdTicks = (useBios && !skipBios) ? 1008 : 208;
+u8 timerOnOffDelay = 0;
+u16 timer0Value = 0;
 bool timer0On = false;
 int timer0Ticks = 0;
 int timer0Reload = 0;
 int timer0ClockReload  = 0;
+u16 timer1Value = 0;
 bool timer1On = false;
 int timer1Ticks = 0;
 int timer1Reload = 0;
 int timer1ClockReload  = 0;
+u16 timer2Value = 0;
 bool timer2On = false;
 int timer2Ticks = 0;
 int timer2Reload = 0;
 int timer2ClockReload  = 0;
+u16 timer3Value = 0;
 bool timer3On = false;
 int timer3Ticks = 0;
 int timer3Reload = 0;
@@ -146,10 +156,10 @@ int capturePrevious = 0;
 int captureNumber = 0;
 
 const int TIMER_TICKS[4] = {
-  1,
-  64,
-  256,
-  1024
+  0,
+  6,
+  8,
+  10
 };
 
 const u32  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
@@ -501,25 +511,24 @@ void cpuEnableProfiling(int hz)
 #endif
 
 
-// Waitstates when reading data
+// Waitstates when accessing data
 inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
 {
   int addr = (address>>24)&15;
   int value =  memoryWait[addr];
-  if ((addr>=0x08) && (addr<=0x0E))
+
+  if (addr>=0x08)
   {
     busPrefetchCount=0;
     busPrefetch=false;
   }
-  else
+  else if (busPrefetch)
   {
-  //  if ((addr>=0x05) && (addr<=0x07))
-  //  {
-  //    bool blank = (((DISPSTAT | (DISPSTAT>>1))&1==1) ?  true : false);
-  //    bool pixelDrawing = (((lcdTicks+40-clockTicks) & 3) == 0 ? true : false);
-  //    value += ((!blank && pixelDrawing) ? videoMemoryWait[addr] : 0);
-  //  }
-    busPrefetchCount+= value+1;
+    int waitState = value;
+    if (waitState>0)
+      waitState--;
+    waitState++;
+    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
   }
 
   return value;
@@ -530,20 +539,18 @@ inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
   int addr = (address>>24)&15;
   int value = memoryWait32[addr];
 
-  if ((addr>=0x08) && (addr<=0x0E))
+  if (addr>=0x08)
   {
     busPrefetchCount=0;
     busPrefetch=false;
   }
-  else
+  else if (busPrefetch)
   {
-  //  if ((addr>=0x05) && (addr<=0x07))
-  //  {
-  //    bool blank = (((DISPSTAT | (DISPSTAT>>1))&1==1) ?  true : false);
-  //    bool pixelDrawing = (((lcdTicks+40-clockTicks) & 3) == 0 ? true : false);
-  //    value += ((!blank && pixelDrawing) ? videoMemoryWait[addr] : 0);
-  //  }
-    busPrefetchCount+= value+1;
+    int waitState = value;
+    if (waitState>0)
+      waitState--;
+    waitState++;
+    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
   }
 
   return value;
@@ -552,22 +559,20 @@ inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
 inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
 {
   int addr = (address>>24)&15;
-  int value = memoryWaitSeq[addr]+1;
+  int value = memoryWaitSeq[addr];
 
-  if ((addr>=0x08) && (addr<=0x0E))
+  if (addr>=0x08)
   {
     busPrefetchCount=0;
     busPrefetch=false;
   }
-  else
+  else if (busPrefetch)
   {
-    if ((addr>=0x05) && (addr<=0x07))
-  //  {
-  //    bool blank = (((DISPSTAT | (DISPSTAT>>1))&1==1) ?  true : false);
-  //    bool pixelDrawing = (((lcdTicks+40-clockTicks) & 3) == 0 ? true : false);
-  //    value += ((!blank && pixelDrawing) ? videoMemoryWait[addr] : 0);
-  //  }
-    busPrefetchCount+= value+1;
+    int waitState = value;
+    if (waitState>0)
+      waitState--;
+    waitState++;
+    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
   }
 
   return value;
@@ -576,22 +581,20 @@ inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
 inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
 {
   int addr = (address>>24)&15;
-  int value =  memoryWaitSeq32[addr]+1;
+  int value =  memoryWaitSeq32[addr];
 
-  if ((addr>=0x08) && (addr<=0x0E))
+  if (addr>=0x08)
   {
     busPrefetchCount=0;
     busPrefetch=false;
   }
-  else
+  else if (busPrefetch)
   {
-  //  if ((addr>=0x05) && (addr<=0x07))
-  //  {
-  //    bool blank = (((DISPSTAT | (DISPSTAT>>1))&1==1) ?  true : false);
-  //    bool pixelDrawing = (((lcdTicks+40-clockTicks) & 3) == 0 ? true : false);
-  //    value += ((!blank && pixelDrawing) ? videoMemoryWait[addr] : 0);
-  //  }
-    busPrefetchCount+= value+1;
+    int waitState = value;
+    if (waitState>0)
+      waitState--;
+    waitState++;
+    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
   }
 
   return value;
@@ -605,28 +608,27 @@ inline int codeTicksAccess16(u32 address) // THUMB NON SEQ
 
   if ((addr>=0x08) && (addr<=0x0D))
   {
-    if ((!(busPrefetch)) && (busPrefetchEnable) && (busPrefetchCount))
+    if ((busPrefetchCount&0x3) == 3)
     {
-        busPrefetchCount-=1;
-      return 0;
-    }
-    else if (busPrefetch)
-    {
-      busPrefetchCount-=2;
+      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
       return 0;
     }
     else
+    if (busPrefetchCount&0x1)
+    {
+      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      return memoryWaitSeq[addr]-1;
+    }
+    else
+    {
+      busPrefetchCount=0;
       return memoryWait[addr];
-  }
-  else if (addr!=2)
-  {
-    busPrefetchCount = 0;
-    return memoryWait[addr];
+    }
   }
   else
   {
     busPrefetchCount = 0;
-    return memoryWait[addr] + 2;
+    return memoryWait[addr];
   }
 }
 
@@ -636,28 +638,31 @@ inline int codeTicksAccess32(u32 address) // ARM NON SEQ
 
   if ((addr>=0x08) && (addr<=0x0D))
   {
-    if ((!(busPrefetch)) && (busPrefetchEnable) && (busPrefetchCount))
+    if (busPrefetchCount&0x1)
     {
-      busPrefetchCount-=1;
-      return 0;
-    }
-    else if (busPrefetch)
-    {
-      busPrefetchCount-=2;
-      return 0;
+      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      if (busPrefetchCount&0x1)
+      {
+        busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+        return 0;
+      }
+      else
+      {
+        busPrefetchCount = 0;
+        return memoryWaitSeq[addr];
+      }
+
     }
     else
+    {
+        busPrefetchCount = 0;
       return memoryWait32[addr];
-  }
-  else if (addr!=2)
-  {
-    busPrefetchCount = 0;
-    return memoryWait32[addr];
+    }
   }
   else
   {
     busPrefetchCount = 0;
-    return memoryWait32[addr] + 2;
+    return memoryWait32[addr];
   }
 }
 
@@ -667,28 +672,24 @@ inline int codeTicksAccessSeq16(u32 address) // THUMB SEQ
 
   if ((addr>=0x08) && (addr<=0x0D))
   {
-    if ((!(busPrefetch)) && (busPrefetchEnable) && (busPrefetchCount))
+    if (busPrefetchCount&0x1)
     {
-      busPrefetchCount-=1;
+      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
       return 0;
     }
-    else if (busPrefetch)
+    else
+    if (busPrefetchCount>0xFF)
     {
-      busPrefetchCount-=2;
-      return 0;
+      busPrefetchCount=0;
+      return memoryWait[addr];
     }
     else
       return memoryWaitSeq[addr];
   }
-  else if (addr!=2)
-  {
-    busPrefetchCount = 0;
-    return memoryWaitSeq[addr];
-  }
   else
   {
     busPrefetchCount = 0;
-    return memoryWaitSeq[addr] + 2;
+    return memoryWaitSeq[addr];
   }
 }
 
@@ -698,26 +699,30 @@ inline int codeTicksAccessSeq32(u32 address) // ARM SEQ
 
   if ((addr>=0x08) && (addr<=0x0D))
   {
-    if ((!(busPrefetch)) && (busPrefetchEnable) && (busPrefetchCount))
+    if (busPrefetchCount&0x1)
     {
-      busPrefetchCount-=1;
-      return 0;
+      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      if (busPrefetchCount&0x1)
+      {
+        busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+        return 0;
+      }
+      else
+        return memoryWaitSeq[addr];
+
     }
-    else if (busPrefetch)
+    else
+    if (busPrefetchCount>0xFF)
     {
-      busPrefetchCount-=2;
-      return 0;
+      busPrefetchCount=0;
+      return memoryWait32[addr];
     }
     else
       return memoryWaitSeq32[addr];
   }
-  else if (addr!=2)
-  {
-    return memoryWaitSeq32[addr];
-  }
   else
   {
-    return memoryWaitSeq32[addr] + 4;
+    return memoryWaitSeq32[addr];
   }
 }
 
@@ -749,11 +754,14 @@ inline int CPUUpdateTicks()
   }
 #endif
 
-  //Used for DMA, or when an IRQ has been enabled
-  if (instaEvent)
-  {
-    cpuLoopTicks = 0;
-    instaEvent = false;
+  if (SWITicks) {
+    if (SWITicks < cpuLoopTicks)
+        cpuLoopTicks = SWITicks;
+  }
+
+  if (IRQTicks) {
+    if (IRQTicks < cpuLoopTicks)
+        cpuLoopTicks = IRQTicks;
   }
 
   return cpuLoopTicks;
@@ -835,7 +843,7 @@ static bool CPUWriteState(gzFile gzFile)
   // new to version 0.7.1
   utilWriteInt(gzFile, stopState);
   // new to version 0.8
-  utilWriteInt(gzFile, intState);
+  utilWriteInt(gzFile, IRQTicks);
 
   utilGzWrite(gzFile, internalRAM, 0x8000);
   utilGzWrite(gzFile, paletteRAM, 0x400);
@@ -939,9 +947,21 @@ static bool CPUReadState(gzFile gzFile)
     stopState = utilReadInt(gzFile) ? true : false;
 
   if(version < SAVE_GAME_VERSION_4)
+  {
+    IRQTicks = 0;
     intState = false;
+  }
   else
-    intState = utilReadInt(gzFile) ? true : false;
+  {
+    IRQTicks = utilReadInt(gzFile);
+    if (IRQTicks>0)
+      intState = true;
+    else
+    {
+      intState = false;
+      IRQTicks = 0;
+    }
+  }
   
   utilGzRead(gzFile, internalRAM, 0x8000);
   utilGzRead(gzFile, paletteRAM, 0x400);
@@ -981,6 +1001,18 @@ static bool CPUReadState(gzFile gzFile)
     SWAP(dma2Dest,   DM2DAD_H, DM2DAD_L);
     SWAP(dma3Source, DM3SAD_H, DM3SAD_L);
     SWAP(dma3Dest,   DM3DAD_H, DM3DAD_L);
+  }
+
+  if(version <= SAVE_GAME_VERSION_8) {
+    timer0ClockReload = TIMER_TICKS[TM0CNT & 3]; 
+    timer1ClockReload = TIMER_TICKS[TM1CNT & 3];
+    timer2ClockReload = TIMER_TICKS[TM2CNT & 3];
+    timer3ClockReload = TIMER_TICKS[TM3CNT & 3];
+
+    timer0Ticks = ((0x10000 - TM0D) << timer0ClockReload) - timer0Ticks;
+    timer1Ticks = ((0x10000 - TM1D) << timer1ClockReload) - timer1Ticks;
+    timer2Ticks = ((0x10000 - TM2D) << timer2ClockReload) - timer2Ticks;
+    timer3Ticks = ((0x10000 - TM3D) << timer3ClockReload) - timer3Ticks;
   }
 
   // set pointers!
@@ -1697,7 +1729,8 @@ void CPUUpdateFlags(bool breakLoop)
   armState = (CPSR & 0x20) ? false : true;
   armIrqEnable = (CPSR & 0x80) ? false : true;
   if(breakLoop) {
-      instaEvent = (armIrqEnable && (IF & IE) && (IME & 1));
+      if (armIrqEnable && (IF & IE) && (IME & 1))
+        cpuNextEvent = cpuTotalTicks;
   }
 }
 
@@ -1905,7 +1938,7 @@ void CPUSoftwareInterrupt(int comment)
 #ifdef SDL
   if(comment == 0xf9) {
     emulating = 0;
-    instaEvent = true;
+    cpuNextEvent = cpuTotalTicks;
     cpuBreakLoop = true;
     return;
   }
@@ -1946,7 +1979,7 @@ void CPUSoftwareInterrupt(int comment)
 #endif    
     holdState = true;
     holdType = -1;
-    instaEvent = true;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x03:
 #ifdef DEV_VERSION
@@ -1958,7 +1991,7 @@ void CPUSoftwareInterrupt(int comment)
     holdState = true;
     holdType = -1;
     stopState = true;
-    instaEvent = true;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x04:
 #ifdef DEV_VERSION
@@ -1996,9 +2029,47 @@ void CPUSoftwareInterrupt(int comment)
     BIOS_ArcTan2();
     break;
   case 0x0B:
+    {
+      int len = (reg[2].I & 0x1FFFFF) >>1;
+      if (!(((reg[0].I & 0xe000000) == 0) ||
+         ((reg[0].I + len) & 0xe000000) == 0))
+      {
+        if ((reg[2].I >> 24) & 1)
+        {
+          if ((reg[2].I >> 26) & 1) 
+          SWITicks = (7 + memoryWait32[(reg[1].I>>24) & 0xF]) * (len>>1);
+          else
+          SWITicks = (8 + memoryWait[(reg[1].I>>24) & 0xF]) * (len);
+        }
+        else
+        {
+          if ((reg[2].I >> 26) & 1) 
+          SWITicks = (10 + memoryWait32[(reg[0].I>>24) & 0xF] +
+              memoryWait32[(reg[1].I>>24) & 0xF]) * (len>>1);
+          else
+          SWITicks = (11 + memoryWait[(reg[0].I>>24) & 0xF] +
+              memoryWait[(reg[1].I>>24) & 0xF]) * len;
+        }
+      }
+    }
     BIOS_CpuSet();
     break;
   case 0x0C:
+    {
+      int len = (reg[2].I & 0x1FFFFF) >>5;
+      if (!(((reg[0].I & 0xe000000) == 0) ||
+         ((reg[0].I + len) & 0xe000000) == 0))
+      {
+        if ((reg[2].I >> 24) & 1)
+          SWITicks = (6 + memoryWait32[(reg[1].I>>24) & 0xF] +
+              7 * (memoryWaitSeq32[(reg[1].I>>24) & 0xF] + 1)) * len;
+        else
+          SWITicks = (9 + memoryWait32[(reg[0].I>>24) & 0xF] +
+              memoryWait32[(reg[1].I>>24) & 0xF] + 
+              7 * (memoryWaitSeq32[(reg[0].I>>24) & 0xF] +
+              memoryWaitSeq32[(reg[1].I>>24) & 0xF] + 2)) * len;
+      }
+    }
     BIOS_CpuFastSet();
     break;
   case 0x0E:
@@ -2008,30 +2079,89 @@ void CPUSoftwareInterrupt(int comment)
     BIOS_ObjAffineSet();
     break;
   case 0x10:
+    {
+      int len = CPUReadHalfWord(reg[2].I);
+      if (!(((reg[0].I & 0xe000000) == 0) ||
+         ((reg[0].I + len) & 0xe000000) == 0))
+        SWITicks = (32 + memoryWait[(reg[0].I>>24) & 0xF]) * len;
+    }
     BIOS_BitUnPack();
     break;
   case 0x11:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 8;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (9 + memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_LZ77UnCompWram();
     break;
   case 0x12:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 8;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (19 + memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_LZ77UnCompVram();
     break;
   case 0x13:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 8;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (29 + (memoryWait[(reg[0].I>>24) & 0xF]<<1)) * len;
+    }
     BIOS_HuffUnComp();
     break;
   case 0x14:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 8;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (11 + memoryWait[(reg[0].I>>24) & 0xF] +
+          memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_RLUnCompWram();
     break;
   case 0x15:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 9;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (34 + (memoryWait[(reg[0].I>>24) & 0xF] << 1) +
+          memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_RLUnCompVram();
     break;
   case 0x16:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 8;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (13 + memoryWait[(reg[0].I>>24) & 0xF] +
+          memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_Diff8bitUnFilterWram();
     break;
   case 0x17:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 9;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (39 + (memoryWait[(reg[0].I>>24) & 0xF]<<1) +
+          memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_Diff8bitUnFilterVram();
     break;
   case 0x18:
+    {
+      u32 len = CPUReadMemory(reg[0].I) >> 9;
+      if(!(((reg[0].I & 0xe000000) == 0) ||
+          ((reg[0].I + (len & 0x1fffff)) & 0xe000000) == 0))
+        SWITicks = (13 + memoryWait[(reg[0].I>>24) & 0xF] +
+          memoryWait[(reg[1].I>>24) & 0xF]) * len;
+    }
     BIOS_Diff16bitUnFilter();
     break;
   case 0x19:
@@ -2109,13 +2239,14 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
   int sc = c;
 
   cpuDmaCount = c;
+  // This is done to get the correct waitstates.
   if (sm>15)
       sm=15;
   if (dm>15)
       dm=15;
   
-  if ((sm>=0x05) && (sm<=0x07) || (dm>=0x05) && (dm <=0x07))
-      blank = (((DISPSTAT | ((DISPSTAT>>1)&1))==1) ?  true : false);
+  //if ((sm>=0x05) && (sm<=0x07) || (dm>=0x05) && (dm <=0x07))
+  //    blank = (((DISPSTAT | ((DISPSTAT>>1)&1))==1) ?  true : false);
 
   if(transfer32) {
     s &= 0xFFFFFFFC;
@@ -2161,21 +2292,17 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
   int totalTicks = 0;
 
   if(transfer32) {
-      sw =1+memoryWaitSeq32[sm & 15] +
-      ((((sm>=0x05) && (sm<=0x07)) && !blank) ? 2 : 0);
-      dw =1+memoryWaitSeq32[dm & 15] +
-      ((((dw>=0x05) && (dw<=0x07)) && !blank) ? 2 : 0);
-      totalTicks = (sw+dw)*(sc-1) + 2 +
-          1 + memoryWait32[sm & 15] + 1 + memoryWaitSeq32[dm & 15];
+      sw =1+memoryWaitSeq32[sm & 15];
+      dw =1+memoryWaitSeq32[dm & 15];
+      totalTicks = (sw+dw)*(sc-1) + 6 + memoryWait32[sm & 15] +
+          memoryWaitSeq32[dm & 15];
   }
   else
   {
-     sw = 1+memoryWaitSeq[sm & 15] +
-      ((((sm>=0x05) && (sm<=0x07)) && !blank) ? 1 : 0);
-     dw = 1+memoryWaitSeq[dm & 15] +
-      ((((dw>=0x05) && (dw<=0x07)) && !blank) ? 1 : 0);
-      totalTicks = (sw+dw)*(sc-1) + 2 +
-          1 + memoryWait[sm & 15] + 1 + memoryWaitSeq[dm & 15];
+     sw = 1+memoryWaitSeq[sm & 15];
+     dw = 1+memoryWaitSeq[dm & 15];
+      totalTicks = (sw+dw)*(sc-1) + 6 + memoryWait[sm & 15] +
+          memoryWaitSeq[dm & 15];
   }
 
   cpuDmaTicksToUpdate += totalTicks;
@@ -2227,7 +2354,7 @@ void CPUCheckDMA(int reason, int dmamask)
       if(DM0CNT_H & 0x4000) {
         IF |= 0x0100;
         UPDATE_REG(0x202, IF);
-        instaEvent = true;
+        cpuNextEvent = cpuTotalTicks;
       }
       
       if(((DM0CNT_H >> 5) & 3) == 3) {
@@ -2296,7 +2423,7 @@ void CPUCheckDMA(int reason, int dmamask)
       if(DM1CNT_H & 0x4000) {
         IF |= 0x0200;
         UPDATE_REG(0x202, IF);
-        instaEvent = true;
+        cpuNextEvent = cpuTotalTicks;
       }
       
       if(((DM1CNT_H >> 5) & 3) == 3) {
@@ -2366,7 +2493,7 @@ void CPUCheckDMA(int reason, int dmamask)
       if(DM2CNT_H & 0x4000) {
         IF |= 0x0400;
         UPDATE_REG(0x202, IF);
-        instaEvent = true;
+        cpuNextEvent = cpuTotalTicks;
       }
 
       if(((DM2CNT_H >> 5) & 3) == 3) {
@@ -2421,7 +2548,7 @@ void CPUCheckDMA(int reason, int dmamask)
       if(DM3CNT_H & 0x4000) {
         IF |= 0x0800;
         UPDATE_REG(0x202, IF);
-        instaEvent = true;
+        cpuNextEvent = cpuTotalTicks;
       }
 
       if(((DM3CNT_H >> 5) & 3) == 3) {
@@ -2461,7 +2588,7 @@ void CPUUpdateRegister(u32 address, u16 value)
       windowOn = (layerEnable & 0x6000) ? true : false;
       if(change && !((value & 0x80))) {
         if(!(DISPSTAT & 1)) {
-          lcdTicks = 960;
+          lcdTicks = 1008;
           //      VCOUNT = 0;
           //      UPDATE_REG(0x06, VCOUNT);
           DISPSTAT &= 0xFFFC;
@@ -2821,70 +2948,37 @@ void CPUUpdateRegister(u32 address, u16 value)
       }
     }
     break;
-  case 0x100:
+ case 0x100:
     timer0Reload = value;
     break;
   case 0x102:
-    timer0Ticks = timer0ClockReload = TIMER_TICKS[value & 3];        
-    if(!timer0On && (value & 0x80)) {
-      // reload the counter
-      TM0D = timer0Reload;      
-      if(timer0ClockReload == 1)
-        timer0Ticks = 0x10000 - TM0D;
-      UPDATE_REG(0x100, TM0D);
-    }
-    timer0On = value & 0x80 ? true : false;
-    TM0CNT = value & 0xC7;
-    UPDATE_REG(0x102, TM0CNT);
-    //    CPUUpdateTicks();
+    timer0Value = value;
+    timerOnOffDelay|=1;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x104:
     timer1Reload = value;
     break;
   case 0x106:
-    timer1Ticks = timer1ClockReload = TIMER_TICKS[value & 3];        
-    if(!timer1On && (value & 0x80)) {
-      // reload the counter
-      TM1D = timer1Reload;      
-      if(timer1ClockReload == 1)
-        timer1Ticks = 0x10000 - TM1D;
-      UPDATE_REG(0x104, TM1D);
-    }
-    timer1On = value & 0x80 ? true : false;
-    TM1CNT = value & 0xC7;
-    UPDATE_REG(0x106, TM1CNT);
+    timer1Value = value;
+    timerOnOffDelay|=2;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x108:
     timer2Reload = value;
     break;
   case 0x10A:
-    timer2Ticks = timer2ClockReload = TIMER_TICKS[value & 3];        
-    if(!timer2On && (value & 0x80)) {
-      // reload the counter
-      TM2D = timer2Reload;      
-      if(timer2ClockReload == 1)
-        timer2Ticks = 0x10000 - TM2D;
-      UPDATE_REG(0x108, TM2D);
-    }
-    timer2On = value & 0x80 ? true : false;
-    TM2CNT = value & 0xC7;
-    UPDATE_REG(0x10A, TM2CNT);
+    timer2Value = value;
+    timerOnOffDelay|=4;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x10C:
     timer3Reload = value;
     break;
   case 0x10E:
-    timer3Ticks = timer3ClockReload = TIMER_TICKS[value & 3];        
-    if(!timer3On && (value & 0x80)) {
-      // reload the counter
-      TM3D = timer3Reload;      
-      if(timer3ClockReload == 1)
-        timer3Ticks = 0x10000 - TM3D;
-      UPDATE_REG(0x10C, TM3D);
-    }
-    timer3On = value & 0x80 ? true : false;
-    TM3CNT = value & 0xC7;
-    UPDATE_REG(0x10E, TM3CNT);
+    timer3Value = value;
+    timerOnOffDelay|=8;
+    cpuNextEvent = cpuTotalTicks;
     break;
   case 0x128:
     if(value & 0x80) {
@@ -2908,7 +3002,8 @@ void CPUUpdateRegister(u32 address, u16 value)
   case 0x200:
     IE = value & 0x3FFF;
     UPDATE_REG(0x200, IE);
-    instaEvent = ((IME & 1) && (IF & IE) && armIrqEnable);
+    if ((IME & 1) && (IF & IE) && armIrqEnable)
+      cpuNextEvent = cpuTotalTicks;
     break;
   case 0x202:
     IF ^= (value & IF);
@@ -2956,12 +3051,14 @@ void CPUUpdateRegister(u32 address, u16 value)
         busPrefetchCount = 0;
       }
       UPDATE_REG(0x204, value & 0x7FFF);
+
     }
     break;
   case 0x208:
     IME = value & 1;
     UPDATE_REG(0x208, IME);
-    instaEvent = ((IME & 1) && (IF & IE) && armIrqEnable);
+    if ((IME & 1) && (IF & IE) && armIrqEnable)
+      cpuNextEvent = cpuTotalTicks;
     break;
   case 0x300:
     if(value != 0)
@@ -2972,6 +3069,65 @@ void CPUUpdateRegister(u32 address, u16 value)
     UPDATE_REG(address&0x3FE, value);
     break;
   }
+}
+
+void applyTimer ()
+{
+  if (timerOnOffDelay & 1)
+  {
+    timer0ClockReload = TIMER_TICKS[timer0Value & 3];        
+    if(!timer0On && (timer0Value & 0x80)) {
+      // reload the counter
+      TM0D = timer0Reload;      
+      timer0Ticks = (0x10000 - TM0D) << timer0ClockReload;
+      UPDATE_REG(0x100, TM0D);
+    }
+    timer0On = timer0Value & 0x80 ? true : false;
+    TM0CNT = timer0Value & 0xC7;
+    UPDATE_REG(0x102, TM0CNT);
+    //    CPUUpdateTicks();
+  }
+  if (timerOnOffDelay & 2)
+  {
+    timer1ClockReload = TIMER_TICKS[timer1Value & 3];        
+    if(!timer1On && (timer1Value & 0x80)) {
+      // reload the counter
+      TM1D = timer1Reload;      
+      timer1Ticks = (0x10000 - TM1D) << timer1ClockReload;
+      UPDATE_REG(0x104, TM1D);
+    }
+    timer1On = timer1Value & 0x80 ? true : false;
+    TM1CNT = timer1Value & 0xC7;
+    UPDATE_REG(0x106, TM1CNT);
+  }
+  if (timerOnOffDelay & 4)
+  {
+    timer2ClockReload = TIMER_TICKS[timer2Value & 3];        
+    if(!timer2On && (timer2Value & 0x80)) {
+      // reload the counter
+      TM2D = timer2Reload;      
+      timer2Ticks = (0x10000 - TM2D) << timer2ClockReload;
+      UPDATE_REG(0x108, TM2D);
+    }
+    timer2On = timer2Value & 0x80 ? true : false;
+    TM2CNT = timer2Value & 0xC7;
+    UPDATE_REG(0x10A, TM2CNT);
+  }
+  if (timerOnOffDelay & 8)
+  {
+    timer3ClockReload = TIMER_TICKS[timer3Value & 3];        
+    if(!timer3On && (timer3Value & 0x80)) {
+      // reload the counter
+      TM3D = timer3Reload;      
+      timer3Ticks = (0x10000 - TM3D) << timer3ClockReload;
+      UPDATE_REG(0x10C, TM3D);
+    }
+    timer3On = timer3Value & 0x80 ? true : false;
+    TM3CNT = timer3Value & 0xC7;
+    UPDATE_REG(0x10E, TM3CNT);
+  }
+  cpuNextEvent = CPUUpdateTicks();
+  timerOnOffDelay = 0;
 }
 
 void CPUWriteHalfWord(u32 address, u16 value)
@@ -3081,7 +3237,7 @@ void CPUWriteByte(u32 address, u8 b)
 	  stopState = true;
 	holdState = 1;
 	holdType = -1;
-	instaEvent = true;
+  cpuNextEvent = cpuTotalTicks;
 	break;
       case 0x60:
       case 0x61:
@@ -3436,7 +3592,7 @@ void CPUReset()
   biosProtected[2] = 0x29;
   biosProtected[3] = 0xe1;
   
-  lcdTicks = (useBios && !skipBios) ? 960 : 160;
+  lcdTicks = (useBios && !skipBios) ? 1008 : 208;
   timer0On = false;
   timer0Ticks = 0;
   timer0Reload = 0;
@@ -3568,11 +3724,11 @@ void CPUReset()
 
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
 
-  instaEvent = false;
   cpuDmaHack = false;
 
-  
   lastTime = systemGetClock();
+
+  SWITicks = 0;
 }
 
 void CPUInterrupt()
@@ -3622,10 +3778,14 @@ extern void winlog(const char *, ...);
 void CPULoop(int ticks)
 {  
   int clockTicks;
-  int totalTicks = 0;
   int timerOverflow = 0;
   // variable used by the CPU core
+  cpuTotalTicks = 0;
   cpuBreakLoop = false;
+  cpuNextEvent = CPUUpdateTicks();
+  if(cpuNextEvent > ticks)
+    cpuNextEvent = ticks;
+
 
   for(;;) {
 #ifndef FINAL_VERSION
@@ -3653,7 +3813,7 @@ void CPULoop(int ticks)
     }
 #endif
 
-    if(!holdState) {
+    if(!holdState && !SWITicks) {
 
       // Emulates the Cheat System (m) code
       if((cheatsEnabled) && (mastercode!=0) && (mastercode == armNextPC))
@@ -3662,8 +3822,11 @@ void CPULoop(int ticks)
         if(systemReadJoypads())
           joy = systemReadJoypad(-1);
         u32 ext = (joy >> 10);
-        totalTicks += cheatsCheckKeys(P1^0x3FF, ext);
+        cpuTotalTicks += cheatsCheckKeys(P1^0x3FF, ext);
       }
+
+      //if ((armNextPC & 0x0803FFFF) == 0x08020000)
+      //    busPrefetchCount=0x100;
 
       if(armState) {
 #include "arm-new.h"
@@ -3673,35 +3836,47 @@ void CPULoop(int ticks)
     } else
       clockTicks = CPUUpdateTicks();
 
-    totalTicks += clockTicks;
+    cpuTotalTicks += clockTicks;
 
-    cpuNextEvent = CPUUpdateTicks();
 
-    if(cpuNextEvent > ticks)
-      cpuNextEvent = ticks;
+    if(cpuTotalTicks >= cpuNextEvent) {
+      int remainingTicks = cpuTotalTicks - cpuNextEvent;
 
-    if(totalTicks >= cpuNextEvent) {
-      int remainingTicks = totalTicks - cpuNextEvent;
+      if (SWITicks)
+      {
+        SWITicks-=clockTicks;
+        if (SWITicks<0)
+          SWITicks = 0;
+      }
+
       clockTicks = cpuNextEvent;
-      totalTicks = 0;
+      cpuTotalTicks = 0;
       cpuDmaHack = false;
-
     
     updateLoop:
+
+      if (IRQTicks)
+      {
+          IRQTicks -= clockTicks;
+        if (IRQTicks<0)
+          IRQTicks = 0;
+      }
+
       lcdTicks -= clockTicks;
+
       
       if(lcdTicks <= 0) {
         if(DISPSTAT & 1) { // V-BLANK
           // if in V-Blank mode, keep computing...
           if(DISPSTAT & 2) {
-            lcdTicks += 960;
+            lcdTicks += 1008;
             VCOUNT++;
             UPDATE_REG(0x06, VCOUNT);
             DISPSTAT &= 0xFFFD;
             UPDATE_REG(0x04, DISPSTAT);
             CPUCompareVCOUNT();
           } else {
-            lcdTicks += 272;
+            lcdTicks += 224;
             DISPSTAT |= 2;
             UPDATE_REG(0x04, DISPSTAT);
             if(DISPSTAT & 16) {
@@ -3727,7 +3902,7 @@ void CPULoop(int ticks)
             VCOUNT++;
             UPDATE_REG(0x06, VCOUNT);
 
-            lcdTicks += (960);
+            lcdTicks += 1008;
             DISPSTAT &= 0xFFFD;
             if(VCOUNT == 160) {
               count++;
@@ -3810,10 +3985,9 @@ void CPULoop(int ticks)
           } else {
             if(frameCount >= framesToSkip) 
             {
-              (*renderLine)();
-              
+              (*renderLine)(); 
               switch(systemColorDepth) {
-              case 16:
+                case 16:
                 {
                   u16 *dest = (u16 *)pix + 242 * (VCOUNT+1);
                   for(int x = 0; x < 240;) {
@@ -3841,7 +4015,7 @@ void CPULoop(int ticks)
                   *dest++ = 0;
                 }
                 break;
-              case 24:
+                case 24:
                 {
                   u8 *dest = (u8 *)pix + 240 * VCOUNT * 3;
                   for(int x = 0; x < 240;) {
@@ -3883,7 +4057,7 @@ void CPULoop(int ticks)
                   }
                 }
                 break;
-              case 32:
+                case 32:
                 {
                   u32 *dest = (u32 *)pix + 241 * (VCOUNT+1);
                   for(int x = 0; x < 240; ) {
@@ -3891,7 +4065,7 @@ void CPULoop(int ticks)
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
-                    
+                 
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
                     *dest++ = systemColorMap32[lineMix[x++] & 0xFFFF];
@@ -3914,7 +4088,7 @@ void CPULoop(int ticks)
             // entering H-Blank
             DISPSTAT |= 2;
             UPDATE_REG(0x04, DISPSTAT);
-            lcdTicks += 272;
+            lcdTicks += 224;
             CPUCheckDMA(2, 0x0f);
             if(DISPSTAT & 16) {
               IF |= 2;
@@ -3926,39 +4100,18 @@ void CPULoop(int ticks)
 
       if(!stopState) {
         if(timer0On) {
-          if(timer0ClockReload == 1) {
-            u32 tm0d = TM0D + clockTicks;
-            if(tm0d > 0xffff) {
-              tm0d += timer0Reload;
-              timerOverflow |= 1;
-              soundTimerOverflow(0);
-              if(TM0CNT & 0x40) {
-                IF |= 0x08;
-                UPDATE_REG(0x202, IF);
-              }
-            }
-            TM0D = tm0d;
-            if(TM0D < timer0Reload)
-              TM0D = timer0Reload;
-            timer0Ticks = 0x10000 - TM0D;
-            UPDATE_REG(0x100, TM0D);            
-          } else {
-            timer0Ticks -= clockTicks;    
-            if(timer0Ticks <= 0) {
-              timer0Ticks += timer0ClockReload;
-              TM0D++;
-              if(TM0D == 0) {
-                TM0D = timer0Reload;
-                timerOverflow |= 1;
-                soundTimerOverflow(0);
-                if(TM0CNT & 0x40) {
-                  IF |= 0x08;
-                  UPDATE_REG(0x202, IF);
-                }
-              }
-              UPDATE_REG(0x100, TM0D);  
+          timer0Ticks -= clockTicks;
+          if(timer0Ticks <= 0) {
+            timer0Ticks += (0x10000 - timer0Reload) << timer0ClockReload;
+            timerOverflow |= 1;
+            soundTimerOverflow(0);
+            if(TM0CNT & 0x40) {
+              IF |= 0x08;
+              UPDATE_REG(0x202, IF);
             }
           }
+          TM0D = 0xFFFF - (timer0Ticks >> timer0ClockReload);
+          UPDATE_REG(0x100, TM0D);            
         }
         
         if(timer1On) {
@@ -3977,40 +4130,18 @@ void CPULoop(int ticks)
               UPDATE_REG(0x104, TM1D);
             }
           } else {
-            if(timer1ClockReload == 1) {
-              u32 tm1d = TM1D + clockTicks;
-              if(tm1d > 0xffff) {
-                tm1d += timer1Reload;
-                timerOverflow |= 2;           
-                soundTimerOverflow(1);
-                if(TM1CNT & 0x40) {
-                  IF |= 0x10;
-                  UPDATE_REG(0x202, IF);
-                }
-              }
-              TM1D = tm1d;
-              if(TM1D < timer1Reload)
-                TM1D = timer1Reload;
-              timer1Ticks = 0x10000 - TM1D;
-              UPDATE_REG(0x104, TM1D);                    
-            } else {
-              timer1Ticks -= clockTicks;          
-              if(timer1Ticks <= 0) {
-                timer1Ticks += timer1ClockReload;
-                TM1D++;
-                
-                if(TM1D == 0) {
-                  TM1D = timer1Reload;
-                  timerOverflow |= 2;           
-                  soundTimerOverflow(1);
-                  if(TM1CNT & 0x40) {
-                    IF |= 0x10;
-                    UPDATE_REG(0x202, IF);
-                  }
-                }
-                UPDATE_REG(0x104, TM1D);        
+            timer1Ticks -= clockTicks;
+            if(timer1Ticks <= 0) {
+              timer1Ticks += (0x10000 - timer1Reload) << timer1ClockReload;
+              timerOverflow |= 2;           
+              soundTimerOverflow(1);
+              if(TM1CNT & 0x40) {
+                IF |= 0x10;
+                UPDATE_REG(0x202, IF);
               }
             }
+            TM1D = 0xFFFF - (timer1Ticks >> timer1ClockReload);
+            UPDATE_REG(0x104, TM1D); 
           }
         }
         
@@ -4029,38 +4160,17 @@ void CPULoop(int ticks)
               UPDATE_REG(0x108, TM2D);
             }
           } else {
-            if(timer2ClockReload == 1) {
-              u32 tm2d = TM2D + clockTicks;
-              if(tm2d > 0xffff) {
-                tm2d += timer2Reload;
-                timerOverflow |= 4;
-                if(TM2CNT & 0x40) {
-                  IF |= 0x20;
-                  UPDATE_REG(0x202, IF);
-                }
-              }
-              TM2D = tm2d;
-              if(TM2D < timer2Reload)
-                TM2D = timer2Reload;
-              timer2Ticks = 0x10000 - TM2D;
-              UPDATE_REG(0x108, TM2D);                    
-            } else {
-              timer2Ticks -= clockTicks;          
-              if(timer2Ticks <= 0) {
-                timer2Ticks += timer2ClockReload;
-                TM2D++;
-                
-                if(TM2D == 0) {
-                  TM2D = timer2Reload;
-                  timerOverflow |= 4;
-                  if(TM2CNT & 0x40) {
-                    IF |= 0x20;
-                    UPDATE_REG(0x202, IF);
-                  }
-                }
-                UPDATE_REG(0x108, TM2D);        
+            timer2Ticks -= clockTicks;
+            if(timer2Ticks <= 0) {
+              timer2Ticks += (0x10000 - timer2Reload) << timer2ClockReload;
+              timerOverflow |= 4;           
+              if(TM2CNT & 0x40) {
+                IF |= 0x20;
+                UPDATE_REG(0x202, IF);
               }
             }
+            TM2D = 0xFFFF - (timer2Ticks >> timer2ClockReload);
+            UPDATE_REG(0x108, TM2D); 
           }
         }
         
@@ -4075,45 +4185,26 @@ void CPULoop(int ticks)
                   UPDATE_REG(0x202, IF);
                 }
               }
-              UPDATE_REG(0x10c, TM3D);
+              UPDATE_REG(0x10C, TM3D);
             }
           } else {
-            if(timer3ClockReload == 1) {
-              u32 tm3d = TM3D + clockTicks;
-              if(tm3d > 0xffff) {
-                tm3d += timer3Reload;
-                if(TM3CNT & 0x40) {
-                  IF |= 0x40;
-                  UPDATE_REG(0x202, IF);
-                }
-              }
-              TM3D = tm3d;
-              if(TM3D < timer3Reload)
-                TM3D = timer3Reload;
-              timer3Ticks = 0x10000 - TM3D;
-              UPDATE_REG(0x10C, TM3D);                            
-            } else {
-              timer3Ticks -= clockTicks;          
-              if(timer3Ticks <= 0) {
-                timer3Ticks += timer3ClockReload;
-                TM3D++;
-                
-                if(TM3D == 0) {
-                  TM3D = timer3Reload;
-                  if(TM3CNT & 0x40) {
-                    IF |= 0x40;
-                    UPDATE_REG(0x202, IF);
-                  }
-                }
-                UPDATE_REG(0x10C, TM3D);
+              timer3Ticks -= clockTicks;
+            if(timer3Ticks <= 0) {
+              timer3Ticks += (0x10000 - timer3Reload) << timer3ClockReload;         
+              if(TM3CNT & 0x40) {
+                IF |= 0x40;
+                UPDATE_REG(0x202, IF);
               }
             }
+            TM3D = 0xFFFF - (timer3Ticks >> timer3ClockReload);
+            UPDATE_REG(0x10C, TM3D); 
           }
         }
       }
+
       timerOverflow = 0;
 
-      // we shouldn't be doing sound in stop state, but we lose synchronization
+      // we shouldn't be doing sound in stop state, but we loose synchronization
       // if sound is disabled, so in stop state, soundTick will just produce
       // mute sound
       soundTicks -= clockTicks;
@@ -4157,10 +4248,39 @@ void CPULoop(int ticks)
         if(stopState)
           res &= 0x3080;
         if(res) {
-          remainingTicks+=5;
-          CPUInterrupt();
-          holdState = false;
-          stopState = false;
+          if (intState)
+          {
+            if (!IRQTicks)
+            {
+              CPUInterrupt();
+              intState = false;
+              holdState = false;
+              stopState = false;
+              holdType = 0;
+            }
+          }
+          else
+          {
+            if (!holdState)
+            {
+              intState = true;
+              IRQTicks=7;
+              if (cpuNextEvent> IRQTicks)
+                cpuNextEvent = IRQTicks;
+            }
+            else
+            {
+              CPUInterrupt();
+              holdState = false;
+              stopState = false;
+              holdType = 0;
+            }
+          }
+
+          // Stops the SWI Ticks emulation if an IRQ is executed
+          //(to avoid problems with nested IRQ/SWI)
+          if (SWITicks)
+            SWITicks = 0;
         }
       }
 
@@ -4174,29 +4294,21 @@ void CPULoop(int ticks)
           remainingTicks = 0;
         goto updateLoop;
       }
-      
+
+      if (timerOnOffDelay)
+          applyTimer();
+
+      if(cpuNextEvent > ticks)
+        cpuNextEvent = ticks;
+
       if(ticks <= 0 || cpuBreakLoop)
         break;
+
     }
-    else
-    // Update in-game timer value after each instruction
-    // (in case a game reads them). Still not working good ?
-    if(totalTicks < cpuNextEvent) {
-      if(timer0On && (timer0Ticks < clockTicks)) {
-       UPDATE_REG(0x100, TM0D+totalTicks);
-      }
-      if(timer1On && !(TM1CNT & 4) && (timer1Ticks < clockTicks)) {
-        UPDATE_REG(0x104, TM1D+totalTicks);
-      }
-      if(timer2On && !(TM2CNT & 4) && (timer2Ticks < clockTicks)) {
-        UPDATE_REG(0x108, TM2D+totalTicks);
-      }
-      if(timer3On && !(TM3CNT & 4) && (timer3Ticks < clockTicks)) {
-        UPDATE_REG(0x10C, TM3D+totalTicks);
-      }
-    } 
   }
 }
+
+
 
 struct EmulatedSystem GBASystem = {
   // emuMain

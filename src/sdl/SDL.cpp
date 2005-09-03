@@ -1356,10 +1356,14 @@ void sdlWriteState(int num)
             num+1);
   else
     sprintf(stateName,"%s%d.sgm", filename, num+1);
+  
   if(emulator.emuWriteState)
     emulator.emuWriteState(stateName);
+
   sprintf(stateName, "Wrote state %d", num+1);
   systemScreenMessage(stateName);
+
+  systemDrawScreen();
 }
 
 void sdlReadState(int num)
@@ -1377,6 +1381,8 @@ void sdlReadState(int num)
 
   sprintf(stateName, "Loaded state %d", num+1);
   systemScreenMessage(stateName);
+
+  systemDrawScreen();
 }
 
 void sdlWriteBattery()

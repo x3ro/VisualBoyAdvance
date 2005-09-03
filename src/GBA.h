@@ -30,7 +30,8 @@
 #define SAVE_GAME_VERSION_6 6
 #define SAVE_GAME_VERSION_7 7
 #define SAVE_GAME_VERSION_8 8
-#define SAVE_GAME_VERSION  SAVE_GAME_VERSION_8
+#define SAVE_GAME_VERSION_9 9
+#define SAVE_GAME_VERSION  SAVE_GAME_VERSION_9
 
 typedef struct {
   u8 *address;
@@ -102,6 +103,7 @@ extern bool CPUWriteState(const char *);
 extern int CPULoadRom(const char *);
 extern void doMirroring(bool);
 extern void CPUUpdateRegister(u32, u16);
+extern void applyTimer ();
 extern void CPUWriteHalfWord(u32, u16);
 extern void CPUWriteByte(u32, u8);
 extern void CPUInit(const char *,bool);

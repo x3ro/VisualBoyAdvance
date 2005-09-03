@@ -30,6 +30,19 @@ extern bool cpuEEPROMEnabled;
 extern bool cpuEEPROMSensorEnabled;
 extern bool cpuDmaHack;
 extern u32 cpuDmaLast;
+extern bool timer0On;
+extern int timer0Ticks;
+extern int timer0ClockReload;
+extern bool timer1On;
+extern int timer1Ticks;
+extern int timer1ClockReload;
+extern bool timer2On;
+extern int timer2Ticks;
+extern int timer2ClockReload;
+extern bool timer3On;
+extern int timer3Ticks;
+extern int timer3ClockReload;
+extern int cpuTotalTicks;
 
 #define CPUReadByteQuick(addr) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]
@@ -193,7 +206,24 @@ inline u32 CPUReadHalfWord(u32 address)
     break;
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fe])
-      value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
+    {
+      if (((address & 0x3fe)>0xFF) && ((address & 0x3fe)<0x10E))
+      {
+        if (((address & 0x3fe) == 0x100) && timer0On)
+          value = 0xFFFF - ((timer0Ticks-cpuTotalTicks) >> timer0ClockReload);
+        else
+        if (((address & 0x3fe) == 0x104) && timer1On && !(TM1CNT & 4))
+          value = 0xFFFF - ((timer1Ticks-cpuTotalTicks) >> timer1ClockReload);
+        else
+        if (((address & 0x3fe) == 0x108) && timer2On && !(TM2CNT & 4))
+          value = 0xFFFF - ((timer2Ticks-cpuTotalTicks) >> timer2ClockReload);
+        else
+        if (((address & 0x3fe) == 0x10C) && timer3On && !(TM3CNT & 4))
+          value = 0xFFFF - ((timer3Ticks-cpuTotalTicks) >> timer3ClockReload);
+      }
+      else
+        value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
+    }
     else goto unreadable;
     break;
   case 5:

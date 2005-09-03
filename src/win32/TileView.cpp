@@ -265,38 +265,41 @@ void TileView::savePNG(const char *name)
 
 void TileView::OnSave() 
 {
-  CString captureBuffer;
+  if(rom != NULL)
+  {
+    CString captureBuffer;
 
-  if(theApp.captureFormat == 0)
-    captureBuffer = "tiles.png";
-  else
-    captureBuffer = "tiles.bmp";
+    if(theApp.captureFormat == 0)
+      captureBuffer = "tiles.png";
+    else
+      captureBuffer = "tiles.bmp";
 
-  LPCTSTR exts[] = {".png", ".bmp" };
+    LPCTSTR exts[] = {".png", ".bmp" };
 
-  CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
-  CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
+    CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
+    CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
 
-  FileDlg dlg(this,
-              captureBuffer,
-              filter,
-              theApp.captureFormat ? 2 : 1,
-              theApp.captureFormat ? "BMP" : "PNG",
-              exts,
-              "",
-              title,
-              true);
+    FileDlg dlg(this,
+                captureBuffer,
+                filter,
+                theApp.captureFormat ? 2 : 1,
+                theApp.captureFormat ? "BMP" : "PNG",
+                exts,
+                "",
+                title,
+                true);
 
-  if(dlg.DoModal() == IDCANCEL) {
-    return;
+    if(dlg.DoModal() == IDCANCEL) {
+      return;
+    }
+
+    captureBuffer = dlg.GetPathName();
+
+    if(dlg.getFilterIndex() == 2)
+      saveBMP(captureBuffer);
+    else
+      savePNG(captureBuffer);
   }
-
-  captureBuffer = dlg.GetPathName();
-
-  if(dlg.getFilterIndex() == 2)
-    saveBMP(captureBuffer);
-  else
-    savePNG(captureBuffer);  
 }
 
 void TileView::renderTile256(int tile, int x, int y, u8 *charBase, u16 *palette)

@@ -37,6 +37,7 @@
 extern int emulating;
 
 extern void remoteCleanUp();
+extern void InterframeCleanup();
 
 void MainWnd::OnFileOpen() 
 {
@@ -254,17 +255,22 @@ BOOL MainWnd::OnFileLoadSlot(UINT nID)
   else
     filename.Format("%s\\%s%d.sgm", saveDir, buffer, nID);
 
+  CString format = winResLoadString(IDS_LOADED_STATE_N);
+  buffer.Format(format, nID);
+ 
   bool res = loadSaveGame(filename);
+
+  if (theApp.paused)
+    InterframeCleanup();
+
+  systemScreenMessage(buffer);
+
+  systemDrawScreen();
 
   theApp.rewindCount = 0;
   theApp.rewindCounter = 0;
   theApp.rewindSaveNeeded = false;
-  
-  CString format = winResLoadString(IDS_LOADED_STATE_N);
-  buffer.Format(format, nID);
-  
-  systemScreenMessage(buffer);
-  
+
   return res;
 }
 
@@ -339,6 +345,8 @@ BOOL MainWnd::OnFileSaveSlot(UINT nID)
   buffer.Format(format, nID);
   
   systemScreenMessage(buffer);
+
+  systemDrawScreen();
   
   return res;
 }

@@ -998,36 +998,39 @@ void MapView::savePNG(const char *name)
   fclose(fp);
 }
 
-void MapView::OnSave() 
+void MapView::OnSave()
 {
-  CString filename;
+  if(rom != NULL)
+  {
+    CString filename;
 
-  if(theApp.captureFormat == 0)
-    filename = "map.png";
-  else
-    filename = "map.bmp";
+    if(theApp.captureFormat == 0)
+      filename = "map.png";
+    else
+      filename = "map.bmp";
 
-  LPCTSTR exts[] = {".png", ".bmp" };
+    LPCTSTR exts[] = {".png", ".bmp" };
 
-  CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
-  CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
+    CString filter = theApp.winLoadFilter(IDS_FILTER_PNG);
+    CString title = winResLoadString(IDS_SELECT_CAPTURE_NAME);
 
-  FileDlg dlg(this,
-              filename,
-              filter,
-              theApp.captureFormat ? 2 : 1,
-              theApp.captureFormat ? "BMP" : "PNG",
-              exts,
-              "",
-              title,
-              true);
+    FileDlg dlg(this,
+                filename,
+                filter,
+                theApp.captureFormat ? 2 : 1,
+                theApp.captureFormat ? "BMP" : "PNG",
+                exts,
+                "",
+                title,
+                true);
 
-  if(dlg.DoModal() == IDCANCEL) {
-    return;
+    if(dlg.DoModal() == IDCANCEL) {
+      return;
+    }
+
+    if(dlg.getFilterIndex() == 2)
+      saveBMP(dlg.GetPathName());
+    else
+      savePNG(dlg.GetPathName());
   }
-
-  if(dlg.getFilterIndex() == 2)
-    saveBMP(dlg.GetPathName());
-  else
-    savePNG(dlg.GetPathName());
 }
