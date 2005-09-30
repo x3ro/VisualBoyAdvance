@@ -207,6 +207,7 @@ inline u32 CPUReadHalfWord(u32 address)
   case 4:
     if((address < 0x4000400) && ioReadable[address & 0x3fe])
     {
+      value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
       if (((address & 0x3fe)>0xFF) && ((address & 0x3fe)<0x10E))
       {
         if (((address & 0x3fe) == 0x100) && timer0On)
@@ -221,8 +222,6 @@ inline u32 CPUReadHalfWord(u32 address)
         if (((address & 0x3fe) == 0x10C) && timer3On && !(TM3CNT & 4))
           value = 0xFFFF - ((timer3Ticks-cpuTotalTicks) >> timer3ClockReload);
       }
-      else
-        value =  READ16LE(((u16 *)&ioMem[address & 0x3fe]));
     }
     else goto unreadable;
     break;
