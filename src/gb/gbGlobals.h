@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -46,6 +46,16 @@ extern u8 gbBgp[4];
 extern u8 gbObp0[4];
 extern u8 gbObp1[4];
 extern u16 gbPalette[128];
+extern bool gbScreenOn;
+extern u8 gbSCYLine[190];
+// gbSCXLine is used for the emulation (bug) of the SX change
+// found in the Artic Zone game.
+extern u8 gbSCXLine[190];
+// gbBgpLine is used for the emulation of the
+// Prehistorik Man's title screen scroller.
+extern u8 gbBgpLine[190];
+extern u8 gbObp0Line [190];
+extern u8 gbObp1Line [190];
 
 extern u8 register_LCDC;
 extern u8 register_LY;
@@ -54,8 +64,10 @@ extern u8 register_SCX;
 extern u8 register_WY;
 extern u8 register_WX;
 extern u8 register_VBK;
+extern u8 oldRegister_WY;
 
 extern int emulating;
+extern bool genericflashcardEnable;
 
 extern int gbBorderLineSkip;
 extern int gbBorderRowSkip;
@@ -63,6 +75,6 @@ extern int gbBorderColumnSkip;
 extern int gbDmaTicks;
 
 extern void gbRenderLine();
-extern void gbDrawSprites();
+extern int gbDrawSprites(bool);
 
 extern u8 (*gbSerialFunction)(u8);

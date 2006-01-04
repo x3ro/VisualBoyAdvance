@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -255,9 +255,12 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
         yyy = 7 - yy;
 
       u16 c = gbPalette[palette + color];
-      if(!color)
-        c = gbPalette[0];
-      if((yy < 40 || yy >= 184) || (xx < 48 || xx >= 208)) {
+
+      // Fix for Super Snaky ???
+      // (it allows SGB borders to not redraw on the GB screen)
+      //if(!color)
+      //  c = gbPalette[0];
+      if(((yy < 40 || yy >= 184) || (xx < 48 || xx >= 208)) && (color)) {
         switch(systemColorDepth) {
         case 16:
           gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);

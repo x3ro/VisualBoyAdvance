@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -102,7 +102,9 @@
    opcode = gbReadOpcode(PC.W++);
    if(gbCgbMode) {
      if(gbMemory[0xff4d] & 1) {
+         
        gbSpeedSwitch();
+       //clockTicks += 228*144-(gbSpeed ? 62 : 63);
        
        if(gbSpeed == 0)
          gbMemory[0xff4d] = 0x00;
@@ -575,17 +577,10 @@ case 0x38:
    break;
  case 0x76:
    // HALT
-   if(IFF & 1) {
-     PC.W--;
      IFF |= 0x80;
-   } else {
-     if((register_IE & register_IF) > 0)
-       IFF |= 0x100;
-     else {
-       PC.W--;
-       IFF |= 0x81;
-     }
-   }
+   // Takes longer to get out of Halt depending on the gbHardware ???
+     if (gbHardware & 5)
+       clockTicks++;
    break;
  case 0x77:
    // LD (HL),A
@@ -1336,7 +1331,7 @@ case 0x38:
  case 0xf3:
    // DI
  //   IFF&=0xFE;
-   IFF&=(~0x21);
+   IFF&=(~0x31);
    break;
    // F4 illegal
  case 0xf5:
@@ -1383,8 +1378,12 @@ case 0x38:
    break;
  case 0xfb:
    // EI
-   IFF|=0x20;
+   if (!(IFF & 0x30))
+     IFF|=0x20;
    break;
+ case 0xfc:
+ case 0xfd:
+  breakpoint = true;
    // FC illegal
    // FD illegal
  case 0xfe:
@@ -1401,7 +1400,10 @@ case 0x38:
    PC.W=0x0038;
    break;
  default:
-   systemMessage(0, N_("Unknown opcode %02x at %04x"),
-                 gbReadOpcode(PC.W-1),PC.W-1);
-   emulating = false;
+   if (gbSystemMessage == false)
+   {
+     systemMessage(0, N_("Unknown opcode %02x at %04x"),
+                   gbReadOpcode(PC.W-1),PC.W-1);
+     gbSystemMessage =true;
+   }
    return;

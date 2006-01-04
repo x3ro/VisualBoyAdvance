@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -222,6 +222,7 @@ void gbSoundEvent(register u16 address, register int data)
     }
     break;
   case NR30:
+    gbMemory[NR30] = data;
     if(!(data & 0x80)) {
       gbMemory[NR52] &= 0xfb;
       sound3On = 0;
@@ -241,6 +242,7 @@ void gbSoundEvent(register u16 address, register int data)
       sound3Skip = 0;
     break;
   case NR34:
+    gbMemory[NR34] = data;
     freq = 2048 - (((data &7) << 8) | (int)gbMemory[NR33]);
     if(freq) {
       sound3Skip = SOUND_MAGIC_2 / freq;

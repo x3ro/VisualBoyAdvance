@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -41,8 +41,8 @@ void mapperMBC1ROM(u16 address, u8 value)
     break;
   case 0x2000: // ROM bank select
     //    value = value & 0x1f;
-    if(value == 0)
-      value = 1;
+    if((value & 0x1f) == 0)
+      value += 1;
     if(value == gbDataMBC1.mapperROMBank)
       break;
 
@@ -51,7 +51,7 @@ void mapperMBC1ROM(u16 address, u8 value)
     // check current model
     if(gbDataMBC1.mapperMemoryModel == 0) {
       // model is 16/8, so we have a high address in use
-      tmpAddress |= (gbDataMBC1.mapperROMHighAddress) << 19;
+      tmpAddress |= (gbDataMBC1.mapperROMHighAddress & 3) << 19;
     }
 
     tmpAddress &= gbRomSizeMask;
@@ -73,6 +73,7 @@ void mapperMBC1ROM(u16 address, u8 value)
       gbMemoryMap[0x0b] = &gbRam[tmpAddress + 0x1000];
       gbDataMBC1.mapperRAMBank = value;
       gbDataMBC1.mapperRAMAddress = tmpAddress;
+      gbDataMBC1.mapperROMHighAddress = 0;
     } else {
       // 16/8, set the high address
       gbDataMBC1.mapperROMHighAddress = value & 0x03;
@@ -83,10 +84,49 @@ void mapperMBC1ROM(u16 address, u8 value)
       gbMemoryMap[0x05] = &gbRom[tmpAddress + 0x1000];
       gbMemoryMap[0x06] = &gbRom[tmpAddress + 0x2000];
       gbMemoryMap[0x07] = &gbRom[tmpAddress + 0x3000];
+
+      gbMemoryMap[0x0a] = &gbRam[0];
+      gbMemoryMap[0x0b] = &gbRam[0x1000];
+      gbDataMBC1.mapperRAMBank = 0;
     }
     break;
   case 0x6000: // memory model select
     gbDataMBC1.mapperMemoryModel = value & 1;
+
+    if(gbDataMBC1.mapperMemoryModel == 1) {
+      // 4/32 model, RAM bank switching provided
+      value = gbDataMBC1.mapperRAMBank & 0x03;
+      tmpAddress = value << 13;
+      tmpAddress &= gbRamSizeMask;
+      gbMemoryMap[0x0a] = &gbRam[tmpAddress];
+      gbMemoryMap[0x0b] = &gbRam[tmpAddress + 0x1000];
+      gbDataMBC1.mapperRAMBank = value;
+      gbDataMBC1.mapperRAMAddress = tmpAddress;
+
+    tmpAddress = gbDataMBC1.mapperROMBank << 14;
+
+
+    tmpAddress &= gbRomSizeMask;
+    gbMemoryMap[0x04] = &gbRom[tmpAddress];
+    gbMemoryMap[0x05] = &gbRom[tmpAddress + 0x1000];
+    gbMemoryMap[0x06] = &gbRom[tmpAddress + 0x2000];
+    gbMemoryMap[0x07] = &gbRom[tmpAddress + 0x3000];
+
+    } else {
+      // 16/8, set the high address
+
+      tmpAddress = gbDataMBC1.mapperROMBank << 14;
+      tmpAddress |= (gbDataMBC1.mapperROMHighAddress) << 19;
+      tmpAddress &= gbRomSizeMask;
+      gbMemoryMap[0x04] = &gbRom[tmpAddress];
+      gbMemoryMap[0x05] = &gbRom[tmpAddress + 0x1000];
+      gbMemoryMap[0x06] = &gbRom[tmpAddress + 0x2000];
+      gbMemoryMap[0x07] = &gbRom[tmpAddress + 0x3000];
+
+      gbMemoryMap[0x0a] = &gbRam[0];
+      gbMemoryMap[0x0b] = &gbRam[0x1000];
+
+    }
     break;
   }
 }
@@ -107,10 +147,12 @@ void memoryUpdateMapMBC1()
   int tmpAddress = gbDataMBC1.mapperROMBank << 14;
 
   // check current model
-  if(gbDataMBC1.mapperMemoryModel == 1) {
+  if(gbDataMBC1.mapperMemoryModel == 0) {
     // model is 16/8, so we have a high address in use
     tmpAddress |= (gbDataMBC1.mapperROMHighAddress) << 19;
   }
+    gbMemoryMap[0x0a] = &gbRam[0];
+    gbMemoryMap[0x0b] = &gbRam[0x1000];
 
   tmpAddress &= gbRomSizeMask;
   gbMemoryMap[0x04] = &gbRom[tmpAddress];
@@ -118,7 +160,7 @@ void memoryUpdateMapMBC1()
   gbMemoryMap[0x06] = &gbRom[tmpAddress + 0x2000];
   gbMemoryMap[0x07] = &gbRom[tmpAddress + 0x3000];
 
-  if(gbRamSize) {
+  if((gbRamSize) &&  (gbDataMBC1.mapperMemoryModel == 1)){
     gbMemoryMap[0x0a] = &gbRam[gbDataMBC1.mapperRAMAddress];
     gbMemoryMap[0x0b] = &gbRam[gbDataMBC1.mapperRAMAddress + 0x1000];
   }

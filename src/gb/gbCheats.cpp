@@ -50,7 +50,7 @@ void gbCheatUpdateMap()
 void gbCheatsSaveGame(gzFile gzFile)
 {
   utilWriteInt(gzFile, gbCheatNumber);
-  if(gbCheatNumber)
+  if(gbCheatNumber>0)
     utilGzWrite(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
 }
 
@@ -81,7 +81,7 @@ void gbCheatsReadGame(gzFile gzFile, int version)
   } else {
     gbCheatNumber = utilReadInt(gzFile);
 
-    if(gbCheatNumber) {
+    if(gbCheatNumber>0) {
       utilGzRead(gzFile, &gbCheatList[0], sizeof(gbCheat)*gbCheatNumber);
     }
   }

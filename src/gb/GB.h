@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ typedef union {
 
 extern bool gbLoadRom(const char *);
 extern void gbEmulate(int);
+extern void gbDrawLine();
 extern bool gbIsGameboyRom(const char *);
 extern void gbSoundReset();
 extern void gbSoundSetQuality(int);

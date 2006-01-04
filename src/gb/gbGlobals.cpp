@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ u8 gbObp0[4] = { 0, 1, 2, 3};
 u8 gbObp1[4] = { 0, 1, 2, 3};
 int gbWindowLine = -1;
 
+bool genericflashcardEnable = false;
 int gbCgbMode = 0;
 
 u16 gbColorFilter[32768];
