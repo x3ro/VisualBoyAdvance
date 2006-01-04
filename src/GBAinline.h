@@ -101,7 +101,15 @@ inline u32 CPUReadMemory(u32 address)
     value = READ32LE(((u32 *)&paletteRAM[address & 0x3fC]));
     break;
   case 6:
-    value = READ32LE(((u32 *)&vram[address & 0x1fffc]));
+    address = (address & 0x1fffc);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    {
+        value = 0;
+        break;
+    }
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+    value = READ32LE(((u32 *)&vram[address]));
     break;
   case 7:
     value = READ32LE(((u32 *)&oam[address & 0x3FC]));
@@ -229,7 +237,15 @@ inline u32 CPUReadHalfWord(u32 address)
     value = READ16LE(((u16 *)&paletteRAM[address & 0x3fe]));
     break;
   case 6:
-    value = READ16LE(((u16 *)&vram[address & 0x1fffe]));
+    address = (address & 0x1fffe);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+    {
+        value = 0;
+        break;
+    }
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+    value = READ16LE(((u16 *)&vram[address]));
     break;
   case 7:
     value = READ16LE(((u16 *)&oam[address & 0x3fe]));
@@ -316,7 +332,12 @@ inline u8 CPUReadByte(u32 address)
   case 5:
     return paletteRAM[address & 0x3ff];
   case 6:
-    return vram[address & 0x1ffff];
+    address = (address & 0x1ffff);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+        return 0;
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+    return vram[address];
   case 7:
     return oam[address & 0x3ff];
   case 8:
@@ -371,7 +392,7 @@ inline void CPUWriteMemory(u32 address, u32 value)
 #ifdef DEV_VERSION
   if(address & 3) {
     if(systemVerbose & VERBOSE_UNALIGNED_MEMORY) {
-      log("Unaliagned word write: %08x to %08x from %08x\n",
+      log("Unaligned word write: %08x to %08x from %08x\n",
           value,
           address,
           armMode ? armNextPC - 4 : armNextPC - 2);
@@ -408,10 +429,12 @@ inline void CPUWriteMemory(u32 address, u32 value)
     WRITE32LE(((u32 *)&paletteRAM[address & 0x3FC]), value);
     break;
   case 0x06:
-    if(address & 0x10000)
-      WRITE32LE(((u32 *)&vram[address & 0x17ffc]), value);
-    else
-      WRITE32LE(((u32 *)&vram[address & 0x1fffc]), value);
+    address = (address & 0x1fffc);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+        return;
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+      WRITE32LE(((u32 *)&vram[address]), value);
     break;
   case 0x07:
     WRITE32LE(((u32 *)&oam[address & 0x3fc]), value);

@@ -1035,6 +1035,9 @@ static bool CPUReadState(gzFile gzFile)
     cpuSaveGameFunc = flashWrite;
     gbaSaveType = 2;
     break;
+  case 5:
+    gbaSaveType = 5;
+    break;
   default:
     systemMessage(MSG_UNSUPPORTED_SAVE_TYPE,
                   N_("Unsupported save type %d"), saveType);
@@ -1120,7 +1123,7 @@ bool CPUWriteBatteryFile(const char *fileName)
     }
   }
   
-  if(gbaSaveType) {
+  if((gbaSaveType) && (gbaSaveType!=5)) {
     FILE *file = fopen(fileName, "wb");
     
     if(!file) {
@@ -3171,8 +3174,12 @@ void CPUWriteHalfWord(u32 address, u16 value)
     WRITE16LE(((u16 *)&paletteRAM[address & 0x3fe]), value);
     break;
   case 6:
-    if ((address & 0xFFFFFF) < 0x18000)
-      WRITE16LE(((u16 *)&vram[address & 0x1fffe]), value);
+    address = (address & 0x1fffe);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+        return;
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+      WRITE16LE(((u16 *)&vram[address]), value); 
     break;
   case 7:
     WRITE16LE(((u16 *)&oam[address & 0x3fe]), value);
@@ -3299,10 +3306,16 @@ void CPUWriteByte(u32 address, u8 b)
     *((u16 *)&paletteRAM[address & 0x3FE]) = (b << 8) | b;
     break;
   case 6:
+    address = (address & 0x1fffe);
+    if (((DISPCNT & 7) >2) && ((address & 0x1C000) == 0x18000))
+        return;
+    if ((address & 0x18000) == 0x18000)
+      address &= 0x17fff;
+
     // no need to switch 
     // byte writes to OBJ VRAM are ignored
-    if ((address & 0xFFFFFF) < objTilesAddress[((DISPCNT&7)+1)>>2])
-            *((u16 *)&vram[address & 0x1FFFE]) = (b << 8) | b;
+    if ((address) < objTilesAddress[((DISPCNT&7)+1)>>2])
+            *((u16 *)&vram[address]) = (b << 8) | b;
     break;
   case 7:
     // no need to switch
@@ -3316,7 +3329,10 @@ void CPUWriteByte(u32 address, u8 b)
     }
     goto unwritable;
   case 14:
-    if(!eepromInUse | cpuSramEnabled | cpuFlashEnabled) {
+      if (!(saveType == 5) && (!eepromInUse | cpuSramEnabled | cpuFlashEnabled)) {
+
+    //if(!cpuEEPROMEnabled && (cpuSramEnabled | cpuFlashEnabled)) { 
+
       (*cpuSaveGameFunc)(address, b);
       break;
     }
@@ -3719,6 +3735,8 @@ void CPUReset()
     // no save at all
     break;
   } 
+
+  saveType = gbaSaveType = cpuSaveType;
 
   ARM_PREFETCH;
 

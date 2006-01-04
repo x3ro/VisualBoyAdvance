@@ -868,6 +868,8 @@ void BIOS_RegisterRamReset(u32 flags)
 {
   // no need to trace here. this is only called directly from GBA.cpp
   // to emulate bios initialization
+
+  CPUUpdateRegister(0x0, 0x80);
   
   if(flags) {
     if(flags & 0x01) {
@@ -893,18 +895,16 @@ void BIOS_RegisterRamReset(u32 flags)
 
     if(flags & 0x80) {
       int i;
-      for(i = 0; i < 8; i++)
+      for(i = 0; i < 0x10; i++)
         CPUUpdateRegister(0x200+i*2, 0);
 
-      CPUUpdateRegister(0x202, 0xFFFF);
-
-      for(i = 0; i < 8; i++)
+      for(i = 0; i < 0xF; i++)
         CPUUpdateRegister(0x4+i*2, 0);
 
-      for(i = 0; i < 16; i++)
+      for(i = 0; i < 0x20; i++)
         CPUUpdateRegister(0x20+i*2, 0);
 
-      for(i = 0; i < 24; i++)
+      for(i = 0; i < 0x18; i++)
         CPUUpdateRegister(0xb0+i*2, 0);
 
       CPUUpdateRegister(0x130, 0);
