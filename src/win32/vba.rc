@@ -925,11 +925,13 @@ BEGIN
     LTEXT           "DE:",IDC_STATIC,250,45,18,8
     LTEXT           "HL:",IDC_STATIC,250,55,18,8
     LTEXT           "IFF:",IDC_STATIC,250,85,18,8
+    LTEXT           "LY:",IDC_STATIC,272,95,18,8
     LTEXT           "",IDC_R0,285,25,52,8,SS_NOPREFIX
     LTEXT           "",IDC_R1,285,35,52,8,SS_NOPREFIX
     LTEXT           "",IDC_R2,285,45,52,8,SS_NOPREFIX
     LTEXT           "",IDC_R3,285,55,52,8,SS_NOPREFIX
     LTEXT           "",IDC_R6,285,85,52,8,SS_NOPREFIX
+    LTEXT           "",IDC_LY,285,95,52,8,SS_NOPREFIX
     CONTROL         "N",IDC_N,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
                     WS_TABSTOP,250,109,21,10
     CONTROL         "Z",IDC_Z,"Button",BS_AUTOCHECKBOX | WS_DISABLED | 
@@ -1813,6 +1815,8 @@ BEGIN
             MENUITEM "Auto hide menu",              ID_OPTIONS_EMULATOR_AUTOHIDEMENU
 
             MENUITEM "Rewind interval...",          ID_OPTIONS_EMULATOR_REWINDINTERVAL
+
+            MENUITEM "Generic Flashcard (GB/GBC)",           ID_OPTIONS_EMULATOR_GENERICFLASHCARD
 
             MENUITEM "&Game Overrides...",          ID_OPTIONS_EMULATOR_GAMEOVERRIDES
 

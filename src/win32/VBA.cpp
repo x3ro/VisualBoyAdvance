@@ -197,6 +197,7 @@ VBA::VBA()
   winGbBorderOn = 0;
   winFlashSize = 0x10000;
   winRtcEnable = false;
+  winGenericflashcardEnable = false;
   winSaveType = 0;
   rewindMemory = NULL;
   rewindPos = 0;

@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -229,6 +229,8 @@ class MainWnd : public CWnd
   afx_msg void OnUpdateOptionsEmulatorAgbprint(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorRealtimeclock();
   afx_msg void OnUpdateOptionsEmulatorRealtimeclock(CCmdUI* pCmdUI);
+  afx_msg void OnOptionsEmulatorGenericflashcard();
+  afx_msg void OnUpdateOptionsEmulatorGenericflashcard(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorAutohidemenu();
   afx_msg void OnUpdateOptionsEmulatorAutohidemenu(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorRewindinterval();

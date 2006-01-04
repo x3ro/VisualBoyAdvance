@@ -505,6 +505,7 @@
 #define IDC_BIT_14                      1264
 #define IDC_BIT_15                      1265
 #define IDC_MIRRORING                   1266
+#define IDC_LY                          1267
 #define ID_HELP_ABOUT                   40001
 #define ID_FILE_EXIT                    40002
 #define ID_OPTIONS_VIDEO_FRAMESKIP_0    40003
@@ -747,6 +748,7 @@
 #define ID_OPTIONS_FILTER_LQ2X          40275
 #define ID_OPTIONS_EMULATOR_GAMEOVERRIDES 40276
 #define ID_HELP_GNUPUBLICLICENSE        40277
+#define ID_OPTIONS_EMULATOR_GENERICFLASHCARD 40279
 
 // Next default values for new objects
 // 
