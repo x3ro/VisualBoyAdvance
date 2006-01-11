@@ -139,7 +139,7 @@ int gbSerialOn = 0;
 int gbSerialTicks = 0;
 int gbSerialBits = 0;
 // timer
-int gbTimerOn = 0;
+bool gbTimerOn = false;
 int gbTimerTicks = GBTIMER_MODE_0_CLOCK_TICKS;
 int gbTimerClockTicks = GBTIMER_MODE_0_CLOCK_TICKS;
 int gbTimerMode = 0;
@@ -153,8 +153,6 @@ const u8 gbTimerMask [4] = {0xff, 0x3, 0xf, 0x3f};
 const u8 gbTimerBug [8] = {0x80, 0x80, 0x02, 0x02, 0x0, 0xff, 0x0, 0xff}; 
 bool gbTimerModeChange = false;
 bool gbTimerOnChange = false;
-int gbOldTimerMode = 0;
-int gbOldTimerClockTicks = GBTIMER_MODE_0_CLOCK_TICKS;
 // lcd
 bool gbScreenOn = true;
 int gbLcdBug = 0;
@@ -683,7 +681,7 @@ void gbCompareLYToLYC()
       if (register_STAT & 0x40)
       {
         // send LCD interrupt only if no interrupt 48h signal...
-        if (!(gbInt48Signal & 7))
+        if (!(gbInt48Signal))
         {
           register_IF |=2;
           gbRegister_IFDelay = true;
@@ -827,12 +825,10 @@ void  gbWriteMemory(register u16 address, register u8 value)
     gbTimerModeChange = (((value & 3) != (register_TAC&3)) && (value & register_TAC & 4)) ? true : false;
     gbTimerOnChange = (((value ^ register_TAC) & 4) == 4) ? true : false;
       
-    gbTimerOn = (value & 4);    
+    gbTimerOn = (value & 4) ? true : false;    
 
-    if (gbTimerOn || gbTimerModeChange)
+    if (gbTimerOnChange || gbTimerModeChange)
     {
-      gbOldTimerMode = register_TAC & 3;
-      gbOldTimerClockTicks = gbTimerClockTicks;
       gbTimerMode = value & 3;
 
       switch(gbTimerMode) {
@@ -891,7 +887,7 @@ void  gbWriteMemory(register u16 address, register u8 value)
       if (temp)
       {
         gbMemory[0xff05] = ++register_TIMA;
-        if(register_TIMA == 0) {
+        if((register_TIMA & 0xff) == 0) {
           // timer overflow!
             
           // reload timer modulo
@@ -1898,8 +1894,7 @@ void gbReset()
 
   gbTimerModeChange = false;
   gbTimerOnChange = false;
-  gbOldTimerMode = 0;
-  gbOldTimerClockTicks = GBTIMER_MODE_0_CLOCK_TICKS;
+  gbTimerOn = false;
 
  // memset(gbSCYLine,0,sizeof(gbSCYLine));
 
@@ -2008,7 +2003,7 @@ void gbReset()
   gbSerialBits = 0;
   gbSerialOn = 0;
   gbWindowLine = -1;
-  gbTimerOn = 0;
+  gbTimerOn = false;
   gbTimerMode = 0;
   //  gbSynchronizeTicks = GBSYNCHRONIZE_CLOCK_TICKS;
   gbSpeed = 0;
@@ -3243,8 +3238,8 @@ void gbEmulate(int ticksToStop)
       if(gbSerialOn && (gbSerialTicks < clockTicks))
         clockTicks = gbSerialTicks;
 
-      if(gbTimerOn && (gbTimerTicks < clockTicks))
-        clockTicks = gbTimerTicks;
+      if(gbTimerOn && (((gbInternalTimer) & gbTimerMask[gbTimerMode])+1 < clockTicks))
+        clockTicks = ((gbInternalTimer) & gbTimerMask[gbTimerMode])+1;
 
       if(soundTicks && (soundTicks < clockTicks))
         clockTicks = soundTicks;
@@ -3300,14 +3295,11 @@ void gbEmulate(int ticksToStop)
             
         if (tempIFF <=clockTicks)
         {
-            if (IFF & 0x80)
-              clockTicks = tempIFF;
-            else
-              tempIFF = clockTicks;
-
+            tempIFF = 0;
             IFF |=1;
         }
-        tempIFF -= clockTicks;
+        else
+          tempIFF -= clockTicks;
         IFF = (IFF & 0x8F) | (tempIFF <<4);
     }
 
@@ -3333,7 +3325,7 @@ void gbEmulate(int ticksToStop)
     // DIV register emulation
     gbDivTicks -= clockTicks;
     while(gbDivTicks <= 0) {
-      gbMemory[0xff04] = register_DIV++;
+      gbMemory[0xff04] = ++register_DIV;
       gbDivTicks += GBDIV_CLOCK_TICKS;
     }
 
@@ -3736,6 +3728,16 @@ void gbEmulate(int ticksToStop)
 #endif
     }
     
+
+    soundTicks -= clockTicks;
+
+    while(soundTicks < 0) {
+      soundTicks += SOUND_CLOCK_TICKS;
+
+      gbSoundTick();
+    }
+
+
     // timer emulation
 
     if(gbTimerOn) {
@@ -3748,7 +3750,7 @@ void gbEmulate(int ticksToStop)
 
           register_TIMA++;
           // timer overflow!
-          if(register_TIMA == 0) {
+          if((register_TIMA & 0xff) == 0) {
             // reload timer modulo
             register_TIMA = register_TMA;
             // flag interrupt
@@ -3765,7 +3767,7 @@ void gbEmulate(int ticksToStop)
     }
 
     gbInternalTimer -= clockTicks;
-    while (gbInternalTimer<=0)
+    while (gbInternalTimer<0)
       gbInternalTimer+=0x100;
 
     /*
@@ -3795,16 +3797,6 @@ void gbEmulate(int ticksToStop)
     }
     */
 
-
-
-
-    soundTicks -= clockTicks;
-
-    while(soundTicks < 0) {
-      soundTicks += SOUND_CLOCK_TICKS;
-
-      gbSoundTick();
-    }
 
     //register_IF *= (IFF & 1);
 
@@ -3841,8 +3833,9 @@ void gbEmulate(int ticksToStop)
     }
 
 
+    gbDmaTicks = 0;
 
-    if ((register_IF & register_IE) && ((IFF & 0x81) && (gbInterruptWait == 0)))
+    if ((register_IF & register_IE) && (IFF & 0x81))
     {
 
       // Add some ticks for the interrupt execution time :
