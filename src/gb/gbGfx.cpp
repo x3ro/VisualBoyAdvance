@@ -127,7 +127,6 @@ void gbRenderLine()
 
         sx = gbSCXLine[x];
 
-
         sy = gbSCYLine[x+(gbSpeed ? 15 : 7)];
 
         sy+=y;
@@ -174,7 +173,7 @@ void gbRenderLine()
           if(gbCgbMode) {
             c = c + (attrs & 7)*4;
           } else {
-            c = (gbBgpLine[x+3]>>(c<<1)) &3;         
+            c = (gbBgpLine[x+7]>>(c<<1)) &3;         
             if(gbSgbMode && !gbCgbMode) {
               int dx = x >> 3;
               int dy = y >> 3;
@@ -315,8 +314,8 @@ void gbRenderLine()
               if(gbCgbMode) {
                 c = c + (attrs & 7) * 4;
               } else {
-                c = (gbBgpLine[x+3]>>(c<<1)) &3;         
-                if(gbSgbMode && ! gbCgbMode) {
+                c = (gbBgpLine[x+7]>>(c<<1)) &3;         
+                if(gbSgbMode && !gbCgbMode) {
                   int dx = x >> 3;
                   int dy = y >> 3;
                   
@@ -534,9 +533,8 @@ int gbDrawSprites(bool draw)
       }
       // sprite limit reached!
       if(count >= 10)
-      {
         break;
-      }
+
     }
   }
   return (count*3);
