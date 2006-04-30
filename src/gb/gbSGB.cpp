@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 
 extern u8 *pix;
 extern bool speedup;
+extern bool gbSgbResetFlag;
 
 #define GBSGB_NONE            0
 #define GBSGB_RESET           1
@@ -96,7 +97,7 @@ void gbSgbReset()
     gbSgbBorder[i] = 1 << 2;
   }
   
-  for(i = 0; i < 4; i++) {
+  for(i = 0; i < 32; i++) {
     gbPalette[i*4] = (0x1f) | (0x1f << 5) | (0x1f << 10);
     gbPalette[i*4+1] = (0x15) | (0x15 << 5) | (0x15 << 10);
     gbPalette[i*4+2] = (0x0c) | (0x0c << 5) | (0x0c << 10);
@@ -260,7 +261,7 @@ void gbSgbDrawBorderTile(int x, int y, int tile, int attr)
       // (it allows SGB borders to not redraw on the GB screen)
       //if(!color)
       //  c = gbPalette[0];
-      if(((yy < 40 || yy >= 184) || (xx < 48 || xx >= 208)) && (color)) {
+      if(((yy < 40 || yy >= 184) || (xx < 48 || xx >= 208)) && (color || (gbSgbResetFlag == true))) {
         switch(systemColorDepth) {
         case 16:
           gbSgbDraw16Bit(dest + yyy*(256+2) + xxx, c);
