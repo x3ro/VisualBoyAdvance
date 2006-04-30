@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2004-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -1042,22 +1042,22 @@ void utilGBAFindSave(const u8 *data, const int size)
     if(d == 0x52504545) {
       if(memcmp(p, "EEPROM_", 7) == 0) {
         if(saveType == 0)
-          saveType = 1;
+          saveType = 3;
       }
     } else if (d == 0x4D415253) {
       if(memcmp(p, "SRAM_", 5) == 0) {
         if(saveType == 0)
-          saveType = 2;
+          saveType = 1;
       }
     } else if (d == 0x53414C46) {
       if(memcmp(p, "FLASH1M_", 8) == 0) {
         if(saveType == 0) {
-          saveType = 3;
+          saveType = 2;
           flashSize = 0x20000;
         }
       } else if(memcmp(p, "FLASH", 5) == 0) {
         if(saveType == 0) {
-          saveType = 3;
+          saveType = 2;
           flashSize = 0x10000;
         }
       }
