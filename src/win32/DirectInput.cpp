@@ -496,10 +496,18 @@ static bool readJoystick(int joy)
 
 static void checkKeyboard()
 {
-  HRESULT hret = pDevices[0].device->Acquire();  
+  // mham fix. Patch #1378104
+  UCHAR keystate[256];
+  HRESULT hret = pDevices[0].device->Acquire();
+
+  if(pDevices[0].first) {
+    pDevices[0].device->GetDeviceState(256, (LPVOID)pDevices[0].data);
+    pDevices[0].first = FALSE;
+    return;
+  }
+
   hret = pDevices[0].device->
-    GetDeviceState(256,
-                   (LPVOID)pDevices[0].data);
+    GetDeviceState(256, (LPVOID)keystate);
   
   if(hret == DIERR_INPUTLOST || hret == DIERR_NOTACQUIRED) {
     return;
@@ -507,12 +515,14 @@ static void checkKeyboard()
  
   if(hret == DI_OK) {
     for(int i = 0; i < 256; i++) {
-      if(KEYDOWN(pDevices[0].data, i)) {
+      if(keystate[i] == pDevices[0].data[i]) continue;
+      if(KEYDOWN(keystate, i)) {
         SendMessage(GetFocus(), JOYCONFIG_MESSAGE,0,i);
         break;
       }
     }
   }
+  memcpy(pDevices[0].data, keystate, sizeof(UCHAR) * 256);
 }
 
 static void checkJoypads()
@@ -759,6 +769,8 @@ bool DirectInput::initialize()
   hret = pDirectInput->CreateDevice(GUID_SysKeyboard,&pDevices[0].device,NULL);
   pDevices[0].isPolled = false;
   pDevices[0].needed  = true;
+  // mham fix. Patch #1378104
+  pDevices[0].first  = true;
 
   if(hret != DI_OK) {
     //    errorMessage(myLoadString(IDS_ERROR_DISP_CREATEDEVICE), hret);
@@ -792,6 +804,8 @@ bool DirectInput::initialize()
   for(int i = 1; i < numDevices; i++) {
     pDevices[i].device->SetDataFormat(&c_dfDIJoystick);
     pDevices[i].needed = false;
+    pDevices[i].first  = true;
+    // mham fix. Patch #1378104
     currentDevice = &pDevices[i];
     axisNumber = 0;
     currentDevice->device->EnumObjects(EnumAxesCallback, NULL, DIDFT_AXIS);
