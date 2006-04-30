@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@ extern int soundVolume;
 #define NOISE_MAGIC 5
 
 extern int speed;
+extern int gbHardware;
 
 extern void soundResume();
 
@@ -57,6 +58,9 @@ extern int soundDebug;
 
 extern int sound1On;
 extern int sound1ATL;
+int sound1ATLreload;
+int freq1low;
+int freq1high;
 extern int sound1Skip;
 extern int sound1Index;
 extern int sound1Continue;
@@ -73,6 +77,9 @@ extern u8 *sound1Wave;
 
 extern int sound2On;
 extern int sound2ATL;
+int sound2ATLreload;
+int freq2low;
+int freq2high;
 extern int sound2Skip;
 extern int sound2Index;
 extern int sound2Continue;
@@ -84,6 +91,9 @@ extern u8 *sound2Wave;
 
 extern int sound3On;
 extern int sound3ATL;
+int sound3ATLreload;
+int freq3low;
+int freq3high;
 extern int sound3Skip;
 extern int sound3Index;
 extern int sound3Continue;
@@ -93,6 +103,8 @@ extern int sound3Last;
 extern int sound4On;
 extern int sound4Clock;
 extern int sound4ATL;
+int sound4ATLreload;
+int freq4;
 extern int sound4Skip;
 extern int sound4Index;
 extern int sound4ShiftRight;
@@ -136,14 +148,16 @@ void gbSoundEvent(register u16 address, register int data)
 #endif
   switch(address) {
   case NR10:
+    gbMemory[address] = data | 0x80;
     sound1SweepATL = sound1SweepATLReload = 344 * ((data >> 4) & 7);
     sound1SweepSteps = data & 7;
     sound1SweepUpDown = data & 0x08;
     sound1SweepStep = 0;
     break;
   case NR11:
+    gbMemory[address] = data | 0x3f;
     sound1Wave = soundWavePattern[data >> 6];
-    sound1ATL  = 172 * (64 - (data & 0x3f));
+    sound1ATL  = sound1ATLreload = 172 * (64 - (data & 0x3f));
     break;
   case NR12:
     sound1EnvelopeVolume = data >> 4;
@@ -151,8 +165,10 @@ void gbSoundEvent(register u16 address, register int data)
     sound1EnvelopeATLReload = sound1EnvelopeATL = 689 * (data & 7);
     break;
   case NR13:
-    freq = (((int)(gbMemory[NR14] & 7)) << 8) | data;
-    sound1ATL = 172 * (64 - (gbMemory[NR11] & 0x3f));
+    gbMemory[address] = 0xff;
+    freq1low = data;
+    freq = ((((int)(freq1high & 7)) << 8) | freq1low);
+    sound1ATL = sound1ATLreload;
     freq = 2048 - freq;
     if(freq) {
       sound1Skip = SOUND_MAGIC / freq;
@@ -160,9 +176,11 @@ void gbSoundEvent(register u16 address, register int data)
       sound1Skip = 0;
     break;
   case NR14:
-    freq = (((int)(data&7) << 8) | gbMemory[NR13]);
+    gbMemory[address] = data | 0xbf;
+    freq1high = data;
+    freq = ((((int)(freq1high & 7)) << 8) | freq1low);
     freq = 2048 - freq;
-    sound1ATL = 172 * (64 - (gbMemory[NR11] & 0x3f));
+    sound1ATL = sound1ATLreload;
     sound1Continue = data & 0x40;
     if(freq) {
       sound1Skip = SOUND_MAGIC / freq;
@@ -172,7 +190,6 @@ void gbSoundEvent(register u16 address, register int data)
       gbMemory[NR52] |= 1;
       sound1EnvelopeVolume = gbMemory[NR12] >> 4;
       sound1EnvelopeUpDown = gbMemory[NR12] & 0x08;
-      sound1ATL = 172 * (64 - (gbMemory[NR11] & 0x3f));
       sound1EnvelopeATLReload = sound1EnvelopeATL = 689 * (gbMemory[NR12] & 7);
       sound1SweepATL = sound1SweepATLReload = 344 * ((gbMemory[NR10] >> 4) & 7);
       sound1SweepSteps = gbMemory[NR10] & 7;
@@ -184,8 +201,9 @@ void gbSoundEvent(register u16 address, register int data)
     }
     break;
   case NR21:
+    gbMemory[address] = data | 0x3f;
     sound2Wave = soundWavePattern[data >> 6];
-    sound2ATL  = 172 * (64 - (data & 0x3f));
+    sound2ATL  = sound2ATLreload = 172 * (64 - (data & 0x3f));
     break;
   case NR22:
     sound2EnvelopeVolume = data >> 4;
@@ -193,8 +211,10 @@ void gbSoundEvent(register u16 address, register int data)
     sound2EnvelopeATLReload = sound2EnvelopeATL = 689 * (data & 7);
     break;
   case NR23:
-    freq = (((int)(gbMemory[NR24] & 7)) << 8) | data;
-    sound2ATL = 172 * (64 - (gbMemory[NR21] & 0x3f));
+    gbMemory[address] = 0xff;
+    freq2low = data;
+    freq = (((int)(freq2high & 7)) << 8) | freq2low;
+    sound2ATL = sound2ATLreload;
     freq = 2048 - freq;
     if(freq) {
       sound2Skip = SOUND_MAGIC / freq;
@@ -202,9 +222,11 @@ void gbSoundEvent(register u16 address, register int data)
       sound2Skip = 0;
     break;
   case NR24:
-    freq = (((int)(data&7) << 8) | gbMemory[NR23]);
+    gbMemory[address] = data | 0xbf;
+    freq2high = data;
+    freq = (((int)(freq2high & 7)) << 8) | freq2low;
     freq = 2048 - freq;
-    sound2ATL = 172 * (64 - (gbMemory[NR21] & 0x3f));
+    sound2ATL = sound2ATLreload;
     sound2Continue = data & 0x40;
     if(freq) {
       sound2Skip = SOUND_MAGIC / freq;
@@ -214,7 +236,7 @@ void gbSoundEvent(register u16 address, register int data)
       gbMemory[NR52] |= 2;
       sound2EnvelopeVolume = gbMemory[NR22] >> 4;
       sound2EnvelopeUpDown = gbMemory[NR22] & 0x08;
-      sound2ATL = 172 * (64 - (gbMemory[NR21] & 0x3f));
+      sound2ATL = sound2ATLreload;
       sound2EnvelopeATLReload = sound2EnvelopeATL = 689 * (gbMemory[NR22] & 7);
       
       sound2Index = 0;
@@ -222,28 +244,33 @@ void gbSoundEvent(register u16 address, register int data)
     }
     break;
   case NR30:
-    gbMemory[NR30] = data;
+    gbMemory[address] = data | 0x7f;
     if(!(data & 0x80)) {
       gbMemory[NR52] &= 0xfb;
       sound3On = 0;
     }
     break;
   case NR31:
-    sound3ATL = 172 * (256-data);
+    gbMemory[address] = 0xff;
+    sound3ATL = sound3ATLreload = 172 * (256-data);
     break;
   case NR32:
+    gbMemory[address] = data | 0x9f;
     sound3OutputLevel = (data >> 5) & 3;
     break;
   case NR33:
-    freq = 2048 - (((int)(gbMemory[NR34]&7) << 8) | data);
+    gbMemory[address] = 0xff;
+    freq3low = data;
+    freq = 2048 - (((int)(freq3high&7) << 8) | freq3low);
     if(freq) {
       sound3Skip = SOUND_MAGIC_2 / freq;
     } else
       sound3Skip = 0;
     break;
   case NR34:
-    gbMemory[NR34] = data;
-    freq = 2048 - (((data &7) << 8) | (int)gbMemory[NR33]);
+    gbMemory[address] = data | 0xbf;
+    freq3high = data;
+    freq = 2048 - (((int)(freq3high&7) << 8) | freq3low);
     if(freq) {
       sound3Skip = SOUND_MAGIC_2 / freq;
     } else {
@@ -252,13 +279,13 @@ void gbSoundEvent(register u16 address, register int data)
     sound3Continue = data & 0x40;
     if((data & 0x80) && (gbMemory[NR30] & 0x80)) {
       gbMemory[NR52] |= 4;
-      sound3ATL = 172 * (256 - gbMemory[NR31]);
+      sound3ATL = sound3ATLreload;
       sound3Index = 0;
       sound3On = 1;
     }
     break;
   case NR41:
-    sound4ATL  = 172 * (64 - (data & 0x3f));
+    sound4ATL  = sound4ATLreload = 172 * (64 - (data & 0x3f));
     break;
   case NR42:
     sound4EnvelopeVolume = data >> 4;
@@ -266,7 +293,7 @@ void gbSoundEvent(register u16 address, register int data)
     sound4EnvelopeATLReload = sound4EnvelopeATL = 689 * (data & 7);
     break;
   case NR43:
-    freq = soundFreqRatio[data & 7];
+    freq = freq4 = soundFreqRatio[data & 7];
     sound4NSteps = data & 0x08;
 
     sound4Skip = (freq << 8) / NOISE_MAGIC;
@@ -279,12 +306,13 @@ void gbSoundEvent(register u16 address, register int data)
     
     break;
   case NR44:
+    gbMemory[address] = data | 0xbf;
     sound4Continue = data & 0x40;
     if(data & 0x80) {
       gbMemory[NR52] |= 8;
       sound4EnvelopeVolume = gbMemory[NR42] >> 4;
       sound4EnvelopeUpDown = gbMemory[NR42] & 0x08;
-      sound4ATL = 172 * (64 - (gbMemory[NR41] & 0x3f));
+      sound4ATL = sound4ATLreload;
       sound4EnvelopeATLReload = sound4EnvelopeATL = 689 * (gbMemory[NR42] & 7);
 
       sound4On = 1;
@@ -292,15 +320,6 @@ void gbSoundEvent(register u16 address, register int data)
       sound4Index = 0;
       sound4ShiftIndex = 0;
       
-      freq = soundFreqRatio[gbMemory[NR43] & 7];
-
-      sound4Skip = (freq << 8) / NOISE_MAGIC;
-      
-      sound4NSteps = gbMemory[NR43] & 0x08;
-      
-      freq = freq / soundShiftClock[gbMemory[NR43] >> 4];
-
-      sound4ShiftSkip = (freq << 8) / NOISE_MAGIC;
       if(sound4NSteps)
         sound4ShiftRight = 0x7fff;
       else
@@ -322,7 +341,9 @@ void gbSoundEvent(register u16 address, register int data)
       sound2On = 0;
       sound3On = 0;
       sound4On = 0;
+      gbMemory[address] &= 0xf0;
     }
+    gbMemory[address] = data & 0x80 | 0x70 | (gbMemory[address] & 0xf);
     break;
   }
 
@@ -386,7 +407,7 @@ void gbSoundEvent(register u16 address, register int data)
       sound1SweepATL-=soundQuality;
       
       if(sound1SweepATL<=0) {
-        freq = (((int)(gbMemory[NR14]&7) << 8) | gbMemory[NR13]);
+        freq = (((int)(freq1high & 7)) << 8) | freq1low;
           
         int updown = 1;
         
@@ -411,8 +432,8 @@ void gbSoundEvent(register u16 address, register int data)
           sound1SweepATL += sound1SweepATLReload;
           sound1Skip = SOUND_MAGIC/(2048 - newfreq);
           
-          gbMemory[NR13] = newfreq & 0xff;
-          gbMemory[NR14] = (gbMemory[NR14] & 0xf8) |((newfreq >> 8) & 7);
+          freq1low = newfreq & 0xff;
+          freq1high = (freq1high & 0xf8) |((newfreq >> 8) & 7);
         }
       }
     }
@@ -464,9 +485,12 @@ void gbSoundChannel2()
 
 void gbSoundChannel3()
 {
-  int value = sound3Last;
+  int value = 0;
   
   if(sound3On && (sound3ATL || !sound3Continue)) {
+
+    value = sound3Last;
+
     sound3Index += soundQuality*sound3Skip;
     sound3Index &= 0x1fffffff;
     
@@ -554,7 +578,7 @@ void gbSoundChannel4()
       sound4ATL-=soundQuality;
       
       if(sound4ATL <= 0 && sound4Continue) {
-        gbMemory[NR52] &= 0xfd;
+        gbMemory[NR52] &= 0xf7;
         sound4On = 0;
       }
     }
@@ -594,7 +618,7 @@ void gbSoundMix()
   }
 
   if(gbDigitalSound)
-    res = soundLevel1*256;
+    res *= soundLevel1*256;
   else
     res *= soundLevel1*60;
   
@@ -656,7 +680,7 @@ void gbSoundMix()
   }
 
   if(gbDigitalSound)
-    res = soundLevel2*256;
+    res *= soundLevel2*256;
   else
     res *= soundLevel2*60;
   
@@ -824,7 +848,10 @@ void gbSoundReset()
   gbSoundEvent(0xff24, 0x77);
   gbSoundEvent(0xff25, 0xf3);
 
-  gbSoundEvent(0xff26, 0xf0);
+  if (gbHardware & 0x4)
+    gbSoundEvent(0xff26, 0xf0);
+  else
+    gbSoundEvent(0xff26, 0xf1);
 
   // don't translate
   if(soundDebug) {
@@ -936,6 +963,18 @@ void gbSoundSaveGame(gzFile gzFile)
 {
   utilWriteData(gzFile, gbSoundSaveStruct);
 
+  utilWriteInt(gzFile, sound1ATLreload);
+  utilWriteInt(gzFile, freq1low);
+  utilWriteInt(gzFile, freq1high);
+  utilWriteInt(gzFile, sound2ATLreload);
+  utilWriteInt(gzFile, freq2low);
+  utilWriteInt(gzFile, freq2high);
+  utilWriteInt(gzFile, sound3ATLreload);
+  utilWriteInt(gzFile, freq3low);
+  utilWriteInt(gzFile, freq3high);
+  utilWriteInt(gzFile, sound4ATLreload);
+  utilWriteInt(gzFile, freq4);
+
   utilGzWrite(gzFile, soundBuffer, 4*735);
   utilGzWrite(gzFile, soundFinalWave, 2*735);
   utilGzWrite(gzFile, &soundQuality, sizeof(int));
@@ -944,6 +983,35 @@ void gbSoundSaveGame(gzFile gzFile)
 void gbSoundReadGame(int version,gzFile gzFile)
 {
   utilReadData(gzFile, gbSoundSaveStruct);
+
+  if (version<11)
+  {
+    sound1ATLreload = 172 * (64 - (gbMemory[NR11] & 0x3f));
+    freq1low = gbMemory[NR13];
+    freq1high = gbMemory[NR14] & 7;
+    sound2ATLreload  = 172 * (64 - (gbMemory[NR21] & 0x3f));
+    freq2low = gbMemory[NR23];
+    freq2high = gbMemory[NR24] & 7;
+    sound3ATLreload = 172 * (256 - gbMemory[NR31]);
+    freq3low = gbMemory[NR33];
+    freq3high = gbMemory[NR34] & 7;
+    sound4ATLreload = 172 * (64 - (gbMemory[NR41] & 0x3f));
+    freq4 = soundFreqRatio[gbMemory[NR43] & 7];
+  }
+  else
+  {
+    sound1ATLreload = utilReadInt(gzFile);
+    freq1low = utilReadInt(gzFile);
+    freq1high = utilReadInt(gzFile);
+    sound2ATLreload = utilReadInt(gzFile);
+    freq2low = utilReadInt(gzFile);
+    freq2high = utilReadInt(gzFile);
+    sound3ATLreload = utilReadInt(gzFile);
+    freq3low = utilReadInt(gzFile);
+    freq3high = utilReadInt(gzFile);
+    sound4ATLreload = utilReadInt(gzFile);
+    freq4 = utilReadInt(gzFile);
+  }
 
   soundBufferIndex = soundIndex * 2;
   
