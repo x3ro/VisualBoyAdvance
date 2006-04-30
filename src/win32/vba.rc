@@ -2208,7 +2208,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_ERROR_CREATING_FILE "Error creating file %s"
-    IDS_FAILED_TO_READ_SGM  "Failed to read complete save game %s (%d)"
+    IDS_FAILED_TO_READ_SGM  "Battery file's size incompatible with the rom settings %s (%d).\nWarning : save of the battery file is now disabled !"
     IDS_FAILED_TO_READ_RTC  "Failed to read RTC from save game %s (continuing)"
     IDS_UNSUPPORTED_VB_SGM  "Unsupported VisualBoy save game version %d"
     IDS_CANNOT_LOAD_SGM_FOR "Cannot load save game for %s. Playing %s"
@@ -2347,7 +2347,7 @@ BEGIN
     IDS_FILTER_GBS          "Gameboy Snapshot_*.GBS__"
     IDS_FILTER_GCF          "Gameshark Code File_*.GCF__"
     IDS_SELECT_CODE_FILE    "Select code file"
-    IDS_SAVE_WILL_BE_LOST   "Importing a snapshot file will erase any saved games and reset the emulator. Do you want to continue?"
+    IDS_SAVE_WILL_BE_LOST   "Importing a snapshot file will erase any saved games. Do you want to continue?"
     IDS_CONFIRM_ACTION      "Please confirm action"
     IDS_CODES_WILL_BE_LOST  "Importing a code file will erase any entered codes. Do you want to continue?"
     IDS_FILTER_SPC          "Gameshark Code File_*.SPC;*.XPC__"

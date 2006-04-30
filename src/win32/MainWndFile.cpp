@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -383,7 +383,8 @@ void MainWnd::OnFileImportBatteryfile()
   if(!res)
     systemMessage(MSG_CANNOT_OPEN_FILE, "Cannot open file %s", dlg.GetPathName());
   else {
-    theApp.emulator.emuReset();
+    //Removed the reset to allow loading a battery file 'within' a save state.
+    //theApp.emulator.emuReset();
   }
 }
 
