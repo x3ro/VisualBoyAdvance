@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ static char THIS_FILE[] = __FILE__;
 #define VBA_CONFIRM_MODE WM_APP + 100
 
 extern void remoteCleanUp();
+extern int gbHardware;
 
 /////////////////////////////////////////////////////////////////////////////
 // MainWnd
@@ -478,11 +479,34 @@ bool MainWnd::FileRun()
   theApp.cartridgeType = (int)type;
   if(type == IMAGE_GB) {
     genericflashcardEnable = theApp.winGenericflashcardEnable;
+
+
     if(!gbLoadRom(theApp.szFile))
       return false;
+    // used for the handling of the gb Boot Rom
+    if (gbHardware & 5)
+    {
+      char tempName[2048];
+      GetModuleFileName(NULL, tempName, 2048);
+
+      char *p = strrchr(tempName, '\\');
+      if(p)
+        *p = 0;
+    
+      strcat(tempName, "\\DMG_ROM.bin");
+
+    
+      skipBios = theApp.skipBiosFile ? true : false;
+      gbCPUInit(tempName, theApp.useBiosFile ? true : false);
+    }
+
+    gbReset();
+  
     theApp.emulator = GBSystem;
     gbBorderOn = theApp.winGbBorderOn;
     theApp.romSize = gbRomSize;
+
+
     if(theApp.autoIPS) {
       int size = gbRomSize;
       utilApplyIPS(ipsname, &gbRom, &size);
@@ -578,7 +602,7 @@ bool MainWnd::FileRun()
     CPUInit((char *)(LPCTSTR)theApp.biosFileName, theApp.useBiosFile ? true : false);
     CPUReset();
   }
-  
+
   readBatteryFile();
 
   if(theApp.autoSaveLoadCheatList)
