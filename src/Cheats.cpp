@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -631,7 +631,6 @@ int cheatsCheckKeys(u32 keys, u32 extended)
           count--;
         }
       }
-	  i++;
       break;
     case GSA_16_BIT_SLIDE:
       i++;
@@ -648,7 +647,6 @@ int cheatsCheckKeys(u32 keys, u32 extended)
           count--;
         }
       }
-	i++;
       break;
     case GSA_32_BIT_SLIDE:
       i++;
@@ -665,7 +663,6 @@ int cheatsCheckKeys(u32 keys, u32 extended)
           count--;
         }
       }
-	i++;
       break;
     case GSA_8_BIT_GS_WRITE2:
       i++;
@@ -691,41 +688,46 @@ int cheatsCheckKeys(u32 keys, u32 extended)
         }
       }
       break;
+      case GSA_16_BIT_ROM_PATCH:
+        if((cheatsList[i].status & 1) == 0) {
+          if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
+            cheatsList[i].oldValue = CPUReadHalfWord(cheatsList[i].address);
+            cheatsList[i].status |= 1;
+            CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
+          }
+        }
+        break;
     case GSA_16_BIT_ROM_PATCH2C:
       i++;
-      if((i < cheatsNumber) && (cheatsList[i].status & 1) == 0) {
+      if(i < cheatsNumber) {
 		  rompatch2addr [0] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
 		  rompatch2oldval [0] = CPUReadHalfWord(rompatch2addr [0]);
 		  rompatch2val [0] = cheatsList[i].rawaddress & 0xFFFF;
       }
-	i++;
       break;
     case GSA_16_BIT_ROM_PATCH2D:
       i++;
-      if((i < cheatsNumber) && (cheatsList[i].status & 1) == 0) {
+      if(i < cheatsNumber) {
 		  rompatch2addr [1] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
 		  rompatch2oldval [1] = CPUReadHalfWord(rompatch2addr [1]);
 		  rompatch2val [1] = cheatsList[i].rawaddress & 0xFFFF;
       }
-	i++;
       break;
     case GSA_16_BIT_ROM_PATCH2E:
       i++;
-      if((i < cheatsNumber) && (cheatsList[i].status & 1) == 0) {
+      if(i < cheatsNumber) {
 		  rompatch2addr [2] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
 		  rompatch2oldval [2] = CPUReadHalfWord(rompatch2addr [2]);
 		  rompatch2val [2] = cheatsList[i].rawaddress & 0xFFFF;
       }
-	i++;
       break;
     case GSA_16_BIT_ROM_PATCH2F:
       i++;
-      if((i < cheatsNumber) && (cheatsList[i].status & 1) == 0) {
+      if(i < cheatsNumber) {
 		  rompatch2addr [3] = ((cheatsList[i-1].value & 0x00FFFFFF) << 1) + 0x8000000;
 		  rompatch2oldval [3] = CPUReadHalfWord(rompatch2addr [3]);
 		  rompatch2val [3] = cheatsList[i].rawaddress & 0xFFFF;
       }
-	i++;
       break;
     case MASTER_CODE:
         mastercode = cheatsList[i].address;
@@ -741,15 +743,6 @@ int cheatsCheckKeys(u32 keys, u32 extended)
         break;
       case INT_32_BIT_WRITE:
         CPUWriteMemory(cheatsList[i].address, cheatsList[i].value);
-        break;
-      case GSA_16_BIT_ROM_PATCH:
-        if((cheatsList[i].status & 1) == 0) {
-          if(CPUReadHalfWord(cheatsList[i].address) != cheatsList[i].value) {
-            cheatsList[i].oldValue = CPUReadHalfWord(cheatsList[i].address);
-            cheatsList[i].status |= 1;
-            CHEAT_PATCH_ROM_16BIT(cheatsList[i].address, cheatsList[i].value);
-          }
-        }
         break;
       case GSA_8_BIT_GS_WRITE:
         if(extended & 4) {
@@ -2621,17 +2614,33 @@ void cheatsSaveGame(gzFile file)
   utilGzWrite(file, cheatsList, sizeof(cheatsList));
 }
 
-void cheatsReadGame(gzFile file)
+void cheatsReadGame(gzFile file, int version)
 {
   cheatsNumber = 0;
   
   cheatsNumber = utilReadInt(file);
 
-  utilGzRead(file, cheatsList, sizeof(cheatsList));
+  if (version > 8)
+    utilGzRead(file, cheatsList, sizeof(cheatsList));
+
 
   bool firstCodeBreaker = true;
   
   for(int i = 0; i < cheatsNumber; i++) {
+    if (version <9)
+    {
+        cheatsList[i].code = utilReadInt(file);
+        cheatsList[i].size = utilReadInt(file);
+        cheatsList[i].status = utilReadInt(file);
+        cheatsList[i].enabled = utilReadInt(file) ? true : false;
+        utilGzRead(file, &cheatsList[i].address, sizeof(u32));
+        cheatsList[i].rawaddress = cheatsList[i].address;
+        utilGzRead(file, &cheatsList[i].value, sizeof(u32));
+        utilGzRead(file, &cheatsList[i].oldValue, sizeof(u32));
+        utilGzRead(file, &cheatsList[i].codestring, 20*sizeof(char));
+        utilGzRead(file, &cheatsList[i].desc, 32*sizeof(char));
+    }
+
     cheatsList[i].status = 0;
     if(!cheatsList[i].codestring[0]) {
       switch(cheatsList[i].size) {
@@ -2684,7 +2693,7 @@ void cheatsSaveCheatList(const char *file)
     return;
   int version = 1;
   fwrite(&version, 1, sizeof(version), f);
-  int type = 0;
+  int type = 1;
   fwrite(&type, 1, sizeof(type), f);
   fwrite(&cheatsNumber, 1, sizeof(cheatsNumber), f);
   fwrite(cheatsList, 1, sizeof(cheatsList), f);
@@ -2693,7 +2702,6 @@ void cheatsSaveCheatList(const char *file)
 
 bool cheatsLoadCheatList(const char *file)
 {
-  cheatsNumber = 0;
 
   int count = 0;
 
@@ -2722,7 +2730,8 @@ bool cheatsLoadCheatList(const char *file)
     return false;
   }
 
-  if(type != 0) {
+
+  if((type != 0) && (type != 1)) {
     systemMessage(MSG_UNSUPPORTED_CHEAT_LIST_TYPE,
                   N_("Unsupported cheat list type %d"), type);
     fclose(f);
@@ -2733,10 +2742,31 @@ bool cheatsLoadCheatList(const char *file)
     fclose(f);
     return false;
   }
-  
-  if(fread(cheatsList, 1, sizeof(cheatsList), f) != sizeof(cheatsList)) {
-    fclose(f);
-    return false;
+  if (type == 1)
+  {
+    if(fread(cheatsList, 1, sizeof(cheatsList), f) != sizeof(cheatsList)) {
+      fclose(f);
+      return false;
+    }
+  }
+  else if (type == 0)
+  {
+    for(int i = 0; i < count; i++) {
+      fread(&cheatsList[i].code, 1, sizeof(int),f);
+      fread(&cheatsList[i].size, 1, sizeof(int),f);
+      fread(&cheatsList[i].status, 1, sizeof(int),f);
+      fread(&cheatsList[i].enabled, 1, sizeof(int),f);
+      cheatsList[i].enabled = cheatsList[i].enabled ? true : false;
+      fread(&cheatsList[i].address, 1, sizeof(u32),f);
+      cheatsList[i].rawaddress = cheatsList[i].address;
+      fread(&cheatsList[i].value, 1, sizeof(u32),f);
+      fread(&cheatsList[i].oldValue, 1, sizeof(u32),f);
+      fread(&cheatsList[i].codestring, 1, 20*sizeof(char),f);
+      if(fread(&cheatsList[i].desc, 1, 32*sizeof(char),f) != 32*sizeof(char)) {
+        fclose(f);
+        return false;
+      }
+    }
   }
 
   bool firstCodeBreaker = true;
