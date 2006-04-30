@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -835,7 +835,9 @@ void MainWnd::OnOptionsEmulatorSavetypeFlash512k()
 
 void MainWnd::OnUpdateOptionsEmulatorSavetypeFlash512k(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(theApp.winFlashSize == 0x10000);
+  // changed theApp.winFlashSize to flashSize to reflect the actual
+  // flashsize value used by the emu (it can change upon battery loading)
+  pCmdUI->SetCheck(flashSize == 0x10000);
 }
 
 void MainWnd::OnOptionsEmulatorSavetypeFlash1m() 
@@ -846,7 +848,9 @@ void MainWnd::OnOptionsEmulatorSavetypeFlash1m()
 
 void MainWnd::OnUpdateOptionsEmulatorSavetypeFlash1m(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(theApp.winFlashSize == 0x20000);
+  // changed theApp.winFlashSize to flashSize to reflect the actual
+  // flashsize value used by the emu (it can change upon battery loading)
+  pCmdUI->SetCheck(flashSize == 0x20000);
 }
 
 void MainWnd::OnOptionsEmulatorUsebiosfile() 
