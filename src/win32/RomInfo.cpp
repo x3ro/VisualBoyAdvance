@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2004-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -356,6 +356,15 @@ BOOL RomInfoGB::OnInitDialog()
   case 0x06:
     type = "ROM+MBC2+BATT";
     break;
+  case 0x0b:
+    type = "ROM+MMM01";
+    break;
+  case 0x0c:
+    type = "ROM+MMM01+RAM";
+    break;
+  case 0x0d:
+    type = "ROM+MMM01+RAM+BATT";
+    break;
   case 0x0f:
     type = "ROM+MBC3+TIMER+BATT";
     break;
@@ -391,6 +400,12 @@ BOOL RomInfoGB::OnInitDialog()
     break;
   case 0x22:
     type = "ROM+MBC7+BATT";
+    break;
+  case 0xfc:
+    type = "ROM+POCKET CAMERA";
+    break;
+  case 0xfd:
+    type = "ROM+BANDAI TAMA5";
     break;
   case 0xfe:
     type = "ROM+HuC-3";
