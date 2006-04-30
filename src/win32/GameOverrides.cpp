@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -170,8 +170,8 @@ BOOL GameOverrides::OnInitDialog()
   };
   const char *flashValues[] = {
     "Default",
-    "512k",
-    "1024k"
+    "64K",
+    "128K"
   };
   const char *saveValues[] = {
     "Default",
