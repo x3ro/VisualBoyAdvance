@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -2486,8 +2486,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
 
     }
@@ -2512,8 +2512,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -2521,7 +2521,7 @@ if(cond_res) {
   case 0x02b:
     {
       // STRH Rd, [Rn], -Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2538,7 +2538,7 @@ if(cond_res) {
   case 0x06b:
     {
       // STRH Rd, [Rn], #-offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2555,7 +2555,7 @@ if(cond_res) {
   case 0x0ab:
     {
       // STRH Rd, [Rn], Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2572,7 +2572,7 @@ if(cond_res) {
   case 0x0eb:
     {
       // STRH Rd, [Rn], #offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2588,7 +2588,7 @@ if(cond_res) {
   case 0x10b:
     {
       // STRH Rd, [Rn, -Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2601,7 +2601,7 @@ if(cond_res) {
   case 0x12b:
     {
       // STRH Rd, [Rn, -Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2615,7 +2615,7 @@ if(cond_res) {
   case 0x14b:
     {
       // STRH Rd, [Rn, -#offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2628,7 +2628,7 @@ if(cond_res) {
   case 0x16b:
     {
       // STRH Rd, [Rn, -#offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2642,7 +2642,7 @@ if(cond_res) {
   case 0x18b:
     {
       // STRH Rd, [Rn, Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2655,7 +2655,7 @@ if(cond_res) {
   case 0x1ab:
     {
       // STRH Rd, [Rn, Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2669,7 +2669,7 @@ if(cond_res) {
   case 0x1cb:
     {
       // STRH Rd, [Rn, #offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2682,7 +2682,7 @@ if(cond_res) {
   case 0x1eb:
     {
       // STRH Rd, [Rn, #offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2697,7 +2697,7 @@ if(cond_res) {
   case 0x03b:
     {
       // LDRH Rd, [Rn], -Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2724,7 +2724,7 @@ if(cond_res) {
   case 0x07b:
     {
       // LDRH Rd, [Rn], #-offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2751,7 +2751,7 @@ if(cond_res) {
   case 0x0bb:
     {
       // LDRH Rd, [Rn], Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2778,7 +2778,7 @@ if(cond_res) {
   case 0x0fb:
     {
       // LDRH Rd, [Rn], #offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2804,7 +2804,7 @@ if(cond_res) {
   case 0x11b:
     {
       // LDRH Rd, [Rn, -Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2825,7 +2825,7 @@ if(cond_res) {
   case 0x13b:
     {
       // LDRH Rd, [Rn, -Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2848,7 +2848,7 @@ if(cond_res) {
   case 0x15b:
     {
       // LDRH Rd, [Rn, -#offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2869,7 +2869,7 @@ if(cond_res) {
   case 0x17b:
     {
       // LDRH Rd, [Rn, -#offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2892,7 +2892,7 @@ if(cond_res) {
   case 0x19b:
     {
       // LDRH Rd, [Rn, Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2913,7 +2913,7 @@ if(cond_res) {
   case 0x1bb:
     {
       // LDRH Rd, [Rn, Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2936,7 +2936,7 @@ if(cond_res) {
   case 0x1db:
     {
       // LDRH Rd, [Rn, #offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2957,7 +2957,7 @@ if(cond_res) {
   case 0x1fb:
     {
       // LDRH Rd, [Rn, #offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -2981,7 +2981,7 @@ if(cond_res) {
   case 0x03d:
     {
       // LDRSB Rd, [Rn], -Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3008,7 +3008,7 @@ if(cond_res) {
   case 0x07d:
     {
       // LDRSB Rd, [Rn], #-offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3035,7 +3035,7 @@ if(cond_res) {
   case 0x0bd:
     {
       // LDRSB Rd, [Rn], Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3062,7 +3062,7 @@ if(cond_res) {
   case 0x0fd:
     {
       // LDRSB Rd, [Rn], #offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3088,7 +3088,7 @@ if(cond_res) {
   case 0x11d:
     {
       // LDRSB Rd, [Rn, -Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3109,7 +3109,7 @@ if(cond_res) {
   case 0x13d:
     {
       // LDRSB Rd, [Rn, -Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3132,7 +3132,7 @@ if(cond_res) {
   case 0x15d:
     {
       // LDRSB Rd, [Rn, -#offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3153,7 +3153,7 @@ if(cond_res) {
   case 0x17d:
     {
       // LDRSB Rd, [Rn, -#offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3176,7 +3176,7 @@ if(cond_res) {
   case 0x19d:
     {
       // LDRSB Rd, [Rn, Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3197,7 +3197,7 @@ if(cond_res) {
   case 0x1bd:
     {
       // LDRSB Rd, [Rn, Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3220,7 +3220,7 @@ if(cond_res) {
   case 0x1dd:
     {
       // LDRSB Rd, [Rn, #offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3241,7 +3241,7 @@ if(cond_res) {
   case 0x1fd:
     {
       // LDRSB Rd, [Rn, #offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3265,7 +3265,7 @@ if(cond_res) {
   case 0x03f:
     {
       // LDRSH Rd, [Rn], -Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3292,7 +3292,7 @@ if(cond_res) {
   case 0x07f:
     {
       // LDRSH Rd, [Rn], #-offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3319,7 +3319,7 @@ if(cond_res) {
   case 0x0bf:
     {
       // LDRSH Rd, [Rn], Rm
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3346,7 +3346,7 @@ if(cond_res) {
   case 0x0ff:
     {
       // LDRSH Rd, [Rn], #offset
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3372,7 +3372,7 @@ if(cond_res) {
   case 0x11f:
     {
       // LDRSH Rd, [Rn, -Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3393,7 +3393,7 @@ if(cond_res) {
   case 0x13f:
     {
       // LDRSH Rd, [Rn, -Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3416,7 +3416,7 @@ if(cond_res) {
   case 0x15f:
     {
       // LDRSH Rd, [Rn, -#offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3437,7 +3437,7 @@ if(cond_res) {
   case 0x17f:
     {
       // LDRSH Rd, [Rn, -#offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3460,7 +3460,7 @@ if(cond_res) {
   case 0x19f:
     {
       // LDRSH Rd, [Rn, Rm]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3481,7 +3481,7 @@ if(cond_res) {
   case 0x1bf:
     {
       // LDRSH Rd, [Rn, Rm]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3504,7 +3504,7 @@ if(cond_res) {
   case 0x1df:
     {
       // LDRSH Rd, [Rn, #offset]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3525,7 +3525,7 @@ if(cond_res) {
   case 0x1ff:
     {
       // LDRSH Rd, [Rn, #offset]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode >> 16) & 0x0F;
       int dest = (opcode >> 12) & 0x0F;
@@ -3563,8 +3563,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3588,8 +3588,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3618,8 +3618,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3644,8 +3644,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3673,8 +3673,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3702,8 +3702,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3731,8 +3731,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3760,8 +3760,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
       clockTicks += codeTicksAccess32(armNextPC) + 1;
     }
     break;
@@ -3792,8 +3792,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
     }
     break;
   case 0x0f9:
@@ -3823,8 +3823,8 @@ if(cond_res) {
         clockTicks += 2;
       else
         clockTicks += 3;
-      if (busPrefetchCount==0)
-        busPrefetchCount = (busPrefetchCount<<clockTicks) | (0xFF>>(8-clockTicks));
+      if (!busPrefetchCount)
+        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
     }
     break;
     LOGICAL_DATA_OPCODE(OP_TST, OP_TST, 0x110);
@@ -4034,7 +4034,7 @@ if(cond_res) {
   CASE_16(0x420)
     {
       // STR Rd, [Rn], -#
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4051,7 +4051,7 @@ if(cond_res) {
   CASE_16(0x4a0)
     {
       // STR Rd, [Rn], #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4066,7 +4066,7 @@ if(cond_res) {
   CASE_16(0x500)
     {
       // STR Rd, [Rn, -#]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4080,7 +4080,7 @@ if(cond_res) {
   CASE_16(0x520)
     {
       // STR Rd, [Rn, -#]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4095,7 +4095,7 @@ if(cond_res) {
   CASE_16(0x580)
     {
       // STR Rd, [Rn, #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4109,7 +4109,7 @@ if(cond_res) {
   CASE_16(0x5a0)
     {
       // STR Rd, [Rn, #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4124,7 +4124,7 @@ if(cond_res) {
   CASE_16(0x410)
     {
       // LDR Rd, [Rn], -#
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4148,7 +4148,7 @@ if(cond_res) {
   CASE_16(0x430)
     {
       // LDRT Rd, [Rn], -#
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4172,7 +4172,7 @@ if(cond_res) {
   CASE_16(0x490)
     {
       // LDR Rd, [Rn], #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4196,7 +4196,7 @@ if(cond_res) {
   CASE_16(0x4b0)
     {
       // LDRT Rd, [Rn], #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4220,7 +4220,7 @@ if(cond_res) {
   CASE_16(0x510)
     {
       // LDR Rd, [Rn, -#]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4242,7 +4242,7 @@ if(cond_res) {
   CASE_16(0x530)
     {
       // LDR Rd, [Rn, -#]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4266,7 +4266,7 @@ if(cond_res) {
   CASE_16(0x590)
     {
       // LDR Rd, [Rn, #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4288,7 +4288,7 @@ if(cond_res) {
   CASE_16(0x5b0)
     {
       // LDR Rd, [Rn, #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4314,7 +4314,7 @@ if(cond_res) {
   CASE_16(0x460)
     {
       // STRB Rd, [Rn], -#
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4331,7 +4331,7 @@ if(cond_res) {
   CASE_16(0x4e0)
     {
       // STRB Rd, [Rn], #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4346,7 +4346,7 @@ if(cond_res) {
   CASE_16(0x540)
     {
       // STRB Rd, [Rn, -#]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4360,7 +4360,7 @@ if(cond_res) {
   CASE_16(0x560)
     {
       // STRB Rd, [Rn, -#]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4375,7 +4375,7 @@ if(cond_res) {
   CASE_16(0x5c0)
     {
       // STRB Rd, [Rn, #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4389,7 +4389,7 @@ if(cond_res) {
   CASE_16(0x5e0)
     {
       // STRB Rd, [Rn, #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4406,7 +4406,7 @@ if(cond_res) {
   CASE_16(0x470)
     {
       // LDRB Rd, [Rn], -#
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4431,7 +4431,7 @@ if(cond_res) {
   CASE_16(0x4f0) // T versions should not be different
     {
       // LDRB Rd, [Rn], #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4455,7 +4455,7 @@ if(cond_res) {
   CASE_16(0x550)
     {
       // LDRB Rd, [Rn, -#]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4477,7 +4477,7 @@ if(cond_res) {
   CASE_16(0x570)
     {
       // LDRB Rd, [Rn, -#]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4501,7 +4501,7 @@ if(cond_res) {
   CASE_16(0x5d0)
     {
       // LDRB Rd, [Rn, #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4523,7 +4523,7 @@ if(cond_res) {
   CASE_16(0x5f0)
     {
       // LDRB Rd, [Rn, #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = opcode & 0xFFF;
       int dest = (opcode >> 12) & 15;
@@ -4551,7 +4551,7 @@ if(cond_res) {
   case 0x628:
     {
       // STR Rd, [Rn], -Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4570,7 +4570,7 @@ if(cond_res) {
   case 0x62a:
     {
       // STR Rd, [Rn], -Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4590,7 +4590,7 @@ if(cond_res) {
   case 0x62c:
     {
       // STR Rd, [Rn], -Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -4616,7 +4616,7 @@ if(cond_res) {
   case 0x62e:
     {
       // STR Rd, [Rn], -Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -4641,7 +4641,7 @@ if(cond_res) {
   case 0x6a8:
     {
       // STR Rd, [Rn], Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4660,7 +4660,7 @@ if(cond_res) {
   case 0x6aa:
     {
       // STR Rd, [Rn], Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4680,7 +4680,7 @@ if(cond_res) {
   case 0x6ac:
     {
       // STR Rd, [Rn], Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -4706,7 +4706,7 @@ if(cond_res) {
   case 0x6ae:
     {
       // STR Rd, [Rn], Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -4728,7 +4728,7 @@ if(cond_res) {
   case 0x708:
     {
       // STR Rd, [Rn, -Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4743,7 +4743,7 @@ if(cond_res) {
   case 0x70a:
     {
       // STR Rd, [Rn, -Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4759,7 +4759,7 @@ if(cond_res) {
   case 0x70c:
     {
       // STR Rd, [Rn, -Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -4781,7 +4781,7 @@ if(cond_res) {
   case 0x70e:
     {
       // STR Rd, [Rn, -Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -4802,7 +4802,7 @@ if(cond_res) {
   case 0x728:
     {
       // STR Rd, [Rn, -Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4818,7 +4818,7 @@ if(cond_res) {
   case 0x72a:
     {
       // STR Rd, [Rn, -Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4835,7 +4835,7 @@ if(cond_res) {
   case 0x72c:
     {
       // STR Rd, [Rn, -Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -4858,7 +4858,7 @@ if(cond_res) {
   case 0x72e:
     {
       // STR Rd, [Rn, -Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -4880,7 +4880,7 @@ if(cond_res) {
   case 0x788:
     {
       // STR Rd, [Rn, Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4895,7 +4895,7 @@ if(cond_res) {
   case 0x78a:
     {
       // STR Rd, [Rn, Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4911,7 +4911,7 @@ if(cond_res) {
   case 0x78c:
     {
       // STR Rd, [Rn, Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -4933,7 +4933,7 @@ if(cond_res) {
   case 0x78e:
     {
       // STR Rd, [Rn, Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -4954,7 +4954,7 @@ if(cond_res) {
   case 0x7a8:
     {
       // STR Rd, [Rn, Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -4970,7 +4970,7 @@ if(cond_res) {
   case 0x7aa:
     {
       // STR Rd, [Rn, Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -4987,7 +4987,7 @@ if(cond_res) {
   case 0x7ac:
     {
       // STR Rd, [Rn, Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5010,7 +5010,7 @@ if(cond_res) {
   case 0x7ae:
     {
       // STR Rd, [Rn, Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5035,7 +5035,7 @@ if(cond_res) {
   case 0x638:
     {
       // LDR Rd, [Rn], -Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5063,7 +5063,7 @@ if(cond_res) {
   case 0x63a:
     {
       // LDR Rd, [Rn], -Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5092,7 +5092,7 @@ if(cond_res) {
   case 0x63c:
     {
       // LDR Rd, [Rn], -Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5127,7 +5127,7 @@ if(cond_res) {
   case 0x63e:
     {
       // LDR Rd, [Rn], -Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5161,7 +5161,7 @@ if(cond_res) {
   case 0x6b8:
     {
       // LDR Rd, [Rn], Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5189,7 +5189,7 @@ if(cond_res) {
   case 0x6ba:
     {
       // LDR Rd, [Rn], Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5218,7 +5218,7 @@ if(cond_res) {
   case 0x6bc:
     {
       // LDR Rd, [Rn], Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5253,7 +5253,7 @@ if(cond_res) {
   case 0x6be:
     {
       // LDR Rd, [Rn], Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5284,7 +5284,7 @@ if(cond_res) {
   case 0x718:
     {
       // LDR Rd, [Rn, -Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5307,7 +5307,7 @@ if(cond_res) {
   case 0x71a:
     {
       // LDR Rd, [Rn, -Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5331,7 +5331,7 @@ if(cond_res) {
   case 0x71c:
     {
       // LDR Rd, [Rn, -Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5361,7 +5361,7 @@ if(cond_res) {
   case 0x71e:
     {
       // LDR Rd, [Rn, -Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5390,7 +5390,7 @@ if(cond_res) {
   case 0x738:
     {
       // LDR Rd, [Rn, -Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5415,7 +5415,7 @@ if(cond_res) {
   case 0x73a:
     {
       // LDR Rd, [Rn, -Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5441,7 +5441,7 @@ if(cond_res) {
   case 0x73c:
     {
       // LDR Rd, [Rn, -Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5473,7 +5473,7 @@ if(cond_res) {
   case 0x73e:
     {
       // LDR Rd, [Rn, -Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5504,7 +5504,7 @@ if(cond_res) {
   case 0x798:
     {
       // LDR Rd, [Rn, Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5527,7 +5527,7 @@ if(cond_res) {
   case 0x79a:
     {
       // LDR Rd, [Rn, Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5551,7 +5551,7 @@ if(cond_res) {
   case 0x79c:
     {
       // LDR Rd, [Rn, Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5581,7 +5581,7 @@ if(cond_res) {
   case 0x79e:
     {
       // LDR Rd, [Rn, Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5610,7 +5610,7 @@ if(cond_res) {
   case 0x7b8:
     {
       // LDR Rd, [Rn, Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5635,7 +5635,7 @@ if(cond_res) {
   case 0x7ba:
     {
       // LDR Rd, [Rn, Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5661,7 +5661,7 @@ if(cond_res) {
   case 0x7bc:
     {
       // LDR Rd, [Rn, Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5693,7 +5693,7 @@ if(cond_res) {
   case 0x7be:
     {
       // LDR Rd, [Rn, Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5727,7 +5727,7 @@ if(cond_res) {
   case 0x668:
     {
       // STRB Rd, [Rn], -Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5746,7 +5746,7 @@ if(cond_res) {
   case 0x66a:
     {
       // STRB Rd, [Rn], -Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5766,7 +5766,7 @@ if(cond_res) {
   case 0x66c:
     {
       // STRB Rd, [Rn], -Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5792,7 +5792,7 @@ if(cond_res) {
   case 0x66e:
     {
       // STRB Rd, [Rn], -Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5817,7 +5817,7 @@ if(cond_res) {
   case 0x6e8:
     {
       // STRB Rd, [Rn], Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5836,7 +5836,7 @@ if(cond_res) {
   case 0x6ea:
     {
       // STRB Rd, [Rn], Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5856,7 +5856,7 @@ if(cond_res) {
   case 0x6ec:
     {
       // STRB Rd, [Rn], Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5882,7 +5882,7 @@ if(cond_res) {
   case 0x6ee:
     {
       // STRB Rd, [Rn], Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5904,7 +5904,7 @@ if(cond_res) {
   case 0x748:
     {
       // STRB Rd, [Rn, -Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5919,7 +5919,7 @@ if(cond_res) {
   case 0x74a:
     {
       // STRB Rd, [Rn, -Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -5935,7 +5935,7 @@ if(cond_res) {
   case 0x74c:
     {
       // STRB Rd, [Rn, -Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -5957,7 +5957,7 @@ if(cond_res) {
   case 0x74e:
     {
       // STRB Rd, [Rn, -Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -5978,7 +5978,7 @@ if(cond_res) {
   case 0x768:
     {
       // STRB Rd, [Rn, -Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -5994,7 +5994,7 @@ if(cond_res) {
   case 0x76a:
     {
       // STRB Rd, [Rn, -Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6011,7 +6011,7 @@ if(cond_res) {
   case 0x76c:
     {
       // STRB Rd, [Rn, -Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6034,7 +6034,7 @@ if(cond_res) {
   case 0x76e:
     {
       // STRB Rd, [Rn, -Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6056,7 +6056,7 @@ if(cond_res) {
   case 0x7c8:
     {
       // STRB Rd, [Rn, Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6071,7 +6071,7 @@ if(cond_res) {
   case 0x7ca:
     {
       // STRB Rd, [Rn, Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6087,7 +6087,7 @@ if(cond_res) {
   case 0x7cc:
     {
       // STRB Rd, [Rn, Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6109,7 +6109,7 @@ if(cond_res) {
   case 0x7ce:
     {
       // STRB Rd, [Rn, Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6130,7 +6130,7 @@ if(cond_res) {
   case 0x7e8:
     {
       // STRB Rd, [Rn, Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6146,7 +6146,7 @@ if(cond_res) {
   case 0x7ea:
     {
       // STRB Rd, [Rn, Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6163,7 +6163,7 @@ if(cond_res) {
   case 0x7ec:
     {
       // STRB Rd, [Rn, Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6186,7 +6186,7 @@ if(cond_res) {
   case 0x7ee:
     {
       // STRB Rd, [Rn, Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6211,7 +6211,7 @@ if(cond_res) {
   case 0x678:
     {
       // LDRB Rd, [Rn], -Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6239,7 +6239,7 @@ if(cond_res) {
   case 0x67a:
     {
       // LDRB Rd, [Rn], -Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6268,7 +6268,7 @@ if(cond_res) {
   case 0x67c:
     {
       // LDRB Rd, [Rn], -Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6303,7 +6303,7 @@ if(cond_res) {
   case 0x67e:
     {
       // LDRB Rd, [Rn], -Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6337,7 +6337,7 @@ if(cond_res) {
   case 0x6f8:
     {
       // LDRB Rd, [Rn], Rm, LSL #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6365,7 +6365,7 @@ if(cond_res) {
   case 0x6fa:
     {
       // LDRB Rd, [Rn], Rm, LSR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6394,7 +6394,7 @@ if(cond_res) {
   case 0x6fc:
     {
       // LDRB Rd, [Rn], Rm, ASR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6429,7 +6429,7 @@ if(cond_res) {
   case 0x6fe:
     {
       // LDRB Rd, [Rn], Rm, ROR #
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6460,7 +6460,7 @@ if(cond_res) {
   case 0x758:
     {
       // LDRB Rd, [Rn, -Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6483,7 +6483,7 @@ if(cond_res) {
   case 0x75a:
     {
       // LDRB Rd, [Rn, -Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6507,7 +6507,7 @@ if(cond_res) {
   case 0x75c:
     {
       // LDRB Rd, [Rn, -Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6537,7 +6537,7 @@ if(cond_res) {
   case 0x75e:
     {
       // LDRB Rd, [Rn, -Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6566,7 +6566,7 @@ if(cond_res) {
   case 0x778:
     {
       // LDRB Rd, [Rn, -Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6591,7 +6591,7 @@ if(cond_res) {
   case 0x77a:
     {
       // LDRB Rd, [Rn, -Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6617,7 +6617,7 @@ if(cond_res) {
   case 0x77c:
     {
       // LDRB Rd, [Rn, -Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6649,7 +6649,7 @@ if(cond_res) {
   case 0x77e:
     {
       // LDRB Rd, [Rn, -Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6680,7 +6680,7 @@ if(cond_res) {
   case 0x7d8:
     {
       // LDRB Rd, [Rn, Rm, LSL #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6703,7 +6703,7 @@ if(cond_res) {
   case 0x7da:
     {
       // LDRB Rd, [Rn, Rm, LSR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6727,7 +6727,7 @@ if(cond_res) {
   case 0x7dc:
     {
       // LDRB Rd, [Rn, Rm, ASR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6757,7 +6757,7 @@ if(cond_res) {
   case 0x7de:
     {
       // LDRB Rd, [Rn, Rm, ROR #]
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6786,7 +6786,7 @@ if(cond_res) {
   case 0x7f8:
     {
       // LDRB Rd, [Rn, Rm, LSL #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int offset = reg[opcode & 15].I << ((opcode>>7)& 31);
       int dest = (opcode >> 12) & 15;
@@ -6811,7 +6811,7 @@ if(cond_res) {
   case 0x7fa:
     {
       // LDRB Rd, [Rn, Rm, LSR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset = shift ? reg[opcode & 15].I >> shift : 0;
@@ -6837,7 +6837,7 @@ if(cond_res) {
   case 0x7fc:
     {
       // LDRB Rd, [Rn, Rm, ASR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       int offset;
@@ -6869,7 +6869,7 @@ if(cond_res) {
   case 0x7fe:
     {
       // LDRB Rd, [Rn, Rm, ROR #]!
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int shift = (opcode >> 7) & 31;
       u32 value = reg[opcode & 15].I;
@@ -6923,7 +6923,7 @@ if(cond_res) {
   CASE_16(0x800)
     {
       // STMDA Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -6958,7 +6958,7 @@ if(cond_res) {
   CASE_16(0x820)
     {
       // STMDA Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -6995,7 +6995,7 @@ if(cond_res) {
   CASE_16(0x840)
     {
       // STMDA Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7047,7 +7047,7 @@ if(cond_res) {
   CASE_16(0x860)
     {
       // STMDA Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7101,7 +7101,7 @@ if(cond_res) {
   CASE_16(0x880)
     {
       // STMIA Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -7134,7 +7134,7 @@ if(cond_res) {
   CASE_16(0x8a0)
     {
       // STMIA Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -7170,7 +7170,7 @@ if(cond_res) {
   CASE_16(0x8c0)
     {
       // STMIA Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -7216,7 +7216,7 @@ if(cond_res) {
   CASE_16(0x8e0)
     {
       // STMIA Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -7266,7 +7266,7 @@ if(cond_res) {
   CASE_16(0x900)
     {
       // STMDB Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7301,7 +7301,7 @@ if(cond_res) {
   CASE_16(0x920)
     {
       // STMDB Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7338,7 +7338,7 @@ if(cond_res) {
   CASE_16(0x940)
     {
       // STMDB Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7390,7 +7390,7 @@ if(cond_res) {
   CASE_16(0x960)
     {
       // STMDB Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7444,7 +7444,7 @@ if(cond_res) {
   CASE_16(0x980)
     {
       // STMIB Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -7477,7 +7477,7 @@ if(cond_res) {
   CASE_16(0x9a0)
     {
       // STMIB Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -7513,7 +7513,7 @@ if(cond_res) {
   CASE_16(0x9c0)
     {
       // STMIB Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -7559,7 +7559,7 @@ if(cond_res) {
   CASE_16(0x9e0)
     {
       // STMIB Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -7621,7 +7621,7 @@ if(cond_res) {
   CASE_16(0x810)
     {
       // LDMDA Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7661,7 +7661,7 @@ if(cond_res) {
   CASE_16(0x830)
     {
       // LDMDA Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7704,7 +7704,7 @@ if(cond_res) {
   CASE_16(0x850)
     {
       // LDMDA Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7784,7 +7784,7 @@ if(cond_res) {
   CASE_16(0x870)
     {
       // LDMDA Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -7871,7 +7871,7 @@ if(cond_res) {
   CASE_16(0x890)
     {
       // LDMIA Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -7910,7 +7910,7 @@ if(cond_res) {
   CASE_16(0x8b0)
     {
       // LDMIA Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I + 
@@ -7953,7 +7953,7 @@ if(cond_res) {
   CASE_16(0x8d0)
     {
       // LDMIA Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = reg[base].I & 0xFFFFFFFC;
@@ -8031,7 +8031,7 @@ if(cond_res) {
   CASE_16(0x8f0)
     {
       // LDMIA Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I +
@@ -8118,7 +8118,7 @@ if(cond_res) {
   CASE_16(0x910)
     {
       // LDMDB Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -8159,7 +8159,7 @@ if(cond_res) {
   CASE_16(0x930)
     {
       // LDMDB Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -8202,7 +8202,7 @@ if(cond_res) {
   CASE_16(0x950)
     {
       // LDMDB Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -8282,7 +8282,7 @@ if(cond_res) {
   CASE_16(0x970)
     {
       // LDMDB Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I - 
@@ -8369,7 +8369,7 @@ if(cond_res) {
   CASE_16(0x990)
     {
       // LDMIB Rn, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -8408,7 +8408,7 @@ if(cond_res) {
   CASE_16(0x9b0)
     {
       // LDMIB Rn!, {Rlist}
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I + 
@@ -8456,7 +8456,7 @@ if(cond_res) {
   CASE_16(0x9d0)
     {
       // LDMIB Rn, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 address = (reg[base].I+4) & 0xFFFFFFFC;
@@ -8534,7 +8534,7 @@ if(cond_res) {
   CASE_16(0x9f0)
     {
       // LDMIB Rn!, {Rlist}^
-      if (busPrefetchCount==0)
+      if (!busPrefetchCount)
         busPrefetch = busPrefetchEnable;
       int base = (opcode & 0x000F0000) >> 16;
       u32 temp = reg[base].I +

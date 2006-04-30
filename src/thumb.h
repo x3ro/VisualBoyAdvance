@@ -1,7 +1,7 @@
 // -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -769,6 +769,7 @@ cpuPrefetch[0] = cpuPrefetch[1];
 busPrefetch = false;
   if (busPrefetchCount & 0xFFFFFF00)
     busPrefetchCount = 0x100 | (busPrefetchCount & 0xFF);
+
 clockTicks = 0;
 u32 oldArmNextPC = armNextPC;
 #ifndef FINAL_VERSION
@@ -1426,7 +1427,7 @@ case 0x28:
    // LDR R0~R7,[PC, #Imm]
    {
    u8 regist = (opcode >> 8) & 7;
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = (reg[15].I & 0xFFFFFFFC) + ((opcode & 0xFF) << 2);
      reg[regist].I = CPUReadMemoryQuick(address);
@@ -1439,7 +1440,7 @@ case 0x28:
  case 0x51:
    // STR Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      CPUWriteMemory(address,
@@ -1451,7 +1452,7 @@ case 0x28:
  case 0x53:
    // STRH Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      CPUWriteHalfWord(address,
@@ -1463,7 +1464,7 @@ case 0x28:
  case 0x55:
    // STRB Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode >>6)&7].I;
      CPUWriteByte(address,
@@ -1475,7 +1476,7 @@ case 0x28:
  case 0x57:
    // LDSB Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = (s8)CPUReadByte(address);
@@ -1487,7 +1488,7 @@ case 0x28:
  case 0x59:
    // LDR Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadMemory(address);
@@ -1499,7 +1500,7 @@ case 0x28:
  case 0x5b:
    // LDRH Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadHalfWord(address);
@@ -1511,7 +1512,7 @@ case 0x28:
  case 0x5d:
    // LDRB Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = CPUReadByte(address);
@@ -1523,7 +1524,7 @@ case 0x28:
  case 0x5f:
    // LDSH Rd, [Rs, Rn]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + reg[(opcode>>6)&7].I;
      reg[opcode&7].I = (s16)CPUReadHalfWordSigned(address);
@@ -1541,7 +1542,7 @@ case 0x28:
  case 0x67:
    // STR Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
      CPUWriteMemory(address,
@@ -1559,7 +1560,7 @@ case 0x28:
  case 0x6f:
    // LDR Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<2);
      reg[opcode&7].I = CPUReadMemory(address);
@@ -1577,7 +1578,7 @@ case 0x28:
  case 0x77:
    // STRB Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
      CPUWriteByte(address,
@@ -1595,7 +1596,7 @@ case 0x28:
  case 0x7f:
    // LDRB Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31));
      reg[opcode&7].I = CPUReadByte(address);
@@ -1613,7 +1614,7 @@ case 0x28:
  case 0x87:
    // STRH Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
      CPUWriteHalfWord(address,
@@ -1631,7 +1632,7 @@ case 0x28:
  case 0x8f:
    // LDRH Rd, [Rs, #Imm]
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[(opcode>>3)&7].I + (((opcode>>6)&31)<<1);
      reg[opcode&7].I = CPUReadHalfWord(address);
@@ -1650,7 +1651,7 @@ case 0x28:
    // STR R0~R7, [SP, #Imm]
    {
    u8 regist = (opcode >> 8) & 7;
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);
      CPUWriteMemory(address, reg[regist].I);
@@ -1668,7 +1669,7 @@ case 0x28:
    // LDR R0~R7, [SP, #Imm]
    {
    u8 regist = (opcode >> 8) & 7;
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[13].I + ((opcode&255)<<2);   
      reg[regist].I = CPUReadMemoryQuick(address);
@@ -1726,7 +1727,7 @@ case 0x28:
  case 0xb4:
    // PUSH {Rlist}
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 temp = reg[13].I - 4 * cpuBitsSet[opcode & 0xff];
@@ -1746,7 +1747,7 @@ case 0x28:
  case 0xb5:
    // PUSH {Rlist, LR}
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 temp = reg[13].I - 4 - 4 * cpuBitsSet[opcode & 0xff];
@@ -1777,7 +1778,7 @@ case 0x28:
  case 0xbc:
    // POP {Rlist}
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 address = reg[13].I & 0xFFFFFFFC;
@@ -1798,7 +1799,7 @@ case 0x28:
  case 0xbd:
    // POP {Rlist, PC}
    {
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      int offset = 0;
      u32 address = reg[13].I & 0xFFFFFFFC;
@@ -1847,7 +1848,7 @@ case 0x28:
    {
      // STM R0~7!, {Rlist}
      u8 regist = (opcode >> 8) & 7;
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[regist].I & 0xFFFFFFFC;
      u32 temp = reg[regist].I + 4*cpuBitsSet[opcode & 0xff];
@@ -1885,7 +1886,7 @@ case 0x28:
    {
      // LDM R0~R7!, {Rlist}
      u8 regist = (opcode >> 8) & 7;
-     if (busPrefetchCount == 0)
+     if (!busPrefetchCount)
        busPrefetch = busPrefetchEnable;
      u32 address = reg[regist].I & 0xFFFFFFFC;
      u32 temp = reg[regist].I + 4*cpuBitsSet[opcode & 0xFF];
