@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -517,7 +517,7 @@ inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
   int addr = (address>>24)&15;
   int value =  memoryWait[addr];
 
-  if (addr>=0x08)
+  if ((addr>=0x08) || (addr < 0x02))
   {
     busPrefetchCount=0;
     busPrefetch=false;
@@ -525,10 +525,9 @@ inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
   else if (busPrefetch)
   {
     int waitState = value;
-    if (waitState>0)
-      waitState--;
-    waitState++;
-    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
+    if (!waitState)
+      waitState = 1;
+    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
   }
 
   return value;
@@ -539,7 +538,7 @@ inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
   int addr = (address>>24)&15;
   int value = memoryWait32[addr];
 
-  if (addr>=0x08)
+  if ((addr>=0x08) || (addr < 0x02))
   {
     busPrefetchCount=0;
     busPrefetch=false;
@@ -547,10 +546,9 @@ inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
   else if (busPrefetch)
   {
     int waitState = value;
-    if (waitState>0)
-      waitState--;
-    waitState++;
-    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
+    if (!waitState)
+      waitState = 1;
+    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
   }
 
   return value;
@@ -561,7 +559,7 @@ inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
   int addr = (address>>24)&15;
   int value = memoryWaitSeq[addr];
 
-  if (addr>=0x08)
+  if ((addr>=0x08) || (addr < 0x02))
   {
     busPrefetchCount=0;
     busPrefetch=false;
@@ -569,10 +567,9 @@ inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
   else if (busPrefetch)
   {
     int waitState = value;
-    if (waitState>0)
-      waitState--;
-    waitState++;
-    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
+    if (!waitState)
+      waitState = 1;
+    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
   }
 
   return value;
@@ -583,7 +580,7 @@ inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
   int addr = (address>>24)&15;
   int value =  memoryWaitSeq32[addr];
 
-  if (addr>=0x08)
+  if ((addr>=0x08) || (addr < 0x02))
   {
     busPrefetchCount=0;
     busPrefetch=false;
@@ -591,10 +588,9 @@ inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
   else if (busPrefetch)
   {
     int waitState = value;
-    if (waitState>0)
-      waitState--;
-    waitState++;
-    busPrefetchCount = (busPrefetchCount<<waitState) | (0xFF>>(8-waitState));
+    if (!waitState)
+      waitState = 1;
+    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
   }
 
   return value;
@@ -608,15 +604,14 @@ inline int codeTicksAccess16(u32 address) // THUMB NON SEQ
 
   if ((addr>=0x08) && (addr<=0x0D))
   {
-    if ((busPrefetchCount&0x3) == 3)
-    {
-      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
-      return 0;
-    }
-    else
     if (busPrefetchCount&0x1)
     {
-      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      if (busPrefetchCount&0x2)
+      {
+        busPrefetchCount = ((busPrefetchCount&0xFF)>>2) | (busPrefetchCount&0xFFFFFF00);
+        return 0;
+      }
+      busPrefetchCount = ((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
       return memoryWaitSeq[addr]-1;
     }
     else
@@ -640,22 +635,17 @@ inline int codeTicksAccess32(u32 address) // ARM NON SEQ
   {
     if (busPrefetchCount&0x1)
     {
-      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
-      if (busPrefetchCount&0x1)
+      if (busPrefetchCount&0x2)
       {
-        busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+        busPrefetchCount = ((busPrefetchCount&0xFF)>>2) | (busPrefetchCount&0xFFFFFF00);
         return 0;
       }
-      else
-      {
-        busPrefetchCount = 0;
-        return memoryWaitSeq[addr];
-      }
-
+      busPrefetchCount = ((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      return memoryWaitSeq[addr] - 1;
     }
     else
     {
-        busPrefetchCount = 0;
+      busPrefetchCount = 0;
       return memoryWait32[addr];
     }
   }
@@ -674,7 +664,7 @@ inline int codeTicksAccessSeq16(u32 address) // THUMB SEQ
   {
     if (busPrefetchCount&0x1)
     {
-      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      busPrefetchCount = ((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
       return 0;
     }
     else
@@ -701,15 +691,13 @@ inline int codeTicksAccessSeq32(u32 address) // ARM SEQ
   {
     if (busPrefetchCount&0x1)
     {
-      busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
-      if (busPrefetchCount&0x1)
+      if (busPrefetchCount&0x2)
       {
-        busPrefetchCount=((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+        busPrefetchCount = ((busPrefetchCount&0xFF)>>2) | (busPrefetchCount&0xFFFFFF00);
         return 0;
       }
-      else
-        return memoryWaitSeq[addr];
-
+      busPrefetchCount = ((busPrefetchCount&0xFF)>>1) | (busPrefetchCount&0xFFFFFF00);
+      return memoryWaitSeq[addr];
     }
     else
     if (busPrefetchCount>0xFF)
@@ -979,7 +967,7 @@ static bool CPUReadState(gzFile gzFile)
   soundReadGame(gzFile, version);
   
   if(version > SAVE_GAME_VERSION_1) {
-    cheatsReadGame(gzFile);
+    cheatsReadGame(gzFile, version);
   }
   if(version > SAVE_GAME_VERSION_6) {
     rtcReadGame(gzFile);
@@ -1035,6 +1023,8 @@ static bool CPUReadState(gzFile gzFile)
     cpuSaveGameFunc = flashWrite;
     gbaSaveType = 2;
     break;
+  case 3:
+     break;
   case 5:
     gbaSaveType = 5;
     break;
@@ -2074,6 +2064,9 @@ void CPUSoftwareInterrupt(int comment)
       }
     }
     BIOS_CpuFastSet();
+    break;
+  case 0x0D:
+    BIOS_GetBiosChecksum();
     break;
   case 0x0E:
     BIOS_BgAffineSet();
@@ -3333,7 +3326,7 @@ void CPUWriteByte(u32 address, u8 b)
 
     //if(!cpuEEPROMEnabled && (cpuSramEnabled | cpuFlashEnabled)) { 
 
-      (*cpuSaveGameFunc)(address, b);
+        (*cpuSaveGameFunc)(address, b);
       break;
     }
     // default
@@ -3698,12 +3691,14 @@ void CPUReset()
     cpuFlashEnabled = true;
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = false;
+    saveType = gbaSaveType = 0;
     break;
   case 1: // EEPROM
     cpuSramEnabled = false;
     cpuFlashEnabled = false;
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = false;
+    saveType = gbaSaveType = 3;
     // EEPROM usage is automatically detected
     break;
   case 2: // SRAM
@@ -3712,6 +3707,7 @@ void CPUReset()
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
     cpuSaveGameFunc = sramDelayedWrite; // to insure we detect the write
+    saveType = gbaSaveType = 1;
     break;
   case 3: // FLASH
     cpuSramEnabled = false;
@@ -3719,6 +3715,7 @@ void CPUReset()
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
     cpuSaveGameFunc = flashDelayedWrite; // to insure we detect the write
+    saveType = gbaSaveType = 2;
     break;
   case 4: // EEPROM+Sensor
     cpuSramEnabled = false;
@@ -3726,6 +3723,7 @@ void CPUReset()
     cpuEEPROMEnabled = true;
     cpuEEPROMSensorEnabled = true;
     // EEPROM usage is automatically detected
+    saveType = gbaSaveType = 3;
     break;
   case 5: // NONE
     cpuSramEnabled = false;
@@ -3733,10 +3731,9 @@ void CPUReset()
     cpuEEPROMEnabled = false;
     cpuEEPROMSensorEnabled = false;
     // no save at all
+    saveType = gbaSaveType = 5;
     break;
   } 
-
-  saveType = gbaSaveType = cpuSaveType;
 
   ARM_PREFETCH;
 
@@ -3834,7 +3831,7 @@ void CPULoop(int ticks)
     if(!holdState && !SWITicks) {
 
       // Emulates the Cheat System (m) code
-      if((cheatsEnabled) && (mastercode!=0) && (mastercode == armNextPC))
+      if((cheatsEnabled) && (mastercode) && (mastercode == armNextPC))
       {
         u32 joy = 0;
         if(systemReadJoypads())
@@ -3843,8 +3840,8 @@ void CPULoop(int ticks)
         cpuTotalTicks += cheatsCheckKeys(P1^0x3FF, ext);
       }
 
-      //if ((armNextPC & 0x0803FFFF) == 0x08020000)
-      //    busPrefetchCount=0x100;
+      if ((armNextPC & 0x0803FFFF) == 0x08020000)
+        busPrefetchCount=0x100;
 
       if(armState) {
 #include "arm-new.h"
