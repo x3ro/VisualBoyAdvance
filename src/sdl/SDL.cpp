@@ -1,6 +1,6 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 Forgotten and the VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -249,8 +249,10 @@ bool screenMessage = false;
 char screenMessageBuffer[21];
 u32  screenMessageTime = 0;
 
-SDL_cond *cond = NULL;
-SDL_mutex *mutex = NULL;
+// Patch #1382692 by deathpudding.
+SDL_sem *sdlBufferLock  = NULL;
+SDL_sem *sdlBufferFull  = NULL;
+SDL_sem *sdlBufferEmpty = NULL;
 u8 sdlBuffer[4096];
 int sdlSoundLen = 0;
 
@@ -2904,67 +2906,69 @@ void systemScreenCapture(int a)
 
 void soundCallback(void *,u8 *stream,int len)
 {
-  if(!emulating)
+  if (!emulating)
     return;
-  SDL_mutexP(mutex);
-  //  printf("Locked mutex\n");
-  if(!speedup && !throttle) {
-    while(sdlSoundLen < 2048*2) {
-      if(emulating)
-        SDL_CondWait(cond, mutex);
-      else 
-        break;
-    }
-  }
-  if(emulating) {
-    //  printf("Copying data\n");
-    memcpy(stream, sdlBuffer, len);
-  }
+
+  // Patch #1382692 by deathpudding.
+  /* since this is running in a different thread, speedup and
+   * throttle can change at any time; save the value so locks
+   * stay in sync */
+  bool lock = (!speedup && !throttle) ? true : false;
+
+  if (lock)
+    SDL_SemWait (sdlBufferFull);
+
+  SDL_SemWait (sdlBufferLock);
+  memcpy (stream, sdlBuffer, len);
   sdlSoundLen = 0;
-  if(mutex)
-    SDL_mutexV(mutex);
+  SDL_SemPost (sdlBufferLock);
+
+  if (lock)
+    SDL_SemPost (sdlBufferEmpty);
 }
 
 void systemWriteDataToSoundBuffer()
 {
-  if(SDL_GetAudioStatus() != SDL_AUDIO_PLAYING)
-    SDL_PauseAudio(0);
-  bool cont = true;
-  while(cont && !speedup && !throttle) {
-    SDL_mutexP(mutex);
-    //    printf("Waiting for len < 2048 (speed up %d)\n", speedup);
-    if(sdlSoundLen < 2048*2)
-      cont = false;
-    SDL_mutexV(mutex);
-  }
+  // Patch #1382692 by deathpudding.
+  if (SDL_GetAudioStatus () != SDL_AUDIO_PLAYING)
+    SDL_PauseAudio (0);
 
-  int len = soundBufferLen;
-  int copied = 0;
-  if((sdlSoundLen+len) >= 2048*2) {
-    //    printf("Case 1\n");
-    memcpy(&sdlBuffer[sdlSoundLen],soundFinalWave, 2048*2-sdlSoundLen);
-    copied = 2048*2 - sdlSoundLen;
+  if ((sdlSoundLen + soundBufferLen) >= 2048*2) {
+    bool lock = (!speedup && !throttle) ? true : false;
+
+    if (lock)
+      SDL_SemWait (sdlBufferEmpty);
+
+    SDL_SemWait (sdlBufferLock);
+    int copied = 2048*2 - sdlSoundLen;
+    memcpy (sdlBuffer + sdlSoundLen, soundFinalWave, copied);
     sdlSoundLen = 2048*2;
-    SDL_CondSignal(cond);
-    cont = true;
-    if(!speedup && !throttle) {
-      while(cont) {
-        SDL_mutexP(mutex);
-        if(sdlSoundLen < 2048*2)
-          cont = false;
-        SDL_mutexV(mutex);
-      }
-      memcpy(&sdlBuffer[0],&(((u8 *)soundFinalWave)[copied]),
-             soundBufferLen-copied);
-      sdlSoundLen = soundBufferLen-copied;
-    } else {
-      memcpy(&sdlBuffer[0], &(((u8 *)soundFinalWave)[copied]), 
-soundBufferLen);
+    SDL_SemPost (sdlBufferLock);
+
+    if (lock) {
+      SDL_SemPost (sdlBufferFull);
+
+      /* wait for buffer to be dumped by soundCallback() */
+      SDL_SemWait (sdlBufferEmpty);
+      SDL_SemPost (sdlBufferEmpty);
+
+      SDL_SemWait (sdlBufferLock);
+      memcpy (sdlBuffer, ((u8 *)soundFinalWave) + copied,
+          soundBufferLen - copied);
+      sdlSoundLen = soundBufferLen - copied;
+      SDL_SemPost (sdlBufferLock);
     }
-  } else {
-    //    printf("case 2\n");
-    memcpy(&sdlBuffer[sdlSoundLen], soundFinalWave, soundBufferLen);
-    sdlSoundLen += soundBufferLen;
+    else {
+      SDL_SemWait (sdlBufferLock);
+      memcpy (sdlBuffer, ((u8 *) soundFinalWave) + copied, soundBufferLen);
+      SDL_SemPost (sdlBufferLock);
+    }
+  }
+  else {
+    SDL_SemWait (sdlBufferLock);
+    memcpy (sdlBuffer + sdlSoundLen, soundFinalWave, soundBufferLen);
+     sdlSoundLen += soundBufferLen;
+    SDL_SemPost (sdlBufferLock);
   }
 }
 
@@ -2996,8 +3000,10 @@ bool systemSoundInit()
     return false;
   }
   soundBufferTotalLen = soundBufferLen*10;
-  cond = SDL_CreateCond();
-  mutex = SDL_CreateMutex();
+  // Patch #1382692 by deathpudding.
+  sdlBufferLock  = SDL_CreateSemaphore (1);
+  sdlBufferFull  = SDL_CreateSemaphore (0);
+  sdlBufferEmpty = SDL_CreateSemaphore (1);
   sdlSoundLen = 0;
   systemSoundOn = true;
   return true;
@@ -3005,14 +3011,14 @@ bool systemSoundInit()
 
 void systemSoundShutdown()
 {
-  SDL_mutexP(mutex);
-  SDL_CondSignal(cond);
-  SDL_mutexV(mutex);
-  SDL_DestroyCond(cond);
-  cond = NULL;
-  SDL_DestroyMutex(mutex);
-  mutex = NULL;
-  SDL_CloseAudio();
+  // Patch #1382692 by deathpudding.
+  SDL_CloseAudio ();
+  SDL_DestroySemaphore (sdlBufferLock);
+  SDL_DestroySemaphore (sdlBufferFull);
+  SDL_DestroySemaphore (sdlBufferEmpty);
+  sdlBufferLock  = NULL;
+  sdlBufferFull  = NULL;
+  sdlBufferEmpty = NULL;
 }
 
 void systemSoundPause()
