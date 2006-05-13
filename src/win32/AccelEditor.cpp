@@ -185,7 +185,8 @@ void AccelEditor::OnAssign()
     return; // no valid key, abort
 
   int count = m_commands.GetCount();
-  for (int index = 0; index < count; index++) {
+  int index;
+  for (index = 0; index < count; index++) {
 
     wIDCommand = LOWORD(m_commands.GetItemData(index));
     mgr.m_mapAccelTable.Lookup(wIDCommand, pCmdAccel);

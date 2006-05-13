@@ -23,11 +23,11 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "GBA.h"
-#include "Port.h"
-#include "armdis.h"
-#include "elf.h"
-#include "exprNode.h"
+#include "../GBA.h"
+#include "../Port.h"
+#include "../armdis.h"
+#include "../elf.h"
+#include "../exprNode.h"
 
 extern bool debugger;
 extern int emulating;
@@ -1066,7 +1066,7 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeWorkRAM[i] == 1)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
@@ -1077,7 +1077,7 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeInternalRAM[i] == 1)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
@@ -1166,7 +1166,7 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeWorkRAM[i] == 2)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
@@ -1177,7 +1177,7 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeInternalRAM[i] == 2)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
@@ -1603,7 +1603,7 @@ static void debuggerMemoryByte(int n, char **args)
   if(n == 2) {
     u32 addr = 0;
     sscanf(args[1], "%x", &addr);
-    for(int i = 0; i < 16; i++) {
+    for(int _i = 0; _i < 16; _i++) {
       int a = debuggerReadByte(addr);
       int b = debuggerReadByte(addr+1);
       int c = debuggerReadByte(addr+2);
@@ -1639,7 +1639,7 @@ static void debuggerMemoryHalfWord(int n, char **args)
     u32 addr = 0;
     sscanf(args[1], "%x", &addr);
     addr = addr & 0xfffffffe;
-    for(int i = 0; i < 16; i++) {
+    for(int _i = 0; _i < 16; _i++) {
       int a = debuggerReadByte(addr);
       int b = debuggerReadByte(addr+1);
       int c = debuggerReadByte(addr+2);
@@ -1675,7 +1675,7 @@ static void debuggerMemory(int n, char **args)
     u32 addr = 0;
     sscanf(args[1], "%x", &addr);
     addr = addr & 0xfffffffc;
-    for(int i = 0; i < 16; i++) {
+    for(int _i = 0; _i < 16; _i++) {
       int a = debuggerReadByte(addr);
       int b = debuggerReadByte(addr+1);
       int c = debuggerReadByte(addr+2);

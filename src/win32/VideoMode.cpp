@@ -123,7 +123,11 @@ static HRESULT WINAPI addVideoMode(LPDDSURFACEDESC2 surf, LPVOID lpContext)
 
 int winVideoModeSelect(CWnd *pWnd, GUID **guid)
 {
+#ifdef _AFXDLL
   HINSTANCE h = AfxLoadLibrary("ddraw.dll");
+#else
+  HMODULE h = LoadLibrary( _T("ddraw.dll") );
+#endif
  
   // If ddraw.dll doesn't exist in the search path,
   // then DirectX probably isn't installed, so fail.
@@ -183,9 +187,11 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
     selected = d.DoModal();
 
     if(selected == -1) {
-      // If the library was loaded by calling LoadLibrary(),
-      // then you must use FreeLibrary() to let go of it.
-      AfxFreeLibrary(h);
+#ifdef _AFXDLL
+      AfxFreeLibrary( h );
+#else
+      FreeLibrary( h );
+#endif
       
       return -1;
     }
@@ -203,13 +209,21 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
                                  NULL);
     if(hret != DD_OK) {
       systemMessage(0, "Error during DirectDrawCreateEx: %08x", hret);
-      AfxFreeLibrary(h);
+#ifdef _AFXDLL
+      AfxFreeLibrary( h );
+#else
+      FreeLibrary( h );
+#endif
       return -1;
     }
   } else {
     // should not happen....
     systemMessage(0, "Error getting DirectDrawCreateEx");
-    AfxFreeLibrary(h);
+#ifdef _AFXDLL
+    AfxFreeLibrary( h );
+#else
+    FreeLibrary( h );
+#endif
     return -1;
   }  
   
@@ -225,7 +239,11 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
 
   // If the library was loaded by calling LoadLibrary(),
   // then you must use FreeLibrary() to let go of it.
-  AfxFreeLibrary(h);
+#ifdef _AFXDLL
+  AfxFreeLibrary( h );
+#else
+  FreeLibrary( h );
+#endif
 
   return res;
 }

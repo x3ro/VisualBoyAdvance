@@ -344,7 +344,7 @@ void memoryUpdateMBC3Clock()
   time_t diff = now - gbDataMBC3.mapperLastTime;
   if(diff > 0) {
     // update the clock according to the last update time
-    gbDataMBC3.mapperSeconds += diff % 60;
+    gbDataMBC3.mapperSeconds += (int)(diff % 60);
     if(gbDataMBC3.mapperSeconds > 59) {
       gbDataMBC3.mapperSeconds -= 60;
       gbDataMBC3.mapperMinutes++;
@@ -352,7 +352,7 @@ void memoryUpdateMBC3Clock()
 
     diff /= 60;
 
-    gbDataMBC3.mapperMinutes += diff % 60;
+    gbDataMBC3.mapperMinutes += (int)(diff % 60);
     if(gbDataMBC3.mapperMinutes > 59) {
       gbDataMBC3.mapperMinutes -= 60;
       gbDataMBC3.mapperHours++;
@@ -360,14 +360,14 @@ void memoryUpdateMBC3Clock()
 
     diff /= 60;
 
-    gbDataMBC3.mapperHours += diff % 24;
+    gbDataMBC3.mapperHours += (int)(diff % 24);
     if(gbDataMBC3.mapperHours > 23) {
       gbDataMBC3.mapperHours -= 24;
       gbDataMBC3.mapperDays++;
     }
     diff /= 24;
 
-    gbDataMBC3.mapperDays += diff;
+    gbDataMBC3.mapperDays += (int)(diff & 0xffffffff);
     if(gbDataMBC3.mapperDays > 255) {
       if(gbDataMBC3.mapperDays > 511) {
         gbDataMBC3.mapperDays %= 512;
@@ -1237,7 +1237,7 @@ void memoryUpdateTAMA5Clock()
   time_t diff = now - gbDataTAMA5.mapperLastTime;
   if(diff > 0) {
     // update the clock according to the last update time
-    gbDataTAMA5.mapperSeconds += diff % 60;
+    gbDataTAMA5.mapperSeconds += (int)(diff % 60);
     if(gbDataTAMA5.mapperSeconds > 59) {
       gbDataTAMA5.mapperSeconds -= 60;
       gbDataTAMA5.mapperMinutes++;
@@ -1245,7 +1245,7 @@ void memoryUpdateTAMA5Clock()
 
     diff /= 60;
 
-    gbDataTAMA5.mapperMinutes += diff % 60;
+    gbDataTAMA5.mapperMinutes += (int)(diff % 60);
     if(gbDataTAMA5.mapperMinutes > 59) {
       gbDataTAMA5.mapperMinutes -= 60;
       gbDataTAMA5.mapperHours++;
@@ -1253,7 +1253,7 @@ void memoryUpdateTAMA5Clock()
 
     diff /= 60;
 
-    gbDataTAMA5.mapperHours += diff % 24;
+    gbDataTAMA5.mapperHours += (int)(diff % 24);
     diff /= 24;
     if(gbDataTAMA5.mapperHours > 23) {
       gbDataTAMA5.mapperHours -= 24;
@@ -1261,7 +1261,7 @@ void memoryUpdateTAMA5Clock()
 
     }
 
-    int days = diff;
+    time_t days = diff;
     while (days)
     {
       gbDataTAMA5.mapperDays++;

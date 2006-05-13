@@ -1,5 +1,16 @@
 #ifndef _MAC
 #include "../AutoBuild.h"
+
+#if _MSC_VER >= 1400
+// use modern icon
+IDI_ICON                ICON    DISCARDABLE     "vbavista.ico"
+#else
+// use traditional icon
+IDI_ICON                ICON    DISCARDABLE     "gbadvance.ico"
+#endif
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version

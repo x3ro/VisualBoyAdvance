@@ -23,21 +23,21 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "AutoBuild.h"
+#include "../AutoBuild.h"
 
 #include "SDL.h"
-#include "GBA.h"
-#include "agbprint.h"
-#include "Flash.h"
-#include "Port.h"
+#include "../GBA.h"
+#include "../agbprint.h"
+#include "../Flash.h"
+#include "../Port.h"
 #include "debugger.h"
-#include "RTC.h"
-#include "Sound.h"
-#include "Text.h"
-#include "unzip.h"
-#include "Util.h"
-#include "gb/GB.h"
-#include "gb/gbGlobals.h"
+#include "../RTC.h"
+#include "../Sound.h"
+#include "../Text.h"
+#include "../unzip.h"
+#include "../Util.h"
+#include "../gb/GB.h"
+#include "../gb/gbGlobals.h"
 
 #ifndef WIN32
 # include <unistd.h>
@@ -50,7 +50,7 @@
 #ifndef __GNUC__
 # define HAVE_DECL_GETOPT 0
 # define __STDC__ 1
-# include "getopt.h"
+# include "../getopt.h"
 #else // ! __GNUC__
 # define HAVE_DECL_GETOPT 1
 # include "getopt.h"

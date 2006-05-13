@@ -20,6 +20,7 @@
 //
 #include "stdafx.h"
 #include <mmsystem.h>
+#include <windows.h>
 
 #include "AVIWrite.h"
 #include "LangSelect.h"
@@ -414,10 +415,12 @@ BOOL VBA::InitInstance()
   //  of your final executable, you should remove from the following
   //  the specific initialization routines you do not need.
 
+#if _MSC_VER < 1400
 #ifdef _AFXDLL
   Enable3dControls();      // Call this when using MFC in a shared DLL
 #else
   Enable3dControlsStatic();  // Call this when linking to MFC statically
+#endif
 #endif
 
   SetRegistryKey(_T("VBA"));
@@ -1475,15 +1478,18 @@ static void winCheckMenuBarInfo(int& winSizeX, int& winSizeY)
   HINSTANCE hinstDll;
   DWORD dwVersion = 0;
   
-  hinstDll = AfxLoadLibrary("USER32.DLL");
+#ifdef _AFXDLL
+  hinstDll = AfxLoadLibrary("user32.dll");
+#else
+  hinstDll = LoadLibrary( _T("user32.dll") );
+#endif
   
   if(hinstDll) {
-    GETMENUBARINFO func = (GETMENUBARINFO)GetProcAddress(hinstDll,
-                                                         "GetMenuBarInfo");
+	  GETMENUBARINFO func = (GETMENUBARINFO)GetProcAddress(hinstDll, "GetMenuBarInfo");
 
     if(func) {
       MENUBARINFO info;
-      info.cbSize = sizeof(info);
+      info.cbSize = sizeof(MENUBARINFO);
       
       func(AfxGetMainWnd()->GetSafeHwnd(), OBJID_MENU, 0, &info);
       
@@ -1500,7 +1506,11 @@ static void winCheckMenuBarInfo(int& winSizeX, int& winSizeY)
                                         SWP_NOMOVE | SWP_SHOWWINDOW);
       }
     }
-    AfxFreeLibrary(hinstDll);
+#ifdef _AFXDLL
+    AfxFreeLibrary( hinstDll );
+#else
+    FreeLibrary( hinstDll );
+#endif
   }
 }
 
@@ -1897,7 +1907,11 @@ void VBA::winSetLanguageOption(int option, bool force)
         }
         AfxSetResourceHandle(l);
         if(languageModule != NULL)
-          AfxFreeLibrary(languageModule);
+#ifdef _AFXDLL
+          AfxFreeLibrary( languageModule );
+#else
+          FreeLibrary( languageModule );
+#endif
         languageModule = l;
       } else {
         systemMessage(IDS_FAILED_TO_GET_LOCINFO,
@@ -1908,7 +1922,11 @@ void VBA::winSetLanguageOption(int option, bool force)
     break;
   case 1:
     if(languageModule != NULL)
-      AfxFreeLibrary(languageModule);
+#ifdef _AFXDLL
+      AfxFreeLibrary( languageModule );
+#else
+      FreeLibrary( languageModule );
+#endif
     languageModule = NULL;
     AfxSetResourceHandle(AfxGetInstanceHandle());
     break;
@@ -1926,7 +1944,13 @@ void VBA::winSetLanguageOption(int option, bool force)
           }
           AfxSetResourceHandle(l);
           if(languageModule != NULL)
-            AfxFreeLibrary(languageModule);
+		  {
+#ifdef _AFXDLL
+            AfxFreeLibrary( languageModule );
+#else
+            FreeLibrary( languageModule );
+#endif
+		  }
           languageModule = l;
         }
       } else {
@@ -1955,9 +1979,13 @@ HINSTANCE VBA::winLoadLanguage(const char *name)
 {
   CString buffer;
   
-  buffer.Format("vba_%s.dll", name);
+  buffer.Format( _T("vba_%s.dll"), name);
 
-  HINSTANCE l = AfxLoadLibrary(buffer);
+#ifdef _AFXDLL
+  HINSTANCE l = AfxLoadLibrary( buffer );
+#else
+  HMODULE l = LoadLibrary( buffer );
+#endif
   
   if(l == NULL) {
     if(strlen(name) == 3) {
@@ -1967,7 +1995,11 @@ HINSTANCE VBA::winLoadLanguage(const char *name)
       buffer2[2] = 0;
       buffer.Format("vba_%s.dll", buffer2);
 
-      return AfxLoadLibrary(buffer);
+#ifdef _AFXDLL
+	  return AfxLoadLibrary( buffer );
+#else
+	  return LoadLibrary( buffer );
+#endif
     }
   }
   return l;

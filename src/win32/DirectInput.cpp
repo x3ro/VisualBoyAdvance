@@ -722,7 +722,11 @@ DirectInput::~DirectInput()
   }
 
   if(dinputDLL) {
-    AfxFreeLibrary(dinputDLL);
+#ifdef _AFXDLL
+    AfxFreeLibrary( dinputDLL );
+#else
+    FreeLibrary( dinputDLL );
+#endif
     dinputDLL = NULL;
   }
 }
@@ -733,7 +737,12 @@ bool DirectInput::initialize()
                                   "joyDebug",
                                   0,
                                   "VBA.ini");
-  dinputDLL = AfxLoadLibrary("DINPUT.DLL");
+#ifdef _AFXDLL
+  dinputDLL = AfxLoadLibrary("dinput.dll");
+#else
+  dinputDLL = LoadLibrary( _T("dinput.dll") );
+#endif
+
   HRESULT (WINAPI *DInputCreate)(HINSTANCE,DWORD,LPDIRECTINPUT *,IUnknown *);  
   if(dinputDLL != NULL) {    
     DInputCreate = (HRESULT (WINAPI *)(HINSTANCE,DWORD,LPDIRECTINPUT *,IUnknown *))
@@ -801,7 +810,8 @@ bool DirectInput::initialize()
     return false;
   }
 
-  for(int i = 1; i < numDevices; i++) {
+  int i;
+  for(i = 1; i < numDevices; i++) {
     pDevices[i].device->SetDataFormat(&c_dfDIJoystick);
     pDevices[i].needed = false;
     pDevices[i].first  = true;

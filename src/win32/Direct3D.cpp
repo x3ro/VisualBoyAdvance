@@ -19,9 +19,9 @@
 #include "stdafx.h"
 #include "vba.h"
 
-#define DIRECT3D_VERSION 0x0800
-#include <d3d8.h>
-#include <d3dx8.h>
+#define DIRECT3D_VERSION 0x0900
+#include <d3d9.h>
+#include <d3dx9.h>
 
 #include "MainWnd.h"
 
@@ -73,10 +73,9 @@ typedef struct _D3DTLVERTEX {
 
 class Direct3DDisplay : public IDisplay {
 private:
-  HINSTANCE             d3dDLL;
-  LPDIRECT3D8           pD3D;
-  LPDIRECT3DDEVICE8     pDevice;
-  LPDIRECT3DTEXTURE8    pTexture;
+  LPDIRECT3D9           pD3D;
+  LPDIRECT3DDEVICE9     pDevice;
+  LPDIRECT3DTEXTURE9    pTexture;
   D3DSURFACE_DESC       dsdBackBuffer;
   D3DPRESENT_PARAMETERS dpp;
   D3DFORMAT             screenFormat;
@@ -109,7 +108,6 @@ public:
 
 Direct3DDisplay::Direct3DDisplay()
 {
-  d3dDLL = NULL;
   pD3D = NULL;  
   pDevice = NULL;
   pTexture = NULL;
@@ -146,11 +144,6 @@ void Direct3DDisplay::cleanup()
     
     pD3D->Release();
     pD3D = NULL;
-
-    if(d3dDLL != NULL) {
-      FreeLibrary(d3dDLL);
-      d3dDLL = NULL;
-    }
   }
 }
 
@@ -261,23 +254,9 @@ bool Direct3DDisplay::initialize()
   theApp.updateMenuBar();
   
   theApp.adjustDestRect();
-  
-  d3dDLL = LoadLibrary("D3D8.DLL");
-  LPDIRECT3D8 (WINAPI *D3DCreate)(UINT);
-  if(d3dDLL != NULL) {    
-    D3DCreate = (LPDIRECT3D8 (WINAPI *)(UINT))
-      GetProcAddress(d3dDLL, "Direct3DCreate8");
 
-    if(D3DCreate == NULL) {
-      theApp.directXMessage("Direct3DCreate8");
-      return FALSE;
-    }
-  } else {
-    theApp.directXMessage("D3D8.DLL");
-    return FALSE;
-  }
-
-  pD3D = D3DCreate(120);
+  // load Direct3D v9
+  pD3D = Direct3DCreate9( D3D_SDK_VERSION );
     
   if(pD3D == NULL) {
     winlog("Error creating Direct3D object\n");
@@ -416,15 +395,13 @@ void Direct3DDisplay::updateFiltering(int filter)
   default:
   case 0:
     // point filtering
-    pDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTEXF_POINT );
-    pDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTEXF_POINT );
-    pDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTEXF_POINT );
+		pDevice->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_POINT );
+		pDevice->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_POINT );
     break;
   case 1:
-    // bilinear
-    pDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTEXF_LINEAR );
-    pDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTEXF_LINEAR );
-    pDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTEXF_POINT );
+    // bilinear filtering
+		pDevice->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
+		pDevice->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
     break;
   }
 }
@@ -432,9 +409,9 @@ void Direct3DDisplay::updateFiltering(int filter)
 void Direct3DDisplay::restoreDeviceObjects()
 {
   // Store render target surface desc
-  LPDIRECT3DSURFACE8 pBackBuffer;
+  LPDIRECT3DSURFACE9 pBackBuffer;
   HRESULT hr;
-  if(SUCCEEDED(hr = pDevice->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer ))) {
+  if(SUCCEEDED(hr = pDevice->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer ))) {
     pBackBuffer->GetDesc( &dsdBackBuffer );
     pBackBuffer->Release();
   } else
@@ -467,11 +444,9 @@ void Direct3DDisplay::restoreDeviceObjects()
     pFont->Release();
     pFont = NULL;
   }
+
   // Create a D3D font using D3DX
-  HFONT hFont = CreateFont( 14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                            ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                            ANTIALIASED_QUALITY, FF_DONTCARE, "Arial" );      
-  D3DXCreateFont( pDevice, hFont, &pFont );
+  D3DXCreateFont( pDevice, 24, 0, FW_BOLD, 1, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE, "Arial", &pFont );
 }
 
 void Direct3DDisplay::clear()
@@ -491,8 +466,8 @@ void Direct3DDisplay::checkFullScreen()
   //    pDirect3D->FlipToGDISurface();
 }
 
-static void BlitRect(LPDIRECT3DDEVICE8 lpDevice,
-                     LPDIRECT3DTEXTURE8 lpSrc,
+static void BlitRect(LPDIRECT3DDEVICE9 lpDevice,
+                     LPDIRECT3DTEXTURE9 lpSrc,
                      float left, float top,
                      float right, float bottom,
                      D3DCOLOR col,float z)
@@ -515,7 +490,7 @@ static void BlitRect(LPDIRECT3DDEVICE8 lpDevice,
 
   // configure shader for vertex type
 
-  lpDevice->SetVertexShader(D3DFVF_TLVERTEX);
+  lpDevice->SetFVF(D3DFVF_TLVERTEX);
 
   // draw the rectangle
 
@@ -656,15 +631,13 @@ void Direct3DDisplay::render()
       if(((GetTickCount() - theApp.screenMessageTime) < 3000) &&
          !theApp.disableStatusMessage && pFont) {
         D3DCOLOR color = D3DCOLOR_ARGB(255, 255, 0, 0);
-        pFont->Begin();
         RECT r;
         r.left = 10;
         r.top = dpp.BackBufferHeight - 20;
         r.right = dpp.BackBufferWidth - 10;
         r.bottom = r.top + 20;
 
-        pFont->DrawText(theApp.screenMessageBuffer, -1, &r, 0, color);
-        pFont->End();
+        pFont->DrawText(NULL, theApp.screenMessageBuffer, -1, &r, 0, color);
       } else {
         theApp.screenMessage = false;
       }

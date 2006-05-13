@@ -50,7 +50,7 @@ void exprNodeCleanUp()
 Node *exprNodeIdentifier()
 {
   Node *n = (Node *)calloc(1, sizeof(Node));
-  n->name = strdup(yytext);
+  n->name = _strdup(yytext);
 
   exprNodeClean(n->name);  
   exprNodeClean(n);

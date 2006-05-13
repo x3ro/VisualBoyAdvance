@@ -163,7 +163,7 @@ BOOL JoypadConfig::OnInitDialog()
 {
   CDialog::OnInitDialog();
   
-  timerId = SetTimer(0,200,NULL);
+  timerId = SetTimer(0,50,NULL);
   
   SetWindowLong(up, GWL_USERDATA,joypad[which][KEY_UP]);
   up.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_UP]));

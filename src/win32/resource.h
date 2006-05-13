@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by VBA.rc
+// Microsoft Visual C++ generated include file.
+// Used by vba.rc
 //
 #define IDS_UNSUPPORTED_VBA_SGM         1
 #define IDS_CANNOT_LOAD_SGM             2
@@ -757,6 +757,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         40278
 #define _APS_NEXT_CONTROL_VALUE         1256
-#define _APS_NEXT_SYMED_VALUE           103
+#define _APS_NEXT_SYMED_VALUE           104
 #endif
 #endif

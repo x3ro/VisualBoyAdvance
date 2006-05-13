@@ -2058,7 +2058,7 @@ void gbSpeedSwitch()
 bool CPUIsGBBios(const char * file)
 {
   if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
+    const char * p = strrchr(file,'.');
 
     if(p != NULL) {
       if(_stricmp(p, ".gb") == 0)
@@ -2269,7 +2269,8 @@ void gbReset()
     gbMemory[0xff02] = 0x7e;
 
   gbMemory[0xff03] = 0xff;
-  for (int i = 0x8; i<0xf; i++)
+  int i;
+  for (i = 0x8; i<0xf; i++)
     gbMemory[0xff00+i] = 0xff;
 
   gbMemory[0xff13] = 0xff;

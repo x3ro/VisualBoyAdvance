@@ -153,7 +153,11 @@ void DirectDrawDisplay::cleanup()
   }
 
   if(ddrawDLL != NULL) {
-    AfxFreeLibrary(ddrawDLL);
+#ifdef _AFXDLL
+    AfxFreeLibrary( ddrawDLL );
+#else
+    FreeLibrary( ddrawDLL );
+#endif
     ddrawDLL = NULL;
   }
   width = 0;
@@ -265,7 +269,12 @@ bool DirectDrawDisplay::initialize()
   if(theApp.pVideoDriverGUID)
     guid = theApp.pVideoDriverGUID;
 
-  ddrawDLL = AfxLoadLibrary("DDRAW.DLL");
+#ifdef _AFXDLL
+  ddrawDLL = AfxLoadLibrary("ddraw.dll");
+#else
+  ddrawDLL = LoadLibrary( _T("ddraw.dll") );
+#endif
+
   HRESULT (WINAPI *DDrawCreateEx)(GUID *,LPVOID *,REFIID,IUnknown *);  
   if(ddrawDLL != NULL) {    
     DDrawCreateEx = (HRESULT (WINAPI *)(GUID *,LPVOID *,REFIID,IUnknown *))

@@ -1363,7 +1363,7 @@ bool CPUWriteBMPFile(const char *fileName)
 bool CPUIsZipFile(const char * file)
 {
   if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
+    const char * p = strrchr(file,'.');
 
     if(p != NULL) {
       if(_stricmp(p, ".zip") == 0)
@@ -1378,7 +1378,7 @@ bool CPUIsGBAImage(const char * file)
 {
   cpuIsMultiBoot = false;
   if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
+    const char * p = strrchr(file,'.');
 
     if(p != NULL) {
       if(_stricmp(p, ".gba") == 0)
@@ -1402,7 +1402,7 @@ bool CPUIsGBAImage(const char * file)
 bool CPUIsGBABios(const char * file)
 {
   if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
+    const char * p = strrchr(file,'.');
 
     if(p != NULL) {
       if(_stricmp(p, ".gba") == 0)
@@ -1422,7 +1422,7 @@ bool CPUIsGBABios(const char * file)
 bool CPUIsELF(const char *file)
 {
   if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
+    const char * p = strrchr(file,'.');
     
     if(p != NULL) {
       if(_stricmp(p, ".elf") == 0)
