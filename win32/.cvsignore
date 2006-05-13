@@ -1,3 +1,6 @@
 Debug Release ReleaseNoDev SDLDebug SDLRelease
+mfc_release mfc_debug sdl_release sdl_debug
 GBA.ncb GBA.opt GBA.plg
 gba_sdl.ncb gba_sdl.opt gba_sdl.plg
+vba_vs2005.ncb
+vba_vs2005.vcproj.A2.Spacy.user
