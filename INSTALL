@@ -65,6 +65,36 @@ The binaries are called this way:
 2. Windows
 ----------
 
+2.1 Visual C++ 2005
+----------------------
+
+Needed software:
+- Microsoft Visual C++ 2005
+ > http://msdn.microsoft.com/visualc/
+ > You do not need the DLL runtimes and the .NET Framework
+- Microsoft Platform SDK
+ > http://www.microsoft.com/downloads/details.aspx?FamilyId=E15438AC-60BE-41BD-AA14-7F1E0F19CA0D&displaylang=en
+- Microsoft DirectX 9.0 SDK
+ > http://msdn.microsoft.com/directx/sdk/
+- Yasm
+ > http://www.tortall.net/projects/yasm/
+ > Unpack it anywhere on your pc, rename the exe to "yasm.exe" and add it to
+    "Tools>Options>Projects and Solutions>VC++ Directories>Executable files"
+- AMD CodeAnalyst
+ > http://developer.amd.com/cawin.aspx?session_id=FB$37649@DJEBIGID
+ > Free and easy profiling for AMD CPUs (32bit and 64bit), Visual Studio 2005 plugin
+ 
+ Those are all needed packages for now. The VBA source also includes the
+ sources of various free libraries for zip, image and skin support.
+ Those can be accessed through the "dependencies" folder in the main
+ solution file. The main solution file includes references to all files
+ for all platforms. At the moment, only MFC and SDL build targets for
+ 32bit Windows are configured. GTK+ and 64bit Windows support may also
+ be possible.
+
+2.2 Visual C++ 6.0 and Visual C++ 2002
+-----------------------------------------
+
 Needed software:
 - nasm: see above for URL. Install it in the default directory
 - Microsoft Visual C++ 6.0 or greater: to compile
