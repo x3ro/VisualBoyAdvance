@@ -74,10 +74,3 @@ BOOL AboutDialog::OnInitDialog()
   return TRUE;  // return TRUE unless you set the focus to a control
   // EXCEPTION: OCX Property Pages should return FALSE
 }
-
-void AboutDialog::OnOK() 
-{
-  // TODO: Add extra validation here
-  
-  CDialog::OnOK();
-}

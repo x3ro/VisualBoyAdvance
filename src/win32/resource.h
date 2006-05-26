@@ -44,7 +44,6 @@
 #define IDS_INVALID_CBA_CODE            39
 #define IDS_CBA_CODE_WARNING            40
 #define IDS_OUT_OF_MEMORY               41
-#define IDI_ICON                        101
 #define IDD_REGISTERS                   102
 #define IDD_DEBUG                       103
 #define IDR_MENU                        104

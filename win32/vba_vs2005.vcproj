@@ -2520,6 +2520,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\src\win32\vbavista.ico"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="source"
@@ -4767,11 +4771,15 @@
 				</File>
 			</Filter>
 		</Filter>
+		<File
+			RelativePath="..\src\win32\VisualBoyAdvance.exe.manifest"
+			>
+		</File>
 	</Files>
 	<Globals>
 		<Global
 			Name="RESOURCE_FILE"
-			Value="\Dev\VisualBoyAdvance\src\win32\vba.rc"
+			Value="\Dokumente und Einstellungen\Spacy\Eigene Dateien\dev\VisualBoyAdvance\src\win32\vba.rc"
 		/>
 	</Globals>
 </VisualStudioProject>
