@@ -97,7 +97,7 @@ void SkinButton::OnPaint()
   PAINTSTRUCT ps;
   HDC hDC = ::BeginPaint(m_hWnd, &ps);
   HDC memDC = ::CreateCompatibleDC(hDC);
-  UINT state = ::SendMessage(m_hWnd, BM_GETSTATE, 0, 0);
+  LRESULT state = ::SendMessage(m_hWnd, BM_GETSTATE, 0, 0);
   HBITMAP oldBitmap;
   if(state & BST_PUSHED)
     oldBitmap = (HBITMAP)SelectObject(memDC, downBmp);

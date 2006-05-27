@@ -41,22 +41,11 @@ class JoypadEditControl : public CEdit
   // Operations
  public:
 
-  // Overrides
-  // ClassWizard generated virtual function overrides
-  //{{AFX_VIRTUAL(JoypadEditControl)
-  //}}AFX_VIRTUAL
-
   // Implementation
  public:
   virtual BOOL PreTranslateMessage(MSG *pMsg);
   afx_msg LRESULT OnJoyConfig(WPARAM wParam, LPARAM lParam);
   virtual ~JoypadEditControl();
-
-  // Generated message map functions
- protected:
-  //{{AFX_MSG(JoypadEditControl)
-  afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
-  //}}AFX_MSG
 
   DECLARE_MESSAGE_MAP()
     };
@@ -102,14 +91,13 @@ class JoypadConfig : public CDialog
 
   // Implementation
  protected:
-  UINT timerId;
+  UINT_PTR timerId;
   int which;
 
   // Generated message map functions
   //{{AFX_MSG(JoypadConfig)
   afx_msg void OnCancel();
   afx_msg void OnOk();
-  afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnDestroy();
   afx_msg void OnTimer(UINT nIDEvent);
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
@@ -149,18 +137,15 @@ class MotionConfig : public CDialog
  protected:
 
   // Generated message map functions
-  //{{AFX_MSG(MotionConfig)
   afx_msg void OnCancel();
   afx_msg void OnOk();
-  afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnDestroy();
   virtual BOOL OnInitDialog();
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
   afx_msg void OnTimer(UINT nIDEvent);
-  //}}AFX_MSG
   DECLARE_MESSAGE_MAP()
     private:
-  UINT timerId;
+  UINT_PTR timerId;
 };
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

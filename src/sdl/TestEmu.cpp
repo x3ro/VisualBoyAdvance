@@ -23,15 +23,16 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "AutoBuild.h"
+#include "../AutoBuild.h"
 
-#include "GBA.h"
+#include "../GBA.h"
 #include "debugger.h"
-#include "Sound.h"
-#include "unzip.h"
-#include "Util.h"
-#include "gb/GB.h"
-#include "gb/gbGlobals.h"
+#include "../Sound.h"
+#include "../unzip.h"
+#include "../Util.h"
+#include "../gb/GB.h"
+#include "../gb/gbGlobals.h"
+#include "../getopt.h"
 
 #ifndef WIN32
 # include <unistd.h>

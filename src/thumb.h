@@ -774,7 +774,7 @@ clockTicks = 0;
 u32 oldArmNextPC = armNextPC;
 #ifndef FINAL_VERSION
 if(armNextPC == stop) {
-  armNextPC = armNextPC++;
+  armNextPC++;
 }
 #endif
 

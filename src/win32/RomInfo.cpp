@@ -548,7 +548,7 @@ void RomInfoGBA::OnOk()
 BOOL RomInfoGBA::OnInitDialog() 
 {
   CDialog::OnInitDialog();
-  
+
   char buffer[13];
 
   strncpy(buffer, (const char *)&rom[0xa0], 12);
@@ -569,6 +569,9 @@ BOOL RomInfoGBA::OnInitDialog()
   GetDlgItem(IDC_ROM_UNIT_CODE)->SetWindowText(buffer);
 
   sprintf(buffer, "%02x", rom[0xb4]);
+  if( rom[0xb4] & 0x80 ) {
+	  strcat(buffer, " (DACS)");
+  }
   GetDlgItem(IDC_ROM_DEVICE_TYPE)->SetWindowText(buffer);
 
   sprintf(buffer, "%02x", rom[0xbc]);

@@ -1467,7 +1467,7 @@ void cheatsDisable(int i)
 
 bool cheatsVerifyCheatCode(const char *code, const char *desc)
 {
-  int len = strlen(code);
+  size_t len = strlen(code);
   if(len != 11 && len != 13 && len != 17) {
     systemMessage(MSG_INVALID_CHEAT_CODE, N_("Invalid cheat code '%s'"), code);
     return false;
@@ -1478,7 +1478,7 @@ bool cheatsVerifyCheatCode(const char *code, const char *desc)
     return false;    
   }
 
-  int i;
+  size_t i;
   for(i = 0; i < 8; i++) {
     if(!CHEAT_IS_HEX(code[i])) {
       // wrong cheat

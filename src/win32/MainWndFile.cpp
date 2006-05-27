@@ -689,7 +689,7 @@ bool MainWnd::fileImportGSACodeFile(CString& fileName)
   }    
   fseek(f, 0x1e, SEEK_SET);
   fread(&len, 1, 4, f);
-  int game = 0;
+  INT_PTR game = 0;
   if(len > 1) {
     GSACodeSelect dlg(f);
     game = dlg.DoModal();
@@ -737,14 +737,14 @@ void MainWnd::OnFileSavegameOldestslot()
   CString name;
   CFileStatus status;
   CString str;
-  __time64_t time = -1;
+  __time64_t time = (__time64_t)-1;
   int found = 0;
     
   for(int i = 0; i < 10; i++) {
     name.Format("%s%s%d.sgm", saveDir, filename, i+1);
 
     if(emulating && CFile::GetStatus(name, status)) {
-      if((unsigned long)status.m_mtime.GetTime() < time) {
+      if(status.m_mtime.GetTime() < time) {
         time = status.m_mtime.GetTime();
         found = i;
       }

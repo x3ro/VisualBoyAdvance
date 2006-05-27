@@ -483,6 +483,9 @@ bool MainWnd::FileRun()
 
     if(!gbLoadRom(theApp.szFile))
       return false;
+
+    gbGetHardwareType();
+
     // used for the handling of the gb Boot Rom
     if (gbHardware & 5)
     {
@@ -495,13 +498,13 @@ bool MainWnd::FileRun()
     
       strcat(tempName, "\\DMG_ROM.bin");
 
-    
       skipBios = theApp.skipBiosFile ? true : false;
       gbCPUInit(tempName, theApp.useBiosFile ? true : false);
     }
 
-    gbReset();
+    
   
+    gbReset();
     theApp.emulator = GBSystem;
     gbBorderOn = theApp.winGbBorderOn;
     theApp.romSize = gbRomSize;
@@ -952,7 +955,7 @@ void MainWnd::OnContextMenu(CWnd* pWnd, CPoint point)
             info.cch = 256;
             if(!GetMenuItemInfo(theApp.menu, i, MF_BYPOSITION, &info)) {
             }
-            if(!AppendMenu(theApp.popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer)) {
+            if(!AppendMenu(theApp.popup, MF_POPUP|MF_STRING, (UINT_PTR)info.hSubMenu, buffer)) {
             }
           }
         } else {
@@ -966,7 +969,7 @@ void MainWnd::OnContextMenu(CWnd* pWnd, CPoint point)
             info.cch = 256;
             if(!GetMenuItemInfoW(theApp.menu, i, MF_BYPOSITION, &info)) {
             }
-            if(!AppendMenuW(theApp.popup, MF_POPUP|MF_STRING, (UINT)info.hSubMenu, buffer)) {
+            if(!AppendMenuW(theApp.popup, MF_POPUP|MF_STRING, (UINT_PTR)info.hSubMenu, buffer)) {
             }
           }
         }

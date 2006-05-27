@@ -109,6 +109,7 @@ extern void remoteSetPort(int);
 extern void debuggerOutput(char *, u32);
 
 extern void CPUUpdateRenderBuffers(bool);
+extern int gbHardware;
 
 struct EmulatedSystem emulator = {
   NULL,
@@ -814,7 +815,7 @@ void sdlCheckDirectory(char *dir)
 {
   struct stat buf;
 
-  int len = strlen(dir);
+  size_t len = strlen(dir);
 
   char *p = dir + len - 1;
 
@@ -837,7 +838,7 @@ char *sdlGetFilename(char *name)
 {
   static char filebuffer[2048];
 
-  int len = strlen(name);
+  size_t len = strlen(name);
   
   char *p = name + len - 1;
   
@@ -2216,7 +2217,23 @@ int main(int argc, char **argv)
     if(type == IMAGE_GB) {
       failed = !gbLoadRom(szFile);
       if(!failed) {
-        cartridgeType = 1;
+        gbGetHardwareType();
+
+		    // used for the handling of the gb Boot Rom
+		    if (gbHardware & 5)
+        {
+			    char tempName[0x800];
+			    strcpy(tempName, arg0);
+			    char *p = strrchr(tempName, '\\');
+			    if(p) { *p = 0x00; }
+			    strcat(tempName, "\\DMG_ROM.bin");
+          fprintf(stderr, "%s\n", tempName);
+			    gbCPUInit(tempName, useBios);
+        }
+        else useBios = false;
+        
+        gbReset();
+        cartridgeType = IMAGE_GB;
         emulator = GBSystem;
         if(sdlAutoIPS) {
           int size = gbRomSize;
@@ -2266,7 +2283,7 @@ int main(int argc, char **argv)
       exit(-1);
     }
   } else {
-    cartridgeType = 0;
+    cartridgeType = IMAGE_GBA;
     strcpy(filename, "gnu_stub");
     rom = (u8 *)malloc(0x2000000);
     workRAM = (u8 *)calloc(1, 0x40000);

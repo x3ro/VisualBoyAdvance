@@ -20,6 +20,8 @@
 #ifndef VBA_GLOBALS_H
 #define VBA_GLOBALS_H
 
+#include "GBA.h"
+
 #define VERBOSE_SWI                  1
 #define VERBOSE_UNALIGNED_MEMORY     2
 #define VERBOSE_ILLEGAL_WRITE        4

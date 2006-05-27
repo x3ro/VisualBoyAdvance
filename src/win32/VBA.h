@@ -74,9 +74,11 @@ class VBA : public CWinApp
   int filterType;
   int filterWidth;
   int filterHeight;
+  int fsAdapter;
   int fsWidth;
   int fsHeight;
   int fsColorDepth;
+  int fsFrequency;
   bool fsForceChange;
   int sizeX;
   int sizeY;
@@ -137,6 +139,7 @@ class VBA : public CWinApp
   bool ddrawDebug;
   bool ddrawUseVideoMemory;
   int d3dFilter;
+  bool d3dKeepAspectRatio;
   int glFilter;
   int glType;
   CSkin *skin;
@@ -151,7 +154,7 @@ class VBA : public CWinApp
   bool disableMMX;
   int languageOption;
   CString languageName;
-  HINSTANCE languageModule;
+  HMODULE languageModule;
   int renderedFrames;
   Input *input;
   int joypadDefault;
@@ -226,7 +229,7 @@ class VBA : public CWinApp
   void saveSettings();
   void movieReadNext();
   bool initInput();
-  HINSTANCE winLoadLanguage(const char *name);
+  HMODULE winLoadLanguage(const char *name);
   void winSetLanguageOption(int option, bool force);
   bool detectMMX();
 #ifdef MMX
@@ -253,6 +256,7 @@ class VBA : public CWinApp
     };
 
     extern VBA theApp;
+	extern int emulating;
 
 #ifdef MMX
     extern "C" bool cpu_mmx;

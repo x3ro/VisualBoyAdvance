@@ -33,6 +33,13 @@
 // Insert your headers here
 //#define WIN32_LEAN_AND_MEAN           // Exclude rarely-used stuff from Windows headers
 
+// Target for Windows 2000
+#define WINVER 0x0500
+#define _WIN32_WINNT 0x0500
+
+#define STRICT
+
+
 #include <afxwin.h>
 #include <afxcmn.h>
 #include <afxdlgs.h>

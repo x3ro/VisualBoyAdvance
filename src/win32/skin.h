@@ -67,7 +67,7 @@ class CSkin
 
   RECT      m_rect;
 
-  DWORD     m_dOldStyle;
+  LONG_PTR     m_dOldStyle;
   RECT      m_oldRect;
   int       m_nButtons;
   SkinButton *m_buttons;

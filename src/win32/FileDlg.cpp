@@ -159,7 +159,7 @@ void FileDlg::OnTypeChange(HWND hwnd)
 
   ASSERT(typeControl != NULL);
 
-  int sel = ::SendMessage(typeControl, CB_GETCURSEL, 0, 0);
+  LRESULT sel = ::SendMessage(typeControl, CB_GETCURSEL, 0, 0);
 
   ASSERT(sel != -1);
   

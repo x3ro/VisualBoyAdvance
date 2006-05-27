@@ -945,11 +945,11 @@ u8 *utilLoad(const char *file,
     }
     size = fileSize;
   }
-  int read = fileSize <= size ? fileSize : size;
-  int r = fread(image, 1, read, f);
+  size_t read = fileSize <= size ? fileSize : size;
+  size_t r = fread(image, 1, read, f);
   fclose(f);
 
-  if(r != (int)read) {
+  if(r != read) {
     systemMessage(MSG_ERROR_READING_IMAGE,
                   N_("Error reading image %s"), file);
     if(data == NULL)

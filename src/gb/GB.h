@@ -42,6 +42,7 @@ extern void gbDrawLine();
 extern bool gbIsGameboyRom(const char *);
 extern void gbSoundReset();
 extern void gbSoundSetQuality(int);
+extern void gbGetHardwareType();
 extern void gbReset();
 extern void gbCleanUp();
 extern void gbCPUInit(const char *,bool);

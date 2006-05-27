@@ -20,7 +20,6 @@
 //
 #include "stdafx.h"
 #include <mmsystem.h>
-#include <windows.h>
 
 #include "AVIWrite.h"
 #include "LangSelect.h"
@@ -164,9 +163,11 @@ VBA::VBA()
   filterType = 0;
   filterWidth = 0;
   filterHeight = 0;
+  fsAdapter = 0;
   fsWidth = 0;
   fsHeight = 0;
   fsColorDepth = 0;
+  fsFrequency = 0;
   fsForceChange = false;
   surfaceSizeX = 0;
   surfaceSizeY = 0;
@@ -224,6 +225,7 @@ VBA::VBA()
   ddrawDebug = false;
   ddrawUseVideoMemory = false;
   d3dFilter = 0;
+  d3dKeepAspectRatio = true;
   glFilter = 0;
   glType = 0;
   skin = NULL;
@@ -288,6 +290,15 @@ VBA::VBA()
 VBA::~VBA()
 {
   InterframeCleanup();
+
+  char winBuffer[2048];
+
+  GetModuleFileName(NULL, winBuffer, 2048);
+  char *p = strrchr(winBuffer, '\\');
+  if(p)
+    *p = 0;
+  
+  regInit(winBuffer);
 
   saveSettings();
 
@@ -508,6 +519,7 @@ BOOL VBA::InitInstance()
   return TRUE;
 }
 
+
 void VBA::adjustDestRect()
 {
   POINT point;
@@ -573,6 +585,7 @@ void VBA::adjustDestRect()
     }          
   }
 }
+
 
 void VBA::updateIFB()
 {
@@ -1206,9 +1219,11 @@ void VBA::loadSettings()
   else
     pVideoDriverGUID = &videoDriverGUID;
 
+  fsAdapter = regQueryDwordValue("fsAdapter", 0);
   fsWidth = regQueryDwordValue("fsWidth", 0);
   fsHeight = regQueryDwordValue("fsHeight", 0);
   fsColorDepth = regQueryDwordValue("fsColorDepth", 0);
+  fsFrequency = regQueryDwordValue("fsFrequency", 0);
 
   if(videoOption == VIDEO_OTHER) {
     if(fsWidth < 0 || fsWidth > 4095 || fsHeight < 0 || fsHeight > 4095)
@@ -1265,6 +1280,7 @@ void VBA::loadSettings()
   d3dFilter = regQueryDwordValue("d3dFilter", 0);
   if(d3dFilter < 0 || d3dFilter > 1)
     d3dFilter = 0;
+  d3dKeepAspectRatio = regQueryDwordValue("d3dKeepAspectRatio", true) ? true : false;
   glFilter = regQueryDwordValue("glFilter", 0);
   if(glFilter < 0 || glFilter > 1)
     glFilter = 0;
@@ -1321,7 +1337,7 @@ void VBA::loadSettings()
   if(ifbType < 0 || ifbType > 2)
     ifbType = 0;
 
-  winFlashSize = regQueryDwordValue("flashSize", 0x10000);
+  flashSize = winFlashSize = regQueryDwordValue("flashSize", 0x10000);
   if(winFlashSize != 0x10000 && winFlashSize != 0x20000)
     winFlashSize = 0x10000;
 
@@ -1681,25 +1697,35 @@ bool VBA::initDisplay()
 
 bool VBA::updateRenderMethod(bool force)
 {
-  bool res = updateRenderMethod0(force);
-  
-  while(!res && renderMethod > 0) {
-    if(renderMethod == OPENGL)
-      renderMethod = DIRECT_3D;
-    else if(renderMethod == DIRECT_3D)
-      renderMethod = DIRECT_DRAW;
-    else if(renderMethod == DIRECT_DRAW) {
-      if(videoOption > VIDEO_4X) {
-        videoOption = VIDEO_2X;
-        force = true;
-      } else
-        renderMethod = GDI;
-    }
-                                    
-    res = updateRenderMethod(force);
-  }
-  return res;  
+	bool res = updateRenderMethod0(force);
+
+	while(!res && renderMethod > 0) {
+		if( fsAdapter > 0 ) {
+			fsAdapter = 0;
+		} else {
+			if( videoOption > VIDEO_4X ) {
+				videoOption = VIDEO_1X;
+				force = true;
+			} else {
+				if(renderMethod == OPENGL) {
+					renderMethod = DIRECT_3D;
+				} else {
+					if(renderMethod == DIRECT_3D) {
+						renderMethod = DIRECT_DRAW;
+					} else {
+						if(renderMethod == DIRECT_DRAW) {
+							renderMethod = GDI;
+						}
+					}
+				}
+			}
+		}
+		res = updateRenderMethod(force);
+	}
+
+	return res;
 }
+
 
 bool VBA::updateRenderMethod0(bool force)
 {
@@ -1732,17 +1758,19 @@ bool VBA::updateRenderMethod0(bool force)
   if(display == NULL) {
     switch(renderMethod) {
     case GDI:
-      display = newGDIDisplay();
-      break;
+		display = newGDIDisplay();
+		break;
     case DIRECT_DRAW:
-      display = newDirectDrawDisplay();
-      break;
+		pVideoDriverGUID = NULL;
+		ZeroMemory( &videoDriverGUID, sizeof( GUID ) );
+		display = newDirectDrawDisplay();
+		break;
     case DIRECT_3D:
-      display = newDirect3DDisplay();
-      break;
-    case OPENGL:
-      display = newOpenGLDisplay();
-      break;
+		display = newDirect3DDisplay();
+		break;
+	case OPENGL:
+		display = newOpenGLDisplay();
+		break;
     }
     
     if(display->initialize()) {
@@ -1773,13 +1801,16 @@ bool VBA::updateRenderMethod0(bool force)
   return true;
 }
 
+
 void VBA::winCheckFullscreen()
 {
-  if(videoOption > VIDEO_4X && tripleBuffering) {
-    if(display)
-      display->checkFullScreen();
-  }
+	if(videoOption > VIDEO_4X && tripleBuffering) {
+		if(display) {
+			display->checkFullScreen();
+		}
+	}
 }
+
 
 void VBA::shutdownDisplay()
 {
@@ -2098,9 +2129,11 @@ void VBA::saveSettings()
   }
 
 
+  regSetDwordValue("fsAdapter", fsAdapter);
   regSetDwordValue("fsWidth", fsWidth);
   regSetDwordValue("fsHeight", fsHeight);
   regSetDwordValue("fsColorDepth", fsColorDepth);
+  regSetDwordValue("fsFrequency", fsFrequency);
 
   regSetDwordValue("renderMethod", renderMethod);
 
@@ -2133,6 +2166,7 @@ void VBA::saveSettings()
   regSetDwordValue("tripleBuffering", tripleBuffering);
 
   regSetDwordValue("d3dFilter", d3dFilter);
+  regSetDwordValue("d3dKeepAspectRatio", d3dKeepAspectRatio);
   regSetDwordValue("glFilter", glFilter);
   regSetDwordValue("glType", glType);
 

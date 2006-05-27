@@ -42,6 +42,8 @@
 #include "../gb/gbGlobals.h"
 #include "../gb/gbPrinter.h"
 
+#include <tchar.h>
+
 extern int emulating;
 
 #define VBA_CONFIRM_MODE WM_APP + 100
@@ -108,13 +110,17 @@ void MainWnd::OnUpdateOptionsFrameskipThrottle200(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.throttle == 200);
 }
 
+
 void MainWnd::OnOptionsFrameskipThrottleOther() 
 {
-  Throttle dlg;
-  int v = dlg.DoModal();
-  if(v)
-    theApp.throttle = v;
+	Throttle dlg;
+	int v = (int)dlg.DoModal();
+	
+	if( v ) {
+		theApp.throttle = v;
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsFrameskipThrottleOther(CCmdUI* pCmdUI) 
 {
@@ -221,10 +227,15 @@ void MainWnd::OnUpdateOptionsVideoFrameskip9(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.cartridgeType == 0 ? frameSkip == 9 : gbFrameSkip == 9);
 }
 
+
 void MainWnd::OnOptionsVideoVsync() 
 {
-  theApp.vsync = !theApp.vsync;
+	theApp.vsync = !theApp.vsync;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("vsync"), theApp.vsync );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoVsync(CCmdUI* pCmdUI) 
 {
@@ -269,12 +280,14 @@ void MainWnd::OnUpdateOptionsVideoFullscreen800x600(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.videoOption == VIDEO_800x600);
 }
 
+
 BOOL MainWnd::OnOptionVideoSize(UINT nID)
 {
-  theApp.updateVideoSize(nID);
-  theApp.m_pMainWnd->PostMessage(VBA_CONFIRM_MODE);
-  return TRUE;
+	theApp.updateVideoSize(nID);
+	theApp.m_pMainWnd->PostMessage(VBA_CONFIRM_MODE);
+	return TRUE;
 }
+
 
 void MainWnd::OnOptionsVideoFullscreen320x240() 
 {
@@ -290,6 +303,7 @@ void MainWnd::OnOptionsVideoFullscreen800x600()
 {
   OnOptionVideoSize(ID_OPTIONS_VIDEO_FULLSCREEN800X600);
 }
+
 
 void MainWnd::OnOptionsVideoFullscreen() 
 {
@@ -325,6 +339,7 @@ void MainWnd::OnOptionsVideoFullscreen()
   theApp.winAccelMgr.UpdateMenu(theApp.menu);
 }
 
+
 void MainWnd::OnUpdateOptionsVideoFullscreen(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.videoOption == VIDEO_OTHER);
@@ -342,13 +357,20 @@ void MainWnd::OnUpdateOptionsVideoDisablesfx(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(cpuDisableSfx);
 }
 
+
 void MainWnd::OnOptionsVideoFullscreenstretchtofit() 
 {
-  theApp.fullScreenStretch = !theApp.fullScreenStretch;
-  theApp.updateWindowSize(theApp.videoOption);
-  if(theApp.display)
-    theApp.display->clear();
+	theApp.fullScreenStretch = !theApp.fullScreenStretch;
+	theApp.d3dKeepAspectRatio = !theApp.fullScreenStretch;
+	theApp.updateWindowSize( theApp.videoOption );
+	if( theApp.display ) {
+		if( emulating ) {
+			theApp.display->clear( );
+		}
+		theApp.display->setOption( _T("d3dKeepAspectRatio"), theApp.d3dKeepAspectRatio );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoFullscreenstretchtofit(CCmdUI* pCmdUI) 
 {
@@ -426,30 +448,44 @@ void MainWnd::OnUpdateOptionsVideoRendermethodOpengl(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.renderMethod == OPENGL);
 }
 
+
 void MainWnd::OnOptionsVideoTriplebuffering() 
 {
-  theApp.tripleBuffering = !theApp.tripleBuffering;
+	theApp.tripleBuffering = !theApp.tripleBuffering;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("tripleBuffering"), theApp.tripleBuffering );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoTriplebuffering(CCmdUI* pCmdUI) 
 {
-  pCmdUI->SetCheck(theApp.tripleBuffering);
+	pCmdUI->SetCheck(theApp.tripleBuffering);
 }
 
 void MainWnd::OnOptionsVideoDdrawemulationonly() 
 {
-  theApp.ddrawEmulationOnly = !theApp.ddrawEmulationOnly;
+	theApp.ddrawEmulationOnly = !theApp.ddrawEmulationOnly;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("ddrawEmulationOnly"), theApp.ddrawEmulationOnly );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoDdrawemulationonly(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.ddrawEmulationOnly);
 }
 
+
 void MainWnd::OnOptionsVideoDdrawusevideomemory() 
 {
-  theApp.ddrawUseVideoMemory = !theApp.ddrawUseVideoMemory;
+	theApp.ddrawUseVideoMemory = !theApp.ddrawUseVideoMemory;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("ddrawUseVideoMemory"), theApp.ddrawUseVideoMemory );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoDdrawusevideomemory(CCmdUI* pCmdUI) 
 {
@@ -458,9 +494,10 @@ void MainWnd::OnUpdateOptionsVideoDdrawusevideomemory(CCmdUI* pCmdUI)
 
 void MainWnd::OnOptionsVideoRenderoptionsD3dnofilter() 
 {
-  theApp.d3dFilter = 0;
-  if(theApp.display)
-    theApp.display->setOption("d3dFilter", 0);
+	theApp.d3dFilter = 0;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("d3dFilter"), theApp.d3dFilter );
+	}
 }
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsD3dnofilter(CCmdUI* pCmdUI) 
@@ -468,60 +505,75 @@ void MainWnd::OnUpdateOptionsVideoRenderoptionsD3dnofilter(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.d3dFilter == 0);
 }
 
+
 void MainWnd::OnOptionsVideoRenderoptionsD3dbilinear() 
 {
-  theApp.d3dFilter = 1;
-  if(theApp.display)
-    theApp.display->setOption("d3dFilter", 1);
+	theApp.d3dFilter = 1;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("d3dFilter"), theApp.d3dFilter );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsD3dbilinear(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.d3dFilter == 1);
 }
 
+
 void MainWnd::OnOptionsVideoRenderoptionsGlnearest() 
 {
-  theApp.glFilter = 0;
-  if(theApp.display)
-    theApp.display->setOption("glFilter", 0);
+	theApp.glFilter = 0;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("glFilter"), theApp.glFilter );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsGlnearest(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.glFilter == 0);
 }
 
+
 void MainWnd::OnOptionsVideoRenderoptionsGlbilinear() 
 {
-  theApp.glFilter = 1;
-  if(theApp.display)
-    theApp.display->setOption("glFilter", 1);
+	theApp.glFilter = 1;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("glFilter"), theApp.glFilter );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsGlbilinear(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.glFilter == 1);
 }
 
+
 void MainWnd::OnOptionsVideoRenderoptionsGltriangle() 
 {
-  theApp.glType = 0;
-  if(theApp.display)
-    theApp.display->setOption("glType", 0);
+	theApp.glType = 0;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("glType"), theApp.glType );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsGltriangle(CCmdUI* pCmdUI) 
 {
   pCmdUI->SetCheck(theApp.glType == 0);
 }
 
+
 void MainWnd::OnOptionsVideoRenderoptionsGlquads() 
 {
-  theApp.glType = 1;
-  if(theApp.display)
-    theApp.display->setOption("glType", 1);
+	theApp.glType = 1;
+	if( theApp.display ) {
+		theApp.display->setOption( _T("glType"), theApp.glType );
+	}
 }
+
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsGlquads(CCmdUI* pCmdUI) 
 {
@@ -705,27 +757,31 @@ void MainWnd::OnUpdateOptionsEmulatorAutohidemenu(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.autoHideMenu);
 }
 
+
 void MainWnd::OnOptionsEmulatorRewindinterval() 
 {
-  RewindInterval dlg(theApp.rewindTimer/6);
-  int v = dlg.DoModal();
-
-  if(v >= 0) {
-    theApp.rewindTimer = v*6; // convert to a multiple of 10 frames
-    regSetDwordValue("rewindTimer", v);
-    if(v == 0) {
-      if(theApp.rewindMemory)
-        free(theApp.rewindMemory);
-      theApp.rewindMemory = NULL;
-      theApp.rewindCount = 0;
-      theApp.rewindCounter = 0;
-      theApp.rewindSaveNeeded = false;
-    } else {
-      if(theApp.rewindMemory == NULL)
-        theApp.rewindMemory = (char *)malloc(8*REWIND_SIZE);
-    }
-  }
+	RewindInterval dlg(theApp.rewindTimer/6);
+	int v = (int)dlg.DoModal();
+	
+	if( v >= 0 ) {
+		theApp.rewindTimer = v*6; // convert to a multiple of 10 frames
+		regSetDwordValue("rewindTimer", v);
+		if(v == 0) {
+			if(theApp.rewindMemory) {
+				free(theApp.rewindMemory);
+				theApp.rewindMemory = NULL;
+			}
+			theApp.rewindCount = 0;
+			theApp.rewindCounter = 0;
+			theApp.rewindSaveNeeded = false;
+		} else {
+			if(theApp.rewindMemory == NULL) {
+				theApp.rewindMemory = (char *)malloc(8*REWIND_SIZE);
+			}
+		}
+	}
 }
+
 
 BOOL MainWnd::OnOptionsEmulatorShowSpeed(UINT nID)
 {
@@ -1671,15 +1727,15 @@ LRESULT MainWnd::OnConfirmMode(WPARAM, LPARAM)
 
 void MainWnd::winConfirmMode()
 {
-  if(theApp.renderMethod == DIRECT_DRAW && theApp.videoOption > VIDEO_4X) {
-    theApp.winCheckFullscreen();
-    ModeConfirm dlg(theApp.m_pMainWnd);
-
-    if(!dlg.DoModal()) {
-      theApp.updateVideoSize(ID_OPTIONS_VIDEO_X2);
-    }
-  }
-  theApp.winAccelMgr.UpdateMenu(theApp.menu);
+	if( theApp.videoOption > VIDEO_4X ) {
+		theApp.winCheckFullscreen();
+		ModeConfirm dlg(theApp.m_pMainWnd);
+		
+		if(!dlg.DoModal()) {
+			theApp.updateVideoSize(ID_OPTIONS_VIDEO_X2);
+		}
+	}
+	theApp.winAccelMgr.UpdateMenu(theApp.menu);
 }
 
 void MainWnd::OnOptionsVideoFullscreenmaxscale() 

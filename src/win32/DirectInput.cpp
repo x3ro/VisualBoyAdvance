@@ -39,7 +39,7 @@ extern void winlog(const char *msg,...);
 
 class DirectInput : public Input {
 private:
-  HINSTANCE dinputDLL;
+  HMODULE dinputDLL;
 
 public:
   virtual void checkDevices();
@@ -722,11 +722,7 @@ DirectInput::~DirectInput()
   }
 
   if(dinputDLL) {
-#ifdef _AFXDLL
-    AfxFreeLibrary( dinputDLL );
-#else
-    FreeLibrary( dinputDLL );
-#endif
+    FreeLibrary(dinputDLL);
     dinputDLL = NULL;
   }
 }
@@ -737,12 +733,7 @@ bool DirectInput::initialize()
                                   "joyDebug",
                                   0,
                                   "VBA.ini");
-#ifdef _AFXDLL
-  dinputDLL = AfxLoadLibrary("dinput.dll");
-#else
-  dinputDLL = LoadLibrary( _T("dinput.dll") );
-#endif
-
+  dinputDLL = LoadLibrary("dinput.dll");
   HRESULT (WINAPI *DInputCreate)(HINSTANCE,DWORD,LPDIRECTINPUT *,IUnknown *);  
   if(dinputDLL != NULL) {    
     DInputCreate = (HRESULT (WINAPI *)(HINSTANCE,DWORD,LPDIRECTINPUT *,IUnknown *))
@@ -753,7 +744,7 @@ bool DirectInput::initialize()
       return false;
     }
   } else {
-    directXMessage("DINPUT.DLL");
+    directXMessage("dinput.dll");
     return false;
   }
   

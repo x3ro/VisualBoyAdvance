@@ -2091,40 +2091,18 @@ void gbCPUInit(const char *biosFileName, bool useBiosFile)
   }
 }
 
-void gbReset()
+void gbGetHardwareType()
 {
-
-
   gbCgbMode = 0;
   gbSgbMode = 0;
-  oldRegister_WY = 146;
-  gbInterruptLaunched = 0;
-
   if(gbRom[0x143] & 0x80) {
     if((gbEmulatorType == 0) ||
        gbEmulatorType == 1 ||
        gbEmulatorType == 4) {
       gbCgbMode = 1;
-      if (gbVram == NULL)
-        gbVram = (u8 *)malloc(0x4000);
-      if (gbWram == NULL)
-        gbWram = (u8 *)malloc(0x8000);
-      memset(gbVram,0,0x4000);
-      memset(gbPalette,0, 2*128);
     }
   }
-  else
-  {
-    if(gbVram != NULL) {
-      free(gbVram);
-      gbVram = NULL;
-    }
-    if(gbWram != NULL) {
-      free(gbWram);
-      gbWram = NULL;
-    }
-  }
-  
+
   if((gbCgbMode == 0 ) && (gbRom[0x146] == 0x03)) {
     if(gbEmulatorType == 0 ||
        gbEmulatorType == 2 ||
@@ -2143,6 +2121,34 @@ void gbReset()
   gbGBCColorType = 0;
   if (gbHardware & 8) // If GBA is selected, choose the GBA default settings.
     gbGBCColorType = 2;    // (0 = GBC, 1 = GBA, 2 = GBASP)
+}
+
+void gbReset()
+{
+  gbGetHardwareType();
+
+  oldRegister_WY = 146;
+  gbInterruptLaunched = 0;
+
+  if(gbCgbMode == 1) {
+      if (gbVram == NULL)
+        gbVram = (u8 *)malloc(0x4000);
+      if (gbWram == NULL)
+        gbWram = (u8 *)malloc(0x8000);
+      memset(gbVram,0,0x4000);
+      memset(gbPalette,0, 2*128);
+  }
+  else
+  {
+    if(gbVram != NULL) {
+      free(gbVram);
+      gbVram = NULL;
+    }
+    if(gbWram != NULL) {
+      free(gbWram);
+      gbWram = NULL;
+    }
+  }
 
   gbLYChangeHappened = false;
   gbLCDChangeHappened = false;

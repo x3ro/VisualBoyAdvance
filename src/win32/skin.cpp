@@ -147,10 +147,14 @@ bool CSkin::Hook(CWnd *pWnd)
   // --------------------------------------------------
   // change window style (get rid of the caption bar)
   // --------------------------------------------------
-  DWORD dwStyle = GetWindowLong(m_hWnd, GWL_STYLE);
+  LONG_PTR dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
   m_dOldStyle = dwStyle;
   dwStyle &= ~(WS_CAPTION|WS_SIZEBOX);
-  SetWindowLong(m_hWnd, GWL_STYLE, dwStyle);
+#ifdef _WIN64
+  SetWindowLongPtr(m_hWnd, GWL_STYLE, dwStyle);
+#elif defined _WIN32
+  SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)dwStyle);
+#endif
 
   RECT r;
   pWnd->GetWindowRect(&r);
@@ -168,7 +172,11 @@ bool CSkin::Hook(CWnd *pWnd)
     pWnd->SetWindowRgn(m_rgnSkin, true);    
 
   // subclass the window procedure
-  m_OldWndProc = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)SkinWndProc);
+#ifdef _WIN64
+  m_OldWndProc = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)SkinWndProc);
+#elif defined _WIN32
+  m_OldWndProc = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(SkinWndProc)));
+#endif
 
   // store a pointer to our class instance inside the window procedure.
   if (!SetProp(m_hWnd, "skin", (void*)this))
@@ -214,7 +222,11 @@ bool CSkin::UnHook()
     SetWindowRgn(m_hWnd, NULL, true);
 
   // unsubclass the window procedure
-  OurWnd = (WNDPROC)SetWindowLong(m_hWnd, GWL_WNDPROC, (LONG)m_OldWndProc);
+#ifdef _WIN64
+  OurWnd = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)m_OldWndProc);
+#elif defined _WIN32
+  OurWnd = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(m_OldWndProc)));
+#endif
 
   // remove the pointer to our class instance, but if we fail we don't care.
   RemoveProp(m_hWnd, "skin");
@@ -223,7 +235,11 @@ bool CSkin::UnHook()
   // we failed to unhook the window.
   m_bHooked = ( OurWnd ? false : true );
 
-  SetWindowLong(m_hWnd, GWL_STYLE, m_dOldStyle);
+#ifdef _WIN64
+  SetWindowLongPtr(m_hWnd, GWL_STYLE, m_dOldStyle);
+#elif defined _WIN32
+  SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)m_dOldStyle);
+#endif
 
   RECT r;
 

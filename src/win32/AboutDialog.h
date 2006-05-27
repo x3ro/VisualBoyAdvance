@@ -60,7 +60,6 @@ class AboutDialog : public CDialog
   // Generated message map functions
   //{{AFX_MSG(AboutDialog)
   virtual BOOL OnInitDialog();
-//  virtual void OnOK();
   //}}AFX_MSG
 
 

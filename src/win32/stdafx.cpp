@@ -16,11 +16,4 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-// stdafx.cpp : source file that includes just the standard includes
-//      DialogSizer.pch will be the pre-compiled header
-//      stdafx.obj will contain the pre-compiled type information
-
 #include "stdafx.h"
-
-// TODO: reference any additional headers you need in STDAFX.H
-// and not in this file

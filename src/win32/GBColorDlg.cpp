@@ -73,9 +73,6 @@ static char THIS_FILE[] = __FILE__;
 GBColorDlg::GBColorDlg(CWnd* pParent /*=NULL*/)
   : CDialog(GBColorDlg::IDD, pParent)
 {
-  //{{AFX_DATA_INIT(GBColorDlg)
-  which = -1;
-  //}}AFX_DATA_INIT
   which = gbPaletteOption;
 }
 
@@ -83,10 +80,8 @@ GBColorDlg::GBColorDlg(CWnd* pParent /*=NULL*/)
 void GBColorDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
-	//{{AFX_DATA_MAP(GBColorDlg)
 	DDX_Control(pDX, IDC_PREDEFINED, m_predefined);
 	DDX_Radio(pDX, IDC_DEFAULT, which);
-	//}}AFX_DATA_MAP
 }
 
 
@@ -171,7 +166,7 @@ BOOL GBColorDlg::OnInitDialog()
     "Hot Desert",
     "Pink Dreams",
     "Weird Colors",
-	  "Real GB Colors",
+	"Real GB Colors",
     "Real 'GB on GBASP' Colors"
   };
 
@@ -213,7 +208,7 @@ void GBColorDlg::setWhich(int w)
 {
   which = w;
 
-  for(int i = 0; i < 9; i++) {
+  for(int i = 0; i < 8; i++) {
     colorControls[i].setColor(colors[which*8+i]);
   }
 }
@@ -239,8 +234,8 @@ void GBColorDlg::OnColorClicked(UINT id)
   {
     COLORREF c = dlg.GetColor();
     
-    colors[which*8+id] = (u16)((c >> 3) & 0x1f | ((c >> 11) & 0x1f) << 5 |
-                               ((c >> 19) & 0x1f) << 10);
+    colors[which*8+id] = (u16)((c >> 3) & 0x1f | ((c >> 11) & 0x1f) << 5 | ((c >> 19) & 0x1f) << 10);
+
     colorControls[id].setColor(colors[which*8+id]);
   }  
 }
@@ -256,8 +251,8 @@ void GBColorDlg::OnSelchangePredefined()
 	int sel = m_predefined.GetCurSel();
 
   if(sel != -1) {
-    int data = m_predefined.GetItemData(sel);
-    for(int i = 0; i < 9; i++) {
+    DWORD_PTR data = m_predefined.GetItemData(sel);
+    for(int i = 0; i < 8; i++) {
       colorControls[i].setColor(defaultPalettes[data][i]);
       colors[which*8+i] = defaultPalettes[data][i];
     }

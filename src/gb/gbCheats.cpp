@@ -163,7 +163,7 @@ bool gbCheatsLoadCheatList(const char *file)
 
 bool gbVerifyGsCode(const char *code)
 {
-  int len = strlen(code);
+  size_t len = strlen(code);
 
   if(len == 0)
     return true;
@@ -228,7 +228,7 @@ void gbAddGsCheat(const char *code, const char *desc)
 
 bool gbVerifyGgCode(const char *code)
 {
-  int len = strlen(code);
+  size_t len = strlen(code);
 
   if(len != 11 &&
      len != 7 &&
@@ -313,7 +313,7 @@ void gbAddGgCheat(const char *code, const char *desc)
   
   int i = gbCheatNumber;
 
-  int len = strlen(code);
+  size_t len = strlen(code);
   
   strcpy(gbCheatList[i].cheatCode, code);
   strcpy(gbCheatList[i].cheatDesc, desc);

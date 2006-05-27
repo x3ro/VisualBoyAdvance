@@ -34,7 +34,7 @@ class ModeConfirm : public CDialog
   // Construction
  public:
   int count;
-  UINT timer;
+  UINT_PTR timer;
   ModeConfirm(CWnd* pParent);   // standard constructor
 
   // Dialog Data

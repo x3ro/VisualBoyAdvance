@@ -1066,7 +1066,7 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(u32 i = address; i < final; i++)
+        for(int i = address; i < final; i++)
           if(freezeWorkRAM[i] == 1)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
@@ -1077,7 +1077,7 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(u32 i = address; i < final; i++)
+        for(int i = address; i < final; i++)
           if(freezeInternalRAM[i] == 1)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
@@ -1166,7 +1166,7 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(u32 i = address; i < final; i++)
+        for(int i = address; i < final; i++)
           if(freezeWorkRAM[i] == 2)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
@@ -1177,7 +1177,7 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(u32 i = address; i < final; i++)
+        for(int i = address; i < final; i++)
           if(freezeInternalRAM[i] == 2)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
@@ -1249,7 +1249,7 @@ static void debuggerDisassembleArm(FILE *f, u32 pc, int count)
   int len = 0;
   char format[30];
   for(i = 0; i < count; i++) {
-    int l = strlen(elfGetAddressSymbol(pc+4*i));
+    size_t l = strlen(elfGetAddressSymbol(pc+4*i));
     if(l > len)
       len = l;
   }
@@ -1268,7 +1268,7 @@ static void debuggerDisassembleThumb(FILE *f, u32 pc, int count)
   int len = 0;
   char format[30];
   for(i = 0; i < count; i++) {
-    int l = strlen(elfGetAddressSymbol(pc+2*i));
+    size_t l = strlen(elfGetAddressSymbol(pc+2*i));
     if(l > len)
       len = l;
   }
