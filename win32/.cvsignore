@@ -4,3 +4,6 @@ GBA.ncb GBA.opt GBA.plg
 gba_sdl.ncb gba_sdl.opt gba_sdl.plg
 vba_vs2005.ncb
 vba_vs2005.vcproj.A2.Spacy.user
+MFC_Release
+MFC_Debug
+vba_vs2005.vcproj.A1.Spacy.user
