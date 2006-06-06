@@ -34,7 +34,7 @@
 #include "../gb/gbGlobals.h"
 #include "../getopt.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 # include <unistd.h>
 # define GETCWD getcwd
 #else // WIN32

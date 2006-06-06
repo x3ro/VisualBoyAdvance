@@ -30,8 +30,8 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-extern USHORT joypad[4][13];
-extern USHORT motion[4];
+extern LONG_PTR joypad[4][13];
+extern LONG_PTR motion[4];
 
 /////////////////////////////////////////////////////////////////////////////
 // JoypadEditControl
@@ -54,11 +54,7 @@ BEGIN_MESSAGE_MAP(JoypadEditControl, CEdit)
 
 LRESULT JoypadEditControl::OnJoyConfig(WPARAM wParam, LPARAM lParam)
 {
-#ifdef _WIN64
-	SetWindowLongPtr( GetSafeHwnd(), GWL_USERDATA, ((wParam<<8)|lParam) );
-#else
-	SetWindowLongPtr( GetSafeHwnd(), GWL_USERDATA, PtrToLong((wParam<<8)|lParam) );
-#endif
+	SetWindowLongPtr( this->GetSafeHwnd(), GWLP_USERDATA, (wParam<<8) | lParam );
 	this->SetWindowText( theApp.input->getKeyName( (int)((wParam<<8)|lParam) ) );
 	GetParent()->GetNextDlgTabItem(this, FALSE)->SetFocus();
 	return TRUE;
@@ -139,7 +135,7 @@ void JoypadConfig::OnDestroy()
   KillTimer(timerId);
 }
 
-void JoypadConfig::OnTimer(UINT nIDEvent) 
+void JoypadConfig::OnTimer(UINT_PTR nIDEvent) 
 {
   theApp.input->checkDevices();
   
@@ -156,43 +152,43 @@ BOOL JoypadConfig::OnInitDialog()
   
   timerId = SetTimer(0,50,NULL);
   
-  SetWindowLongPtr(up, GWL_USERDATA,joypad[which][KEY_UP]);
+  SetWindowLongPtr(up, GWLP_USERDATA,joypad[which][KEY_UP]);
   up.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_UP]));
   
-  SetWindowLongPtr(down, GWL_USERDATA,joypad[which][KEY_DOWN]);
+  SetWindowLongPtr(down, GWLP_USERDATA,joypad[which][KEY_DOWN]);
   down.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_DOWN]));
 
-  SetWindowLongPtr(left, GWL_USERDATA,joypad[which][KEY_LEFT]);
+  SetWindowLongPtr(left, GWLP_USERDATA,joypad[which][KEY_LEFT]);
   left.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_LEFT]));
 
-  SetWindowLongPtr(right, GWL_USERDATA,joypad[which][KEY_RIGHT]);
+  SetWindowLongPtr(right, GWLP_USERDATA,joypad[which][KEY_RIGHT]);
   right.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_RIGHT]));
 
-  SetWindowLongPtr(buttonA, GWL_USERDATA,joypad[which][KEY_BUTTON_A]);
+  SetWindowLongPtr(buttonA, GWLP_USERDATA,joypad[which][KEY_BUTTON_A]);
   buttonA.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_A]));
 
-  SetWindowLongPtr(buttonB, GWL_USERDATA,joypad[which][KEY_BUTTON_B]);
+  SetWindowLongPtr(buttonB, GWLP_USERDATA,joypad[which][KEY_BUTTON_B]);
   buttonB.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_B]));
   
-  SetWindowLongPtr(buttonL, GWL_USERDATA,joypad[which][KEY_BUTTON_L]);
+  SetWindowLongPtr(buttonL, GWLP_USERDATA,joypad[which][KEY_BUTTON_L]);
   buttonL.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_L]));
 
-  SetWindowLongPtr(buttonR, GWL_USERDATA,joypad[which][KEY_BUTTON_R]);
+  SetWindowLongPtr(buttonR, GWLP_USERDATA,joypad[which][KEY_BUTTON_R]);
   buttonR.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_R]));
   
-  SetWindowLongPtr(buttonSelect, GWL_USERDATA,joypad[which][KEY_BUTTON_SELECT]);
+  SetWindowLongPtr(buttonSelect, GWLP_USERDATA,joypad[which][KEY_BUTTON_SELECT]);
   buttonSelect.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_SELECT]));
 
-  SetWindowLongPtr(buttonStart, GWL_USERDATA,joypad[which][KEY_BUTTON_START]);
+  SetWindowLongPtr(buttonStart, GWLP_USERDATA,joypad[which][KEY_BUTTON_START]);
   buttonStart.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_START]));
 
-  SetWindowLongPtr(speed, GWL_USERDATA,joypad[which][KEY_BUTTON_SPEED]);
+  SetWindowLongPtr(speed, GWLP_USERDATA,joypad[which][KEY_BUTTON_SPEED]);
   speed.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_SPEED]));
   
-  SetWindowLongPtr(capture, GWL_USERDATA,joypad[which][KEY_BUTTON_CAPTURE]);
+  SetWindowLongPtr(capture, GWLP_USERDATA,joypad[which][KEY_BUTTON_CAPTURE]);
   capture.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_CAPTURE]));
 
-  SetWindowLongPtr(buttonGS, GWL_USERDATA,joypad[which][KEY_BUTTON_GS]);
+  SetWindowLongPtr(buttonGS, GWLP_USERDATA,joypad[which][KEY_BUTTON_GS]);
   buttonGS.SetWindowText(theApp.input->getKeyName(joypad[which][KEY_BUTTON_GS]));
   
   CenterWindow();
@@ -201,7 +197,7 @@ BOOL JoypadConfig::OnInitDialog()
                 // EXCEPTION: OCX Property Pages should return FALSE
 }
 
-void JoypadConfig::assignKey(int id, int key)
+void JoypadConfig::assignKey(int id, LONG_PTR key)
 {
   switch(id) {
   case IDC_EDIT_LEFT:
@@ -251,43 +247,43 @@ void JoypadConfig::assignKeys()
   int id;
 
   id = IDC_EDIT_UP;
-  assignKey(id, GetWindowLongPtr(up, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(up, GWLP_USERDATA));
 
   id = IDC_EDIT_DOWN;
-  assignKey(id, GetWindowLongPtr(down, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(down, GWLP_USERDATA));
 
   id = IDC_EDIT_LEFT;
-  assignKey(id, GetWindowLongPtr(left, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(left, GWLP_USERDATA));
 
   id = IDC_EDIT_RIGHT;
-  assignKey(id, GetWindowLongPtr(right, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(right, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_A;
-  assignKey(id, GetWindowLongPtr(buttonA, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonA, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_B;
-  assignKey(id, GetWindowLongPtr(buttonB, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonB, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_L;
-  assignKey(id, GetWindowLongPtr(buttonL, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonL, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_R;
-  assignKey(id, GetWindowLongPtr(buttonR, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonR, GWLP_USERDATA));
   
   id = IDC_EDIT_BUTTON_SELECT;
-  assignKey(id, GetWindowLongPtr(buttonSelect, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonSelect, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_START;
-  assignKey(id, GetWindowLongPtr(buttonStart, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonStart, GWLP_USERDATA));
 
   id = IDC_EDIT_SPEED;
-  assignKey(id, GetWindowLongPtr(speed, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(speed, GWLP_USERDATA));
 
   id = IDC_EDIT_CAPTURE;
-  assignKey(id, GetWindowLongPtr(capture, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(capture, GWLP_USERDATA));
 
   id = IDC_EDIT_BUTTON_GS;
-  assignKey(id, GetWindowLongPtr(buttonGS, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(buttonGS, GWLP_USERDATA));
 
   //  winSaveKeys();
 }
@@ -354,16 +350,16 @@ BOOL MotionConfig::OnInitDialog()
   
   timerId = SetTimer(0,200,NULL);
   
-  SetWindowLongPtr(up, GWL_USERDATA,motion[KEY_UP]);
+  SetWindowLongPtr(up, GWLP_USERDATA,motion[KEY_UP]);
   up.SetWindowText(theApp.input->getKeyName(motion[KEY_UP]));
   
-  SetWindowLongPtr(down, GWL_USERDATA,motion[KEY_DOWN]);
+  SetWindowLongPtr(down, GWLP_USERDATA,motion[KEY_DOWN]);
   down.SetWindowText(theApp.input->getKeyName(motion[KEY_DOWN]));
 
-  SetWindowLongPtr(left, GWL_USERDATA,motion[KEY_LEFT]);
+  SetWindowLongPtr(left, GWLP_USERDATA,motion[KEY_LEFT]);
   left.SetWindowText(theApp.input->getKeyName(motion[KEY_LEFT]));
 
-  SetWindowLongPtr(right, GWL_USERDATA,motion[KEY_RIGHT]);
+  SetWindowLongPtr(right, GWLP_USERDATA,motion[KEY_RIGHT]);
   right.SetWindowText(theApp.input->getKeyName(motion[KEY_RIGHT]));
 
   CenterWindow();
@@ -376,14 +372,14 @@ void MotionConfig::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 }
 
-void MotionConfig::OnTimer(UINT nIDEvent) 
+void MotionConfig::OnTimer(UINT_PTR nIDEvent) 
 {
   theApp.input->checkDevices();
   
   CDialog::OnTimer(nIDEvent);
 }
 
-void MotionConfig::assignKey(int id, int key)
+void MotionConfig::assignKey(int id, LONG_PTR key)
 {
   switch(id) {
   case IDC_EDIT_LEFT:
@@ -406,14 +402,14 @@ void MotionConfig::assignKeys()
   int id;
 
   id = IDC_EDIT_UP;
-  assignKey(id, GetWindowLongPtr(up, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(up, GWLP_USERDATA));
 
   id = IDC_EDIT_DOWN;
-  assignKey(id, GetWindowLongPtr(down, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(down, GWLP_USERDATA));
 
   id = IDC_EDIT_LEFT;
-  assignKey(id, GetWindowLongPtr(left, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(left, GWLP_USERDATA));
 
   id = IDC_EDIT_RIGHT;
-  assignKey(id, GetWindowLongPtr(right, GWL_USERDATA));
+  assignKey(id, GetWindowLongPtr(right, GWLP_USERDATA));
 }

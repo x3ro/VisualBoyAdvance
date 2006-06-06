@@ -2911,7 +2911,7 @@ bool gbReadSaveMBC2(const char * name)
       return false;
     }
 
-    int read = fread(&gbMemory[0xa000],
+    size_t read = fread(&gbMemory[0xa000],
                      1,
                      256,
                      file);
@@ -2932,7 +2932,7 @@ bool gbReadSaveMBC2(const char * name)
                  1,
                  1,
                  file);
-    if(read >0) {
+    if(read > 0) {
       systemMessage(MSG_FAILED_TO_READ_SGM,
                     N_("Battery file's size incompatible with the rom settings %s (%d).\nWarning : save of the battery file is now disabled !"), name, read);
       fclose(file);
@@ -3065,7 +3065,7 @@ bool gbReadSaveMBC7(const char * name)
       return false;
     }
 
-    int read = fread(&gbMemory[0xa000],
+    size_t read = fread(&gbMemory[0xa000],
                      1,
                      256,
                      file);
@@ -3086,7 +3086,7 @@ bool gbReadSaveMBC7(const char * name)
                  1,
                  1,
                  file);
-    if(read >0) {
+    if(read > 0) {
       systemMessage(MSG_FAILED_TO_READ_SGM,
                     N_("Battery file's size incompatible with the rom settings %s (%d).\nWarning : save of the battery file is now disabled !"), name, read);
       fclose(file);
@@ -3385,7 +3385,7 @@ bool gbReadGSASnapshot(const char *fileName)
     return false;
   }
   fseek(file, 0x13, SEEK_SET);
-  int read = 0;
+  size_t read = 0;
   int toRead = 0;
   switch(gbRomType) {
   case 0x03:

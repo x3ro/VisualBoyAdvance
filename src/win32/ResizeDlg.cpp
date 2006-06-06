@@ -89,7 +89,7 @@ void AssertFailed(char *file, int line, char *exp)
                        MB_ABORTRETRYIGNORE);
 
   if(res == IDRETRY) {
-    __asm int 3;
+	DebugBreak();
   } else if(res == IDABORT)
     SendMessage(*theApp.m_pMainWnd, WM_QUIT, 0, 0);
 }
@@ -143,7 +143,7 @@ void ApiFailure(char *pcszFilename, int nLine, char *pcszExpression )
   if(nCode == IDABORT) {
     ::SendMessage(*theApp.m_pMainWnd, WM_QUIT, 0, 0);
   } else if(nCode == IDRETRY)
-    __asm int 3;
+	  DebugBreak();
 }
 
 long FASTCALL RegQueryValueExRecursive( HKEY hKey, LPCTSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData )

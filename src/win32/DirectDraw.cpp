@@ -33,6 +33,8 @@
 #include "Reg.h"
 #include "resource.h"
 
+#include "Display.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -631,6 +633,7 @@ void DirectDrawDisplay::checkFullScreen()
 void DirectDrawDisplay::render()
 {
   HRESULT hret;
+  unsigned int nBytesPerPixel = systemColorDepth>>3;
 
   if(pDirectDraw == NULL ||
      ddsOffscreen == NULL ||
@@ -703,60 +706,7 @@ void DirectDrawDisplay::render()
           copyY = 144;
         }
       }
-      // MMX doesn't seem to be faster to copy the data
-      __asm {
-        mov eax, copyX;
-        mov ebx, copyY;
-        
-        mov esi, pix;
-        mov edi, ddsDesc.lpSurface;
-        mov edx, ddsDesc.lPitch;
-        cmp systemColorDepth, 16;
-        jnz gbaOtherColor;
-        sub edx, eax;
-        sub edx, eax;
-        lea esi,[esi+2*eax+4];
-        shr eax, 1;
-      gbaLoop16bit:
-        mov ecx, eax;
-        repz movsd;
-        inc esi;
-        inc esi;
-        inc esi;
-        inc esi;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop16bit;
-        jmp gbaLoopEnd;
-      gbaOtherColor:
-        cmp systemColorDepth, 32;
-        jnz gbaOtherColor2;
-        
-        sub edx, eax;
-        sub edx, eax;
-        sub edx, eax;
-        sub edx, eax;
-        lea esi, [esi+4*eax+4];
-      gbaLoop32bit:
-        mov ecx, eax;
-        repz movsd;
-        add esi, 4;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop32bit;
-        jmp gbaLoopEnd;
-      gbaOtherColor2:
-        lea eax, [eax+2*eax];
-        sub edx, eax;
-      gbaLoop24bit:
-        mov ecx, eax;
-        shr ecx, 2;
-        repz movsd;
-        add edi, edx;
-        dec ebx;
-        jnz gbaLoop24bit;
-      gbaLoopEnd:
-      }
+	  copyImage( pix, ddsDesc.lpSurface, copyX, copyY, ddsDesc.lPitch, systemColorDepth );
     }
     if(theApp.showSpeed && (theApp.videoOption > VIDEO_4X || theApp.skin != NULL)) {
       char buffer[30];
@@ -828,7 +778,7 @@ void DirectDrawDisplay::render()
       SetTextColor(hdc, RGB(255,0,0));
       SetBkMode(hdc,TRANSPARENT);      
       TextOut(hdc, theApp.dest.left+10, theApp.dest.bottom - 20, theApp.screenMessageBuffer,
-              strlen(theApp.screenMessageBuffer));
+              (int)_tcslen(theApp.screenMessageBuffer));
       ddsPrimary->ReleaseDC(hdc);
     } else {
       theApp.screenMessage = false;

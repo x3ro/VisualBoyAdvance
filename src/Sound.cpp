@@ -1,6 +1,7 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
-// Copyright (C) 2005 Forgotten and the VBA development team
+// Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2004-2006 VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,15 +19,16 @@
 
 #include <memory.h>
 
+#include "Sound.h"
+
 #include "GBA.h"
 #include "Globals.h"
-#include "Sound.h"
 #include "Util.h"
 
 #define USE_TICKS_AS  380
 #define SOUND_MAGIC   0x60000000
 #define SOUND_MAGIC_2 0x30000000
-#define NOISE_MAGIC 5
+#define NOISE_MAGIC   5
 
 extern bool stopState;
 

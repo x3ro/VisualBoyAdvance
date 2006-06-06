@@ -231,8 +231,8 @@ class VBA : public CWinApp
   bool initInput();
   HMODULE winLoadLanguage(const char *name);
   void winSetLanguageOption(int option, bool force);
-  bool detectMMX();
 #ifdef MMX
+  bool detectMMX();
 #endif
   void updatePriority();
   void winUpdateSkin();

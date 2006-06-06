@@ -17,6 +17,8 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+#pragma once
+
 enum DISPLAY_TYPE {
   GDI = 0,
   DIRECT_DRAW = 1,
@@ -42,3 +44,5 @@ class IDisplay {
   virtual bool isSkinSupported() { return false; }
   virtual int selectFullScreenMode(GUID **) = 0;
 };
+
+void copyImage( void *source, void *destination, unsigned int width, unsigned int height, unsigned int destinationPitch, unsigned int colorDepth );

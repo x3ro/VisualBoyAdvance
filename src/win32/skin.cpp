@@ -150,11 +150,7 @@ bool CSkin::Hook(CWnd *pWnd)
   LONG_PTR dwStyle = GetWindowLongPtr(m_hWnd, GWL_STYLE);
   m_dOldStyle = dwStyle;
   dwStyle &= ~(WS_CAPTION|WS_SIZEBOX);
-#ifdef _WIN64
   SetWindowLongPtr(m_hWnd, GWL_STYLE, dwStyle);
-#else
-  SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)dwStyle);
-#endif
 
   RECT r;
   pWnd->GetWindowRect(&r);
@@ -172,11 +168,7 @@ bool CSkin::Hook(CWnd *pWnd)
     pWnd->SetWindowRgn(m_rgnSkin, true);    
 
   // subclass the window procedure
-#ifdef _WIN64
-  m_OldWndProc = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)SkinWndProc);
-#else
-  m_OldWndProc = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(SkinWndProc)));
-#endif
+  m_OldWndProc = (WNDPROC)SetWindowLongPtr( m_hWnd, GWLP_WNDPROC, (LONG_PTR)SkinWndProc );
 
   // store a pointer to our class instance inside the window procedure.
   if (!SetProp(m_hWnd, "skin", (void*)this))
@@ -222,11 +214,7 @@ bool CSkin::UnHook()
     SetWindowRgn(m_hWnd, NULL, true);
 
   // unsubclass the window procedure
-#ifdef _WIN64
-  OurWnd = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)m_OldWndProc);
-#else
-  OurWnd = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(m_OldWndProc)));
-#endif
+  OurWnd = (WNDPROC)SetWindowLongPtr( m_hWnd, GWLP_WNDPROC, (LONG_PTR)m_OldWndProc );
 
   // remove the pointer to our class instance, but if we fail we don't care.
   RemoveProp(m_hWnd, "skin");
@@ -235,11 +223,7 @@ bool CSkin::UnHook()
   // we failed to unhook the window.
   m_bHooked = ( OurWnd ? false : true );
 
-#ifdef _WIN64
   SetWindowLongPtr(m_hWnd, GWL_STYLE, m_dOldStyle);
-#else
-  SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)m_dOldStyle);
-#endif
 
   RECT r;
 
@@ -549,7 +533,7 @@ LRESULT CALLBACK SkinWndProc(HWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lPa
 {
   // we will need a pointer to the associated class instance
   // (it was stored in the window before, remember?)
-  CSkin *pSkin = (CSkin*)GetProp(hWnd, "skin");
+  CSkin *pSkin = (CSkin*)GetProp(hWnd, _T("skin"));
 
   // to handle WM_PAINT
   PAINTSTRUCT ps;

@@ -35,6 +35,8 @@
 #include "Reg.h"
 #include "resource.h"
 
+#include "Display.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -501,7 +503,7 @@ void Direct3DDisplay::render()
 {
   if(!pDevice)
     return;
-  
+
   // Test the cooperative level to see if it's okay to render
   if( FAILED( pDevice->TestCooperativeLevel() ) )
     {
@@ -541,61 +543,8 @@ void Direct3DDisplay::render()
             copyX = 160;
             copyY = 144;
           }
-        }
-        // MMX doesn't seem to be faster to copy the data
-        __asm {
-          mov eax, copyX;
-          mov ebx, copyY;
-          
-          mov esi, pix;
-          mov edi, locked.pBits;
-          mov edx, locked.Pitch;
-          cmp systemColorDepth, 16;
-          jnz gbaOtherColor;
-          sub edx, eax;
-          sub edx, eax;
-          lea esi,[esi+2*eax+4];
-          shr eax, 1;
-        gbaLoop16bit:
-          mov ecx, eax;
-          repz movsd;
-          inc esi;
-          inc esi;
-          inc esi;
-          inc esi;
-          add edi, edx;
-          dec ebx;
-          jnz gbaLoop16bit;
-          jmp gbaLoopEnd;
-        gbaOtherColor:
-          cmp systemColorDepth, 32;
-          jnz gbaOtherColor2;
-          
-          sub edx, eax;
-          sub edx, eax;
-          sub edx, eax;
-          sub edx, eax;
-          lea esi, [esi+4*eax+4];
-        gbaLoop32bit:
-          mov ecx, eax;
-          repz movsd;
-          add esi, 4;
-          add edi, edx;
-          dec ebx;
-          jnz gbaLoop32bit;
-          jmp gbaLoopEnd;
-        gbaOtherColor2:
-          lea eax, [eax+2*eax];
-          sub edx, eax;
-        gbaLoop24bit:
-          mov ecx, eax;
-          shr ecx, 2;
-          repz movsd;
-          add edi, edx;
-          dec ebx;
-          jnz gbaLoop24bit;
-        gbaLoopEnd:
-        }
+		}
+		copyImage( pix, locked.pBits, theApp.sizeX, theApp.sizeY, locked.Pitch, systemColorDepth );
       }
 
       if(theApp.videoOption > VIDEO_4X && theApp.showSpeed) {
@@ -712,4 +661,3 @@ IDisplay *newDirect3DDisplay()
 {
   return new Direct3DDisplay();
 }
-

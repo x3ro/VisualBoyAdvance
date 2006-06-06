@@ -706,7 +706,7 @@ bool MainWnd::fileImportGSACodeFile(CString& fileName)
   }
 
   if(game != -1) {
-    return cheatsImportGSACodeFile(fileName, game, v3);
+    return cheatsImportGSACodeFile(fileName, (int)game, v3);
   }
   
   return true;

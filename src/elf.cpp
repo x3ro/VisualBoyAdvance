@@ -961,8 +961,7 @@ u8 *elfReadAttribute(u8 *data, ELFAttr *attr)
     data += bytes;
     break;
   case DW_FORM_ref_addr:
-    attr->value = (elfDebugInfo->infodata + elfRead4Bytes(data)) -
-      elfGetCompileUnitForData(data)->top;
+    attr->value = (elfDebugInfo->infodata + elfRead4Bytes(data)) - elfGetCompileUnitForData(data)->top;
     data += 4;
     break;
   case DW_FORM_ref4:
@@ -970,11 +969,7 @@ u8 *elfReadAttribute(u8 *data, ELFAttr *attr)
     data += 4;
     break;
   case DW_FORM_ref_udata:
-    attr->value = (elfDebugInfo->infodata +
-                   (elfGetCompileUnitForData(data)->top -
-                    elfDebugInfo->infodata) +
-                   elfReadLEB128(data, &bytes)) -
-      elfCurrentUnit->top;
+    attr->value = (elfDebugInfo->infodata + (elfGetCompileUnitForData(data)->top - elfDebugInfo->infodata) + elfReadLEB128(data, &bytes)) - elfCurrentUnit->top;
     data += bytes;
     break;    
   case DW_FORM_indirect:

@@ -9,7 +9,7 @@
  * Adapted from original gzio.c from zlib library by Forgotten
  */
 
-/* @(#) $Id: memgzio.c,v 1.4 2006/05/27 14:47:32 spacy51 Exp $ */
+/* @(#) $Id: memgzio.c,v 1.5 2006/06/06 21:04:20 spacy51 Exp $ */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -331,7 +331,7 @@ local int get_byte(s)
     if (s->z_eof) return EOF;
     if (s->stream.avail_in == 0) {
 	errno = 0;
-	s->stream.avail_in = memRead(s->inbuf, 1, Z_BUFSIZE, s->file);
+	s->stream.avail_in = (uInt)memRead(s->inbuf, 1, Z_BUFSIZE, s->file);
 	if (s->stream.avail_in == 0) {
 	    s->z_eof = 1;
 	    if (memError(s->file)) s->z_err = Z_ERRNO;
@@ -476,8 +476,7 @@ int ZEXPORT memgzread (file, buf, len)
 		s->stream.avail_in  -= n;
 	    }
 	    if (s->stream.avail_out > 0) {
-		s->stream.avail_out -= memRead(next_out, 1, s->stream.avail_out,
-					     s->file);
+		s->stream.avail_out -= (uInt)memRead(next_out, 1, s->stream.avail_out, s->file);
 	    }
 	    len -= s->stream.avail_out;
 	    s->stream.total_in  += (uLong)len;
@@ -488,7 +487,7 @@ int ZEXPORT memgzread (file, buf, len)
         if (s->stream.avail_in == 0 && !s->z_eof) {
 
             errno = 0;
-            s->stream.avail_in = memRead(s->inbuf, 1, Z_BUFSIZE, s->file);
+            s->stream.avail_in = (uInt)memRead(s->inbuf, 1, Z_BUFSIZE, s->file);
             if (s->stream.avail_in == 0) {
                 s->z_eof = 1;
 		if (memError(s->file)) {

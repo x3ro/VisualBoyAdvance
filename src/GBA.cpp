@@ -1230,13 +1230,13 @@ bool CPUWriteGSASnapshot(const char *fileName,
   fwrite("SharkPortSave", 1, 0x0d, file);
   utilPutDword(buffer, 0x000f0000);
   fwrite(buffer, 1, 4, file); // save type 0x000f0000 = GBA save
-  utilPutDword(buffer, strlen(title));
+  utilPutDword(buffer, (u32)strlen(title));
   fwrite(buffer, 1, 4, file); // title length
   fwrite(title, 1, strlen(title), file);
-  utilPutDword(buffer, strlen(desc));
+  utilPutDword(buffer, (u32)strlen(desc));
   fwrite(buffer, 1, 4, file); // desc length
   fwrite(desc, 1, strlen(desc), file);
-  utilPutDword(buffer, strlen(notes));
+  utilPutDword(buffer, (u32)strlen(notes));
   fwrite(buffer, 1, 4, file); // notes length
   fwrite(notes, 1, strlen(notes), file);
   int saveSize = 0x10000;

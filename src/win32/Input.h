@@ -43,7 +43,7 @@ class Input {
 
   virtual bool readDevices() = 0;
   virtual u32 readDevice(int which) = 0;
-  virtual CString getKeyName(int key) = 0;
+  virtual CString getKeyName(LONG_PTR key) = 0;
   virtual void checkKeys() = 0;
   virtual void checkMotionKeys() = 0;
   virtual void checkDevices() = 0;

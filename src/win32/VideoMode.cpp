@@ -110,7 +110,7 @@ static HRESULT WINAPI addVideoMode(LPDDSURFACEDESC2 surf, LPVOID lpContext)
     if(surf->dwWidth >= 640 && surf->dwHeight >= 480) {
       sprintf(buffer, "%4dx%4dx%2d", surf->dwWidth, surf->dwHeight,
               surf->ddpfPixelFormat.dwRGBBitCount);
-      int pos = ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
+      WPARAM pos = ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
       ::SendMessage(h, LB_SETITEMDATA, pos,
                     (surf->ddpfPixelFormat.dwRGBBitCount << 24) |
                     ((surf->dwWidth & 4095) << 12) |
@@ -184,7 +184,7 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
   if(gDriverCnt > 1) {
     VideoDriverSelect d(pWnd);
 
-    selected = d.DoModal();
+    INT_PTR selected = d.DoModal();
 
     if(selected == -1) {
 #ifdef _AFXDLL
@@ -229,7 +229,7 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
   
   VideoMode dlg(ddraw, pWnd);
 
-  int res = dlg.DoModal();
+  INT_PTR res = dlg.DoModal();
 
   if(res != -1) {
     *guid = Drivers[selected].pGUID;
@@ -245,7 +245,7 @@ int winVideoModeSelect(CWnd *pWnd, GUID **guid)
   FreeLibrary( h );
 #endif
 
-  return res;
+  return (int)res;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -296,12 +296,12 @@ void VideoMode::OnCancel()
 
 void VideoMode::OnOk() 
 {
-  int cur = m_modes.GetCurSel();
+  DWORD_PTR cur = m_modes.GetCurSel();
 
   if(cur != -1) {
-    cur = m_modes.GetItemData(cur);
+    cur = m_modes.GetItemData((int)cur);
   }
-  EndDialog(cur);
+  EndDialog((int)cur);
 }
 
 BOOL VideoMode::OnInitDialog() 

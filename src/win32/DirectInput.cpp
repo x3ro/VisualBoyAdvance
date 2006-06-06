@@ -49,7 +49,7 @@ public:
   virtual bool initialize();
   virtual bool readDevices();
   virtual u32 readDevice(int which);
-  virtual CString getKeyName(int key);
+  virtual CString getKeyName(LONG_PTR key);
   virtual void checkKeys();
   virtual void checkMotionKeys();
   virtual void activate();
@@ -84,7 +84,7 @@ static LPDIRECTINPUT pDirectInput = NULL;
 static int joyDebug = 0;
 static int axisNumber = 0;
 
-USHORT joypad[4][13] = {
+LONG_PTR joypad[4][13] = {
   {
     DIK_LEFT,  DIK_RIGHT,
     DIK_UP,    DIK_DOWN,
@@ -99,7 +99,7 @@ USHORT joypad[4][13] = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  
 };
 
-USHORT motion[4] = {
+LONG_PTR motion[4] = {
   DIK_NUMPAD4, DIK_NUMPAD6, DIK_NUMPAD8, DIK_NUMPAD2
 };
 
@@ -171,13 +171,13 @@ void winReadKeys()
     motion[KEY_DOWN] = key;
 }
 
-static void winSaveKey(char *name, int num, USHORT value)
+static void winSaveKey(char *name, int num, LONG_PTR value)
 {
   char buffer[80];
 
   sprintf(buffer, "Joy%d_%s", num, name);
 
-  regSetDwordValue(buffer, value);
+  regSetDwordValue(buffer, (DWORD)value);
 }
 
 void winSaveKeys()
@@ -199,14 +199,10 @@ void winSaveKeys()
   }
   regSetDwordValue("joyVersion", 1);  
 
-  regSetDwordValue("Motion_Left",
-                   motion[KEY_LEFT]);
-  regSetDwordValue("Motion_Right",
-                   motion[KEY_RIGHT]);
-  regSetDwordValue("Motion_Up",
-                   motion[KEY_UP]);
-  regSetDwordValue("Motion_Down",
-                   motion[KEY_DOWN]);
+  regSetDwordValue("Motion_Left", (DWORD)motion[KEY_LEFT]);
+  regSetDwordValue("Motion_Right", (DWORD)motion[KEY_RIGHT]);
+  regSetDwordValue("Motion_Up", (DWORD)motion[KEY_UP]);
+  regSetDwordValue("Motion_Down", (DWORD)motion[KEY_DOWN]);
 }
 
 static BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi,
@@ -332,7 +328,7 @@ static int getPovState(DWORD value)
 
 static void checkKeys()
 {
-  int dev = 0;
+  LONG_PTR dev = 0;
   int i;
 
   for(i = 0; i < numDevices; i++)
@@ -627,17 +623,17 @@ static void checkJoypads()
   }
 }
 
-BOOL checkKey(int key)
+BOOL checkKey(LONG_PTR key)
 {
-  int dev = (key >> 8);
+  LONG_PTR dev = (key >> 8);
 
-  int k = (key & 255);
+  LONG_PTR k = (key & 255);
   
   if(dev == 0) {
     return KEYDOWN(pDevices[0].data,k);
   } else {
     if(k < 16) {
-      int axis = k >> 1;
+      LONG_PTR axis = k >> 1;
       LONG value = pDevices[dev].axis[axis].center;
       switch(pDevices[dev].axis[axis].offset) {
       case DIJOFS_X:
@@ -670,7 +666,7 @@ BOOL checkKey(int key)
         return value > pDevices[dev].axis[axis].positive;
       return value < pDevices[dev].axis[axis].negative;
     } else if(k < 48) {
-      int hat = (k >> 2) & 3;
+      LONG_PTR hat = (k >> 2) & 3;
       int state = getPovState(pDevices[dev].state.rgdwPOV[hat]);
       BOOL res = FALSE;
       switch(k & 3) {
@@ -922,10 +918,10 @@ u32 DirectInput::readDevice(int which)
   return res;
 }
 
-CString DirectInput::getKeyName(int key)
+CString DirectInput::getKeyName(LONG_PTR key)
 {
-  int d = (key >> 8);
-  int k = key & 255;
+  LONG_PTR d = (key >> 8);
+  LONG_PTR k = key & 255;
 
   DIDEVICEOBJECTINSTANCE di;
 
@@ -936,7 +932,7 @@ CString DirectInput::getKeyName(int key)
   CString winBuffer = winResLoadString(IDS_ERROR);
   
   if(d == 0) {
-    pDevices[0].device->GetObjectInfo(&di,key,DIPH_BYOFFSET);
+    pDevices[0].device->GetObjectInfo( &di, (DWORD)key, DIPH_BYOFFSET );
     winBuffer = di.tszName;
   } else {
     if(k < 16) {
@@ -965,12 +961,12 @@ CString DirectInput::getKeyName(int key)
           winBuffer.Format("Joy %d %s -", d, di.tszName);
       }
     } else if(k < 48) {
-      int hat = (k >> 2) & 3;
+      LONG_PTR hat = (k >> 2) & 3;
       pDevices[d].device->GetObjectInfo(&di,
-                                        DIJOFS_POV(hat),
+                                        (DWORD)DIJOFS_POV(hat),
                                         DIPH_BYOFFSET);
       char *dir = "up";
-      int dd = k & 3;
+      LONG_PTR dd = k & 3;
       if(dd == 1)
         dir = "down";
       else if(dd == 2)
@@ -980,7 +976,7 @@ CString DirectInput::getKeyName(int key)
       winBuffer.Format("Joy %d %s %s", d, di.tszName, dir);
     } else {
       pDevices[d].device->GetObjectInfo(&di,
-                                        DIJOFS_BUTTON(k-128),
+                                        (DWORD)DIJOFS_BUTTON(k-128),
                                         DIPH_BYOFFSET);
       winBuffer.Format(winResLoadString(IDS_JOY_BUTTON),d,di.tszName);
     }

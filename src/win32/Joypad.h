@@ -60,7 +60,7 @@ class JoypadConfig : public CDialog
   // Construction
  public:
   void assignKeys();
-  void assignKey(int id, int key);
+  void assignKey(int id, LONG_PTR key);
   JoypadConfig(int w, CWnd* pParent = NULL);   // standard constructor
 
   // Dialog Data
@@ -99,7 +99,7 @@ class JoypadConfig : public CDialog
   afx_msg void OnCancel();
   afx_msg void OnOk();
   afx_msg void OnDestroy();
-  afx_msg void OnTimer(UINT nIDEvent);
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
   virtual BOOL OnInitDialog();
   //}}AFX_MSG
@@ -113,7 +113,7 @@ class MotionConfig : public CDialog
   // Construction
  public:
   void assignKeys();
-  void assignKey(int id, int key);
+  void assignKey(int id, LONG_PTR key);
   MotionConfig(CWnd* pParent = NULL);   // standard constructor
 
   // Dialog Data
@@ -142,7 +142,7 @@ class MotionConfig : public CDialog
   afx_msg void OnDestroy();
   virtual BOOL OnInitDialog();
   afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-  afx_msg void OnTimer(UINT nIDEvent);
+  afx_msg void OnTimer(UINT_PTR nIDEvent);
   DECLARE_MESSAGE_MAP()
     private:
   UINT_PTR timerId;

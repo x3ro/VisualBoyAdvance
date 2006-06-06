@@ -39,13 +39,13 @@
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 # include <unistd.h>
 # define GETCWD getcwd
-#else // WIN32
+#else // _WIN32
 # include <direct.h>
 # define GETCWD _getcwd
-#endif // WIN32
+#endif // _WIN32
 
 #ifndef __GNUC__
 # define HAVE_DECL_GETOPT 0
@@ -866,15 +866,15 @@ FILE *sdlFindFile(const char *name)
   char buffer[4096];
   char path[2048];
 
-#ifdef WIN32
+#ifdef _WIN32
 #define PATH_SEP ";"
 #define FILE_SEP '\\'
 #define EXE_NAME "VisualBoyAdvance-SDL.exe"
-#else // ! WIN32
+#else // ! _WIN32
 #define PATH_SEP ":"
 #define FILE_SEP '/'
 #define EXE_NAME "VisualBoyAdvance"
-#endif // ! WIN32
+#endif // ! _WIN32
 
   fprintf(stderr, "Searching for file %s\n", name);
   
@@ -897,7 +897,7 @@ FILE *sdlFindFile(const char *name)
       return f;
   }
 
-#ifdef WIN32
+#ifdef _WIN32
   home = getenv("USERPROFILE");
   if(home != NULL) {
     fprintf(stderr, "Searching user profile directory: %s\n", home);
@@ -906,13 +906,13 @@ FILE *sdlFindFile(const char *name)
     if(f != NULL)
       return f;
   }
-#else // ! WIN32
+#else // ! _WIN32
     fprintf(stderr, "Searching system config directory: %s\n", SYSCONFDIR);
     sprintf(path, "%s%c%s", SYSCONFDIR, FILE_SEP, name);
     f = fopen(path, "r");
     if(f != NULL)
       return f;
-#endif // ! WIN32
+#endif // ! _WIN32
 
   if(!strchr(arg0, '/') &&
      !strchr(arg0, '\\')) {

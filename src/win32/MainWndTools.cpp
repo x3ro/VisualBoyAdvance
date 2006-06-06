@@ -51,7 +51,7 @@ static char THIS_FILE[] = __FILE__;
 
 extern bool debugger;
 extern int emulating;
-extern int remoteSocket;
+extern SOCKET remoteSocket;
 
 extern void remoteCleanUp();
 extern void remoteSetSockets(SOCKET, SOCKET);
