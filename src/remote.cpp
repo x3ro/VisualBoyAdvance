@@ -237,7 +237,7 @@ void remotePutPacket(char *packet)
   char *p = buffer;
   *p++ = '$';
   
-  for(int i = 0 ;i < count; i++) {
+  for(size_t i = 0 ;i < count; i++) {
     csum += packet[i];
     *p++ = packet[i];
   }

@@ -81,6 +81,16 @@ gbaLoopEnd:
 	switch(colorDepth)
 	{
 	case 16:
+		register unsigned int lineSize = width<<1;
+		register unsigned char *src = ((unsigned char*)source) + lineSize + 4;
+		register unsigned char *dst = (unsigned char*)destination;
+		do {
+			MoveMemory( dst, src, lineSize );
+				src+=lineSize;
+				dst+=lineSize;
+			src += 2;
+			dst += (destinationPitch - lineSize);
+		} while ( --height);
 		break;
 	case 32:
 		register unsigned int lineSize = width<<2;
