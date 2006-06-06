@@ -152,7 +152,7 @@ bool CSkin::Hook(CWnd *pWnd)
   dwStyle &= ~(WS_CAPTION|WS_SIZEBOX);
 #ifdef _WIN64
   SetWindowLongPtr(m_hWnd, GWL_STYLE, dwStyle);
-#elif defined _WIN32
+#else
   SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)dwStyle);
 #endif
 
@@ -174,7 +174,7 @@ bool CSkin::Hook(CWnd *pWnd)
   // subclass the window procedure
 #ifdef _WIN64
   m_OldWndProc = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)SkinWndProc);
-#elif defined _WIN32
+#else
   m_OldWndProc = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(SkinWndProc)));
 #endif
 
@@ -224,7 +224,7 @@ bool CSkin::UnHook()
   // unsubclass the window procedure
 #ifdef _WIN64
   OurWnd = (WNDPROC)SetWindowLongPtr(m_hWnd, GWL_WNDPROC, (LONG_PTR)m_OldWndProc);
-#elif defined _WIN32
+#else
   OurWnd = (WNDPROC)LongToPtr(SetWindowLongPtr(m_hWnd, GWL_WNDPROC, PtrToLong(m_OldWndProc)));
 #endif
 
@@ -237,7 +237,7 @@ bool CSkin::UnHook()
 
 #ifdef _WIN64
   SetWindowLongPtr(m_hWnd, GWL_STYLE, m_dOldStyle);
-#elif defined _WIN32
+#else
   SetWindowLongPtr(m_hWnd, GWL_STYLE, (LONG)m_dOldStyle);
 #endif
 

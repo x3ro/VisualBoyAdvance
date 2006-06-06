@@ -56,7 +56,7 @@ LRESULT JoypadEditControl::OnJoyConfig(WPARAM wParam, LPARAM lParam)
 {
 #ifdef _WIN64
 	SetWindowLongPtr( GetSafeHwnd(), GWL_USERDATA, ((wParam<<8)|lParam) );
-#elif defined _WIN32
+#else
 	SetWindowLongPtr( GetSafeHwnd(), GWL_USERDATA, PtrToLong((wParam<<8)|lParam) );
 #endif
 	this->SetWindowText( theApp.input->getKeyName( (int)((wParam<<8)|lParam) ) );

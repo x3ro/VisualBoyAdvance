@@ -401,6 +401,12 @@ BOOL RomInfoGB::OnInitDialog()
   case 0x22:
     type = "ROM+MBC7+BATT";
     break;
+  case 0x55:
+    type = "GameGenie";
+    break;
+  case 0x56:
+    type = "GameShark V3.0";
+    break;
   case 0xfc:
     type = "ROM+POCKET CAMERA";
     break;

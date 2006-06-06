@@ -44,6 +44,8 @@
 #define IDS_INVALID_CBA_CODE            39
 #define IDS_CBA_CODE_WARNING            40
 #define IDS_OUT_OF_MEMORY               41
+#define IDS_WRONG_GAMESHARK_CODE        42
+#define IDS_UNSUPPORTED_GAMESHARK_CODE  43
 #define IDI_ICON                        101
 #define IDD_REGISTERS                   102
 #define IDD_DEBUG                       103

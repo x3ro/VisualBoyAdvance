@@ -19,9 +19,9 @@
 // AboutDialog.cpp : implementation file
 //
 
+#include "stdafx.h"
 #include "AboutDialog.h"
 #include "../AutoBuild.h"
-#include "resource.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
