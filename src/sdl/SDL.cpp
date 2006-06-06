@@ -815,7 +815,7 @@ void sdlCheckDirectory(char *dir)
 {
   struct stat buf;
 
-  size_t len = strlen(dir);
+  int len = strlen(dir);
 
   char *p = dir + len - 1;
 
@@ -838,7 +838,7 @@ char *sdlGetFilename(char *name)
 {
   static char filebuffer[2048];
 
-  size_t len = strlen(name);
+  int len = strlen(name);
   
   char *p = name + len - 1;
   
@@ -2218,9 +2218,9 @@ int main(int argc, char **argv)
       failed = !gbLoadRom(szFile);
       if(!failed) {
         gbGetHardwareType();
-
-		    // used for the handling of the gb Boot Rom
-		    if (gbHardware & 5)
+        
+        // used for the handling of the gb Boot Rom
+        if (gbHardware & 5)
         {
 			    char tempName[0x800];
 			    strcpy(tempName, arg0);
@@ -2283,7 +2283,7 @@ int main(int argc, char **argv)
       exit(-1);
     }
   } else {
-    cartridgeType = IMAGE_GBA;
+    cartridgeType = 0;
     strcpy(filename, "gnu_stub");
     rom = (u8 *)malloc(0x2000000);
     workRAM = (u8 *)calloc(1, 0x40000);

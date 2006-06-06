@@ -146,6 +146,10 @@ struct mapperMMM01 {
   int mapperRomBank0Remapping;
 };
 
+struct mapperGS3 {
+  int mapperROMBank;
+};
+
 extern mapperMBC1 gbDataMBC1;
 extern mapperMBC2 gbDataMBC2;
 extern mapperMBC3 gbDataMBC3;
@@ -154,6 +158,7 @@ extern mapperHuC1 gbDataHuC1;
 extern mapperHuC3 gbDataHuC3;
 extern mapperTAMA5 gbDataTAMA5;
 extern mapperMMM01 gbDataMMM01;
+extern mapperGS3 gbDataGS3;
 
 void mapperMBC1ROM(u16,u8);
 void mapperMBC1RAM(u16,u8);
@@ -179,6 +184,8 @@ u8 mapperTAMA5ReadRAM(u16);
 void memoryUpdateTAMA5Clock();
 void mapperMMM01ROM(u16,u8);
 void mapperMMM01RAM(u16,u8);
+void mapperGGROM(u16,u8);
+void mapperGS3ROM(u16,u8);
 //extern void (*mapper)(u16,u8);
 //extern void (*mapperRAM)(u16,u8);
 //extern u8 (*mapperReadRAM)(u16);
@@ -192,6 +199,7 @@ extern void memoryUpdateMapHuC1();
 extern void memoryUpdateMapHuC3();
 extern void memoryUpdateMapTAMA5();
 extern void memoryUpdateMapMMM01();
+extern void memoryUpdateMapGS3();
 
 
 

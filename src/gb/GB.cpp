@@ -133,6 +133,7 @@ int gbRemainingClockTicks = 0;
 int gbOldClockTicks = 0;
 int gbIntBreak = 0;
 int gbInterruptLaunched = 0;
+u8 gbCheatingDevice = 0; // 1 = GS, 2 = GG
 // breakpoint
 bool breakpoint = false;
 // interrupt
@@ -725,10 +726,10 @@ void  gbWriteMemory(register u16 address, register u8 value)
     }
 
 #endif
-
     if(mapper)
       (*mapper)(address, value);
     return;
+
   }
 
   if(address < 0xa000) {
@@ -737,9 +738,9 @@ void  gbWriteMemory(register u16 address, register u8 value)
     if ((gbLcdModeDelayed !=3) ||
     // This part is used to emulate a small difference between hardwares
     // (check 8-in-1's arrow on GBA/GBC to verify it)
-        ((register_LY == 0) && ((gbHardware & 0xa) && (gbScreenOn==false) &&
-        (register_LCDC & 0x80)) &&
-        (gbLcdLYIncrementTicksDelayed ==(GBLY_INCREMENT_CLOCK_TICKS-GBLCD_MODE_2_CLOCK_TICKS))))
+       ((register_LY == 0) && ((gbHardware & 0xa) && (gbScreenOn==false) &&
+       (register_LCDC & 0x80)) &&
+       (gbLcdLYIncrementTicksDelayed ==(GBLY_INCREMENT_CLOCK_TICKS-GBLCD_MODE_2_CLOCK_TICKS))))
       gbMemoryMap[address>>12][address&0x0fff] = value;
     return;
   }
@@ -771,16 +772,23 @@ void  gbWriteMemory(register u16 address, register u8 value)
   }
 
   // OAM not accessible during mode 2 & 3.
-  if((address < 0xfea0) &&
-     (((gbHardware & 0xa) && ((gbLcdMode | gbLcdModeDelayed) &2)) ||
-     ((gbHardware & 5) && (((gbLcdModeDelayed == 2) &&
-      (gbLcdTicksDelayed<=GBLCD_MODE_2_CLOCK_TICKS)) ||
-      (gbLcdModeDelayed == 3))))) {
-    return;
+  if(address < 0xfea0)
+  {
+      if (((gbHardware & 0xa) && ((gbLcdMode | gbLcdModeDelayed) &2)) ||
+          ((gbHardware & 5) && (((gbLcdModeDelayed == 2) &&
+          (gbLcdTicksDelayed<=GBLCD_MODE_2_CLOCK_TICKS)) ||
+          (gbLcdModeDelayed == 3))))
+      return;
+    else
+    {
+      gbMemory[address] = value;
+      return;
+    }
   }
 
 
-  if(address < 0xff00){
+
+  if((address > 0xfea0) && (address < 0xff00)){ // GBC allows reading/writing to that area
     gbMemory[address] = value;
     return;
   }   
@@ -1711,6 +1719,19 @@ u8 gbReadOpcode(register u16 address)
       return 0xff;
     break;
   }
+
+  if ((address >= 0xfea0) && (address < 0xff00))
+  {
+    if (gbHardware & 1)
+      return ((((address + ((address >> 4) - 0xfea)) >> 2) & 1) ? 0x00 : 0xff );
+    else if (gbHardware & 2)
+      return gbMemoryMap[address>>12][address & 0x0fff];
+    else if (gbHardware & 4)
+      return ((((address + ((address >> 4) - 0xfea)) >> 2) & 1) ? 0xff : 0x00 );
+    else if (gbHardware & 8)
+      return ((address & 0xf0) |((address & 0xf0)>>4));
+  }
+
   return gbMemoryMap[address>>12][address & 0x0fff];
 }
 
@@ -1957,11 +1978,24 @@ u8 gbReadMemory(register u16 address)
       (gbSpeed && (gbHardware & 0x2) && (gbLcdModeDelayed == 0) && (gbLcdTicksDelayed == (GBLCD_MODE_0_CLOCK_TICKS-gbSpritesTicks[299])))))
   return 0xff;
 
+  if ((address >= 0xfea0) && (address < 0xff00))
+  {
+    if (gbHardware & 1)
+      return ((((address + ((address >> 4) - 0xfea)) >> 2) & 1) ? 0x00 : 0xff );
+    else if (gbHardware & 2)
+      return gbMemoryMap[address>>12][address & 0x0fff];
+    else if (gbHardware & 4)
+      return ((((address + ((address >> 4) - 0xfea)) >> 2) & 1) ? 0xff : 0x00 );
+    else if (gbHardware & 8)
+      return ((address & 0xf0) |((address & 0xf0)>>4));
+  }
+
   return gbMemoryMap[address>>12][address & 0x0fff];
 }
 
 void gbVblank_interrupt()
 {
+  gbCheatWrite(false); // Emulates GS codes.
   gbMemory[0xff0f] = register_IF &= 0xfe;
   gbWriteMemory(--SP.W, PC.B.B1);
   gbWriteMemory(--SP.W, PC.B.B0);
@@ -2171,7 +2205,7 @@ void gbReset()
   // Karamuchou ha Oosawagi!.
   if (gbMemory != NULL)
   {
-    memset(gbMemory,0, 65536);
+    memset(gbMemory,0xff, 65536);
     for (int temp = 0xC000; temp < 0xE000; temp++)
       if ((temp & 0x8) ^((temp & 0x800)>>8))
       {
@@ -2617,6 +2651,7 @@ void gbReset()
     gbMemoryMap[0x00] = &gbRom[0x0000];
     inBios = false;
   }
+
   gbMemoryMap[0x01] = &gbRom[0x1000];
   gbMemoryMap[0x02] = &gbRom[0x2000];
   gbMemoryMap[0x03] = &gbRom[0x3000];
@@ -2641,7 +2676,7 @@ void gbReset()
     gbMemoryMap[0x0c] = &gbMemory[0xc000];
     gbMemoryMap[0x0d] = &gbMemory[0xd000];
     gbMemoryMap[0x0e] = &gbMemory[0xe000];
-    gbMemoryMap[0x0f] = &gbMemory[0xf000];    
+    gbMemoryMap[0x0f] = &gbMemory[0xf000]; 
   }
 
   if(gbRam) {
@@ -2658,6 +2693,8 @@ void gbReset()
 
   gbScreenOn = true;
   gbSystemMessage = false;
+
+  gbCheatWrite(true); // Emulates GS codes.
 
 }
 
@@ -3596,9 +3633,6 @@ static bool gbReadSaveState(gzFile gzFile)
     }
   }
 
-  int oldgbCgbMode = gbCgbMode;
-  int oldgbSgbMode = gbSgbMode;
-
   gbReset();
 
   inBios = ib;
@@ -3607,29 +3641,28 @@ static bool gbReadSaveState(gzFile gzFile)
 
 
   // Correct crash when loading color gameboy save in regular gameboy type.
-  if (oldgbCgbMode != gbCgbMode)
+  if (!gbCgbMode)
   {
-    if (!gbCgbMode)
-    {
-      if(gbVram != NULL) {
-        free(gbVram);
-        gbVram = NULL;
-      }
-      if(gbWram != NULL) {
-        free(gbWram);
-        gbWram = NULL;
-      }
+    if(gbVram != NULL) {
+      free(gbVram);
+      gbVram = NULL;
     }
-    else
-    {
-      if(gbVram == NULL)
-        gbVram = (u8 *)malloc(0x4000);
-      if(gbWram == NULL)
-        gbWram = (u8 *)malloc(0x8000);
-      memset(gbVram,0,0x4000);
-      memset(gbPalette,0, 2*128);
+    if(gbWram != NULL) {
+      free(gbWram);
+      gbWram = NULL;
     }
   }
+  else
+  {
+    if(gbVram == NULL)
+      gbVram = (u8 *)malloc(0x4000);
+    if(gbWram == NULL)
+      gbWram = (u8 *)malloc(0x8000);
+    memset(gbVram,0,0x4000);
+    memset(gbPalette,0, 2*128);
+  }
+
+
 
   if(version >= GBSAVE_GAME_VERSION_7) {
     utilGzRead(gzFile, &IFF, 2);
@@ -3773,6 +3806,10 @@ static bool gbReadSaveState(gzFile gzFile)
   case 0x22:
     // MBC 7
     memoryUpdateMapMBC7();
+    break;
+  case 0x56:
+    // GS3
+    memoryUpdateMapGS3();
     break;
   case 0xfd:
     // TAMA5
@@ -4027,6 +4064,8 @@ bool gbUpdateSizes()
 
   if(gbRomSize < gbRomSizes[gbRom[0x148]]) {
     gbRom = (u8 *)realloc(gbRom, gbRomSizes[gbRom[0x148]]);
+    for (int i = gbRomSize; i<gbRomSizes[gbRom[0x148]]; i++)
+        gbRom[i] = 0x00; // Not sure if it's 0x00, 0xff or random data...
   }
   // (it's in the case a cart is 'lying' on its size.
   else if ((gbRomSize>gbRomSizes[gbRom[0x148]]) && (genericflashcardEnable))
@@ -4059,6 +4098,19 @@ bool gbUpdateSizes()
   u8 ramsize = genericflashcardEnable ? 5 : gbRom[0x149];
   gbRom[0x149] = ramsize;
 
+  if ((gbRom[2] == 0x6D) && (gbRom[5] == 0x47) && (gbRom[6] == 0x65) && (gbRom[7] == 0x6E) &&
+      (gbRom[8] == 0x69) && (gbRom[9] == 0x65) && (gbRom[0xA] == 0x28) && (gbRom[0xB] == 0x54))
+  {
+    gbCheatingDevice = 1; // GameGenie
+    for (int i = 0; i < 0x20; i++) // Cleans GG hardware registers
+      gbRom[0x4000+i] = 0;
+  }
+  else if (((gbRom[0x104] == 0x44) && (gbRom[0x156] == 0xEA) && (gbRom[0x158] == 0x7F) &&
+            (gbRom[0x159] == 0xEA) && (gbRom[0x15B] == 0x7F)) || ((gbRom[0x165] == 0x3E) &&
+            (gbRom[0x166] == 0xD9) && (gbRom[0x16D] == 0xE1) && (gbRom[0x16E] == 0x7F)))
+    gbCheatingDevice = 2; // GameShark
+  else gbCheatingDevice = 0;
+
   if(ramsize > 5) {
     systemMessage(MSG_UNSUPPORTED_RAM_SIZE,
                   N_("Unsupported ram size %02x"), gbRom[0x149]);
@@ -4089,6 +4141,10 @@ bool gbUpdateSizes()
       gbRomType = 0x1a;*/
       gbRomType = 0x1b;
   }
+  else if (gbCheatingDevice == 1)
+    gbRomType = 0x55;
+  else  if (gbCheatingDevice == 2)
+    gbRomType = 0x56;
 
   gbRom[0x147] = gbRomType;
 
@@ -4100,7 +4156,7 @@ bool gbUpdateSizes()
   case 0x02:
   case 0x03:
   case 0x08:
-      case 0x09:
+  case 0x09:
     // MBC 1
     mapper = mapperMBC1ROM;
     mapperRAM = mapperMBC1RAM;
@@ -4153,6 +4209,14 @@ bool gbUpdateSizes()
     mapper = mapperMBC7ROM;
     mapperRAM = mapperMBC7RAM;
     mapperReadRAM = mapperMBC7ReadRAM;
+    break;
+    // GG (GameGenie)
+  case 0x55:
+    mapper = mapperGGROM;
+    break;
+  case 0x56:
+    // GS (GameShark)
+    mapper = mapperGS3ROM;
     break;
   case 0xfd:
     // TAMA5

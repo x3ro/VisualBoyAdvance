@@ -1531,7 +1531,7 @@ void memoryUpdateMapTAMA5()
   }
 }
 
-
+// MMM01 Used in Momotarou collection (however the rom is corrupted)
 mapperMMM01 gbDataMMM01 ={
   0, // RAM enable
   1, // ROM bank
@@ -1542,7 +1542,7 @@ mapperMMM01 gbDataMMM01 ={
   0  // Rom Bank 0 remapping
 };
 
-// MBC1 ROM write registers
+// MMM01 ROM write registers
 void mapperMMM01ROM(u16 address, u8 value)
 {
   int tmpAddress = 0;
@@ -1613,7 +1613,7 @@ void mapperMMM01ROM(u16 address, u8 value)
   }
 }
 
-// MBC1 RAM write
+// MMM01 RAM write
 void mapperMMM01RAM(u16 address, u8 value)
 {
   if(gbDataMMM01.mapperRAMEnable) {
@@ -1651,4 +1651,67 @@ void memoryUpdateMapMMM01()
     gbMemoryMap[0x0a] = &gbRam[gbDataMMM01.mapperRAMAddress];
     gbMemoryMap[0x0b] = &gbRam[gbDataMMM01.mapperRAMAddress + 0x1000];
   }
+}
+
+// GameGenie ROM write registers
+void mapperGGROM(u16 address, u8 value)
+{
+  int tmpAddress = 0;
+
+  switch(address & 0x6000) {
+  case 0x0000: // RAM enable register
+    break;
+  case 0x2000: // GameGenie has only a half bank
+    break;
+  case 0x4000: // GameGenie has no RAM
+      if ((address >=0x4001) && (address <= 0x4020)) // GG Hardware Registers
+        gbMemoryMap[address >> 12][address & 0x0fff] = value;
+    break;
+  case 0x6000: // GameGenie has only a half bank
+    break;
+  }
+}
+
+
+// GS3 Used to emulate the GS V3.0 rom bank switching
+mapperGS3 gbDataGS3 = { 1 }; // ROM bank
+
+void mapperGS3ROM(u16 address, u8 value)
+{
+  int tmpAddress = 0;
+
+  switch(address & 0x6000) {
+  case 0x0000: // GS has no ram
+    break;
+  case 0x2000: // GS has no 'classic' ROM bank select
+    break;
+  case 0x4000: // GS has no ram
+    break;
+  case 0x6000: // 0x6000 area is RW, and used for GS hardware registers
+
+    if (address == 0x7FE1) // This is the (half) ROM bank select register
+    {
+      if(value == gbDataGS3.mapperROMBank)
+        break;
+      tmpAddress = value << 13;
+
+      tmpAddress &= gbRomSizeMask;
+      gbDataGS3.mapperROMBank = value;
+      gbMemoryMap[0x04] = &gbRom[tmpAddress];
+      gbMemoryMap[0x05] = &gbRom[tmpAddress + 0x1000];
+    }
+    else
+      gbMemoryMap[address>>12][address & 0x0fff] = value;
+    break;
+  }
+}
+
+void memoryUpdateMapGS3()
+{
+  int tmpAddress = gbDataGS3.mapperROMBank << 13;
+
+  tmpAddress &= gbRomSizeMask;
+  // GS can only change a half ROM bank
+  gbMemoryMap[0x04] = &gbRom[tmpAddress];
+  gbMemoryMap[0x05] = &gbRom[tmpAddress + 0x1000];
 }
