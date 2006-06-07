@@ -582,6 +582,7 @@ void MainWnd::OnUpdateOptionsVideoRenderoptionsGlquads(CCmdUI* pCmdUI)
 
 void MainWnd::OnOptionsVideoRenderoptionsSelectskin() 
 {
+#ifndef NOSKINS
   LPCTSTR exts[] = {".ini" };
   CString filter = winLoadFilter(IDS_FILTER_INI);
   CString title = winResLoadString(IDS_SELECT_SKIN_FILE);
@@ -615,6 +616,9 @@ void MainWnd::OnOptionsVideoRenderoptionsSelectskin()
 
   theApp.winUpdateSkin();
   theApp.winAccelMgr.UpdateMenu(theApp.menu);
+#else
+	systemMessage( 0, _T("This build of VBA does not support skins!") );
+#endif
 }
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsSelectskin(CCmdUI* pCmdUI) 
@@ -625,9 +629,13 @@ void MainWnd::OnUpdateOptionsVideoRenderoptionsSelectskin(CCmdUI* pCmdUI)
 
 void MainWnd::OnOptionsVideoRenderoptionsSkin() 
 {
+#ifndef NOSKINS
   theApp.skinEnabled = !theApp.skinEnabled;
   theApp.updateRenderMethod(true);
   theApp.winAccelMgr.UpdateMenu(theApp.menu);
+#else
+	systemMessage( 0, _T("This build of VBA does not support skins!") );
+#endif
 }
 
 void MainWnd::OnUpdateOptionsVideoRenderoptionsSkin(CCmdUI* pCmdUI) 
