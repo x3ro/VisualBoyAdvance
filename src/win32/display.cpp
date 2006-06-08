@@ -78,12 +78,14 @@ gbaLoopEnd:
 #else // #ifdef ASM
 
 	// optimized C version
+	register unsigned int lineSize;
+	register unsigned char *src, *dst;
 	switch(colorDepth)
 	{
 	case 16:
-		register unsigned int lineSize = width<<1;
-		register unsigned char *src = ((unsigned char*)source) + lineSize + 4;
-		register unsigned char *dst = (unsigned char*)destination;
+		lineSize = width<<1;
+		src = ((unsigned char*)source) + lineSize + 4;
+		dst = (unsigned char*)destination;
 		do {
 			MoveMemory( dst, src, lineSize );
 				src+=lineSize;
@@ -93,9 +95,9 @@ gbaLoopEnd:
 		} while ( --height);
 		break;
 	case 32:
-		register unsigned int lineSize = width<<2;
-		register unsigned char *src = ((unsigned char*)source) + lineSize + 4;
-		register unsigned char *dst = (unsigned char*)destination;
+		lineSize = width<<2;
+		src = ((unsigned char*)source) + lineSize + 4;
+		dst = (unsigned char*)destination;
 		do {
 			MoveMemory( dst, src, lineSize );
 				src+=lineSize;
