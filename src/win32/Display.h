@@ -34,12 +34,12 @@ class IDisplay {
   virtual bool initialize() = 0;
   virtual void cleanup() = 0;
   virtual void render() = 0;
-  virtual void checkFullScreen() { };
-  virtual void renderMenu() { };
+  virtual void checkFullScreen() {};
+  virtual void renderMenu() {};
   virtual void clear()=0;
   virtual bool changeRenderSize(int w, int h) { return true; };
   virtual void resize(int w, int h) {};
-  virtual void setOption(const char *option, int value) = 0;
+  virtual void setOption(const char *option, int value) {};
   virtual DISPLAY_TYPE getType() = 0;
   virtual bool isSkinSupported() { return false; }
   virtual int selectFullScreenMode(GUID **) = 0;

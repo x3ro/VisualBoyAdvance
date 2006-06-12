@@ -108,7 +108,7 @@ gbaLoopEnd:
 		break;
 	}
 
-	// very compatible C version
+	// very compatible but slow C version
 	//unsigned int nBytesPerPixel = colorDepth>>3;
 	//unsigned int i, x, y, srcPitch = (width+1) * nBytesPerPixel;
 	//unsigned char * src = ((unsigned char*)source)+srcPitch;
