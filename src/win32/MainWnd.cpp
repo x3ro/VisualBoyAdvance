@@ -991,36 +991,63 @@ void MainWnd::OnSystemMinimize()
   ShowWindow(SW_SHOWMINIMIZED);
 }
 
-bool MainWnd::fileOpenSelect()
+
+bool MainWnd::fileOpenSelect( bool gb )
 {
-  theApp.dir = "";
-  CString initialDir = regQueryStringValue("romdir",".");
-  if(!initialDir.IsEmpty())
-    theApp.dir = initialDir;
+	theApp.dir = _T("");
+	CString initialDir;
+	if( gb ) {
+		initialDir = regQueryStringValue( _T("gbromdir"), _T(".") );
+	} else {
+		initialDir = regQueryStringValue( _T("romdir"), _T(".") );
+	}
+	
+	if( !initialDir.IsEmpty() ) {
+		theApp.dir = initialDir;
+	}
 
-  int selectedFilter = regQueryDwordValue("selectedFilter", 0);
-  if(selectedFilter < 0 || selectedFilter > 2)
-    selectedFilter = 0;
+	int selectedFilter = 0;
+	if( !gb ) {
+		selectedFilter = regQueryDwordValue( _T("selectedFilter"), 0);
+		if( (selectedFilter < 0) || (selectedFilter > 2) ) {
+			selectedFilter = 0;
+		}
+	}
+	
+	theApp.szFile = _T("");
+	
+	LPCTSTR exts[] = { _T(""), _T(""), _T(""), _T("") };
+	CString filter;
+	CString title;
+	if( gb ) {
+		filter = winLoadFilter( IDS_FILTER_GBROM );
+		title = winResLoadString( IDS_SELECT_ROM );
+	} else {
+		filter = winLoadFilter( IDS_FILTER_ROM );
+		title = winResLoadString( IDS_SELECT_ROM );
+	}
 
-  theApp.szFile = "";
+	FileDlg dlg( this, _T(""), filter, selectedFilter, _T(""), exts, theApp.dir, title, false);
 
-  LPCTSTR exts[] = { "", "", "" };
-  CString filter = winLoadFilter(IDS_FILTER_ROM);
-  CString title = winResLoadString(IDS_SELECT_ROM);
-
-  FileDlg dlg(this, "", filter, selectedFilter, "", exts, theApp.dir, title, false);
-
-  if(dlg.DoModal() == IDOK) {
-    regSetDwordValue("selectedFilter", dlg.m_ofn.nFilterIndex);
-    theApp.szFile = dlg.GetPathName();
-    theApp.dir = theApp.szFile.Left(dlg.m_ofn.nFileOffset);
-    if(theApp.dir.GetLength() > 3 && theApp.dir[theApp.dir.GetLength()-1] == '\\')
-      theApp.dir = theApp.dir.Left(theApp.dir.GetLength()-1);
-    regSetStringValue("romdir", theApp.dir);
-    return true;
-  }
-  return false;
+	if( dlg.DoModal() == IDOK ) {
+		if( !gb ) {
+			regSetDwordValue( _T("selectedFilter"), dlg.m_ofn.nFilterIndex );
+		}
+		theApp.szFile = dlg.GetPathName();
+		theApp.dir = theApp.szFile.Left( dlg.m_ofn.nFileOffset );
+		if( (theApp.dir.GetLength() > 3) && (theApp.dir[theApp.dir.GetLength()-1] == _T('\\')) ) {
+			theApp.dir = theApp.dir.Left( theApp.dir.GetLength() - 1 );
+		}
+		if( gb ) {
+			regSetStringValue( _T("gbromdir"), theApp.dir );
+		} else {
+			regSetStringValue( _T("romdir"), theApp.dir );
+		}
+		return true;
+	}
+	return false;
 }
+
 
 void MainWnd::OnPaint() 
 {

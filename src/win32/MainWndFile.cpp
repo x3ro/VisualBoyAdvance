@@ -39,13 +39,15 @@ extern int emulating;
 extern void remoteCleanUp();
 extern void InterframeCleanup();
 
+
 void MainWnd::OnFileOpen() 
 {
-  theApp.winCheckFullscreen();
-  if(fileOpenSelect()) {
-    FileRun();
-  }
+	theApp.winCheckFullscreen();
+	if( fileOpenSelect( false ) ) {
+		FileRun();
+	}
 }
+
 
 void MainWnd::OnFilePause() 
 {
@@ -159,31 +161,15 @@ void MainWnd::OnUpdateFileClose(CCmdUI* pCmdUI)
   pCmdUI->Enable(emulating);
 }
 
+
 void MainWnd::OnFileOpengameboy() 
 {
-  theApp.winCheckFullscreen();
-  theApp.dir = "";
-  CString initialDir = regQueryStringValue("gbromdir",".");
-  if(!initialDir.IsEmpty())
-    theApp.dir = initialDir;
-
-  theApp.szFile = "";
-
-  LPCTSTR exts[] = { "", "", "", "" };
-  CString filter = winLoadFilter(IDS_FILTER_GBROM);
-  CString title = winResLoadString(IDS_SELECT_ROM);
-
-  FileDlg dlg(this, "", filter, 0, "", exts, initialDir, title, false);
-
-  if(dlg.DoModal() == IDOK) {
-    theApp.szFile = dlg.GetPathName();
-    theApp.dir = theApp.szFile.Left(dlg.m_ofn.nFileOffset);
-    if(theApp.dir.GetLength() > 3 && theApp.dir[theApp.dir.GetLength()-1] == '\\')
-      theApp.dir = theApp.dir.Left(theApp.dir.GetLength()-1);
-    regSetStringValue("gbromdir", theApp.dir);
-    FileRun();
-  }
+	theApp.winCheckFullscreen();
+	if( fileOpenSelect( true ) ) {
+		FileRun();
+	}
 }
+
 
 void MainWnd::OnFileLoad() 
 {

@@ -55,7 +55,7 @@ class MainWnd : public CWnd
   void winMouseOn();
   void screenCapture(int captureNumber);
   HACCEL m_hAccelTable;
-  bool fileOpenSelect();
+  bool fileOpenSelect( bool gb = false );
   afx_msg LRESULT OnConfirmMode(WPARAM, LPARAM);
   afx_msg LRESULT OnMySysCommand(WPARAM, LPARAM);
   afx_msg void OnUpdateFileLoadGameSlot(CCmdUI *pCmdUI);
