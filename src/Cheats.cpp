@@ -571,6 +571,7 @@ static int getCodeLength(int num)
   case MASTER_CODE:
   case CHEATS_16_BIT_WRITE:
   case CHEATS_32_BIT_WRITE:
+  case UNKNOWN_CODE:
     return 1;
   case CBA_IF_KEYS_PRESSED:
   case CBA_SLIDE_CODE:
