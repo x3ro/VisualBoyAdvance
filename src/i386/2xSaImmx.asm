@@ -1,40 +1,38 @@
 ;/*---------------------------------------------------------------------*
 ; * The following (piece of) code, (part of) the 2xSaI engine,          *
-; * copyright (c) 1999 - 2001 by Derek Liauw Kie Fa.                    *
-; * Non-Commercial use of this software is allowed and is encouraged,   *
-; * provided that appropriate credit be given.                          *
+; * copyright (c) 2001 by Derek Liauw Kie Fa.                           *
+; * Non-Commercial use of the engine is allowed and is encouraged,      *
+; * provided that appropriate credit be given and that this copyright   *
+; * notice will not be removed under any circumstance.                  *
 ; * You may freely modify this code, but I request                      *
 ; * that any improvements to the engine be submitted to me, so          *
 ; * that I can implement these improvements in newer versions of        *
-; * the software.                                                       *
+; * the engine.                                                         *
 ; * If you need more information, have any comments or suggestions,     *
-; * you can e-mail me. My e-mail: derek-liauw@usa.net.                  *
+; * you can e-mail me. My e-mail: DerekL666@yahoo.com                   *
 ; *---------------------------------------------------------------------*/
+; modified by Spacy to compile with yasm [2006-06-20]
 
 ;----------------------
-; 2xSaI version 0.59 WIP, soon to become version 0.60
+; 2xSaI, Super2xSaI, SuperEagle .. FINAL. no versioning anymore..
 ;----------------------
 
-;%define FAR_POINTER
-
-
-
-          BITS 32
+	  BITS 32
 %ifdef __DJGPP__
           GLOBAL __2xSaILine
           GLOBAL __2xSaISuperEagleLine
-                  GLOBAL __2xSaISuper2xSaILine
+          GLOBAL __2xSaISuper2xSaILine
           GLOBAL _Init_2xSaIMMX
 %else
           GLOBAL _2xSaILine
           GLOBAL _2xSaISuperEagleLine
-                  GLOBAL _2xSaISuper2xSaILine
+          GLOBAL _2xSaISuper2xSaILine
           GLOBAL Init_2xSaIMMX
 %endif
-          SECTION .text ALIGN = 32
+	  SECTION .text ALIGN = 32
 
-%ifdef FAR_POINTER
-;EXTERN_C void _2xSaILine (uint8 *srcPtr, uint32 srcPitch, uint32 width,
+%ifdef __DJGPP__
+;EXTERN_C void __2xSaILine (uint8 *srcPtr, uint32 srcPitch, uint32 width,
 ;                        uint8 *dstPtr, uint32 dstPitch, uint16 dstSegment);
 %else
 ;EXTERN_C void _2xSaILine (uint8 *srcPtr, uint32 srcPitch, uint32 width,
@@ -48,8 +46,6 @@ width         equ 20
 dstOffset     equ 24
 dstPitch      equ 28
 dstSegment    equ 32
-
-
 
 
 colorB0   equ -2
@@ -79,18 +75,23 @@ colorA3   equ 4
 
 
 
+
+
+
+
+
 %ifdef __DJGPP__
 __2xSaISuper2xSaILine:
 %else
-_2xSaISuper2xSaILine:
+NEWSYM _2xSaISuper2xSaILine
 %endif
 ; Store some stuff
-         push ebp
-         mov ebp, esp
+	 push ebp
+	 mov ebp, esp
          pushad
 
 ; Prepare the destination
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          ; Set the selector
          mov eax, [ebp+dstSegment]
          mov fs, ax
@@ -98,11 +99,11 @@ _2xSaISuper2xSaILine:
          mov edx, [ebp+dstOffset]         ; edx points to the screen
 ; Prepare the source
          ; eax points to colorA
-         mov eax, [ebp+srcPtr]                          ;eax points to colorA
-         mov ebx, [ebp+srcPitch]                        ;ebx contains the source pitch
-         mov ecx, [ebp+width]                           ;ecx contains the number of pixels to process
+         mov eax, [ebp+srcPtr]				;eax points to colorA
+         mov ebx, [ebp+srcPitch]			;ebx contains the source pitch
+         mov ecx, [ebp+width]				;ecx contains the number of pixels to process
          ; eax now points to colorB1
-         sub eax, ebx                                           ;eax points to B1 which is the base 
+         sub eax, ebx						;eax points to B1 which is the base 
 
 ; Main Loop
 .Loop:   push ecx
@@ -111,7 +112,7 @@ _2xSaISuper2xSaILine:
          mov ecx, [ebp+deltaPtr]
 
 
-                ;load source img
+		;load source img
          movq mm0, [eax+colorB0]
          movq mm1, [eax+colorB3]
          movq mm2, [eax+ebx+color4]
@@ -124,7 +125,7 @@ _2xSaISuper2xSaILine:
          movq mm7, [eax+ebx+ebx+colorA3]
          pop eax
 
-                ;compare to delta
+		;compare to delta
          pcmpeqw mm0, [ecx+2+colorB0]
          pcmpeqw mm1, [ecx+2+colorB3]
          pcmpeqw mm2, [ecx+ebx+2+color4]
@@ -137,7 +138,7 @@ _2xSaISuper2xSaILine:
          sub ecx, ebx
 
 
-                ;compose results
+		;compose results
          pand mm0, mm1
          pand mm2, mm3
          pand mm4, mm5
@@ -147,14 +148,14 @@ _2xSaISuper2xSaILine:
          pxor mm7, mm7
          pand mm0, mm4
          movq mm6, [eax+colorB0]
-         pcmpeqw mm7, mm0                       ;did any compare give us a zero ?
+         pcmpeqw mm7, mm0			;did any compare give us a zero ?
 
          movq [ecx+2+colorB0], mm6
 
          packsswb mm7, mm7
          movd ecx, mm7
-         test ecx, ecx                          
-         jz near .SKIP_PROCESS          ;no, so we can skip
+         test ecx, ecx				
+         jz near .SKIP_PROCESS		;no, so we can skip
 
          ;End Delta
 
@@ -432,15 +433,15 @@ _2xSaISuper2xSaILine:
          pcmpgtw mm0, mm1
 
          por mm7, [Mask35]
-         por mm0, [Mask26] 
+         por mm0, [Mask26]
          movq [Mask35], mm7
          movq [Mask26], mm0
 
 .SKIP_GUESS:
 
-         ;Start the ASSEMBLY !!!        eh... compose all the results together to form the final image...
+         ;Start the ASSEMBLY !!!	eh... compose all the results together to form the final image...
 
-                 
+		 
          movq mm0, [eax+ebx+color5]
          movq mm1, [eax+ebx+ebx+color2]
          movq mm2, mm0
@@ -459,7 +460,7 @@ _2xSaISuper2xSaILine:
 
          pand mm3, mm2
          paddw mm0, mm3                ;mm0 contains the interpolated values
-                 ;---------------------------
+		 ;---------------------------
 
 
 
@@ -484,102 +485,102 @@ _2xSaISuper2xSaILine:
 %endif
 
 
-                 movq mm7, [Mask26]
-                 movq mm6, [eax+colorB2]
-                 movq mm5, [eax+ebx+ebx+color2]
-                 movq mm4, [eax+ebx+ebx+color1]
-                 pcmpeqw mm4, mm5
-                 pcmpeqw mm6, mm5
-                 pxor mm5, mm5
-                 pand mm7, mm4
-                 pcmpeqw mm6, mm5
-                 pand mm7, mm6
+		 movq mm7, [Mask26]
+		 movq mm6, [eax+colorB2]
+		 movq mm5, [eax+ebx+ebx+color2]
+		 movq mm4, [eax+ebx+ebx+color1]
+		 pcmpeqw mm4, mm5
+		 pcmpeqw mm6, mm5
+		 pxor mm5, mm5
+		 pand mm7, mm4
+		 pcmpeqw mm6, mm5
+		 pand mm7, mm6
 
 
 
-                 movq mm6, [eax+ebx+ebx+color3]
-                 movq mm5, [eax+ebx+ebx+color2]
-                 movq mm4, [eax+ebx+ebx+color1]
-                 movq mm2, [eax+ebx+color5]
-                 movq mm1, [eax+ebx+color4]
-                 movq mm3, [eax+colorB0]
+		 movq mm6, [eax+ebx+ebx+color3]
+		 movq mm5, [eax+ebx+ebx+color2]
+		 movq mm4, [eax+ebx+ebx+color1]
+		 movq mm2, [eax+ebx+color5]
+		 movq mm1, [eax+ebx+color4]
+		 movq mm3, [eax+colorB0]
 
-                 pcmpeqw mm2, mm4
-                 pcmpeqw mm6, mm5
-                 pcmpeqw mm1, mm5
-                 pcmpeqw mm3, mm5
-                 pxor mm5, mm5
-                 pcmpeqw mm2, mm5
-                 pcmpeqw mm3, mm5
-                 pand mm6, mm1
-                 pand mm2, mm3
-                 pand mm6, mm2
-                 por mm7, mm6
+		 pcmpeqw mm2, mm4
+		 pcmpeqw mm6, mm5
+		 pcmpeqw mm1, mm5
+		 pcmpeqw mm3, mm5
+		 pxor mm5, mm5
+		 pcmpeqw mm2, mm5
+		 pcmpeqw mm3, mm5
+		 pand mm6, mm1
+		 pand mm2, mm3
+		 pand mm6, mm2
+		 por mm7, mm6
 
-                 
-                 movq mm6, mm7
-                 pcmpeqw mm6, mm5
-                 pand mm7, mm0
+		 
+		 movq mm6, mm7
+		 pcmpeqw mm6, mm5
+		 pand mm7, mm0
 
-                 movq mm1, [eax+ebx+color5]
-                 pand mm6, mm1
-                 por mm7, mm6
-                 movq [final1a], mm7                    ;finished  1a
-
-
-         
-             ;--------------------------------           
-
-                 movq mm7, [Mask35]
-                 push eax
-                 add eax, ebx
-                 movq mm6, [eax+ebx+ebx+colorA2]
-                 pop eax
-                 movq mm5, [eax+ebx+color5]
-                 movq mm4, [eax+ebx+color4]
-                 pcmpeqw mm4, mm5
-                 pcmpeqw mm6, mm5
-                 pxor mm5, mm5
-                 pand mm7, mm4
-                 pcmpeqw mm6, mm5
-                 pand mm7, mm6
+		 movq mm1, [eax+ebx+color5]
+		 pand mm6, mm1
+		 por mm7, mm6
+		 movq [final1a], mm7			;finished  1a
 
 
+	 
+	     ;--------------------------------		 
 
-                 movq mm6, [eax+ebx+color6]
-                 movq mm5, [eax+ebx+color5]
-                 movq mm4, [eax+ebx+color4]
-                 movq mm2, [eax+ebx+ebx+color2]
-                 movq mm1, [eax+ebx+ebx+color1]
-                 push eax
-                 add eax, ebx
-                 movq mm3, [eax+ebx+ebx+colorA0]
-                 pop eax
-
-                 pcmpeqw mm2, mm4
-                 pcmpeqw mm6, mm5
-                 pcmpeqw mm1, mm5
-                 pcmpeqw mm3, mm5
-                 pxor mm5, mm5
-                 pcmpeqw mm2, mm5
-                 pcmpeqw mm3, mm5
-                 pand mm6, mm1
-                 pand mm2, mm3
-                 pand mm6, mm2
-                 por mm7, mm6
-
-                 
-                 movq mm6, mm7
-                 pcmpeqw mm6, mm5
-                 pand mm7, mm0
-
-                 movq mm1, [eax+ebx+ebx+color2]
-                 pand mm6, mm1
-                 por mm7, mm6
-                 movq [final2a], mm7                    ;finished  2a
+		 movq mm7, [Mask35]
+		 push eax
+		 add eax, ebx
+		 movq mm6, [eax+ebx+ebx+colorA2]
+		 pop eax
+		 movq mm5, [eax+ebx+color5]
+		 movq mm4, [eax+ebx+color4]
+		 pcmpeqw mm4, mm5
+		 pcmpeqw mm6, mm5
+		 pxor mm5, mm5
+		 pand mm7, mm4
+		 pcmpeqw mm6, mm5
+		 pand mm7, mm6
 
 
-                 ;--------------------------------------------
+
+		 movq mm6, [eax+ebx+color6]
+		 movq mm5, [eax+ebx+color5]
+		 movq mm4, [eax+ebx+color4]
+		 movq mm2, [eax+ebx+ebx+color2]
+		 movq mm1, [eax+ebx+ebx+color1]
+		 push eax
+		 add eax, ebx
+		 movq mm3, [eax+ebx+ebx+colorA0]
+		 pop eax
+
+		 pcmpeqw mm2, mm4
+		 pcmpeqw mm6, mm5
+		 pcmpeqw mm1, mm5
+		 pcmpeqw mm3, mm5
+		 pxor mm5, mm5
+		 pcmpeqw mm2, mm5
+		 pcmpeqw mm3, mm5
+		 pand mm6, mm1
+		 pand mm2, mm3
+		 pand mm6, mm2
+		 por mm7, mm6
+
+		 
+		 movq mm6, mm7
+		 pcmpeqw mm6, mm5
+		 pand mm7, mm0
+
+		 movq mm1, [eax+ebx+ebx+color2]
+		 pand mm6, mm1
+		 por mm7, mm6
+		 movq [final2a], mm7			;finished  2a
+
+
+		 ;--------------------------------------------
  
 
 %ifdef dfhsdfhsdahdsfhdsfh
@@ -600,168 +601,133 @@ _2xSaISuper2xSaILine:
                       product1b = INTERPOLATE (color5, color6);
 %endif
 
-                 push eax
-                 add eax, ebx
-                 pxor mm7, mm7
-                 movq mm0, [eax+ebx+ebx+colorA0]
-                 movq mm1, [eax+ebx+ebx+colorA1]
-                 movq mm2, [eax+ebx+ebx+colorA2]
-                 movq mm3, [eax+ebx+ebx+colorA3]
-                 pop eax
-                 movq mm4, [eax+ebx+ebx+color2]
-                 movq mm5, [eax+ebx+ebx+color3]
-                 movq mm6, [eax+ebx+color6]
+		 push eax
+		 add eax, ebx
+		 pxor mm7, mm7
+		 movq mm0, [eax+ebx+ebx+colorA0]
+		 movq mm1, [eax+ebx+ebx+colorA1]
+		 movq mm2, [eax+ebx+ebx+colorA2]
+		 movq mm3, [eax+ebx+ebx+colorA3]
+		 pop eax
+		 movq mm4, [eax+ebx+ebx+color2]
+		 movq mm5, [eax+ebx+ebx+color3]
+		 movq mm6, [eax+ebx+color6]
 
-                 pcmpeqw mm6, mm5
-                 pcmpeqw mm1, mm5
-                 pcmpeqw mm4, mm2
-                 pcmpeqw mm0, mm5
-                 pcmpeqw mm4, mm7
-                 pcmpeqw mm0, mm7
-                 pand mm0, mm4
-                 pand mm6, mm1
-                 pand mm0, mm6
+		 pcmpeqw mm6, mm5
+		 pcmpeqw mm1, mm5
+		 pcmpeqw mm4, mm2
+		 pcmpeqw mm0, mm5
+		 pcmpeqw mm4, mm7
+		 pcmpeqw mm0, mm7
+		 pand mm0, mm4
+		 pand mm6, mm1
+		 pand mm0, mm6
 
+		 movq mm4, [eax+ebx+color2]
+		 movq mm5, [eax+ebx+ebx+color5]
+		 movq mm6, [eax+ebx+ebx+color3]
 
-                 push eax
-                 add eax, ebx
-                 movq mm1, [eax+ebx+ebx+colorA1]
-                 pop eax
-                 movq mm4, [eax+ebx+ebx+color2]
-                 movq mm5, [eax+ebx+color5]
-                 movq mm6, [eax+ebx+ebx+color3]
+		 pcmpeqw mm5, mm4
+		 pcmpeqw mm2, mm4
+		 pcmpeqw mm1, mm6
+		 pcmpeqw mm3, mm4
+		 pcmpeqw mm1, mm7
+		 pcmpeqw mm3, mm7
+		 pand mm2, mm5
+		 pand mm1, mm3
+		 pand mm1, mm2
 
-                 pcmpeqw mm5, mm4
-                 pcmpeqw mm2, mm4
-                 pcmpeqw mm1, mm6
-                 pcmpeqw mm3, mm4
-                 pcmpeqw mm1, mm7
-                 pcmpeqw mm3, mm7
-                 pand mm2, mm5
-                 pand mm1, mm3
-                 pand mm1, mm2
+		 movq mm2, mm0
+		 movq mm7, [I2333Pixel]
+		 movq mm6, [I2223Pixel]
+		 movq mm5, [I23Pixel]
+		 movq mm4, [Mask35]
+		 movq mm3, [Mask26]
 
+		 por mm2, mm4
+		 pand mm4, [eax+ebx+ebx+color3]
+		 por mm2, mm3
+		 pand mm3, [eax+ebx+ebx+color2]
+		 por mm2, mm1
+		 pand mm0, mm7
+		 pand mm1, mm6
+		 pxor mm7, mm7
+		 pcmpeqw mm2, mm7
+		 por mm0, mm1
+		 por mm3, mm4
+		 pand mm2, mm5
+		 por mm0, mm3
+		 por mm0, mm2
+		 movq [final2b], mm0
 
-                 movq mm7, mm0
-                 por mm7, mm1
+		 ;-----------------------------------
+		 
 
-                 movq mm4, [Mask35]
-                 movq mm3, [Mask26]
-                 
-                 movq mm6, mm4
-                 pand mm6, mm7
-                 pxor mm4, mm6
+		 pxor mm7, mm7
+		 movq mm0, [eax+colorB0]
+		 movq mm1, [eax+colorB1]
+		 movq mm2, [eax+colorB2]
+		 movq mm3, [eax+colorB3]
+		 movq mm4, [eax+ebx+color5]
+		 movq mm5, [eax+ebx+color6]
+		 movq mm6, [eax+ebx+ebx+color3]
 
-                 movq mm6, mm3
-                 pand mm6, mm7
-                 pxor mm3, mm6
+		 pcmpeqw mm6, mm5
+		 pcmpeqw mm1, mm5
+		 pcmpeqw mm4, mm2
+		 pcmpeqw mm0, mm5
+		 pcmpeqw mm4, mm7
+		 pcmpeqw mm0, mm7
+		 pand mm0, mm4
+		 pand mm6, mm1
+		 pand mm0, mm6
 
-                 movq mm2, mm0
-                 movq mm7, [I2333Pixel]
-                 movq mm6, [I2223Pixel]
-                 movq mm5, [I23Pixel]
+		 movq mm4, [eax+ebx+color5]
+		 movq mm5, [eax+ebx+ebx+color2]
+		 movq mm6, [eax+ebx+color6]
 
+		 pcmpeqw mm5, mm4
+		 pcmpeqw mm2, mm4
+		 pcmpeqw mm1, mm6
+		 pcmpeqw mm3, mm4
+		 pcmpeqw mm1, mm7
+		 pcmpeqw mm3, mm7
+		 pand mm2, mm5
+		 pand mm1, mm3
+		 pand mm1, mm2
 
-                 por mm2, mm4
-                 pand mm4, [eax+ebx+ebx+color3]
-                 por mm2, mm3
-                 pand mm3, [eax+ebx+ebx+color2]
-                 por mm2, mm1
-                 pand mm0, mm7
-                 pand mm1, mm6
-                 pxor mm7, mm7
-                 pcmpeqw mm2, mm7
-                 por mm0, mm1
-                 por mm3, mm4
-                 pand mm2, mm5
-                 por mm0, mm3
-                 por mm0, mm2
-                 movq [final2b], mm0
+		 movq mm2, mm0
+		 movq mm7, [I5666Pixel]
+		 movq mm6, [I5556Pixel]
+		 movq mm5, [I56Pixel]
+		 movq mm4, [Mask35]
+		 movq mm3, [Mask26]
 
-                 ;-----------------------------------
-                 
+		 por mm2, mm4
+		 pand mm4, [eax+ebx+color5]
+		 por mm2, mm3
+		 pand mm3, [eax+ebx+color6]
+		 por mm2, mm1
+		 pand mm0, mm7
+		 pand mm1, mm6
+		 pxor mm7, mm7
+		 pcmpeqw mm2, mm7
+		 por mm0, mm1
+		 por mm3, mm4
+		 pand mm2, mm5
+		 por mm0, mm3
+		 por mm0, mm2
+		 movq [final1b], mm0
+		 
+	  ;---------
 
-                 pxor mm7, mm7
-                 movq mm0, [eax+colorB0]
-                 movq mm1, [eax+colorB1]
-                 movq mm2, [eax+colorB2]
-                 movq mm3, [eax+colorB3]
-                 movq mm4, [eax+ebx+color5]
-                 movq mm5, [eax+ebx+color6]
-                 movq mm6, [eax+ebx+ebx+color3]
+		 movq mm0, [final1a]
+		 movq mm4, [final2a]
+		 movq mm2, [final1b]
+		 movq mm6, [final2b]
 
-                 pcmpeqw mm6, mm5
-                 pcmpeqw mm1, mm5
-                 pcmpeqw mm4, mm2
-                 pcmpeqw mm0, mm5
-                 pcmpeqw mm4, mm7
-                 pcmpeqw mm0, mm7
-                 pand mm0, mm4
-                 pand mm6, mm1
-                 pand mm0, mm6
-
-                 movq mm1, [eax+colorB1]
-                 movq mm4, [eax+ebx+color5]
-                 movq mm5, [eax+ebx+ebx+color2]
-                 movq mm6, [eax+ebx+color6]
-
-                 pcmpeqw mm5, mm4
-                 pcmpeqw mm2, mm4
-                 pcmpeqw mm1, mm6
-                 pcmpeqw mm3, mm4
-                 pcmpeqw mm1, mm7
-                 pcmpeqw mm3, mm7
-                 pand mm2, mm5
-                 pand mm1, mm3
-                 pand mm1, mm2
-
-
-                 movq mm7, mm0
-                 por mm7, mm1
-
-                 movq mm4, [Mask35]
-                 movq mm3, [Mask26]
-                 
-                 movq mm6, mm4
-                 pand mm6, mm7
-                 pxor mm4, mm6
-
-                 movq mm6, mm3
-                 pand mm6, mm7
-                 pxor mm3, mm6
-
-                 movq mm2, mm0
-                 movq mm7, [I5666Pixel]
-                 movq mm6, [I5556Pixel]
-                 movq mm5, [I56Pixel]
-
-
-                 por mm2, mm4
-                 pand mm4, [eax+ebx+color5]
-                 por mm2, mm3
-                 pand mm3, [eax+ebx+color6]
-                 por mm2, mm1
-                 pand mm0, mm7
-                 pand mm1, mm6
-                 pxor mm7, mm7
-                 pcmpeqw mm2, mm7
-                 por mm0, mm1
-                 por mm3, mm4
-                 pand mm2, mm5
-                 por mm0, mm3
-                 por mm0, mm2
-                 movq [final1b], mm0
-                 
-          ;---------
-
-                 movq mm0, [final1a]
-                 movq mm4, [final2a]
-                 movq mm2, [final1b]
-                 movq mm6, [final2b]
-
-
-                 movq mm1, mm0
-                 movq mm5, mm4
+		 movq mm1, mm0
+		 movq mm5, mm4
 
 
          punpcklwd mm0, mm2
@@ -780,12 +746,12 @@ _2xSaISuper2xSaILine:
          movq [fs:edx+8], mm5
          pop edx
 %else
-         movq [edx], mm0
-         movq [edx+8], mm1
+         movq [es:edx], mm0
+         movq [es:edx+8], mm1
          push edx
          add edx, [ebp+dstPitch]
-         movq [edx], mm4
-         movq [edx+8], mm5
+         movq [es:edx], mm4
+         movq [es:edx+8], mm5
          pop edx
 %endif
 .SKIP_PROCESS:
@@ -818,18 +784,22 @@ _2xSaISuper2xSaILine:
 
 
 
+
+
+
+
 %ifdef __DJGPP__
 __2xSaISuperEagleLine:
 %else
-_2xSaISuperEagleLine:
+NEWSYM _2xSaISuperEagleLine
 %endif
 ; Store some stuff
-         push ebp
-         mov ebp, esp
+	 push ebp
+	 mov ebp, esp
          pushad
 
 ; Prepare the destination
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          ; Set the selector
          mov eax, [ebp+dstSegment]
          mov fs, ax
@@ -1217,9 +1187,9 @@ _2xSaISuperEagleLine:
          pcmpgtw mm0, mm1
 
          por mm7, [Mask35]
-         por mm0, [Mask26]
+         por mm1, [Mask26]
          movq [Mask35], mm7
-         movq [Mask26], mm0
+         movq [Mask26], mm1
 
 .SKIP_GUESS:
          ;Start the ASSEMBLY !!!
@@ -1331,7 +1301,7 @@ _2xSaISuperEagleLine:
 
 
 
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          movq [fs:edx], mm0
          movq [fs:edx+8], mm1
          push edx
@@ -1340,12 +1310,12 @@ _2xSaISuperEagleLine:
          movq [fs:edx+8], mm5
          pop edx
 %else
-         movq [edx], mm0
-         movq [edx+8], mm1
+         movq [es:edx], mm0
+         movq [es:edx+8], mm1
          push edx
          add edx, [ebp+dstPitch]
-         movq [edx], mm4
-         movq [edx+8], mm5
+         movq [es:edx], mm4
+         movq [es:edx+8], mm5
          pop edx
 %endif
 .SKIP_PROCESS:
@@ -1377,7 +1347,7 @@ _2xSaISuperEagleLine:
 ;-------------------------------------------------------------------------
 
 
-;This is version 0.50
+;This is 2xSaI
 colorI   equ -2
 colorE   equ 0
 colorF   equ 2
@@ -1401,15 +1371,15 @@ colorP   equ 4
 %ifdef __DJGPP__
 __2xSaILine:
 %else
-_2xSaILine:
+NEWSYM _2xSaILine
 %endif
 ; Store some stuff
-         push ebp
-         mov ebp, esp
+	 push ebp
+	 mov ebp, esp
          pushad
 
 ; Prepare the destination
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          ; Set the selector
          mov eax, [ebp+dstSegment]
          mov fs, ax
@@ -1599,12 +1569,12 @@ _2xSaILine:
          punpcklwd mm5, mm0
          punpckhwd mm6, mm0
 
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          movq [fs:edx], mm5
          movq [fs:edx+8], mm6
 %else
-         movq [edx], mm5
-         movq [edx+8], mm6
+         movq [es:edx], mm5
+         movq [es:edx+8], mm6
 %endif
 
 ;------------------------------------------------
@@ -1766,7 +1736,6 @@ _2xSaILine:
          movd ecx, mm7
          test ecx, ecx
          jz near .SKIP_GUESS
-
 ;---------------------------------------------
 ; Map of the pixels:                    I|E F|J
 ;                                       G|A B|K
@@ -1887,9 +1856,9 @@ _2xSaILine:
          pcmpgtw mm0, mm1
 
          por mm7, [Mask1]
-         por mm0, [Mask2]
+         por mm1, [Mask2]
          movq [Mask1], mm7
-         movq [Mask2], mm0
+         movq [Mask2], mm1
 
 .SKIP_GUESS:
          ;----------------------------
@@ -1953,12 +1922,12 @@ _2xSaILine:
          push edx
          add edx, [ebp+dstPitch]
 
-%ifdef FAR_POINTER
+%ifdef __DJGPP__
          movq [fs:edx], mm0
          movq [fs:edx+8], mm1
 %else
-         movq [edx], mm0
-         movq [edx+8], mm1
+         movq [es:edx], mm0
+         movq [es:edx+8], mm1
 %endif
          pop edx
 
@@ -1992,28 +1961,28 @@ _2xSaILine:
 %ifdef __DJGPP__
 _Init_2xSaIMMX:
 %else
-Init_2xSaIMMX:
+NEWSYM Init_2xSaIMMX
 %endif
 ; Store some stuff
-         push ebp
-         mov ebp, esp
+	 push ebp
+	 mov ebp, esp
          push edx
 
 
 ;Damn thing doesn't work
-;        mov eax,1
-;        cpuid
-;        test edx, 0x00800000     ;test bit 23
-;        jz end2 ;bit not set => no MMX detected
+;	 mov eax,1
+;	 cpuid
+;	 test edx, 0x00800000     ;test bit 23
+;	 jz end2 ;bit not set => no MMX detected
 
-         mov eax, [ebp+8]         ;PixelFormat
-         cmp eax, 555
-         jz Bits555
-         cmp eax, 565
-         jz Bits565
+	 mov eax, [ebp+8]         ;PixelFormat
+	 cmp eax, 555
+	 jz Bits555
+	 cmp eax, 565
+	 jz Bits565
 end2:
-         mov eax, 1
-         jmp end3
+	 mov eax, 1
+	 jmp end
 Bits555:
          mov edx, 0x7BDE7BDE
          mov eax, colorMask
@@ -2032,7 +2001,7 @@ Bits555:
          mov [eax], edx
          mov [eax+4], edx
          mov eax, 0
-         jmp end3
+         jmp end
 Bits565:
          mov edx, 0xF7DEF7DE
          mov eax, colorMask
@@ -2051,12 +2020,12 @@ Bits565:
          mov [eax], edx
          mov [eax+4], edx
          mov eax, 0
-         jmp end3
-end3:   
+         jmp end
+end:	
          pop edx
-         mov esp, ebp
-         pop ebp
-         ret
+	 mov esp, ebp
+	 pop ebp
+	 ret
 
 
 ;-------------------------------------------------------------------------
@@ -2067,21 +2036,17 @@ end3:
 ;-------------------------------------------------------------------------
 ;-------------------------------------------------------------------------
 
-        SECTION .data ALIGN = 32
+	SECTION .data ALIGN = 32
 ;Some constants
-colorMask     dd 0xF7DEF7DE,0xF7DEF7DE
-lowPixelMask  dd 0x08210821,0x08210821
+colorMask     dd 0xF7DEF7DE, 0xF7DEF7DE
+lowPixelMask  dd 0x08210821, 0x08210821
 
-qcolorMask    dd 0xE79CE79C,0xE79CE79C
-qlowpixelMask dd 0x18631863,0x18631863
+qcolorMask    dd 0xE79CE79C, 0xE79CE79C
+qlowpixelMask dd 0x18631863, 0x18631863
 
-darkenMask    dd 0xC718C718,0xC718C718
-GreenMask     dd 0x07E007E0,0x07E007E0
-RedBlueMask   dd 0xF81FF81F,0xF81FF81F
-
-FALSE         dd 0x00000000,0x00000000
-TRUE          dd 0xffffffff,0xffffffff
-ONE           dd 0x00010001,0x00010001
+FALSE         dd 0x00000000, 0x00000000
+TRUE          dd 0xffffffff, 0xffffffff
+ONE           dd 0x00010001, 0x00010001
 
 
         SECTION .bss ALIGN = 32
