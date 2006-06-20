@@ -60,7 +60,6 @@ private:
 	LPDIRECT3D9           pD3D;
 	LPDIRECT3DDEVICE9     pDevice;
 	D3DPRESENT_PARAMETERS dpp;
-	LPDIRECT3DSURFACE9    pBackBuffer;
 	D3DFORMAT             screenFormat;
 	int                   width;
 	int                   height;
@@ -97,7 +96,6 @@ Direct3DDisplay::Direct3DDisplay()
 	width = 0;
 	height = 0;
 	failed = false;
-	pBackBuffer = NULL;
 	pFont = NULL;
 }
 
@@ -306,14 +304,18 @@ bool Direct3DDisplay::initialize()
 #endif
 
 
-	// check for available fullscreen modes
+	theApp.updateFilter();
+	theApp.updateIFB();
+
+
+	// create device
 	ZeroMemory(&dpp, sizeof(dpp));
 	dpp.Windowed = TRUE;
 	dpp.BackBufferFormat = mode.Format;
 	dpp.BackBufferCount = theApp.tripleBuffering ? 2 : 1;
 	dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	dpp.BackBufferWidth = theApp.surfaceSizeX;
-	dpp.BackBufferHeight = theApp.surfaceSizeY;
+	dpp.BackBufferWidth = theApp.rect.right;
+	dpp.BackBufferHeight = theApp.rect.bottom;
 	dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 	dpp.PresentationInterval = theApp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 
@@ -330,9 +332,6 @@ bool Direct3DDisplay::initialize()
 	}
 
 	createFont();
-
-	theApp.updateFilter();
-	theApp.updateIFB();
 
 	if(failed) return false;
 
@@ -368,6 +367,7 @@ void Direct3DDisplay::render()
 	
 	HRESULT hr;
 	D3DLOCKED_RECT lr;
+	LPDIRECT3DSURFACE9 pBackBuffer;
 	pDevice->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer );
 	if( FAILED( hr = pBackBuffer->LockRect( &lr, NULL, D3DLOCK_DISCARD ) ) ) {
 		DXTRACE_ERR_MSGBOX( _T("Can not lock back buffer"), hr );
@@ -376,24 +376,13 @@ void Direct3DDisplay::render()
 		if( !theApp.filterFunction ) {
 			copyImage( pix, lr.pBits, theApp.sizeX, theApp.sizeY, lr.Pitch, systemColorDepth );
 		} else {
-			if( systemColorDepth == 16 ) {
-				theApp.filterFunction(pix+theApp.filterWidth*2+4,
-					theApp.filterWidth*2+4,
-					(u8*)theApp.delta,
-					(u8*)lr.pBits,
-					lr.Pitch,
-					theApp.filterWidth,
-					theApp.filterHeight);
-			}
-			if( systemColorDepth == 32 ) {
-				theApp.filterFunction(pix+theApp.filterWidth*4+4,
-					theApp.filterWidth*4+4,
-					(u8*)theApp.delta,
-					(u8*)lr.pBits,
-					lr.Pitch,
-					theApp.filterWidth,
-					theApp.filterHeight);
-			}
+			theApp.filterFunction( pix + (theApp.filterWidth * (systemColorDepth>>3)) + 4,
+				theApp.filterWidth * (systemColorDepth>>3) + 4,
+				(u8*)theApp.delta,
+				(u8*)lr.pBits,
+				lr.Pitch,
+				theApp.filterWidth,
+				theApp.filterHeight);
 		}
 		pBackBuffer->UnlockRect();
 	}
@@ -523,6 +512,8 @@ void Direct3DDisplay::setOption(const char *option, int value)
 
 bool Direct3DDisplay::resetDevice()
 {
+	if( !pDevice ) return false;
+
 	HRESULT hr;
 	destroyFont();
 	if( FAILED( hr = pDevice->Reset( &dpp ) ) ) {
