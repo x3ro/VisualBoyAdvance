@@ -205,7 +205,7 @@ void MainWnd::OnToolsDebugGdb()
       remoteSetSockets(wait.getListenSocket(), wait.getSocket());
       debugger = true;
       emulating = 1;
-      theApp.cartridgeType = 0;
+      theApp.cartridgeType = IMAGE_GBA;
       theApp.filename = "\\gnu_stub";
       rom = (u8 *)malloc(0x2000000);
       workRAM = (u8 *)calloc(1, 0x40000);

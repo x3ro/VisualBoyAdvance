@@ -253,9 +253,9 @@ BOOL MainWnd::OnFileLoadSlot(UINT nID)
 
   systemDrawScreen();
 
-  theApp.rewindCount = 0;
-  theApp.rewindCounter = 0;
-  theApp.rewindSaveNeeded = false;
+  //theApp.rewindCount = 0;
+  //theApp.rewindCounter = 0;
+  //theApp.rewindSaveNeeded = false;
 
   return res;
 }

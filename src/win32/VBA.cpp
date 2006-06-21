@@ -19,7 +19,6 @@
 // VBA.cpp : Defines the class behaviors for the application.
 //
 #include "stdafx.h"
-#include <mmsystem.h>
 
 #include "AVIWrite.h"
 #include "LangSelect.h"
@@ -130,6 +129,23 @@ void (*dbgOutput)(char *, u32) = winOutput;
 extern "C" bool cpu_mmx;
 #endif
 
+namespace Sm60FPS
+{
+  float					K_fCpuSpeed = 98.0f;
+  float					K_fTargetFps = 60.0f * K_fCpuSpeed / 100;
+  float					K_fDT = 1000.0f / K_fTargetFps;
+
+  u32					dwTimeElapse;
+  u32					dwTime0;
+  u32					dwTime1;
+  u32					nFrameCnt;
+  float					fWantFPS;
+  float					fCurFPS;
+  bool					bLastSkip;
+  int					nCurSpeed;
+  int					bSaveMoreCPU;
+};
+
 void directXMessage(const char *msg)
 {
   systemMessage(IDS_DIRECTX_7_REQUIRED,
@@ -185,7 +201,7 @@ VBA::VBA()
   display = NULL;
   menu = NULL;
   popup = NULL;
-  cartridgeType = 0;
+  cartridgeType = IMAGE_GBA;
   soundInitialized = false;
   useBiosFile = false;
   skipBiosFile = false;
@@ -363,7 +379,6 @@ VBA::~VBA()
 // The one and only VBA object
 
 VBA theApp;
-#include <afxdisp.h>
 /////////////////////////////////////////////////////////////////////////////
 // VBA initialization
 
@@ -420,12 +435,6 @@ static int parseCommandLine(char *cmdline, char **argv)
 
 BOOL VBA::InitInstance()
 {
-  AfxEnableControlContainer();
-  // Standard initialization
-  // If you are not using these features and wish to reduce the size
-  //  of your final executable, you should remove from the following
-  //  the specific initialization routines you do not need.
-
 #if _MSC_VER < 1400
 #ifdef _AFXDLL
   Enable3dControls();      // Call this when using MFC in a shared DLL
@@ -827,6 +836,9 @@ void systemDrawScreen()
     }
   }
 
+  if (Sm60FPS_CanSkipFrame())
+	  return;
+
   if(theApp.aviRecording && !theApp.painting) {
     int width = 240;
     int height = 160;
@@ -872,16 +884,15 @@ void systemDrawScreen()
     delete bmp;
   }
 
-  if(theApp.ifbFunction) {
-    if(systemColorDepth == 16)
-      theApp.ifbFunction(pix+theApp.filterWidth*2+4, theApp.filterWidth*2+4,
-                         theApp.filterWidth, theApp.filterHeight);
-    else
-      theApp.ifbFunction(pix+theApp.filterWidth*4+4, theApp.filterWidth*4+4,
-                         theApp.filterWidth, theApp.filterHeight);
+  if( theApp.ifbFunction ) {
+	  theApp.ifbFunction( pix + (theApp.filterWidth * (systemColorDepth>>3)) + 4,
+		  (theApp.filterWidth * (systemColorDepth>>3)) + 4,
+		  theApp.filterWidth, theApp.filterHeight );
   }
 
   theApp.display->render();
+
+  Sm60FPS_Sleep();
 }
 
 void systemScreenCapture(int captureNumber)
@@ -892,7 +903,7 @@ void systemScreenCapture(int captureNumber)
 
 u32 systemGetClock()
 {
-  return timeGetTime();
+  return GetTickCount();
 }
 
 void systemMessage(int number, const char *defaultMsg, ...)
@@ -949,34 +960,18 @@ void systemFrame()
 void system10Frames(int rate)
 {
   u32 time = systemGetClock();  
-  if(!theApp.wasPaused && theApp.autoFrameSkip && !theApp.throttle) {
+
+  if (theApp.autoFrameSkip)
+  {
     u32 diff = time - theApp.autoFrameSkipLastTime;
-    int speed = 100;
+	Sm60FPS::nCurSpeed = 100;
 
-    if(diff)
-      speed = (1000000/rate)/diff;
-    
-    if(speed >= 98) {
-      theApp.frameskipadjust++;
-
-      if(theApp.frameskipadjust >= 3) {
-        theApp.frameskipadjust=0;
-        if(systemFrameSkip > 0)
-          systemFrameSkip--;
-      }
-    } else {
-      if(speed  < 80)
-        theApp.frameskipadjust -= (90 - speed)/5;
-      else if(systemFrameSkip < 9)
-        theApp.frameskipadjust--;
-
-      if(theApp.frameskipadjust <= -2) {
-        theApp.frameskipadjust += 2;
-        if(systemFrameSkip < 9)
-          systemFrameSkip++;
-      }
-    }    
+    if (diff)
+		Sm60FPS::nCurSpeed = (1000000/rate)/diff;
   }
+
+
+
   if(!theApp.wasPaused && theApp.throttle) {
     if(!speedup) {
       u32 diff = time - theApp.throttleLastTime;
@@ -1091,7 +1086,7 @@ bool systemPauseOnFrame()
 
 void systemGbBorderOn()
 {
-  if(emulating && theApp.cartridgeType == 1 && gbBorderOn) {
+  if(emulating && theApp.cartridgeType == IMAGE_GB && gbBorderOn) {
     theApp.updateWindowSize(theApp.videoOption);
   }
 }
@@ -1187,7 +1182,7 @@ void VBA::loadSettings()
   
   winSetLanguageOption(languageOption, true);
   
-  frameSkip = regQueryDwordValue("frameSkip", 2);
+  frameSkip = regQueryDwordValue("frameSkip", 1);
   if(frameSkip < 0 || frameSkip > 9)
     frameSkip = 2;
 
@@ -1428,6 +1423,15 @@ void VBA::loadSettings()
   throttle = regQueryDwordValue("throttle", 0);
   if(throttle < 5 || throttle > 1000)
     throttle = 0;
+
+  if (autoFrameSkip)
+  {
+	  throttle = 0;
+	  frameSkip = 0;
+	  systemFrameSkip = 0;
+  }
+
+  Sm60FPS::bSaveMoreCPU = regQueryDwordValue("saveMoreCPU", 0);
 }
 
 void VBA::updateFrameSkip()
@@ -1589,7 +1593,7 @@ void VBA::updateWindowSize(int value)
 
   videoOption = value;
   
-  if(cartridgeType == 1) {
+  if(cartridgeType == IMAGE_GB) {
     if(gbBorderOn) {
       sizeX = 256;
       sizeY = 224;
@@ -1698,6 +1702,7 @@ bool VBA::initDisplay()
 
 bool VBA::updateRenderMethod(bool force)
 {
+	Sm60FPS_Init();
 	bool res = updateRenderMethod0(force);
 
 	while(!res && renderMethod > 0) {
@@ -2244,6 +2249,8 @@ void VBA::saveSettings()
   regSetDwordValue("cheatsEnabled", cheatsEnabled);
   regSetDwordValue("fsMaxScale", fsMaxScale);
   regSetDwordValue("throttle", throttle);
+
+  regSetDwordValue("saveMoreCPU", Sm60FPS::bSaveMoreCPU);
 }
 
 void winSignal(int, int)
@@ -2270,4 +2277,74 @@ void winOutput(char *s, u32 addr)
     }
     toolsLog(str);
   }  
+}
+
+
+void Sm60FPS_Init()
+{
+	Sm60FPS::dwTimeElapse = 0;
+	Sm60FPS::fWantFPS = 60.f;
+	Sm60FPS::fCurFPS = 0.f;
+	Sm60FPS::nFrameCnt = 0;
+	Sm60FPS::bLastSkip = false;
+	Sm60FPS::nCurSpeed = 100;
+}
+
+
+bool Sm60FPS_CanSkipFrame()
+{
+  if( theApp.autoFrameSkip ) {
+	  if( Sm60FPS::nFrameCnt == 0 ) {
+		  Sm60FPS::nFrameCnt = 0;
+		  Sm60FPS::dwTimeElapse = 0;
+		  Sm60FPS::dwTime0 = timeGetTime();
+	  } else {
+		  if( Sm60FPS::nFrameCnt >= 10 ) {
+			  Sm60FPS::nFrameCnt = 0;
+			  Sm60FPS::dwTimeElapse = 0;
+
+			  if( Sm60FPS::nCurSpeed > Sm60FPS::K_fCpuSpeed ) {
+				  Sm60FPS::fWantFPS += 1;
+				  if( Sm60FPS::fWantFPS > Sm60FPS::K_fTargetFps ){
+					  Sm60FPS::fWantFPS = Sm60FPS::K_fTargetFps;
+				  }
+			  } else {
+				  if( Sm60FPS::nCurSpeed < (Sm60FPS::K_fCpuSpeed - 5) ) {
+					  Sm60FPS::fWantFPS -= 1;
+					  if( Sm60FPS::fWantFPS < 30.f ) {
+						  Sm60FPS::fWantFPS = 30.f;
+					  }
+				  }
+			  }
+		  } else { // between frame 1-10
+			  Sm60FPS::dwTime1 = timeGetTime();
+			  Sm60FPS::dwTimeElapse += (Sm60FPS::dwTime1 - Sm60FPS::dwTime0);
+			  Sm60FPS::dwTime0 = Sm60FPS::dwTime1;
+			  if( !Sm60FPS::bLastSkip &&
+				  ( (Sm60FPS::fWantFPS < Sm60FPS::K_fTargetFps) || Sm60FPS::bSaveMoreCPU) ) {
+					  Sm60FPS::fCurFPS = (float)Sm60FPS::nFrameCnt * 1000 / Sm60FPS::dwTimeElapse;
+					  if( (Sm60FPS::fCurFPS < Sm60FPS::K_fTargetFps) || Sm60FPS::bSaveMoreCPU ) {
+						  Sm60FPS::bLastSkip = true;
+						  Sm60FPS::nFrameCnt++;
+						  return true;
+					  }
+			  }
+		  }
+	  }
+	  Sm60FPS::bLastSkip = false;
+	  Sm60FPS::nFrameCnt++;
+  }	
+  return false;
+}
+
+
+void Sm60FPS_Sleep()
+{
+	if( theApp.autoFrameSkip ) {
+		u32 dwTimePass = Sm60FPS::dwTimeElapse + (timeGetTime() - Sm60FPS::dwTime0);
+		u32 dwTimeShould = (u32)(Sm60FPS::nFrameCnt * Sm60FPS::K_fDT);
+		if( dwTimeShould > dwTimePass ) {
+			Sleep(dwTimeShould - dwTimePass);
+		}
+	}
 }

@@ -1,6 +1,7 @@
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
 // Copyright (C) 2004 Forgotten and the VBA development team
+// Copyright (C) 2005-2006 VBA development team
 
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,7 +18,8 @@
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 #include "stdafx.h"
-#include <stdio.h>
+
+#include "Display.h"
 
 #include "../System.h"
 #include "../GBA.h"
