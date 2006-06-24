@@ -101,6 +101,7 @@ static void debuggerFileDisassemble(int, char **);
 static void debuggerFileDisassembleArm(int, char **);
 static void debuggerFileDisassembleThumb(int, char **);
 static void debuggerIo(int, char **);
+static void debuggerLast(int, char **);
 static void debuggerLocals(int, char **);
 static void debuggerMemoryByte(int, char **);
 static void debuggerMemoryHalfWord(int, char **);
@@ -149,6 +150,7 @@ static DebuggerCommand debuggerCommands[] = {
   { "fdt", debuggerFileDisassembleThumb, "Disassemble THUMB instructions to file", "<file> [<address> [<number>]]" },
   { "h", debuggerHelp,        "Show this help information. Type h <command> for command help", "[<command>]" },
   { "io", debuggerIo,         "Show I/O registers status", "[video|video2|dma|timer|misc]" },
+  { "last", debuggerLast,	  "Trigger the display of the last registers states", NULL },
   { "load", debuggerReadState,	"Load a savegame", "<number>" },
   { "locals", debuggerLocals, "Show local variables", NULL },
   { "mb", debuggerMemoryByte, "Show memory contents (bytes)", "<address>" },
@@ -1049,16 +1051,15 @@ static void debuggerBreakWriteClear(int n, char **args)
     sscanf(args[1], "%x", &address);
     int n = 0;
     sscanf(args[2], "%d", &n);
-    
-    if(address < 0x2000000 || address > 0x3007fff) {
-      printf("Invalid address: %08x\n", address);
+
+	if (! ((address >= 0x02000000 && address < 0x02040000) ||
+		  (address >= 0x03000000 && address < 0x03008000) ||
+      (address >= 0x05000000 && address < 0x05000400) ||
+		  (address >= 0x06000000 && address < 0x06018000) ||
+      (address >= 0x07000000 && address < 0x07000400))) { 
+	  printf("Invalid address: %08x\n", address);
       return;
-    }
-    
-    if(address > 0x203ffff && address < 0x3000000) {
-      printf("Invalid address: %08x\n", address);
-      return;
-    }
+  }
     
     u32 final = address + n;    
     switch(address >> 24) {
@@ -1066,7 +1067,7 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeWorkRAM[i] == 1)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
@@ -1077,11 +1078,50 @@ static void debuggerBreakWriteClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeInternalRAM[i] == 1)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on write from %08x to %08x\n",
                0x3000000+address, 0x3000000+final);
+      }
+      break;
+    case 5:
+      {
+        address &= 0x3ff;
+        final &= 0x3ff;
+        for(u32 i = address; i < final; i++)
+          if(freezePRAM[i] == 1)
+            freezePRAM[i] = 0;
+        printf("Cleared break on write from %08x to %08x\n",
+               0x5000000+address, 0x5000000+final);
+      }
+      break;
+	  case 6:
+      {
+        if (address > 0x6010000) {
+          address &= 0x17fff;
+          final &= 0x17fff;
+        } else {
+          address &= 0xffff;
+          final &= 0xffff;
+        }
+
+        for (u32 i = address; i < final; i++)
+          if(freezeVRAM[i] == 1)
+            freezeVRAM[i] = 0;
+        printf("Cleared break on write from %08x to %08x\n",
+               0x06000000+address, 0x06000000+final);
+      }
+      break;
+    case 7:
+      {
+        address &= 0x3ff;
+        final &= 0x3ff;
+        for(u32 i = address; i < final; i++)
+          if(freezeOAM[i] == 1)
+            freezeOAM[i] = 0;
+        printf("Cleared break on write from %08x to %08x\n",
+               0x7000000+address, 0x7000000+final);
       }
       break;
     }
@@ -1093,6 +1133,15 @@ static void debuggerBreakWriteClear(int n, char **args)
     for(i = 0; i < 0x8000; i++)
       if(freezeInternalRAM[i] == 1)
         freezeInternalRAM[i] = 0;
+    for(i = 0; i < 0x400; i++)
+      if(freezePRAM[i] == 1)
+        freezePRAM[i] = 0;
+    for(i = 0; i< 0x18000; i++)
+      if(freezeVRAM[i] == 1)
+        freezeVRAM[i] = 0;
+    for(i = 0; i < 0x400; i++)
+      if(freezeOAM[i] == 1)
+        freezeOAM[i] = 0;
 
     printf("Cleared all break on write\n");
   } else
@@ -1111,14 +1160,13 @@ static void debuggerBreakWrite(int n, char **args)
     int n = 0;
     sscanf(args[2], "%d", &n);
     
-    if(address < 0x2000000 || address > 0x3007fff) {
-      printf("Invalid address: %08x\n", address);
-      return;
-    }
-    
-    if(address > 0x203ffff && address < 0x3000000) {
-      printf("Invalid address: %08x\n", address);
-      return;
+	  if (! ((address >= 0x02000000 && address < 0x02040000) ||
+		    (address >= 0x03000000 && address < 0x03008000) ||
+        (address >= 0x05000000 && address < 0x05000400) ||
+  		  (address >= 0x06000000 && address < 0x06018000) ||
+        (address >= 0x07000000 && address < 0x07000400))) { 
+	    printf("Invalid address: %08x\n", address);
+        return;
     }
 
     u32 final = address + n;
@@ -1129,15 +1177,43 @@ static void debuggerBreakWrite(int n, char **args)
     } else if(address < 0x3008000 && final > 0x3008000) {
       printf("Invalid byte count: %d\n", n);
       return;
+    } else if(address < 0x05000400 && final > 0x05000400) {
+      printf("Invalid byte count: %d\n", n);
+      return;
+    } else if(address < 0x06018000 && final > 0x06018000) {
+      printf("Invalid byte count: %d\n", n);
+      return;
+    } else if(address < 0x07000400 && final > 0x07000400) {
+      printf("Invalid byte count: %d\n", n);
+      return;
     }
+
     printf("Added break on write at %08x for %d bytes\n", address, n);
-    for(int i = 0; i < n; i++) {
-      if((address >> 24) == 2)
-        freezeWorkRAM[address & 0x3ffff] = 1;
-      else
-        freezeInternalRAM[address & 0x7fff] = 1;
-      address++;
+
+    switch(address >> 24) {
+      case 2:
+        for (int i = 0; i < n; i++)
+          freezeWorkRAM[(address + i) & 0x3ffff] = 1;
+        break;
+      case 3:
+        for (int i = 0; i < n; i++)
+          freezeInternalRAM[(address + i) & 0x7fff] = 1;
+        break;
+      case 5:
+        for (int i = 0; i < n; i++)
+          freezePRAM[(address + i) & 0x3ff] = 1;
+        break;
+      case 6:
+        // address/range must be valid, so we can use a lazy mask
+        for (int i = 0; i < n; i++)
+          freezeVRAM[(address + i) & 0x1ffff] = 1;
+        break;
+      case 7:
+        for (int i = 0; i < n; i++)
+          freezeOAM[(address + i) & 0x3ff] = 1;
+        break;
     }
+   
   } else
     debuggerUsage("bpw");    
 }
@@ -1150,14 +1226,13 @@ static void debuggerBreakChangeClear(int n, char **args)
     int n = 0;
     sscanf(args[2], "%d", &n);
     
-    if(address < 0x2000000 || address > 0x3007fff) {
-      printf("Invalid address: %08x\n", address);
-      return;
-    }
-    
-    if(address > 0x203ffff && address < 0x3000000) {
-      printf("Invalid address: %08x\n", address);
-      return;
+	  if (! ((address >= 0x02000000 && address < 0x02040000) ||
+		    (address >= 0x03000000 && address < 0x03008000) ||
+        (address >= 0x05000000 && address < 0x05000400) ||
+  		  (address >= 0x06000000 && address < 0x06018000) ||
+        (address >= 0x07000000 && address < 0x07000400))) { 
+	    printf("Invalid address: %08x\n", address);
+        return;
     }
     
     u32 final = address + n;    
@@ -1166,7 +1241,7 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x3ffff;
         final &= 0x3ffff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeWorkRAM[i] == 2)
             freezeWorkRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
@@ -1177,11 +1252,49 @@ static void debuggerBreakChangeClear(int n, char **args)
       {
         address &= 0x7fff;
         final &= 0x7fff;
-        for(int i = address; i < final; i++)
+        for(u32 i = address; i < final; i++)
           if(freezeInternalRAM[i] == 2)
             freezeInternalRAM[i] = 0;
         printf("Cleared break on change from %08x to %08x\n",
                0x3000000+address, 0x3000000+final);
+      }
+      break;
+    case 5:
+      {
+        address &= 0x3ff;
+        final &= 0x3ff;
+        for(u32 i = address; i < final; i++)
+          if(freezePRAM[i] == 2)
+            freezePRAM[i] = 0;
+        printf("Cleared break on change from %08x to %08x\n",
+               0x5000000+address, 0x5000000+final);
+      }
+      break;
+    case 6:
+      {
+        if (address > 0x6010000) {
+          address &= 0x17fff;
+          final &= 0x17fff;
+        } else {
+          address &= 0xffff;
+          final &= 0xffff;
+        }
+        for(u32 i = address; i < final; i++)
+          if(freezeVRAM[i] == 2)
+            freezeVRAM[i] = 0;
+        printf("Cleared break on change from %08x to %08x\n",
+               0x3000000+address, 0x3000000+final);
+      }
+      break;
+    case 7:
+      {
+        address &= 0x3ff;
+        final &= 0x3ff;
+        for(u32 i = address; i < final; i++)
+          if(freezeOAM[i] == 2)
+            freezeOAM[i] = 0;
+        printf("Cleared break on change from %08x to %08x\n",
+               0x7000000+address, 0x7000000+final);
       }
       break;
     }
@@ -1193,6 +1306,15 @@ static void debuggerBreakChangeClear(int n, char **args)
     for(i = 0; i < 0x8000; i++)
       if(freezeInternalRAM[i] == 2)
         freezeInternalRAM[i] = 0;
+    for(i = 0; i < 0x400; i++)
+      if(freezePRAM[i] == 2)
+        freezePRAM[i] = 0;
+    for(i = 0; i < 0x18000; i++)
+      if(freezeVRAM[i] == 2)
+        freezeVRAM[i] = 0;
+    for(i = 0; i < 0x400; i++)
+      if(freezeOAM[i] == 2)
+        freezeOAM[i] = 0;
     
     printf("Cleared all break on change\n");
   } else
@@ -1211,14 +1333,13 @@ static void debuggerBreakChange(int n, char **args)
     int n = 0;
     sscanf(args[2], "%d", &n);
     
-    if(address < 0x2000000 || address > 0x3007fff) {
-      printf("Invalid address: %08x\n", address);
-      return;
-    }
-    
-    if(address > 0x203ffff && address < 0x3000000) {
-      printf("Invalid address: %08x\n", address);
-      return;
+	  if (! ((address >= 0x02000000 && address < 0x02040000) ||
+		    (address >= 0x03000000 && address < 0x03008000) ||
+        (address >= 0x05000000 && address < 0x05000400) ||
+  		  (address >= 0x06000000 && address < 0x06018000) ||
+        (address >= 0x07000000 && address < 0x07000400))) { 
+	    printf("Invalid address: %08x\n", address);
+        return;
     }
 
     u32 final = address + n;
@@ -1229,15 +1350,39 @@ static void debuggerBreakChange(int n, char **args)
     } else if(address < 0x3008000 && final > 0x3008000) {
       printf("Invalid byte count: %d\n", n);
       return;
+    } else if(address < 0x6018000 && final > 0x6018000) {
+      printf("Invalid byte count: %d\n", n);
+      return;
+    } else if(address < 0x7000400 && final > 0x7000400) {
+      printf("Invalid byte count: %d\n", n);
+      return;
     }
     printf("Added break on change at %08x for %d bytes\n", address, n);
-    for(int i = 0; i < n; i++) {
-      if((address >> 24) == 2)
-        freezeWorkRAM[address & 0x3ffff] = 2;
-      else
-        freezeInternalRAM[address & 0x7fff] = 2;
-      address++;
+    
+    switch(address >> 24) {
+      case 2:
+        for (int i = 0; i < n; i++)
+          freezeWorkRAM[(address + i) & 0x3ffff] = 2;
+        break;
+      case 3:
+        for (int i = 0; i < n; i++)
+          freezeInternalRAM[(address + i) & 0x7fff] = 2;
+        break;
+      case 5:
+        for (int i = 0; i < n; i++)
+          freezePRAM[(address + i) & 0x3ff] = 2;
+        break;
+      case 6:
+        // address/range must be valid, so we can use a lazy mask
+        for (int i = 0; i < n; i++)
+          freezeVRAM[(address + i) & 0x1ffff] = 2;
+        break;
+      case 7:
+        for (int i = 0; i < n; i++)
+          freezeOAM[(address + i) & 0x3ff] = 2;
+        break;
     }
+
   } else
     debuggerUsage("bpc");
 }
@@ -1246,7 +1391,7 @@ static void debuggerDisassembleArm(FILE *f, u32 pc, int count)
 {
   char buffer[80];
   int i = 0;
-  int len = 0;
+  u32 len = 0;
   char format[30];
   for(i = 0; i < count; i++) {
     size_t l = strlen(elfGetAddressSymbol(pc+4*i));
@@ -1265,7 +1410,7 @@ static void debuggerDisassembleThumb(FILE *f, u32 pc, int count)
 {
   char buffer[80];
   int i = 0;
-  int len = 0;
+  u32 len = 0;
   char format[30];
   for(i = 0; i < count; i++) {
     size_t l = strlen(elfGetAddressSymbol(pc+2*i));
@@ -1407,6 +1552,25 @@ static void debuggerRegisters(int, char **)
 {
   char *command[3];
   char buffer[10];
+
+#ifdef BKPT_SUPPORT
+  if (debugger_last)
+  {
+    printf("R00=%08x R04=%08x R08=%08x R12=%08x\n",
+         oldreg[0], oldreg[4], oldreg[8], oldreg[12]);
+    printf("R01=%08x R05=%08x R09=%08x R13=%08x\n",
+         oldreg[1], oldreg[5], oldreg[9], oldreg[13]);
+    printf("R02=%08x R06=%08x R10=%08x R14=%08x\n",
+         oldreg[2], oldreg[6], oldreg[10], oldreg[14]);
+    printf("R03=%08x R07=%08x R11=%08x R15=%08x\n",
+         oldreg[3], oldreg[7], oldreg[11], oldreg[15]);
+    command[0]="m";
+    command[1]=oldbuffer;
+    command[2]="1";
+    debuggerDisassemble(3, command);
+    printf("\n");
+  }
+#endif
 
   printf("R00=%08x R04=%08x R08=%08x R12=%08x\n",
          reg[0].I, reg[4].I, reg[8].I, reg[12].I);
@@ -2219,4 +2383,13 @@ static bool debuggerCondEvaluate(int num)
       }
     } 
   }
+}
+
+void debuggerLast(int n, char **args)
+{
+debugger_last =!debugger_last;
+if (debugger_last == true)
+printf ("Last registers will be shown\n");
+else
+printf ("Last registers wont be shown\n");
 }

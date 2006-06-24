@@ -2826,6 +2826,15 @@ static u8 cheatsGetType(u32 address)
     return freezeWorkRAM[address & 0x3FFFF];
   case 3:
     return freezeInternalRAM[address & 0x7FFF];
+  case 5:
+    return freezePRAM[address & 0x3FC];
+  case 6:
+    if (address > 0x06010000)
+      return freezeVRAM[address & 0x17FFF];
+    else
+      return freezeVRAM[address & 0x1FFFF];
+  case 7:
+    return freezeOAM[address & 0x3FC];
   }
   return 0;
 }

@@ -21,9 +21,11 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -40,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\cximage"
+				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\sdl"
 				PreprocessorDefinitions="WIN32;WINVER=0x0500;_DEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;DEV_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE;NOSKINS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -60,13 +62,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib WSock32.Lib Vfw32.Lib dsound.lib dinput.lib dxguid.lib winmm.lib d3d9.lib d3dx9d.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_debug.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Debug;.\dependencies\libpng\Debug;.\dependencies\libjasper\Debug;.\dependencies\libjpeg\Debug;.\dependencies\libtiff\Debug;.\dependencies\cximage\Debug"
+				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="nafxcwd.lib;LIBCMTD.lib"
 				GenerateDebugInformation="true"
@@ -97,6 +100,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -105,10 +109,11 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -126,7 +131,7 @@
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="1"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\cximage"
+				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\sdl"
 				PreprocessorDefinitions="WIN32;WINVER=0x0500;NDEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;FINAL_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE;NOSKINS"
 				RuntimeLibrary="0"
 				EnableEnhancedInstructionSet="1"
@@ -145,13 +150,14 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="nafxcw.lib LIBCMT.lib WSock32.Lib Vfw32.Lib dsound.lib dinput.lib dxguid.lib winmm.lib d3d9.lib d3dx9.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\libjasper\Release;.\dependencies\libjpeg\Release;.\dependencies\libtiff\Release;.\dependencies\cximage\Release"
+				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="nafxcw.lib;LIBCMT.lib"
 				GenerateDebugInformation="true"
@@ -184,6 +190,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -192,9 +199,11 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -231,15 +240,16 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib"
+				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL_debug.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Debug;.\dependencies\libpng\Debug;.\dependencies\sdl\Debug"
+				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
-				IgnoreDefaultLibraryNames=""
+				IgnoreDefaultLibraryNames="nafxcwd.lib;LIBCMTD.lib;libcmt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -268,8 +278,9 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying SDL.dll..."
-				CommandLine="del &quot;$(OutDir)\SDL.dll&quot;&#x0D;&#x0A;copy &quot;.\dependencies\sdl\Debug\SDL.dll&quot; &quot;$(OutDir)\SDL.dll&quot;&#x0D;&#x0A;"
+				Description=""
+				CommandLine=""
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 		<Configuration
@@ -278,10 +289,11 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
-			WholeProgramOptimization="1"
+			WholeProgramOptimization="0"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -317,15 +329,16 @@
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
+				ExcludedFromBuild="true"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib"
+				AdditionalDependencies="nafxcw.lib LIBCMT.lib zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
-				IgnoreDefaultLibraryNames=""
+				IgnoreDefaultLibraryNames="nafxcw.lib;LIBCMT.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -356,8 +369,9 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying SDL.dll..."
-				CommandLine="del &quot;$(OutDir)\SDL.dll&quot;&#x0D;&#x0A;copy &quot;.\dependencies\sdl\Release\SDL.dll&quot; &quot;$(OutDir)\SDL.dll&quot;&#x0D;&#x0A;"
+				Description=""
+				CommandLine=""
+				ExcludedFromBuild="true"
 			/>
 		</Configuration>
 	</Configurations>

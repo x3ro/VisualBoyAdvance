@@ -17,6 +17,17 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+// The following define updates oldreg when debugger_last is activated
+
+#define UPDATE_OLD_REG \
+		   if (debugger_last) { \
+			   sprintf(oldbuffer,"%08x", armState ? reg[15].I - 4 : reg[15].I - 4); \
+			   for (xxx=0; xxx<18; xxx++){ \
+				   oldreg[xxx]=reg[xxx].I; \
+			   } \
+		   } 
+
+
 #ifdef C_CORE
 #define NEG(i) ((i) >> 31)
 #define POS(i) ((~(i)) >> 31)
@@ -763,6 +774,11 @@
 #endif
 #endif
 
+
+#ifdef BKPT_SUPPORT
+u8 xxx;
+#endif
+
 u32 opcode = cpuPrefetch[0];
 cpuPrefetch[0] = cpuPrefetch[1];
 
@@ -1343,6 +1359,10 @@ case 0x28:
        // MOV Hd, Rs
        reg[dest+8].I = reg[base].I;
        if(dest == 7) {
+#ifdef BKPT_SUPPORT
+	     UPDATE_OLD_REG
+#endif
+
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
@@ -1355,6 +1375,11 @@ case 0x28:
        // MOV Hd, Hs
        reg[dest+8].I = reg[base+8].I;
        if(dest == 7) {
+
+#ifdef BKPT_SUPPORT
+	     UPDATE_OLD_REG
+#endif
+
          reg[15].I &= 0xFFFFFFFE;
          armNextPC = reg[15].I;
          reg[15].I += 2;
@@ -1373,6 +1398,9 @@ case 0x28:
      switch((opcode >>6) & 3) {
      case 0:
        // BX Rs
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
        reg[15].I = (reg[base].I) & 0xFFFFFFFE;
        if(reg[base].I & 1) {
          armState = false;
@@ -1393,6 +1421,11 @@ case 0x28:
        break;
      case 1:
        // BX Hs
+
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
+
        reg[15].I = (reg[8+base].I) & 0xFFFFFFFE;
        if(reg[8+base].I & 1) {
          armState = false;
@@ -1908,6 +1941,9 @@ case 0x28:
    break;
  case 0xd0:
    // BEQ offset
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
    if(Z_FLAG) {
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;
      armNextPC = reg[15].I;
@@ -1921,6 +1957,9 @@ case 0x28:
  case 0xd1:
    // BNE offset
    if(!Z_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1933,6 +1972,9 @@ case 0x28:
  case 0xd2:
    // BCS offset
    if(C_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1945,6 +1987,9 @@ case 0x28:
  case 0xd3:
    // BCC offset
    if(!C_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1957,6 +2002,9 @@ case 0x28:
  case 0xd4:
    // BMI offset
    if(N_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1969,6 +2017,9 @@ case 0x28:
  case 0xd5:
    // BPL offset
    if(!N_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1981,6 +2032,9 @@ case 0x28:
  case 0xd6:
    // BVS offset
    if(V_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -1993,6 +2047,9 @@ case 0x28:
  case 0xd7:
    // BVC offset
    if(!V_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2005,6 +2062,9 @@ case 0x28:
  case 0xd8:
    // BHI offset
    if(C_FLAG && !Z_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2017,6 +2077,9 @@ case 0x28:
  case 0xd9:
    // BLS offset
    if(!C_FLAG || Z_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2029,6 +2092,9 @@ case 0x28:
  case 0xda:
    // BGE offset
    if(N_FLAG == V_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2041,6 +2107,9 @@ case 0x28:
  case 0xdb:
    // BLT offset
    if(N_FLAG != V_FLAG) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2053,6 +2122,9 @@ case 0x28:
  case 0xdc:
    // BGT offset
    if(!Z_FLAG && (N_FLAG == V_FLAG)) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
@@ -2065,6 +2137,9 @@ case 0x28:
  case 0xdd:
    // BLE offset
    if(Z_FLAG || (N_FLAG != V_FLAG)) {
+#ifdef BKPT_SUPPORT
+		 UPDATE_OLD_REG
+#endif
      reg[15].I += ((s8)(opcode & 0xFF)) << 1;       
      armNextPC = reg[15].I;
      reg[15].I += 2;
