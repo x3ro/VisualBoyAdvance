@@ -65,22 +65,32 @@ The binaries are called this way:
 2. Windows
 ----------
 
-2.1 Visual C++ 2005
-----------------------
+2.1 Visual C++ 2005 Express Edition
+-----------------------------------
+
+If you want to use the free express edition of Visual C++ 2005,
+you have to do the following steps prior to the normal setup procedure of Visual C++/Studio 2005:
+!!! You will not be able to build the MFC (GUI) version of VBA, only the SDL build will succeed !!!
+- First download and install VC++ 2005 Express from http://msdn.microsoft.com/vstudio/express/visualC/default.aspx
+- Now follow the guide at http://msdn2.microsoft.com/en-us/library/ms235626.aspx
+- Now continue with section [2.2]
+
+2.2 Visual C++ 2005
+-------------------
 
 Needed software:
 - Microsoft Visual C++ 2005 (buy)
  > http://msdn.microsoft.com/visualc/
  > You do not need the DLL runtimes and the .NET Framework
-- Microsoft Platform SDK (free, optional)
+- Microsoft Platform SDK (free, optional, essential only for express edition)
  > http://www.microsoft.com/downloads/details.aspx?FamilyId=E15438AC-60BE-41BD-AA14-7F1E0F19CA0D&displaylang=en
-- Microsoft DirectX 9.0 SDK (free)
+- Microsoft DirectX 9.0 SDK (free, essential)
  > http://msdn.microsoft.com/directx/sdk/
-- Yasm (free)
+- Yasm (free, essential)
  > http://www.tortall.net/projects/yasm/
  > Unpack it anywhere on your pc, rename the exe to "yasm.exe" and add it to
     "Tools>Options>Projects and Solutions>VC++ Directories>Executable files"
-- AMD CodeAnalyst (optional)
+- AMD CodeAnalyst (optional, AMD CPU required)
  > http://developer.amd.com/cawin.aspx?session_id=FB$37649@DJEBIGID
  > Free and easy profiling for AMD CPUs (32bit and 64bit), Visual Studio 2005 plugin
  
@@ -89,11 +99,12 @@ Needed software:
  Those can be accessed through the "dependencies" folder in the main
  solution file. The main solution file includes references to all files
  for all platforms. At the moment, only MFC and SDL build targets for
- 32bit Windows are configured. GTK+ and 64bit Windows support may also
- be possible.
+ 32bit Windows are configured. GTK+ and 64bit Windows support may also be possible.
+You can now open the project file: "win32/vba_vs2005.sln".
+You will receive three neglectable warnings if you use the express edition.
 
-2.2 Visual C++ 6.0 and Visual C++ 2002
------------------------------------------
+2.3 Visual C++ 6.0 and Visual C++ 2002
+--------------------------------------
 
 Needed software:
 - nasm: see above for URL. Install it in the default directory
