@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
@@ -244,12 +244,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
+				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL_debug.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
-				IgnoreDefaultLibraryNames="nafxcwd.lib;LIBCMTD.lib;libcmt.lib"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -278,7 +278,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 				ExcludedFromBuild="true"
 			/>
@@ -333,12 +332,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="nafxcw.lib LIBCMT.lib zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
+				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
 				GenerateManifest="false"
-				IgnoreDefaultLibraryNames="nafxcw.lib;LIBCMT.lib"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -369,7 +368,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 				ExcludedFromBuild="true"
 			/>
@@ -3550,6 +3548,22 @@
 					<File
 						RelativePath="..\src\win32\display.cpp"
 						>
+						<FileConfiguration
+							Name="SDL_Debug|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="SDL_Release|Win32"
+							ExcludedFromBuild="true"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+							/>
+						</FileConfiguration>
 					</File>
 					<File
 						RelativePath="..\src\win32\GDIDisplay.cpp"
