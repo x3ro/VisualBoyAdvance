@@ -95,13 +95,15 @@ Needed software:
  > Free and easy profiling for AMD CPUs (32bit and 64bit), Visual Studio 2005 plugin
  
  Those are all packages for now. The VBA source also includes the
- sources of various free libraries for zip, image and skin support.
+ sources and/or binaries of various free libraries for zip and image support.
  Those can be accessed through the "dependencies" folder in the main
  solution file. The main solution file includes references to all files
  for all platforms. At the moment, only MFC and SDL build targets for
- 32bit Windows are configured. GTK+ and 64bit Windows support may also be possible.
-You can now open the project file: "win32/vba_vs2005.sln".
-You will receive three neglectable warnings if you use the express edition.
+ 32bit Windows are configured. GTK+ and 64bit Windows support are also possible,
+ but are not yet added for several reasons.
+
+ You can now open the project file: "win32/vba_vs2005.sln".
+ Info: If you use the express edition of VC++ 2005, you will receive three neglectable warnings.
 
 2.3 Visual C++ 6.0 and Visual C++ 2002
 --------------------------------------
