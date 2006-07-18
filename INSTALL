@@ -79,7 +79,7 @@ you have to do the following steps prior to the normal setup procedure of Visual
 -------------------
 
 Needed software:
-- Microsoft Visual C++ 2005 (buy)
+- Microsoft Visual C++ 2005 (buy if not using Express Edition or if MFC build is required)
  > http://msdn.microsoft.com/visualc/
  > You do not need the DLL runtimes and the .NET Framework
 - Microsoft Platform SDK (free, optional, essential only for express edition)
@@ -88,8 +88,9 @@ Needed software:
  > http://msdn.microsoft.com/directx/sdk/
 - Yasm (free, essential)
  > http://www.tortall.net/projects/yasm/
- > Unpack it anywhere on your pc, rename the exe to "yasm.exe" and add it to
+ > Unpack it anywhere on your pc and add the directory to
     "Tools>Options>Projects and Solutions>VC++ Directories>Executable files"
+    If you got a newer version you ahve to change the custom build option for the "2xSaImmx.asm" file to use your version of yasm.
 - AMD CodeAnalyst (optional, AMD CPU required)
  > http://developer.amd.com/cawin.aspx?session_id=FB$37649@DJEBIGID
  > Free and easy profiling for AMD CPUs (32bit and 64bit), Visual Studio 2005 plugin

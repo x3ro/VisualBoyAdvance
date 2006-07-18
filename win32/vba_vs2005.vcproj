@@ -2515,7 +2515,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0rc2-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
 							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
 						/>
 					</FileConfiguration>
@@ -2525,7 +2525,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0rc2-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
 							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
 						/>
 					</FileConfiguration>
@@ -2535,7 +2535,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0rc2-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
 							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
 						/>
 					</FileConfiguration>
@@ -2545,7 +2545,7 @@
 						<Tool
 							Name="VCCustomBuildTool"
 							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0rc2-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
+							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
 							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
 						/>
 					</FileConfiguration>
