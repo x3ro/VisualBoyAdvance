@@ -1111,7 +1111,7 @@ void MainWnd::screenCapture(int captureNumber)
   if( dwAttr != INVALID_FILE_ATTRIBUTES ) {
 	  // screenshot file already exists
 	  screenCapture(++captureNumber);
-	  // this will recursively use the first non-existent scrrenshot number
+	  // this will recursively use the first non-existent screenshot number
 	  return;
   }
 
