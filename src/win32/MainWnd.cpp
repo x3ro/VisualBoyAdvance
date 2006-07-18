@@ -1106,6 +1106,15 @@ void MainWnd::screenCapture(int captureNumber)
                   captureNumber,
                   ext);
 
+  // check if file exists
+  DWORD dwAttr = GetFileAttributes( buffer );
+  if( dwAttr != INVALID_FILE_ATTRIBUTES ) {
+	  // screenshot file already exists
+	  screenCapture(++captureNumber);
+	  // this will recursively use the first non-existent scrrenshot number
+	  return;
+  }
+
   if(theApp.captureFormat == 0)
     theApp.emulator.emuWritePNG(buffer);
   else
