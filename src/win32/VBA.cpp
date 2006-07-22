@@ -1332,9 +1332,9 @@ void VBA::loadSettings()
   if(ifbType < 0 || ifbType > 2)
     ifbType = 0;
 
-  winFlashSize = regQueryDwordValue("flashSize", 0x10000);
+  winFlashSize = regQueryDwordValue("flashSize", 0x20000);
   if(winFlashSize != 0x10000 && winFlashSize != 0x20000)
-    winFlashSize = 0x10000;
+    winFlashSize = 0x20000;
   flashSize = winFlashSize;
 
   agbPrintEnable(regQueryDwordValue("agbPrint", 0) ? true : false);
