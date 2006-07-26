@@ -100,22 +100,31 @@ DDEnumCallback(GUID *pGUID, LPSTR pDescription, LPSTR pName, LPVOID context)
 
 static HRESULT WINAPI addVideoMode(LPDDSURFACEDESC2 surf, LPVOID lpContext)
 {
-  HWND h = (HWND)lpContext;
-  char buffer[50];
-  
-  switch(surf->ddpfPixelFormat.dwRGBBitCount) {
-  case 16:
-  case 24:
-  case 32:
-    if(surf->dwWidth >= 640 && surf->dwHeight >= 480) {
-      sprintf(buffer, "%4dx%4dx%2d", surf->dwWidth, surf->dwHeight,
-              surf->ddpfPixelFormat.dwRGBBitCount);
-      WPARAM pos = ::SendMessage(h, LB_ADDSTRING, 0, (LPARAM)buffer);
-      ::SendMessage(h, LB_SETITEMDATA, pos,
-                    (surf->ddpfPixelFormat.dwRGBBitCount << 24) |
-                    ((surf->dwWidth & 4095) << 12) |
-                    (surf->dwHeight & 4095));
-    }
+	HWND h = (HWND)lpContext;
+	char buffer[50];
+	
+	switch( surf->ddpfPixelFormat.dwRGBBitCount )
+	{
+	case 16:
+	case 24:
+	case 32:
+		sprintf(
+			buffer,
+			_T("%4dx%4dx%2d"),
+			surf->dwWidth,
+			surf->dwHeight,
+			surf->ddpfPixelFormat.dwRGBBitCount
+			);
+		WPARAM pos = ::SendMessage( h, LB_ADDSTRING, 0, (LPARAM)buffer );
+		::SendMessage(
+			h,
+			LB_SETITEMDATA,
+			pos,
+			(surf->ddpfPixelFormat.dwRGBBitCount << 24) |
+			((surf->dwWidth & 4095) << 12) |
+			(surf->dwHeight & 4095)
+			);
+    break;
   }
 
   return DDENUMRET_OK;
@@ -309,8 +318,11 @@ BOOL VideoMode::OnInitDialog()
   CDialog::OnInitDialog();
   
   // check for available fullscreen modes
-  pDirectDraw->EnumDisplayModes(DDEDM_STANDARDVGAMODES, NULL, m_modes.m_hWnd,
-                                addVideoMode);
+  pDirectDraw->EnumDisplayModes(
+	  DDEDM_STANDARDVGAMODES,
+	  NULL,
+	  m_modes.m_hWnd,
+	  addVideoMode);
   
   GetDlgItem(ID_OK)->EnableWindow(FALSE);      
   CenterWindow();
