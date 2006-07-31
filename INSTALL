@@ -90,7 +90,7 @@ Needed software:
  > http://www.tortall.net/projects/yasm/
  > Unpack it anywhere on your pc and add the directory to
     "Tools>Options>Projects and Solutions>VC++ Directories>Executable files"
-    If you got a newer version you ahve to change the custom build option for the "2xSaImmx.asm" file to use your version of yasm.
+    If you got a newer version you have to change the custom build option for the "2xSaImmx.asm" file to use your version of yasm.
 - AMD CodeAnalyst (optional, AMD CPU required)
  > http://developer.amd.com/cawin.aspx?session_id=FB$37649@DJEBIGID
  > Free and easy profiling for AMD CPUs (32bit and 64bit), Visual Studio 2005 plugin
