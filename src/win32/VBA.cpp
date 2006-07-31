@@ -241,7 +241,6 @@ VBA::VBA()
   ddrawDebug = false;
   ddrawUseVideoMemory = false;
   d3dFilter = 0;
-  d3dKeepAspectRatio = true;
   glFilter = 0;
   glType = 0;
   skin = NULL;
@@ -1182,9 +1181,9 @@ void VBA::loadSettings()
   
   winSetLanguageOption(languageOption, true);
   
-  frameSkip = regQueryDwordValue("frameSkip", 1);
+  frameSkip = regQueryDwordValue("frameSkip", 0);
   if(frameSkip < 0 || frameSkip > 9)
-    frameSkip = 2;
+    frameSkip = 0;
 
   gbFrameSkip = regQueryDwordValue("gbFrameSkip", 0);
   if(gbFrameSkip < 0 || gbFrameSkip > 9)
@@ -1196,8 +1195,7 @@ void VBA::loadSettings()
   synchronize = regQueryDwordValue("synchronize", 1) ? true : false;
   fullScreenStretch = regQueryDwordValue("stretch", 0) ? true : false;
 
-  videoOption = regQueryDwordValue("video", 0);
-
+  videoOption = regQueryDwordValue("video", 1);
   if(videoOption < 0 || videoOption > VIDEO_OTHER)
     videoOption = 0;
 
@@ -1228,7 +1226,6 @@ void VBA::loadSettings()
   }
 
   renderMethod = (DISPLAY_TYPE)regQueryDwordValue("renderMethod", DIRECT_DRAW);
-
   if(renderMethod < GDI || renderMethod > OPENGL)
     renderMethod = DIRECT_DRAW;
   
@@ -1256,7 +1253,7 @@ void VBA::loadSettings()
 
   soundOffFlag = (regQueryDwordValue("soundOff", 0)) ? true : false;
 
-  soundQuality = regQueryDwordValue("soundQuality", 2);
+  soundQuality = regQueryDwordValue("soundQuality", 1);
 
   soundEcho = regQueryDwordValue("soundEcho", 0) ? true : false;
 
@@ -1269,16 +1266,17 @@ void VBA::loadSettings()
     soundVolume = 0;
 
   ddrawEmulationOnly = regQueryDwordValue("ddrawEmulationOnly", false) ? true : false;
-  ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", false) ? true : false;
-  tripleBuffering = regQueryDwordValue("tripleBuffering", true) ? true : false;
+  ddrawUseVideoMemory = regQueryDwordValue("ddrawUseVideoMemory", true) ? true : false;
+  tripleBuffering = regQueryDwordValue("tripleBuffering", false) ? true : false;
 
-  d3dFilter = regQueryDwordValue("d3dFilter", 0);
+  d3dFilter = regQueryDwordValue("d3dFilter", 1);
   if(d3dFilter < 0 || d3dFilter > 1)
-    d3dFilter = 0;
-  d3dKeepAspectRatio = regQueryDwordValue("d3dKeepAspectRatio", true) ? true : false;
-  glFilter = regQueryDwordValue("glFilter", 0);
+    d3dFilter = 1;
+
+  glFilter = regQueryDwordValue("glFilter", 1);
   if(glFilter < 0 || glFilter > 1)
-    glFilter = 0;
+    glFilter = 1;
+
   glType = regQueryDwordValue("glType", 0);
   if(glType < 0 || glType > 1)
     glType = 0;
@@ -1287,7 +1285,7 @@ void VBA::loadSettings()
   if(filterType < 0 || filterType > 13)
     filterType = 0;
 
-  disableMMX = regQueryDwordValue("disableMMX", 0) ? true: false;
+  disableMMX = regQueryDwordValue("disableMMX", false) ? true: false;
 
   disableStatusMessage = regQueryDwordValue("disableStatus", 0) ? true : false;
 
@@ -1325,9 +1323,6 @@ void VBA::loadSettings()
   if(winSaveType < 0 || winSaveType > 5)
     winSaveType = 0;
   
-  cpuEnhancedDetection = regQueryDwordValue("enhancedDetection", 1) ? true :
-    false;
-
   ifbType = regQueryDwordValue("ifbType", 0);
   if(ifbType < 0 || ifbType > 2)
     ifbType = 0;
@@ -2174,7 +2169,6 @@ void VBA::saveSettings()
   regSetDwordValue("tripleBuffering", tripleBuffering);
 
   regSetDwordValue("d3dFilter", d3dFilter);
-  regSetDwordValue("d3dKeepAspectRatio", d3dKeepAspectRatio);
   regSetDwordValue("glFilter", glFilter);
   regSetDwordValue("glType", glType);
 
@@ -2206,8 +2200,6 @@ void VBA::saveSettings()
   
   regSetDwordValue("saveType", winSaveType);
   
-  regSetDwordValue("enhancedDetection", cpuEnhancedDetection);
-
   regSetDwordValue("ifbType", ifbType);
 
   regSetDwordValue("flashSize", winFlashSize);

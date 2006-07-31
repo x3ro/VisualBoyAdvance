@@ -142,7 +142,6 @@ class VBA : public CWinApp
   bool ddrawDebug;
   bool ddrawUseVideoMemory;
   int d3dFilter;
-  bool d3dKeepAspectRatio;
   int glFilter;
   int glType;
   CSkin *skin;

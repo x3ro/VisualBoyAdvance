@@ -28,7 +28,8 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON                ICON                    "vbavista.ico"
+IDI_ICON                ICON                    "ico00002.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1635,10 +1636,8 @@ BEGIN
                 MENUITEM "EEPROM+Sensor",               ID_OPTIONS_EMULATOR_SAVETYPE_EEPROMSENSOR
                 MENUITEM "None",                        ID_OPTIONS_EMULATOR_SAVETYPE_NONE
                 MENUITEM SEPARATOR
-                MENUITEM "Flash 64K",                   ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K
-                MENUITEM "Flash 128K",                  ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M
-                MENUITEM SEPARATOR
-                MENUITEM "Enhanced detection",          ID_OPTIONS_EMULATOR_SAVETYPE_ENHANCEDDETECTION
+                MENUITEM "Flash 64 KB",                 ID_OPTIONS_EMULATOR_SAVETYPE_FLASH512K
+                MENUITEM "Flash 128 KB",                ID_OPTIONS_EMULATOR_SAVETYPE_FLASH1M
             END
             MENUITEM SEPARATOR
             MENUITEM "&Use BIOS file",              ID_OPTIONS_EMULATOR_USEBIOSFILE

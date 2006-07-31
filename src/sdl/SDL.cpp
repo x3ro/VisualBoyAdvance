@@ -1208,8 +1208,6 @@ void sdlReadPreferences(FILE *f)
       if(rewindTimer < 0 || rewindTimer > 600)
         rewindTimer = 0;
       rewindTimer *= 6;  // convert value to 10 frames multiple
-    } else if(!strcmp(key, "enhancedDetection")) {
-      cpuEnhancedDetection = sdlFromHex(value) ? true : false;
     } else {
       fprintf(stderr, "Unknown configuration key %s\n", key);
     }
@@ -2249,10 +2247,6 @@ int main(int argc, char **argv)
       int size = CPULoadRom(szFile);
       failed = (size == 0);
       if(!failed) {
-        //        if(cpuEnhancedDetection && cpuSaveType == 0) {
-        //          utilGBAFindSave(rom, size);
-        //        }
-
         sdlApplyPerImagePreferences();
 
         doMirroring(mirroringEnable);

@@ -118,6 +118,6 @@ gbaLoopEnd:
 			//for (i=0;i<nBytesPerPixel;i++) //Byte# Of Pixel
 				//*(dst+i+(x*nBytesPerPixel)+(y*destinationPitch)) = *(src+i+(x*nBytesPerPixel)+(y*srcPitch));
 
-#endif // #ifdef ASM
+#endif
 }
 

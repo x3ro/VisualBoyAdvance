@@ -531,9 +531,6 @@ bool MainWnd::FileRun()
     rtcEnable(theApp.winRtcEnable);
     cpuSaveType = theApp.winSaveType;
 
-    //    if(cpuEnhancedDetection && winSaveType == 0) {
-    //      utilGBAFindSave(rom, size);
-    //    }
     GetModuleFileName(NULL, tempName, 2048);
 
     char *p = strrchr(tempName, '\\');

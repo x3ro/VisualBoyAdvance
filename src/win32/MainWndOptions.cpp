@@ -376,13 +376,12 @@ void MainWnd::OnUpdateOptionsVideoDisablesfx(CCmdUI* pCmdUI)
 void MainWnd::OnOptionsVideoFullscreenstretchtofit() 
 {
 	theApp.fullScreenStretch = !theApp.fullScreenStretch;
-	theApp.d3dKeepAspectRatio = !theApp.fullScreenStretch;
 	theApp.updateWindowSize( theApp.videoOption );
 	if( theApp.display ) {
 		if( emulating ) {
 			theApp.display->clear( );
 		}
-		theApp.display->setOption( _T("d3dKeepAspectRatio"), theApp.d3dKeepAspectRatio );
+		theApp.display->setOption( _T("fullScreenStretch"), theApp.fullScreenStretch );
 	}
 }
 

@@ -61,13 +61,19 @@ private:
 	LPDIRECT3DDEVICE9     pDevice;
 	D3DPRESENT_PARAMETERS dpp;
 	D3DFORMAT             screenFormat;
+	LPDIRECT3DSURFACE9    emulatedImage;
+	D3DTEXTUREFILTERTYPE  filter;
 	int                   width;
 	int                   height;
+	RECT                  destRect;
 	bool                  failed;
 
 	ID3DXFont *pFont;
 	void createFont();
 	void destroyFont();
+	void createSurface();
+	void destroySurface();
+	void calculateDestRect();
 	bool resetDevice();
 
 public:
@@ -82,9 +88,10 @@ public:
 	virtual void render();
 
 	virtual void renderMenu();
-	virtual bool changeRenderSize(int w, int h);
-	virtual void setOption(const char *option, int value);
-	virtual int selectFullScreenMode(GUID **);  
+	virtual bool changeRenderSize( int w, int h );
+	virtual void resize( int w, int h );
+	virtual void setOption( const char *option, int value );
+	virtual int selectFullScreenMode( GUID ** );  
 };
 
 
@@ -97,6 +104,8 @@ Direct3DDisplay::Direct3DDisplay()
 	height = 0;
 	failed = false;
 	pFont = NULL;
+	emulatedImage = NULL;
+	filter = D3DTEXF_POINT;
 }
 
 
@@ -109,6 +118,7 @@ Direct3DDisplay::~Direct3DDisplay()
 void Direct3DDisplay::cleanup()
 {
 	destroyFont();
+	destroySurface();
 
 	if( pDevice ) {
 		pDevice->Release();
@@ -314,8 +324,8 @@ bool Direct3DDisplay::initialize()
 	dpp.BackBufferFormat = mode.Format;
 	dpp.BackBufferCount = theApp.tripleBuffering ? 2 : 1;
 	dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	dpp.BackBufferWidth = theApp.rect.right;
-	dpp.BackBufferHeight = theApp.rect.bottom;
+	dpp.BackBufferWidth = 0; // use width of hDeviceWindow
+	dpp.BackBufferHeight = 0; // use height of hDeviceWindow
 	dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 	dpp.PresentationInterval = theApp.vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 
@@ -332,6 +342,10 @@ bool Direct3DDisplay::initialize()
 	}
 
 	createFont();
+	createSurface();
+	calculateDestRect();
+
+	setOption( _T("d3dFilter"), theApp.d3dFilter );
 
 	if(failed) return false;
 
@@ -358,6 +372,7 @@ void Direct3DDisplay::clear()
 
 void Direct3DDisplay::render()
 {
+	if( failed ) return;
 	if(!pDevice) return;
 	if( FAILED( pDevice->TestCooperativeLevel() ) ) return;
 	
@@ -365,11 +380,10 @@ void Direct3DDisplay::render()
 	
 	pDevice->BeginScene();
 	
+	// copy pix to emulatedImage and apply pixel filter if selected
 	HRESULT hr;
 	D3DLOCKED_RECT lr;
-	LPDIRECT3DSURFACE9 pBackBuffer;
-	pDevice->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer );
-	if( FAILED( hr = pBackBuffer->LockRect( &lr, NULL, D3DLOCK_DISCARD ) ) ) {
+	if( FAILED( hr = emulatedImage->LockRect( &lr, NULL, D3DLOCK_DISCARD ) ) ) {
 		DXTRACE_ERR_MSGBOX( _T("Can not lock back buffer"), hr );
 		return;
 	} else {
@@ -384,12 +398,19 @@ void Direct3DDisplay::render()
 				theApp.filterWidth,
 				theApp.filterHeight);
 		}
-		pBackBuffer->UnlockRect();
+		emulatedImage->UnlockRect();
+	}
+
+	// copy emulatedImage to pBackBuffer and scale with or without aspect ratio
+	LPDIRECT3DSURFACE9 pBackBuffer;
+	pDevice->GetBackBuffer( 0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer );
+	if( theApp.fullScreenStretch ) {
+		pDevice->StretchRect( emulatedImage, NULL, pBackBuffer, NULL, filter );
+	} else {
+		pDevice->StretchRect( emulatedImage, NULL, pBackBuffer, &destRect, filter );
 	}
 	pBackBuffer->Release();
 	pBackBuffer = NULL;
-
-
 
 	D3DCOLOR color = theApp.showSpeedTransparent ? D3DCOLOR_ARGB(0x7f, 0x00, 0x00, 0xff) : D3DCOLOR_ARGB(0xff, 0x00, 0x00, 0xff);
 	RECT r;
@@ -427,19 +448,32 @@ void Direct3DDisplay::render()
 }
 
 
-bool Direct3DDisplay::changeRenderSize(int w, int h)
+bool Direct3DDisplay::changeRenderSize( int w, int h )
 {
 	if( (w != width) || (h != height) ) {
 		width = w; height = h;
-		dpp.BackBufferWidth = (UINT)w;
-		dpp.BackBufferHeight = (UINT)h;
-		return resetDevice();
+		if( pDevice ) {
+			destroySurface();
+			createSurface();
+			calculateDestRect();
+		}
 	}
 	return true;
 }
 
 
-int Direct3DDisplay::selectFullScreenMode(GUID **)
+void Direct3DDisplay::resize( int w, int h )
+{
+	if( (w != dpp.BackBufferWidth) || (h != dpp.BackBufferHeight) ) {
+		dpp.BackBufferWidth = (UINT)w;
+		dpp.BackBufferHeight = (UINT)h;
+		resetDevice();
+		calculateDestRect();
+	}
+}
+
+
+int Direct3DDisplay::selectFullScreenMode( GUID ** )
 {
 	HRESULT hr;
 	D3DDISPLAYMODE dm;
@@ -468,8 +502,7 @@ int Direct3DDisplay::selectFullScreenMode(GUID **)
 void Direct3DDisplay::createFont()
 {
 	if( !pFont ) {
-		D3DXCreateFont
-			(
+		HRESULT hr = D3DXCreateFont(
 			pDevice,
 			12,
 			0,
@@ -481,8 +514,10 @@ void Direct3DDisplay::createFont()
 			DEFAULT_QUALITY,
 			DEFAULT_PITCH || FF_DONTCARE,
 			_T("Arial"),
-			&pFont
-			);
+			&pFont );
+		if( FAILED( hr ) ) {
+			DXTRACE_ERR_MSGBOX( _T("createFont failed"), hr );
+		}
 	}
 }
 
@@ -496,7 +531,57 @@ void Direct3DDisplay::destroyFont()
 }
 
 
-void Direct3DDisplay::setOption(const char *option, int value)
+void Direct3DDisplay::createSurface()
+{
+	if( !emulatedImage ) {
+		HRESULT hr = pDevice->CreateOffscreenPlainSurface(
+			width, height,
+			dpp.BackBufferFormat,
+			D3DPOOL_DEFAULT,
+			&emulatedImage,
+			NULL );
+		if( FAILED( hr ) ) {
+			DXTRACE_ERR_MSGBOX( _T("createSurface failed"), hr );
+		}
+	}
+}
+
+
+void Direct3DDisplay::destroySurface()
+{
+	if( emulatedImage ) {
+		emulatedImage->Release();
+		emulatedImage = NULL;
+	}
+}
+
+
+void Direct3DDisplay::calculateDestRect()
+{
+	float scaleX = (float)dpp.BackBufferWidth / (float)width;
+	float scaleY = (float)dpp.BackBufferHeight / (float)height;
+	float min = (scaleX < scaleY) ? scaleX : scaleY;
+	if( theApp.fsMaxScale && (min > theApp.fsMaxScale) ) {
+		min = (float)theApp.fsMaxScale;
+	}
+	destRect.left = 0;
+	destRect.top = 0;
+	destRect.right = (LONG)(width * min);
+	destRect.bottom = (LONG)(height * min);
+	if( destRect.right != dpp.BackBufferWidth ) {
+		LONG diff = (dpp.BackBufferWidth - destRect.right) / 2;
+		destRect.left += diff;
+		destRect.right += diff;
+	}
+	if( destRect.bottom != dpp.BackBufferHeight ) {
+		LONG diff = (dpp.BackBufferHeight - destRect.bottom) / 2;
+		destRect.top += diff;
+		destRect.bottom += diff;
+	}
+}
+
+
+void Direct3DDisplay::setOption( const char *option, int value )
 {
 	if( !_tcscmp( option, _T("vsync") ) ) {
 		dpp.PresentationInterval = value ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -507,6 +592,18 @@ void Direct3DDisplay::setOption(const char *option, int value)
 		dpp.BackBufferCount = value ? 2 : 1;
 		resetDevice();
 	}
+
+	if( !_tcscmp( option, _T("d3dFilter") ) ) {
+		switch( value )
+		{
+		case 0: //point
+			filter = D3DTEXF_POINT;
+			break;
+		case 1: //linear
+			filter = D3DTEXF_LINEAR;
+			break;
+		}
+	}
 }
 
 
@@ -516,12 +613,14 @@ bool Direct3DDisplay::resetDevice()
 
 	HRESULT hr;
 	destroyFont();
+	destroySurface();
 	if( FAILED( hr = pDevice->Reset( &dpp ) ) ) {
-		DXTRACE_ERR_MSGBOX( _T("pDevice->Reset failed"), hr );
+		//DXTRACE_ERR_MSGBOX( _T("pDevice->Reset failed"), hr );
 		failed = true;
 		return false;
 	}
 	createFont();
+	createSurface();
 	failed = false;
 	return true;
 }
