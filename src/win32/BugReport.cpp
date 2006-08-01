@@ -216,7 +216,6 @@ CString BugReport::createReport()
   AppendFormat(report, "Using BIOS   : %d\r\n", theApp.useBiosFile);
   AppendFormat(report, "Skip BIOS    : %d\r\n", theApp.skipBiosFile);
   AppendFormat(report, "Disable SFX  : %d\r\n", cpuDisableSfx);
-  AppendFormat(report, "Skip intro   : %d\r\n", theApp.removeIntros);
   AppendFormat(report, "Throttle     : %d\r\n", theApp.throttle);
   AppendFormat(report, "Rewind       : %d\r\n", theApp.rewindTimer);
   AppendFormat(report, "Auto frame   : %d\r\n", theApp.autoFrameSkip);

@@ -4736,7 +4736,7 @@
 	<Globals>
 		<Global
 			Name="RESOURCE_FILE"
-			Value="\Dokumente und Einstellungen\Spacy\Eigene Dateien\dev\VisualBoyAdvance\src\win32\vba.rc"
+			Value="\Dev\VisualBoyAdvance\src\win32\vba.rc"
 		/>
 	</Globals>
 </VisualStudioProject>

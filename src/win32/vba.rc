@@ -28,8 +28,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_ICON                ICON                    "ico00002.ico"
-
+IDI_ICON                ICON                    "vbavista.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -140,7 +139,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    ICON            IDI_ICON,IDC_STATIC,6,6,20,20
+    ICON            101,IDC_STATIC,6,6,20,20
     CTEXT           "VisualBoyAdvance Emulator",IDC_STATIC,30,6,120,8
     CTEXT           "Copyright © 2006 VBA development team",IDC_STATIC,6,36,144,8
     CTEXT           "http://vba.ngemu.com",IDC_URL,6,66,144,8
@@ -1076,24 +1075,26 @@ BEGIN
     DEFPUSHBUTTON   "&Copy",IDC_COPY,87,164,50,14
 END
 
-IDD_GAME_OVERRIDES DIALOG  0, 0, 271, 138
+IDD_GAME_OVERRIDES DIALOGEX 0, 0, 268, 132
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Game overrides"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    COMBOBOX        IDC_RTC,152,35,112,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_SAVE_TYPE,152,55,112,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_FLASH_SIZE,152,76,112,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_MIRRORING,152,97,112,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,7,117,50,14
-    PUSHBUTTON      "Defaults",IDC_DEFAULTS,110,117,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,213,117,50,14
-    LTEXT           "Overrides for game:",IDC_STATIC,7,17,140,8
-    EDITTEXT        IDC_NAME,152,15,112,14,ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT           "Real Time Clock:",IDC_STATIC,7,37,140,8
-    LTEXT           "Save Type:",IDC_STATIC,7,57,140,8
-    LTEXT           "Flash Size:",IDC_STATIC,7,77,140,8
-    LTEXT           "Mirroring:",IDC_STATIC,7,97,140,8
+    COMBOBOX        IDC_RTC,84,42,180,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SAVE_TYPE,84,60,180,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_FLASH_SIZE,84,78,180,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_MIRRORING,84,96,180,12,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,6,114,72,12
+    PUSHBUTTON      "Defaults",IDC_DEFAULTS,108,114,54,12
+    PUSHBUTTON      "Cancel",IDCANCEL,192,114,72,12
+    LTEXT           "Game Code",IDC_STATIC,6,6,72,12
+    EDITTEXT        IDC_NAME,84,6,180,12,ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT           "Real Time Clock:",IDC_STATIC,6,42,72,12
+    LTEXT           "Save Type:",IDC_STATIC,6,60,72,12
+    LTEXT           "Flash Size:",IDC_STATIC,6,78,72,12
+    LTEXT           "Mirroring:",IDC_STATIC,6,96,72,12
+    LTEXT           "Comment",IDC_STATIC,6,24,72,12
+    EDITTEXT        IDC_COMMENT,84,24,180,12,ES_AUTOHSCROLL
 END
 
 
@@ -1441,9 +1442,9 @@ BEGIN
     IDD_GAME_OVERRIDES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 264
+        RIGHTMARGIN, 261
         TOPMARGIN, 7
-        BOTTOMMARGIN, 111
+        BOTTOMMARGIN, 105
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1611,7 +1612,6 @@ BEGIN
             MENUITEM "&Synchronize",                ID_OPTIONS_EMULATOR_SYNCHRONIZE
             MENUITEM "Pause when inactive window",  ID_OPTIONS_EMULATOR_PAUSEWHENINACTIVE
             MENUITEM "Speed up toggle",             ID_OPTIONS_EMULATOR_SPEEDUPTOGGLE
-            MENUITEM "Remove intros (GBA)",         ID_OPTIONS_EMULATOR_REMOVEINTROSGBA
             MENUITEM "Automatic IPS patching",      ID_OPTIONS_EMULATOR_AUTOMATICALLYIPSPATCH
             MENUITEM "AGB Print",                   ID_OPTIONS_EMULATOR_AGBPRINT
             MENUITEM "Real Time Clock",             ID_OPTIONS_EMULATOR_REALTIMECLOCK

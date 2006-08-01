@@ -45,14 +45,15 @@ GameOverrides::GameOverrides(CWnd* pParent /*=NULL*/)
 
 void GameOverrides::DoDataExchange(CDataExchange* pDX)
 {
-  CDialog::DoDataExchange(pDX);
-  //{{AFX_DATA_MAP(GameOverrides)
-  DDX_Control(pDX, IDC_NAME, m_name);
-  DDX_Control(pDX, IDC_MIRRORING, m_mirroring);
-  DDX_Control(pDX, IDC_FLASH_SIZE, m_flashSize);
-  DDX_Control(pDX, IDC_SAVE_TYPE, m_saveType);
-  DDX_Control(pDX, IDC_RTC, m_rtc);
-  //}}AFX_DATA_MAP
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(GameOverrides)
+	DDX_Control(pDX, IDC_NAME, m_name);
+	DDX_Control(pDX, IDC_MIRRORING, m_mirroring);
+	DDX_Control(pDX, IDC_FLASH_SIZE, m_flashSize);
+	DDX_Control(pDX, IDC_SAVE_TYPE, m_saveType);
+	DDX_Control(pDX, IDC_RTC, m_rtc);
+	DDX_Control(pDX, IDC_COMMENT, m_comment);
+	//}}AFX_DATA_MAP
 }
 
 
@@ -80,6 +81,10 @@ void GameOverrides::OnOK()
   buffer[4] = 0;
   
   strcat(tempName, "\\vba-over.ini");
+
+  char comment[0xFF];
+  m_comment.GetWindowText(comment, 0xFF);
+  WritePrivateProfileString(buffer, "comment", !strncmp(comment, "", 0xFF) ? NULL : comment, tempName);
 
   int rtc = m_rtc.GetCurSel();
   int flash = m_flashSize.GetCurSel();
@@ -216,7 +221,16 @@ BOOL GameOverrides::OnInitDialog()
   strcat(tempName, "\\vba-over.ini");
 
   m_name.SetWindowText(buffer);
-  
+
+  char comment[0xFF];
+  GetPrivateProfileString(buffer,
+	  "comment",
+	  "",
+	  comment,
+	  0xFF,
+	  tempName);
+  m_comment.SetWindowText(comment);
+
   UINT v = GetPrivateProfileInt(buffer,
                                 "rtcEnabled",
                                 -1,

@@ -714,17 +714,6 @@ void MainWnd::OnUpdateOptionsEmulatorSpeeduptoggle(CCmdUI* pCmdUI)
   pCmdUI->SetCheck(theApp.speedupToggle);
 }
 
-void MainWnd::OnOptionsEmulatorRemoveintrosgba() 
-{
-  //  theApp.removeIntros = !theApp.removeIntros;
-}
-
-void MainWnd::OnUpdateOptionsEmulatorRemoveintrosgba(CCmdUI* pCmdUI) 
-{
-  pCmdUI->Enable(false);
-  //  pCmdUI->SetCheck(theApp.removeIntros);
-}
-
 void MainWnd::OnOptionsEmulatorAutomaticallyipspatch() 
 {
   theApp.autoIPS = !theApp.autoIPS;

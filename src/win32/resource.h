@@ -46,11 +46,11 @@
 #define IDS_OUT_OF_MEMORY               41
 #define IDS_WRONG_GAMESHARK_CODE        42
 #define IDS_UNSUPPORTED_GAMESHARK_CODE  43
-#define IDI_ICON                        101
 #define IDD_REGISTERS                   102
 #define IDD_DEBUG                       103
 #define IDR_MENU                        104
 #define IDD_ABOUT                       105
+#define IDI_ICON                        105
 #define IDR_ACCELERATOR                 106
 #define IDD_CHEATS                      107
 #define IDD_ADD_CHEAT                   108
@@ -499,6 +499,7 @@
 #define IDC_BIT_7                       1257
 #define IDC_FLASH_SIZE                  1257
 #define IDC_BIT_8                       1258
+#define IDC_COMMENT                     1258
 #define IDC_BIT_9                       1259
 #define IDC_BIT_10                      1260
 #define IDC_BIT_11                      1261
@@ -651,7 +652,6 @@
 #define ID_TOOLS_LOGGING                40156
 #define ID_OPTIONS_EMULATOR_SPEEDHACK   40157
 #define ID_OPTIONS_EMULATOR_SPEEDUPTOGGLE 40158
-#define ID_OPTIONS_EMULATOR_REMOVEINTROSGBA 40159
 #define ID_OPTIONS_FILTER16BIT_ADVANCEMAMESCALE2X 40160
 #define ID_OPTIONS_FILTER16BIT_SIMPLE2X 40161
 #define ID_FILE_RECENT_FREEZE           40162
@@ -758,6 +758,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         40278
 #define _APS_NEXT_CONTROL_VALUE         1256
-#define _APS_NEXT_SYMED_VALUE           105
+#define _APS_NEXT_SYMED_VALUE           106
 #endif
 #endif

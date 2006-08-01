@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+#include "afxwin.h"
 #if !defined(AFX_GAMEOVERRIDES_H__EEEFE37F_F477_455D_8682_705FB2DBCC0C__INCLUDED_)
 #define AFX_GAMEOVERRIDES_H__EEEFE37F_F477_455D_8682_705FB2DBCC0C__INCLUDED_
 
@@ -63,6 +64,8 @@ protected:
 	virtual BOOL OnInitDialog();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
+public:
+	CEdit m_comment;
 };
 
 //{{AFX_INSERT_LOCATION}}

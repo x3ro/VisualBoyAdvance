@@ -221,8 +221,6 @@ class MainWnd : public CWnd
   afx_msg void OnUpdateOptionsEmulatorPausewheninactive(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorSpeeduptoggle();
   afx_msg void OnUpdateOptionsEmulatorSpeeduptoggle(CCmdUI* pCmdUI);
-  afx_msg void OnOptionsEmulatorRemoveintrosgba();
-  afx_msg void OnUpdateOptionsEmulatorRemoveintrosgba(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorAutomaticallyipspatch();
   afx_msg void OnUpdateOptionsEmulatorAutomaticallyipspatch(CCmdUI* pCmdUI);
   afx_msg void OnOptionsEmulatorAgbprint();
