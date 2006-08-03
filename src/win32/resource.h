@@ -52,6 +52,7 @@
 #define IDD_ABOUT                       105
 #define IDR_ACCELERATOR                 106
 #define IDD_CHEATS                      107
+#define IDI_ICON                        107
 #define IDD_ADD_CHEAT                   108
 #define IDD_DIRECTORIES                 109
 #define IDD_CONFIG                      110
@@ -757,6 +758,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         40278
 #define _APS_NEXT_CONTROL_VALUE         1256
-#define _APS_NEXT_SYMED_VALUE           106
+#define _APS_NEXT_SYMED_VALUE           108
 #endif
 #endif
