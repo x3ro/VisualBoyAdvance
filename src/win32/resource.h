@@ -50,7 +50,6 @@
 #define IDD_DEBUG                       103
 #define IDR_MENU                        104
 #define IDD_ABOUT                       105
-#define IDI_ICON                        105
 #define IDR_ACCELERATOR                 106
 #define IDD_CHEATS                      107
 #define IDD_ADD_CHEAT                   108
