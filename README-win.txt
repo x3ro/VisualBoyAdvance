@@ -147,6 +147,7 @@ Version 1.5 introduced the support for per game settings for GBA games. You
 can defined the following settings on a per game basis by using an INI file
 called vba-over.ini in the same directory as the emulator:
 
+comment=You can add any text you like here, for example the full name of the game, but not exceeding 255 characters
 rtcEnabled=<0 for false, anything else for true>
 flashSize=<65536 or 131072>
 saveType=<0 for automatic, 1 for EEPROM, 2 for SRAM, 3 for Flash or 4 for
@@ -163,6 +164,9 @@ saveType=0
 rtcEnabled=1
 flashSize=131072
 saveType=0
+
+An easier way to change the per game settings is to use the Game overrides dialog in the MFC version of VBA.
+Select Menu>Options>Emulator>Game Overrides... to open the dialog. Just make your changes and click OK.
 
 FAQ
 ---
