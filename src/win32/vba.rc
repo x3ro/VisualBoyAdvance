@@ -8,7 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "afxres.h"
-#include "vba.rc2"
+#include "resource2.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -35,13 +35,12 @@ END
 2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
-    "#include ""vba.rc2""\0"
+    "#include ""resource2.h""\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "\r\n"
-    "\0"
+    "#include ""vba.rc2""\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -71,12 +70,13 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,90,102,50,14,WS_GROUP
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 154, 78
+IDD_ABOUT DIALOGEX 0, 0, 157, 78
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "About"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    ICON            107,IDC_STATIC,6,6,20,20
+    ICON            101,IDC_STATIC,6,6,20,20
     CTEXT           "VisualBoyAdvance Emulator",IDC_STATIC,30,6,120,8
     CTEXT           "Copyright © 2006 VBA development team",IDC_STATIC,6,36,144,8
     CTEXT           "http://vba.ngemu.com",IDC_URL,6,66,144,8
@@ -85,33 +85,36 @@ BEGIN
     CTEXT           "",IDC_VERSION,90,18,60,8,SS_NOPREFIX
 END
 
-IDD_DIRECTORIES DIALOGEX 0, 0, 284, 129
+IDD_DIRECTORIES DIALOGEX 0, 0, 220, 301
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Directories"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    PUSHBUTTON      "Browse...",IDC_ROM_DIR,174,7,50,14
-    PUSHBUTTON      "Browse...",IDC_GBROM_DIR,174,26,50,14
-    PUSHBUTTON      "Browse...",IDC_BATTERY_DIR,174,45,50,14
-    PUSHBUTTON      "Browse...",IDC_SAVE_DIR,174,64,50,14
-    PUSHBUTTON      "Browse...",IDC_CAPTURE_DIR,174,83,50,14
-    DEFPUSHBUTTON   "OK",IDOK,88,108,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,145,108,50,14
-    LTEXT           "ROM:",IDC_STATIC,7,9,20,8
-    LTEXT           "Battery:",IDC_STATIC,7,47,25,8
-    LTEXT           "Save Game:",IDC_STATIC,7,66,40,8
-    LTEXT           "Capture:",IDC_STATIC,7,85,28,8
-    EDITTEXT        IDC_ROM_PATH,49,7,121,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_BATTERY_PATH,49,45,121,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_SAVE_PATH,49,64,121,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_CAPTURE_PATH,49,83,121,14,ES_AUTOHSCROLL
-    LTEXT           "GB ROM:",IDC_STATIC,7,28,32,8
-    EDITTEXT        IDC_GBROM_PATH,49,26,121,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "Reset",IDC_ROM_DIR_RESET,228,6,50,14
-    PUSHBUTTON      "Reset",IDC_GBROM_DIR_RESET,228,25,50,14
-    PUSHBUTTON      "Reset",IDC_BATTERY_DIR_RESET,228,45,50,14
-    PUSHBUTTON      "Reset",IDC_SAVE_DIR_RESET,228,64,50,14
-    PUSHBUTTON      "Reset",IDC_CAPTURE_DIR_RESET,228,83,50,14
+    PUSHBUTTON      "Browse...",IDC_ROM_DIR,12,66,90,12
+    PUSHBUTTON      "Browse...",IDC_GBROM_DIR,12,114,90,12
+    PUSHBUTTON      "Browse...",IDC_BATTERY_DIR,12,162,90,12
+    PUSHBUTTON      "Browse...",IDC_SAVE_DIR,12,210,90,12
+    PUSHBUTTON      "Browse...",IDC_CAPTURE_DIR,12,258,90,12
+    DEFPUSHBUTTON   "OK",IDOK,120,282,42,12
+    PUSHBUTTON      "Cancel",IDCANCEL,168,282,42,12
+    EDITTEXT        IDC_ROM_PATH,12,54,198,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_BATTERY_PATH,12,150,198,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SAVE_PATH,12,198,198,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_CAPTURE_PATH,12,246,198,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_GBROM_PATH,12,102,198,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Reset",IDC_ROM_DIR_RESET,120,66,90,12
+    PUSHBUTTON      "Reset",IDC_GBROM_DIR_RESET,120,114,84,12
+    PUSHBUTTON      "Reset",IDC_BATTERY_DIR_RESET,120,162,90,12
+    PUSHBUTTON      "Reset",IDC_SAVE_DIR_RESET,120,210,90,12
+    PUSHBUTTON      "Reset",IDC_CAPTURE_DIR_RESET,120,258,90,12
+    CONTROL         "You can either select or enter absolute paths to directories,\nor you can use relative paths by beginning with a . (point).\nExamples:   c:\\emulation\\roms   |   .\\battery   |   ..\\snapshots\\gba",IDC_STATIC,
+                    "Static",SS_LEFTNOWORDWRAP | WS_GROUP,6,6,210,30,WS_EX_STATICEDGE
+    GROUPBOX        "Game Boy Advance ROM Images",IDC_STATIC,6,42,210,42
+    GROUPBOX        "Game Boy / Game Boy Color ROM Images",IDC_STATIC,6,90,210,42
+    GROUPBOX        "Game Boy Internal Battery Saves",IDC_STATIC,6,138,210,42
+    GROUPBOX        "Visual Boy Advance Save Games",IDC_STATIC,6,186,210,42
+    GROUPBOX        "Screenshots",IDC_STATIC,6,234,210,42
 END
 
 IDD_CONFIG DIALOG  0, 0, 135, 211
@@ -1051,7 +1054,7 @@ BEGIN
     IDD_ABOUT, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 147
+        RIGHTMARGIN, 150
         TOPMARGIN, 7
         BOTTOMMARGIN, 71
     END
@@ -1059,9 +1062,9 @@ BEGIN
     IDD_DIRECTORIES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 277
+        RIGHTMARGIN, 213
         TOPMARGIN, 7
-        BOTTOMMARGIN, 122
+        BOTTOMMARGIN, 294
     END
 
     IDD_CONFIG, DIALOG
@@ -2043,8 +2046,7 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+#include "vba.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

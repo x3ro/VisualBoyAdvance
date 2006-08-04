@@ -2434,10 +2434,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath="..\src\win32\icon.ico"
-				>
-			</File>
-			<File
 				RelativePath="..\src\win32\resource.h"
 				>
 				<FileConfiguration
@@ -2456,6 +2452,10 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\src\win32\resource2.h"
+				>
 			</File>
 			<File
 				RelativePath="..\src\win32\vba.rc"
@@ -2496,10 +2496,6 @@
 						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\src\win32\vbavista.ico"
-				>
 			</File>
 		</Filter>
 		<Filter

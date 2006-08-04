@@ -24,6 +24,7 @@
 #include "MainWnd.h"
 
 #include <winsock.h>
+#include <shlwapi.h>
 
 #include "FileDlg.h"
 #include "Reg.h"
@@ -765,6 +766,16 @@ void MainWnd::winSaveCheatListDefault()
   else
     name = theApp.filename;
   CString dir = regQueryStringValue("saveDir", NULL);
+  if( dir[0] == '.' ) {
+	  // handle as relative path
+	  char baseDir[MAX_PATH+1];
+	  GetModuleFileName( NULL, baseDir, MAX_PATH );
+	  baseDir[MAX_PATH] = '\0'; // for security reasons
+	  PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+	  strcat( baseDir, "\\" );
+	  strcat( baseDir, dir );
+	  dir = baseDir;
+	}
 
   if(!dir.GetLength())
     dir = getDirFromFile(filename);
@@ -797,6 +808,16 @@ void MainWnd::winLoadCheatListDefault()
   else
     name = theApp.filename;
   CString dir = regQueryStringValue("saveDir", NULL);
+  if( dir[0] == '.' ) {
+	  // handle as relative path
+	  char baseDir[MAX_PATH+1];
+	  GetModuleFileName( NULL, baseDir, MAX_PATH );
+	  baseDir[MAX_PATH] = '\0'; // for security reasons
+	  PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+	  strcat( baseDir, "\\" );
+	  strcat( baseDir, dir );
+	  dir = baseDir;
+	}
 
   if(!dir.GetLength())
     dir = getDirFromFile(filename);
@@ -859,6 +880,16 @@ void MainWnd::writeBatteryFile()
     buffer = theApp.filename;
 
   CString saveDir = regQueryStringValue("batteryDir", NULL);
+  if( saveDir[0] == '.' ) {
+	  // handle as relative path
+	  char baseDir[MAX_PATH+1];
+	  GetModuleFileName( NULL, baseDir, MAX_PATH );
+	  baseDir[MAX_PATH] = '\0'; // for security reasons
+	  PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+	  strcat( baseDir, "\\" );
+	  strcat( baseDir, saveDir );
+	  saveDir = baseDir;
+	}
 
   if(saveDir.IsEmpty())
     saveDir = getDirFromFile(theApp.filename);
@@ -886,6 +917,16 @@ void MainWnd::readBatteryFile()
     buffer = theApp.filename;
 
   CString saveDir = regQueryStringValue("batteryDir", NULL);
+  if( saveDir[0] == '.' ) {
+	  // handle as relative path
+	  char baseDir[MAX_PATH+1];
+	  GetModuleFileName( NULL, baseDir, MAX_PATH );
+	  baseDir[MAX_PATH] = '\0'; // for security reasons
+	  PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+	  strcat( baseDir, "\\" );
+	  strcat( baseDir, saveDir );
+	  saveDir = baseDir;
+	}
 
   if(saveDir.IsEmpty())
     saveDir = getDirFromFile(theApp.filename);
@@ -997,6 +1038,17 @@ bool MainWnd::fileOpenSelect( bool gb )
 		initialDir = regQueryStringValue( _T("romdir"), _T(".") );
 	}
 	
+	if( initialDir[0] == '.' ) {
+		// handle as relative path
+		char baseDir[MAX_PATH+1];
+		GetModuleFileName( NULL, baseDir, MAX_PATH );
+		baseDir[MAX_PATH] = '\0'; // for security reasons
+		PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+		strcat( baseDir, "\\" );
+		strcat( baseDir, initialDir );
+		initialDir = baseDir;
+	}
+
 	if( !initialDir.IsEmpty() ) {
 		theApp.dir = initialDir;
 	}
@@ -1033,11 +1085,7 @@ bool MainWnd::fileOpenSelect( bool gb )
 		if( (theApp.dir.GetLength() > 3) && (theApp.dir[theApp.dir.GetLength()-1] == _T('\\')) ) {
 			theApp.dir = theApp.dir.Left( theApp.dir.GetLength() - 1 );
 		}
-		if( gb ) {
-			regSetStringValue( _T("gbromdir"), theApp.dir );
-		} else {
-			regSetStringValue( _T("romdir"), theApp.dir );
-		}
+		SetCurrentDirectory( theApp.dir );
 		return true;
 	}
 	return false;
@@ -1073,6 +1121,16 @@ void MainWnd::screenCapture(int captureNumber)
   CString buffer;
   
   CString captureDir = regQueryStringValue("captureDir", "");
+  if( captureDir[0] == '.' ) {
+	  // handle as relative path
+	  char baseDir[MAX_PATH+1];
+	  GetModuleFileName( NULL, baseDir, MAX_PATH );
+	  baseDir[MAX_PATH] = '\0'; // for security reasons
+	  PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+	  strcat( baseDir, "\\" );
+	  strcat( baseDir, captureDir );
+	  captureDir = baseDir;
+	}
   int index = theApp.filename.ReverseFind('\\');
   
   CString name;

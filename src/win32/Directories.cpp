@@ -26,6 +26,7 @@
 #include "WinResUtil.h"
 
 #include <shlobj.h>
+#include <shlwapi.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -199,23 +200,76 @@ void Directories::OnCancel()
 
 void Directories::OnOK() 
 {
-  CString buffer;
-  m_romPath.GetWindowText(buffer);
-  if(!buffer.IsEmpty())
-    regSetStringValue("romdir", buffer);
-  m_gbromPath.GetWindowText(buffer);
-  if(!buffer.IsEmpty())
-    regSetStringValue("gbromdir", buffer);      
-  m_batteryPath.GetWindowText(buffer);
-  if(!buffer.IsEmpty())
-    regSetStringValue("batteryDir", buffer);
-  m_savePath.GetWindowText(buffer);
-  if(!buffer.IsEmpty())
-    regSetStringValue("saveDir", buffer);
-  m_capturePath.GetWindowText(buffer);
-  if(!buffer.IsEmpty())
-    regSetStringValue("captureDir", buffer);      
-  EndDialog(TRUE);
+	char baseDir[MAX_PATH+1];
+	char temp[MAX_PATH+1];
+	GetModuleFileName( NULL, baseDir, MAX_PATH );
+	baseDir[MAX_PATH] = '\0'; // for security reasons
+	PathRemoveFileSpec( baseDir ); // removes the trailing file name and backslash
+
+
+	CString buffer;
+
+	m_romPath.GetWindowText(buffer);
+	if( !buffer.IsEmpty() )
+		regSetStringValue( "romdir", buffer );
+	if( buffer[0] == '.' ) {
+		strcpy( temp, baseDir );
+		strcat( temp, "\\" );
+		strcat( temp, buffer );
+		buffer = temp;
+	}
+	if( !directoryDoesExist( buffer ) )
+		SHCreateDirectoryEx( NULL, buffer, NULL );
+
+	m_gbromPath.GetWindowText(buffer);
+	if( !buffer.IsEmpty() )
+		regSetStringValue( "gbromdir", buffer );      
+	if( buffer[0] == '.' ) {
+		strcpy( temp, baseDir );
+		strcat( temp, "\\" );
+		strcat( temp, buffer );
+		buffer = temp;
+	}
+	if( !directoryDoesExist( buffer ) )
+		SHCreateDirectoryEx( NULL, buffer, NULL );
+
+	m_batteryPath.GetWindowText(buffer);
+	if( !buffer.IsEmpty() )
+		regSetStringValue( "batteryDir", buffer );
+	if( buffer[0] == '.' ) {
+		strcpy( temp, baseDir );
+		strcat( temp, "\\" );
+		strcat( temp, buffer );
+		buffer = temp;
+	}
+	if( !directoryDoesExist( buffer ) )
+		SHCreateDirectoryEx( NULL, buffer, NULL );
+
+	m_savePath.GetWindowText(buffer);
+	if( !buffer.IsEmpty() )
+		regSetStringValue( "saveDir", buffer );
+	if( buffer[0] == '.' ) {
+		strcpy( temp, baseDir );
+		strcat( temp, "\\" );
+		strcat( temp, buffer );
+		buffer = temp;
+	}
+	if( !directoryDoesExist( buffer ) )
+		SHCreateDirectoryEx( NULL, buffer, NULL );
+
+	m_capturePath.GetWindowText(buffer);
+	if( !buffer.IsEmpty() )
+		regSetStringValue( "captureDir", buffer );
+	if( buffer[0] == '.' ) {
+		strcpy( temp, baseDir );
+		strcat( temp, "\\" );
+		strcat( temp, buffer );
+		buffer = temp;
+	}
+	if( !directoryDoesExist( buffer ) )
+		SHCreateDirectoryEx( NULL, buffer, NULL );
+
+	EndDialog(TRUE);
 }
 
 CString Directories::browseForDir(CString title)

@@ -52,7 +52,6 @@
 #define IDD_ABOUT                       105
 #define IDR_ACCELERATOR                 106
 #define IDD_CHEATS                      107
-#define IDI_ICON                        107
 #define IDD_ADD_CHEAT                   108
 #define IDD_DIRECTORIES                 109
 #define IDD_CONFIG                      110
