@@ -30,24 +30,20 @@
 #include "../Util.h"
 #include "../gb/gbGlobals.h"
 
-extern int Init_2xSaI(u32); // initializes all pixel filters
-extern int systemSpeed;
-
-#include <tchar.h>
-
 // Direct3D
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>      // main include file
 #include <D3dx9core.h> // required for font rednering
 #include <Dxerr.h>     // contains debug functions
 
+extern int Init_2xSaI(u32); // initializes all pixel filters
+extern int systemSpeed;
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
-
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
@@ -67,8 +63,8 @@ private:
 	int                   height;
 	RECT                  destRect;
 	bool                  failed;
+	ID3DXFont             *pFont;
 
-	ID3DXFont *pFont;
 	void createFont();
 	void destroyFont();
 	void createSurface();
@@ -79,7 +75,6 @@ private:
 public:
 	Direct3DDisplay();
 	virtual ~Direct3DDisplay();
-
 	virtual DISPLAY_TYPE getType() { return DIRECT_3D; };
 
 	virtual bool initialize();
@@ -91,7 +86,7 @@ public:
 	virtual bool changeRenderSize( int w, int h );
 	virtual void resize( int w, int h );
 	virtual void setOption( const char *option, int value );
-	virtual int selectFullScreenMode( GUID ** );  
+	virtual int  selectFullScreenMode( GUID ** );  
 };
 
 
@@ -179,7 +174,7 @@ bool Direct3DDisplay::initialize()
 	case VIDEO_OTHER:
 		float scaleX = ((float)theApp.fsWidth / theApp.sizeX);
 		float scaleY = ((float)theApp.fsHeight / theApp.sizeY);
-		float min = scaleX < scaleY ? scaleX : scaleY;
+		float min = (scaleX < scaleY) ? scaleX : scaleY;
 		if(theApp.fullScreenStretch) {
 			theApp.surfaceSizeX = theApp.fsWidth;
 			theApp.surfaceSizeY = theApp.fsHeight;
@@ -412,32 +407,34 @@ void Direct3DDisplay::render()
 	pBackBuffer->Release();
 	pBackBuffer = NULL;
 
-	D3DCOLOR color = theApp.showSpeedTransparent ? D3DCOLOR_ARGB(0x7f, 0x00, 0x00, 0xff) : D3DCOLOR_ARGB(0xff, 0x00, 0x00, 0xff);
+	D3DCOLOR color;
 	RECT r;
 	r.left = 4;
 	r.right = dpp.BackBufferWidth - 4;
 
 	if( theApp.screenMessage ) {
-		if(((GetTickCount() - theApp.screenMessageTime) < 3000) && !theApp.disableStatusMessage && pFont) {
+		color = theApp.showSpeedTransparent ? D3DCOLOR_ARGB(0x7F, 0xFF, 0x00, 0x00) : D3DCOLOR_ARGB(0xFF, 0xFF, 0x00, 0x00);
+		if( ( ( GetTickCount() - theApp.screenMessageTime ) < 3000 ) && !theApp.disableStatusMessage && pFont ) {
 			r.top = dpp.BackBufferHeight - 20;
 			r.bottom = dpp.BackBufferHeight - 4;
-			pFont->DrawText(NULL, theApp.screenMessageBuffer, -1, &r, 0, color);
+			pFont->DrawText( NULL, theApp.screenMessageBuffer, -1, &r, 0, color );
 		} else {
 			theApp.screenMessage = false;
 		}
 	}
 
-	if( theApp.showSpeed && (theApp.videoOption > VIDEO_4X) ) {
+	if( theApp.showSpeed && ( theApp.videoOption > VIDEO_4X ) ) {
+		color = theApp.showSpeedTransparent ? D3DCOLOR_ARGB(0x7F, 0x00, 0x00, 0xFF) : D3DCOLOR_ARGB(0xFF, 0x00, 0x00, 0xFF);
 		char buffer[30];
-		if(theApp.showSpeed == 1) {
-			sprintf(buffer, "%3d%%", systemSpeed);
+		if( theApp.showSpeed == 1 ) {
+			sprintf( buffer, "%3d%%", systemSpeed );
 		} else {
-			sprintf(buffer, "%3d%%(%d, %d fps)", systemSpeed, systemFrameSkip, theApp.showRenderedFrames);
+			sprintf( buffer, "%3d%%(%d, %d fps)", systemSpeed, systemFrameSkip, theApp.showRenderedFrames );
 		}
 		
 		r.top = 4;
 		r.bottom = 20;
-		pFont->DrawText(NULL, buffer, -1, &r, 0, color);
+		pFont->DrawText( NULL, buffer, -1, &r, 0, color );
 	}
 
 	pDevice->EndScene();
@@ -504,7 +501,7 @@ void Direct3DDisplay::createFont()
 	if( !pFont ) {
 		HRESULT hr = D3DXCreateFont(
 			pDevice,
-			12,
+			14,
 			0,
 			FW_BOLD,
 			1,
