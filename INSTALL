@@ -85,7 +85,8 @@ Needed software:
 - Microsoft Platform SDK (free, optional, essential only for express edition)
  > http://www.microsoft.com/downloads/details.aspx?FamilyId=E15438AC-60BE-41BD-AA14-7F1E0F19CA0D&displaylang=en
 - Microsoft DirectX 9.0 SDK (free, essential)
- > http://msdn.microsoft.com/directx/sdk/
+ > http://msdn.com/directx/sdk
+   (August 2006 version as I write these lines)
 - Yasm (free, essential)
  > http://www.tortall.net/projects/yasm/
  > Unpack it anywhere on your pc and add the directory to
