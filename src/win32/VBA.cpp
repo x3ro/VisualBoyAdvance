@@ -1463,27 +1463,24 @@ void VBA::updateVideoSize(UINT id)
     value = VIDEO_320x240;
     fsWidth = 320;
     fsHeight = 240;
-    fsColorDepth = 16;
+    fsColorDepth = 32;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN640X480:
     value = VIDEO_640x480;
     fsWidth = 640;
     fsHeight = 480;
-    fsColorDepth = 16;
+    fsColorDepth = 32;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN800X600:
     value = VIDEO_800x600;
     fsWidth = 800;
     fsHeight = 600;
-    fsColorDepth = 16;
+    fsColorDepth = 32;
     break;
   case ID_OPTIONS_VIDEO_FULLSCREEN:
     value = VIDEO_OTHER;
     break;
   }
-
-  //if(videoOption == value && value != VIDEO_OTHER)
-   // return;
 
   updateWindowSize(value);
 }
@@ -1687,6 +1684,9 @@ void VBA::updateWindowSize(int value)
 
   updateIFB();  
   updateFilter();
+  
+  if(display)
+    display->resize(theApp.dest.right-theApp.dest.left, theApp.dest.bottom-theApp.dest.top);
   
   m_pMainWnd->RedrawWindow(NULL,NULL,RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);  
 }
