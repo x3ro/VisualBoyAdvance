@@ -1399,12 +1399,12 @@ IDR_MENU MENU
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "&Open...",                    ID_FILE_OPEN
+        MENUITEM "Open...",                     ID_FILE_OPEN
         MENUITEM "Open Gameboy...",             ID_FILE_OPENGAMEBOY
         MENUITEM SEPARATOR
-        MENUITEM "&Load...",                    ID_FILE_LOAD
-        MENUITEM "&Save...",                    ID_FILE_SAVE
-        POPUP "Loa&d Game"
+        MENUITEM "Load...",                     ID_FILE_LOAD
+        MENUITEM "Save...",                     ID_FILE_SAVE
+        POPUP "Load Game"
         BEGIN
             MENUITEM "Most recent",                 ID_FILE_LOADGAME_MOSTRECENT
             MENUITEM "Auto load most recent",       ID_FILE_LOADGAME_AUTOLOADMOSTRECENT
@@ -1420,7 +1420,7 @@ BEGIN
             MENUITEM "Slot #9",                     ID_FILE_LOADGAME_SLOT9
             MENUITEM "Slot #10",                    ID_FILE_LOADGAME_SLOT10
         END
-        POPUP "S&ave Game"
+        POPUP "Save Game"
         BEGIN
             MENUITEM "Oldest slot",                 ID_FILE_SAVEGAME_OLDESTSLOT
             MENUITEM SEPARATOR
@@ -1436,35 +1436,35 @@ BEGIN
             MENUITEM "Slot #10",                    ID_FILE_SAVEGAME_SLOT10
         END
         MENUITEM SEPARATOR
-        MENUITEM "&Pause",                      ID_FILE_PAUSE
-        MENUITEM "&Reset",                      ID_FILE_RESET
+        MENUITEM "Pause",                       ID_FILE_PAUSE
+        MENUITEM "Reset",                       ID_FILE_RESET
         MENUITEM SEPARATOR
-        POPUP "Re&cent"
+        POPUP "Recent"
         BEGIN
             MENUITEM "&Reset",                      ID_FILE_RECENT_RESET
             MENUITEM "&Freeze",                     ID_FILE_RECENT_FREEZE
             MENUITEM SEPARATOR
         END
         MENUITEM SEPARATOR
-        POPUP "&Import"
+        POPUP "Import"
         BEGIN
             MENUITEM "&Battery file...",            ID_FILE_IMPORT_BATTERYFILE
             MENUITEM "Gameshark &code file...",     ID_FILE_IMPORT_GAMESHARKCODEFILE
             MENUITEM "&Gameshark Snapshot...",      ID_FILE_IMPORT_GAMESHARKSNAPSHOT
         END
-        POPUP "E&xport"
+        POPUP "Export"
         BEGIN
             MENUITEM "&Battery file...",            ID_FILE_EXPORT_BATTERYFILE
             MENUITEM "&Gameshark Snapshot...",      ID_FILE_EXPORT_GAMESHARKSNAPSHOT
         END
         MENUITEM SEPARATOR
-        MENUITEM "S&creen capture...",          ID_FILE_SCREENCAPTURE
-        MENUITEM "Ro&m information...",         ID_FILE_ROMINFORMATION
-        MENUITEM "&Toggle menu",                ID_FILE_TOGGLEMENU
+        MENUITEM "Screen capture...",           ID_FILE_SCREENCAPTURE
+        MENUITEM "Rom information...",          ID_FILE_ROMINFORMATION
+        MENUITEM "Toggle menu",                 ID_FILE_TOGGLEMENU
         MENUITEM SEPARATOR
-        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM "Close",                       ID_FILE_CLOSE
         MENUITEM SEPARATOR
-        MENUITEM "&Exit",                       ID_FILE_EXIT
+        MENUITEM "Exit",                        ID_FILE_EXIT
     END
     POPUP "&Options"
     BEGIN
@@ -1619,6 +1619,7 @@ BEGIN
                 MENUITEM "&3x",                         ID_OPTIONS_SOUND_VOLUME_3X
                 MENUITEM "&4x",                         ID_OPTIONS_SOUND_VOLUME_4X
             END
+            MENUITEM "Hardware Acceleration",       ID_OPTIONS_SOUND_HARDWAREACCELERATION
         END
         POPUP "&Gameboy"
         BEGIN

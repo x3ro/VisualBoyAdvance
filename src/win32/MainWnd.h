@@ -418,6 +418,10 @@ class MainWnd : public CWnd
     afx_msg BOOL OnFileRecentFile(UINT nID);
   afx_msg BOOL OnFileLoadSlot(UINT nID);
   afx_msg BOOL OnFileSaveSlot(UINT nID);
+public:
+	afx_msg void OnOptionsSoundHardwareacceleration();
+public:
+	afx_msg void OnUpdateOptionsSoundHardwareacceleration(CCmdUI *pCmdUI);
 };
 
 /////////////////////////////////////////////////////////////////////////////

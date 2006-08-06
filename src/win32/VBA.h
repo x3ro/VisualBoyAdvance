@@ -166,6 +166,7 @@ class VBA : public CWinApp
   bool soundRecording;
   WavWriter *soundRecorder;
   CString soundRecordName;
+  bool dsoundDisableHardwareAcceleration;
   ISound *sound;
   bool aviRecording;
   AVIWrite *aviRecorder;

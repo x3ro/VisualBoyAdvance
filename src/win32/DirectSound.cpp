@@ -17,6 +17,7 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
+// MFC
 #include "stdafx.h"
 
 // Tools
@@ -29,10 +30,10 @@
 #include "../Globals.h"
 #include "../Sound.h"
 
-// DirectSound includes
-#include <mmsystem.h>
-#include <mmreg.h>
-#include <dsound.h>
+// DirectSound8
+#include <Dsound.h>
+#pragma comment( lib, "Dsound" )
+#pragma comment( lib, "Dxguid" )
 
 
 class DirectSound : public ISound
@@ -140,6 +141,9 @@ bool DirectSound::init()
 	ZeroMemory( &dsbdesc, sizeof(DSBUFFERDESC) );
 	dsbdesc.dwSize = sizeof(DSBUFFERDESC);
 	dsbdesc.dwFlags = DSBCAPS_PRIMARYBUFFER;
+	if( theApp.dsoundDisableHardwareAcceleration ) {
+		dsbdesc.dwFlags |= DSBCAPS_LOCSOFTWARE;
+	}
 
 	if( FAILED( hr = pDirectSound->CreateSoundBuffer( &dsbdesc, &dsbPrimary, NULL ) ) ) {
 		systemMessage(IDS_CANNOT_CREATESOUNDBUFFER, _T("Cannot CreateSoundBuffer %08x"), hr);
@@ -181,6 +185,9 @@ bool DirectSound::init()
 	ZeroMemory( &dsbdesc, sizeof(DSBUFFERDESC) );
 	dsbdesc.dwSize = sizeof(DSBUFFERDESC);
 	dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLPOSITIONNOTIFY;
+	if( theApp.dsoundDisableHardwareAcceleration ) {
+		dsbdesc.dwFlags |= DSBCAPS_LOCSOFTWARE;
+	}
 	dsbdesc.dwBufferBytes = soundBufferTotalLen;
 	dsbdesc.lpwfxFormat = &wfx;
 

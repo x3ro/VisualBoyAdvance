@@ -751,18 +751,18 @@ void MainWnd::OnOptionsEmulatorAutohidemenu()
 
 void MainWnd::OnOptionsEmulatorGenericflashcard() 
 {
-  if(emulating && theApp.cartridgeType == 1)
+  if(emulating && theApp.cartridgeType == IMAGE_GB)
   theApp.winGenericflashcardEnable = !theApp.winGenericflashcardEnable;
 }
 
 void MainWnd::OnUpdateOptionsEmulatorGenericflashcard(CCmdUI* pCmdUI) 
 {
-  if(emulating && theApp.cartridgeType == 1)
+  if(emulating && theApp.cartridgeType == IMAGE_GB)
   pCmdUI->SetCheck(theApp.winGenericflashcardEnable);
     else
   pCmdUI->SetCheck(false);
 
-  pCmdUI->Enable(emulating && theApp.cartridgeType == 1);
+  pCmdUI->Enable(emulating && theApp.cartridgeType == IMAGE_GB);
 }
 
 void MainWnd::OnUpdateOptionsEmulatorAutohidemenu(CCmdUI* pCmdUI) 
@@ -1774,5 +1774,17 @@ void MainWnd::OnOptionsEmulatorGameoverrides()
 
 void MainWnd::OnUpdateOptionsEmulatorGameoverrides(CCmdUI* pCmdUI) 
 {
-  pCmdUI->Enable(emulating && theApp.cartridgeType == 0);
+  pCmdUI->Enable(emulating && (theApp.cartridgeType == 0));
+}
+
+void MainWnd::OnOptionsSoundHardwareacceleration()
+{
+  theApp.dsoundDisableHardwareAcceleration = !theApp.dsoundDisableHardwareAcceleration;
+  systemSoundShutdown();
+  systemSoundInit();
+}
+
+void MainWnd::OnUpdateOptionsSoundHardwareacceleration(CCmdUI *pCmdUI)
+{
+  pCmdUI->SetCheck(!theApp.dsoundDisableHardwareAcceleration);
 }

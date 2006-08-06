@@ -266,6 +266,7 @@ VBA::VBA()
   winPauseNextFrame = false;
   soundRecording = false;
   soundRecorder = NULL;
+  dsoundDisableHardwareAcceleration = true;
   sound = NULL;
   aviRecording = false;
   aviRecorder = NULL;
