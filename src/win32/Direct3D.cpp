@@ -385,8 +385,9 @@ void Direct3DDisplay::render()
 		if( !theApp.filterFunction ) {
 			copyImage( pix, lr.pBits, theApp.sizeX, theApp.sizeY, lr.Pitch, systemColorDepth );
 		} else {
-			theApp.filterFunction( pix + (theApp.filterWidth * (systemColorDepth>>3)) + 4,
-				theApp.filterWidth * (systemColorDepth>>3) + 4,
+			u32 pitch = theApp.filterWidth * (systemColorDepth>>3) + 4;
+			theApp.filterFunction( pix + pitch,
+				pitch,
 				(u8*)theApp.delta,
 				(u8*)lr.pBits,
 				lr.Pitch,
@@ -600,6 +601,10 @@ void Direct3DDisplay::setOption( const char *option, int value )
 			filter = D3DTEXF_LINEAR;
 			break;
 		}
+	}
+
+	if( !_tcscmp( option, _T("maxScale") ) ) {
+		calculateDestRect();
 	}
 }
 

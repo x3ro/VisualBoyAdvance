@@ -59,12 +59,14 @@ private:
 	int height;
 	float size;
 	u8 *filterData;
+	RECT destRect;
 	bool failed;
 
 	void initializeMatrices( int w, int h );
 	bool initializeTexture( int w, int h );
 	void updateFiltering( int value );
 	void setVSync( int interval = 1 );
+	void calculateDestRect( int w, int h );
 
 public:
 	OpenGLDisplay();
@@ -367,6 +369,8 @@ void OpenGLDisplay::renderMenu()
 
 void OpenGLDisplay::render()
 {
+	clear();
+
 	int pitch = theApp.filterWidth * 4 + 4;
 	u8 *data = pix + ( theApp.sizeX + 1 ) * 4;
 	
@@ -385,12 +389,13 @@ void OpenGLDisplay::render()
 
 	// Texturemap complete texture to surface
 	// so we have free scaling and antialiasing
-	int mult = 1;
-	if( theApp.filterFunction) {
-		glPixelStorei( GL_UNPACK_ROW_LENGTH, 2 * theApp.sizeX );
+	int mult;
+	if( theApp.filterFunction ) {
+		glPixelStorei( GL_UNPACK_ROW_LENGTH, theApp.sizeX << 1 );
 		mult = 2;
 	} else {
 		glPixelStorei( GL_UNPACK_ROW_LENGTH, theApp.sizeX + 1 );
+		mult = 1;
 	}
 	
 	glTexSubImage2D(
@@ -403,28 +408,38 @@ void OpenGLDisplay::render()
 		GL_RGBA,
 		GL_UNSIGNED_BYTE,
 		data );
-	
+
 	if( theApp.glType == 0 ) {
 		glBegin( GL_TRIANGLE_STRIP );
+
 		glTexCoord2f( 0.0f, 0.0f );
 		glVertex3i( 0, 0, 0 );
-		glTexCoord2f( (float)mult * (float)theApp.sizeX / size, 0.0f );
+
+		glTexCoord2f( (float)(mult * theApp.sizeX) / size, 0.0f );
 		glVertex3i( theApp.surfaceSizeX, 0, 0 );
-		glTexCoord2f( 0.0f, (float)mult * (float)theApp.sizeY / size );
+
+		glTexCoord2f( 0.0f, (float)(mult * theApp.sizeY) / size );
 		glVertex3i( 0, theApp.surfaceSizeY, 0 );
-		glTexCoord2f( (float)mult * (float)theApp.sizeX / size, (float)mult * (float)theApp.sizeY / size );
+
+		glTexCoord2f( (float)(mult * theApp.sizeX) / size, (float)(mult * theApp.sizeY) / size );
 		glVertex3i( theApp.surfaceSizeX, theApp.surfaceSizeY, 0 );
+
 		glEnd();
 	} else {
 		glBegin( GL_QUADS );
+
 		glTexCoord2f( 0.0f, 0.0f );
 		glVertex3i( 0, 0, 0 );
-		glTexCoord2f( (float)mult * (float)theApp.sizeX / size, 0.0f );
+
+		glTexCoord2f( (float)(mult * theApp.sizeX) / size, 0.0f );
 		glVertex3i( theApp.surfaceSizeX, 0, 0 );
-		glTexCoord2f( (float)mult * (float)theApp.sizeX / size, (float)mult * (float)theApp.sizeY / size );
+
+		glTexCoord2f( (float)(mult * theApp.sizeX) / size, (float)(mult * theApp.sizeY) / size );
 		glVertex3i( theApp.surfaceSizeX, theApp.surfaceSizeY, 0 );
-		glTexCoord2f( 0.0f, (float)mult * (float)theApp.sizeY / size );
+
+		glTexCoord2f( 0.0f, (float)(mult * theApp.sizeY) / size );
 		glVertex3i( 0, theApp.surfaceSizeY, 0 );
+
 		glEnd();
 	}
 
@@ -478,23 +493,35 @@ void OpenGLDisplay::updateFiltering( int value )
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		break;
 	}
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
 }
 
 
 void OpenGLDisplay::initializeMatrices( int w, int h )
 {
-	glViewport( 0, 0, w, h );
+	if( theApp.fullScreenStretch ) {
+		glViewport( 0, 0, w, h );
+	} else {
+		calculateDestRect( w, h );
+		glViewport(
+			destRect.left,
+			destRect.top,
+			destRect.right - destRect.left,
+			destRect.bottom - destRect.top );
+	}
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	glOrtho(
-		0.0f,
-		(GLdouble)(w),
-		(GLdouble)(h),
-		0.0f,
+		/* left   */ 1.0f,
+		/* right  */ (GLdouble)(w - 1),
+		/* bottom */ (GLdouble)(h - 1),
+		/* top    */ 1.0f,
 		0.0f,
 		1.0f );
-	
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 }
@@ -577,6 +604,31 @@ bool OpenGLDisplay::changeRenderSize( int w, int h )
 }
 
 
+void OpenGLDisplay::calculateDestRect( int w, int h )
+{
+	float scaleX = (float)w / (float)width;
+	float scaleY = (float)h / (float)height;
+	float min = (scaleX < scaleY) ? scaleX : scaleY;
+	if( theApp.fsMaxScale && (min > theApp.fsMaxScale) ) {
+		min = (float)theApp.fsMaxScale;
+	}
+	destRect.left = 0;
+	destRect.top = 0;
+	destRect.right = (LONG)(width * min);
+	destRect.bottom = (LONG)(height * min);
+	if( destRect.right != w ) {
+		LONG diff = (w - destRect.right) / 2;
+		destRect.left += diff;
+		destRect.right += diff;
+	}
+	if( destRect.bottom != h ) {
+		LONG diff = (h - destRect.bottom) / 2;
+		destRect.top += diff;
+		destRect.bottom += diff;
+	}
+}
+
+
 void OpenGLDisplay::setOption( const char *option, int value )
 {
 	if( !_tcscmp( option, _T("vsync") ) ) {
@@ -585,6 +637,14 @@ void OpenGLDisplay::setOption( const char *option, int value )
 
 	if( !_tcscmp( option, _T("glFilter") ) ) {
 		updateFiltering( value );
+	}
+
+	if( !_tcscmp( option, _T("maxScale") ) ) {
+		initializeMatrices( theApp.dest.right, theApp.dest.bottom );
+	}
+
+	if( !_tcscmp( option, _T("fullScreenStretch") ) ) {
+		initializeMatrices( theApp.dest.right, theApp.dest.bottom );
 	}
 }
 

@@ -1761,6 +1761,10 @@ void MainWnd::OnOptionsVideoFullscreenmaxscale()
   theApp.winCheckFullscreen();
 
   dlg.DoModal();
+
+  if( theApp.display ) {
+	  theApp.display->setOption( _T("maxScale"), theApp.fsMaxScale );
+  }
 }
 
 
