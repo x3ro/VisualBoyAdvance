@@ -81,7 +81,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				EmbedManifest="false"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -109,7 +109,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
-			WholeProgramOptimization="0"
+			WholeProgramOptimization="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -129,12 +129,17 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				InlineFunctionExpansion="1"
+				AdditionalOptions="/D_ST_MODEL&#x0D;&#x0A;/D_SECURE_SCL=0"
+				Optimization="2"
+				InlineFunctionExpansion="2"
 				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\sdl"
 				PreprocessorDefinitions="WIN32;WINVER=0x0500;NDEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;FINAL_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE;NOSKINS"
 				RuntimeLibrary="0"
-				EnableEnhancedInstructionSet="1"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -164,6 +169,7 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				LinkTimeCodeGeneration="4"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -171,7 +177,7 @@
 			/>
 			<Tool
 				Name="VCManifestTool"
-				EmbedManifest="false"
+				EmbedManifest="true"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
