@@ -4,6 +4,7 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vba_vs2005", "vba_vs2005.vcproj", "{EAD25A86-E6DB-4258-8875-197930F28F6A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B938FBD9-C7F9-4BF7-8C27-68865D1FA092} = {B938FBD9-C7F9-4BF7-8C27-68865D1FA092}
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE} = {DB5C12E9-BCD3-4517-8708-475C0D1D88CE}
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F} = {96E945F7-0377-48DA-A5F8-1C192DE9F25F}
 	EndProjectSection
 EndProject
@@ -26,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "dependencies\libp
 	ProjectSection(ProjectDependencies) = postProject
 		{B938FBD9-C7F9-4BF7-8C27-68865D1FA092} = {B938FBD9-C7F9-4BF7-8C27-68865D1FA092}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cximage", "dependencies\cximage\cximage.vcproj", "{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +62,14 @@ Global
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F}.SDL_Debug|Win32.Build.0 = Debug|Win32
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F}.SDL_Release|Win32.ActiveCfg = Release|Win32
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F}.SDL_Release|Win32.Build.0 = Release|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.MFC_Debug|Win32.ActiveCfg = Debug|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.MFC_Debug|Win32.Build.0 = Debug|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.MFC_Release|Win32.ActiveCfg = Release|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.MFC_Release|Win32.Build.0 = Release|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.SDL_Debug|Win32.ActiveCfg = Debug|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.SDL_Debug|Win32.Build.0 = Debug|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.SDL_Release|Win32.ActiveCfg = Release|Win32
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE}.SDL_Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +77,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B938FBD9-C7F9-4BF7-8C27-68865D1FA092} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
+		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		AMDCaProjectFile = 

@@ -17,7 +17,7 @@
 	<Configurations>
 		<Configuration
 			Name="MFC_Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
@@ -42,11 +42,12 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng"
-				PreprocessorDefinitions="WIN32;WINVER=0x0500;_DEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;DEV_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE;NOSKINS"
+				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\cximage"
+				PreprocessorDefinitions="WIN32;WINVER=0x0500;_DEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;DEV_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				EnableEnhancedInstructionSet="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -69,7 +70,7 @@
 				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib WSock32.Lib Vfw32.Lib dinput.lib winmm.lib d3d9.lib d3dx9d.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_debug.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
+				AdditionalLibraryDirectories=""
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="nafxcwd.lib;LIBCMTD.lib"
 				GenerateDebugInformation="true"
@@ -105,11 +106,11 @@
 		</Configuration>
 		<Configuration
 			Name="MFC_Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="1"
-			WholeProgramOptimization="2"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -134,8 +135,8 @@
 				InlineFunctionExpansion="2"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng"
-				PreprocessorDefinitions="WIN32;WINVER=0x0500;NDEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;FINAL_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE;NOSKINS"
+				AdditionalIncludeDirectories=".\dependencies\zlib;.\dependencies\libpng;.\dependencies\cximage"
+				PreprocessorDefinitions="WIN32;WINVER=0x0500;NDEBUG;_WINDOWS;OEMRESOURCE;MMX;ASM;FINAL_VERSION;BKPT_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="1"
@@ -162,14 +163,14 @@
 				AdditionalDependencies="nafxcw.lib LIBCMT.lib WSock32.Lib Vfw32.Lib dinput.lib winmm.lib d3d9.lib d3dx9.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
+				AdditionalLibraryDirectories=""
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="nafxcw.lib;LIBCMT.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				LinkTimeCodeGeneration="4"
+				LinkTimeCodeGeneration="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -201,7 +202,7 @@
 		</Configuration>
 		<Configuration
 			Name="SDL_Debug|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
@@ -231,6 +232,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				EnableEnhancedInstructionSet="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -250,10 +252,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
+				AdditionalDependencies="WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL_debug.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
+				AdditionalLibraryDirectories=""
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -290,11 +292,11 @@
 		</Configuration>
 		<Configuration
 			Name="SDL_Release|Win32"
-			OutputDirectory="$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			UseOfMFC="0"
-			WholeProgramOptimization="0"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -339,10 +341,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
+				AdditionalDependencies="WSock32.Lib SDLmain.lib SDL.lib dxguid.lib winmm.lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_SDL.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories=".\dependencies\zlib\Release;.\dependencies\libpng\Release;.\dependencies\sdl\Release"
+				AdditionalLibraryDirectories=""
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -1191,6 +1193,10 @@
 								Name="VCCustomBuildTool"
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\src\win32\skinButton.h"
+						>
 					</File>
 					<File
 						RelativePath="..\src\win32\ZoomControl.h"
@@ -2213,6 +2219,10 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="..\src\win32\skin.h"
+						>
+					</File>
+					<File
 						RelativePath="..\src\win32\StringTokenizer.h"
 						>
 						<FileConfiguration
@@ -2743,6 +2753,10 @@
 								Name="VCCLCompilerTool"
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\src\win32\skinButton.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\src\win32\ZoomControl.cpp"
@@ -3947,6 +3961,10 @@
 								Name="VCCLCompilerTool"
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="..\src\win32\skin.cpp"
+						>
 					</File>
 					<File
 						RelativePath="..\src\win32\StringTokenizer.cpp"
