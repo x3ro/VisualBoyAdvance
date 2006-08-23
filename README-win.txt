@@ -40,11 +40,13 @@ Options->Joypad->Configure... menu.
 The 1 thorugh 4 joypads allow you to have different settings which can be
 easily switched.
 
-System requirements
--------------------
+Recommended System Requirements
+-------------------------------
 
-Fast computer (Pentium III 500 Mhz recommended) and Microsoft DirectX 7 or
-greater.
+CPU: 800MHz with MMX & SSE
+RAM: 64MB free
+GPU: Graphics card with drivers supporting DirectX9
+OS:  Windows 2000 with DirectX9 runtime
 
 Translations
 ------------
