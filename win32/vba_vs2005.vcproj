@@ -67,7 +67,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib WSock32.Lib Vfw32.Lib dinput.lib winmm.lib d3d9.lib d3dx9d.lib DxErr.lib OpenGL32.Lib"
+				AdditionalDependencies="nafxcwd.lib LIBCMTD.lib WSock32.Lib Vfw32.Lib winmm.lib d3d9.lib d3dx9d.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance_debug.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
@@ -160,7 +160,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="nafxcw.lib LIBCMT.lib WSock32.Lib Vfw32.Lib dinput.lib winmm.lib d3d9.lib d3dx9.lib DxErr.lib OpenGL32.Lib"
+				AdditionalDependencies="nafxcw.lib LIBCMT.lib WSock32.Lib Vfw32.Lib winmm.lib d3d9.lib d3dx9.lib DxErr.lib OpenGL32.Lib"
 				OutputFile="$(OutDir)\VisualBoyAdvance.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
