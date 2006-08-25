@@ -214,7 +214,7 @@ void MainWnd::OnToolsDebugGdb()
       paletteRAM = (u8 *)calloc(1,0x400);
       vram = (u8 *)calloc(1, 0x20000);
       oam = (u8 *)calloc(1, 0x400);
-      pix = (u8 *)calloc(1, 4 * 240 * 160);
+      pix = (u8 *)calloc(1, 4 * 241 * 162);
       ioMem = (u8 *)calloc(1, 0x400);
       
       theApp.emulator = GBASystem;
