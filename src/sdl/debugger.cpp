@@ -74,7 +74,15 @@ struct DebuggerCommand {
   char *syntax;
 };
 
+unsigned int SearchStart = 0xFFFFFFFF;
+unsigned int SearchMaxMatches = 5;
+u8 SearchData [64]; // It doesn't make much sense to search for more than 64 bytes
+unsigned int SearchLength = 0;
+unsigned int SearchResults;
+
 static void debuggerContinueAfterBreakpoint();
+void debuggerDoSearch();
+unsigned int AddressToGBA(u8* mem);
 
 static void debuggerHelp(int,char **);
 static void debuggerNext(int,char **);
@@ -100,6 +108,9 @@ static void debuggerEdit(int, char **);
 static void debuggerFileDisassemble(int, char **);
 static void debuggerFileDisassembleArm(int, char **);
 static void debuggerFileDisassembleThumb(int, char **);
+static void debuggerFindText(int, char **);
+static void debuggerFindHex(int, char **);
+static void debuggerFindResume(int, char **);
 static void debuggerIo(int, char **);
 static void debuggerLast(int, char **);
 static void debuggerLocals(int, char **);
@@ -148,6 +159,9 @@ static DebuggerCommand debuggerCommands[] = {
   { "fd", debuggerFileDisassemble, "Disassemble instructions to file", "<file> [<address> [<number>]]" },
   { "fda", debuggerFileDisassembleArm, "Disassemble ARM instructions to file", "<file> [<address> [<number>]]" },
   { "fdt", debuggerFileDisassembleThumb, "Disassemble THUMB instructions to file", "<file> [<address> [<number>]]" },
+  { "ft", debuggerFindText, "Search memory for ASCII-string.", "<start> [<max-result>] <string>" },
+  { "fh", debuggerFindHex, "Search memory for hex-string.", "<start> [<max-result>] <hex-string>" },
+  { "fr", debuggerFindResume, "Resume current search.", "[<max-result>]" },
   { "h", debuggerHelp,        "Show this help information. Type h <command> for command help", "[<command>]" },
   { "io", debuggerIo,         "Show I/O registers status", "[video|video2|dma|timer|misc]" },
   { "last", debuggerLast,	  "Trigger the display of the last registers states", NULL },
@@ -1527,6 +1541,204 @@ static void debuggerFileDisassembleThumb(int n, char **args)
   fclose(f);
 }
 
+void debuggerFindText(int n, char **args)
+{
+  if ((n == 4) || (n == 3))
+  {
+    SearchResults = 0;
+    sscanf(args[1], "%x", &SearchStart);
+    
+    if (n == 4)
+	{
+      sscanf(args[2], "%u", &SearchMaxMatches);
+      strncpy((char*) SearchData, args[3], 64);
+	  SearchLength = strlen(args[3]);
+	}
+	else if (n == 3)
+	{
+      strncpy((char*) SearchData, args[2], 64);
+	  SearchLength = strlen(args[2]);
+	};
+
+	if (SearchLength > 64)
+	{
+	  printf ("Entered string (length: %d) is longer than 64 bytes and was cut.\n", SearchLength);
+	  SearchLength = 64;
+	};
+
+	debuggerDoSearch ();
+    
+  } else
+    debuggerUsage("ft");
+};
+
+void debuggerFindHex(int n, char **args)
+{
+  if ((n == 4) || (n == 3))
+  {
+    SearchResults = 0;
+    sscanf(args[1], "%x", &SearchStart);
+    
+	char SearchHex [128];
+    if (n == 4)
+	{
+      sscanf(args[2], "%u", &SearchMaxMatches);
+      strncpy(SearchHex, args[3], 128);
+	  SearchLength = strlen(args[3]);
+	}
+	else if (n == 3)
+	{
+      strncpy(SearchHex, args[2], 128);
+	  SearchLength = strlen(args[2]);
+	};
+
+	if (SearchLength & 1)
+	  printf ("Unaligned bytecount: %d,5. Last digit (%c) cut.\n", SearchLength / 2, SearchHex [SearchLength - 1]);
+
+	SearchLength /= 2;
+
+	if (SearchLength > 64)
+	{
+	  printf ("Entered string (length: %d) is longer than 64 bytes and was cut.\n", SearchLength);
+	  SearchLength = 64;
+	};
+
+	for (unsigned int i = 0; i < SearchLength; i++)
+	{
+	  unsigned int cbuf = 0;
+	  sscanf (&SearchHex [i << 1], "%02x", &cbuf);
+      SearchData [i] = cbuf;
+	};
+    
+	debuggerDoSearch ();
+    
+  } else
+    debuggerUsage("fh");
+};
+
+void debuggerFindResume(int n, char **args)
+{
+  if ((n == 1) || (n == 2))
+  {
+    if (SearchLength == 0)
+	{
+	  printf("Error: No search in progress. Start a search with ft or fh.\n");
+      debuggerUsage("fr");
+	  return;
+	};
+    
+	if (n == 2)
+	  sscanf(args[1], "%u", &SearchMaxMatches);
+    
+	debuggerDoSearch();
+
+  } else
+    debuggerUsage("fr");
+};
+
+void debuggerDoSearch()
+{
+  int count = 0;
+
+  while (true)
+  {
+    unsigned int final = SearchStart + SearchLength - 1;
+    u8* end;
+    u8* start;
+
+    switch (SearchStart >> 24)
+    {
+    case 0:
+      if (final > 0x00003FFF) { SearchStart = 0x02000000; continue; }
+        else { start = bios + (SearchStart & 0x3FFF); end = bios + 0x3FFF; break; };
+    case 2:
+      if (final > 0x0203FFFF) { SearchStart = 0x03000000; continue; }
+        else { start = workRAM + (SearchStart & 0x3FFFF); end = workRAM + 0x3FFFF; break; };
+    case 3:
+      if (final > 0x03007FFF) { SearchStart = 0x04000000; continue; }
+        else { start = internalRAM + (SearchStart & 0x7FFF); end = internalRAM + 0x7FFF; break; };
+    case 4:
+      if (final > 0x040003FF) { SearchStart = 0x05000000; continue; }
+        else { start = ioMem + (SearchStart & 0x3FF); end = ioMem + 0x3FF; break; };
+    case 5:
+      if (final > 0x050003FF) { SearchStart = 0x06000000; continue; }
+        else { start = paletteRAM + (SearchStart & 0x3FF); end = paletteRAM + 0x3FF; break; };
+    case 6:
+      if (final > 0x0601FFFF) { SearchStart = 0x07000000; continue; }
+        else { start = vram + (SearchStart & 0x1FFFF); end = vram + 0x1FFFF; break; };
+    case 7:
+      if (final > 0x070003FF) { SearchStart = 0x08000000; continue; }
+        else { start = oam + (SearchStart & 0x3FF); end = oam + 0x3FF; break; };
+    case 8:
+    case 9:
+    case 10:
+    case 11:
+    case 12:
+    case 13:
+	  if (final <= 0x09FFFFFF)
+		{ start = rom + (SearchStart & 0x01FFFFFF); end = rom + 0x01FFFFFF; break; };
+	default:
+      printf ("Search completed.\n");
+      SearchLength = 0;
+      return;
+    };
+
+    end -= SearchLength - 1;
+    u8 firstbyte = SearchData [0];
+    while (start <= end)
+    {
+      while ((start <= end) && (*start != firstbyte))
+        start++;
+
+      if (start > end)
+        break;
+
+      unsigned int p = 1;
+      while ((start [p] == SearchData [p]) && (p < SearchLength))
+        p++;
+
+      if (p == SearchLength)
+      {
+        printf ("Search result (%d): %08x\n", count + SearchResults, AddressToGBA (start));
+        count++;
+        if (count == SearchMaxMatches)
+        {
+          SearchStart = AddressToGBA (start + p);
+		  SearchResults += count;
+          return;
+        };
+
+        start += p;		// assume areas don't overlap; alternative: start++;
+      } else
+        start++;
+    };
+
+    SearchStart = AddressToGBA (end + SearchLength - 1) + 1;
+  };
+};
+
+unsigned int AddressToGBA(u8* mem)
+{
+  if(mem >= &bios[0] && mem <= &bios[0x3fff])
+    return 0x00000000 + (mem - &bios[0]);
+  else if(mem >= &workRAM[0] && mem <= &workRAM[0x3ffff])
+    return 0x02000000 + (mem - &workRAM[0]);
+  else if(mem >= &internalRAM[0] && mem <= &internalRAM[0x7fff])
+    return 0x03000000 + (mem - &internalRAM[0]);
+  else if(mem >= &ioMem[0] && mem <= &ioMem[0x3ff])
+    return 0x04000000 + (mem - &ioMem[0]);
+  else if(mem >= &paletteRAM[0] && mem <= &paletteRAM[0x3ff])
+    return 0x05000000 + (mem - &paletteRAM[0]);
+  else if(mem >= &vram[0] && mem <= &vram[0x1ffff])
+    return 0x06000000 + (mem - &vram[0]);
+  else if(mem >= &oam[0] && mem <= &oam[0x3ff])
+    return 0x07000000 + (mem - &oam[0]);
+  else if(mem >= &rom[0] && mem <= &rom[0x1ffffff])
+    return 0x08000000 + (mem - &rom[0]);
+  else
+    return 0xFFFFFFFF;
+};
+
 static void debuggerFileDisassemble(int n, char **args)
 {
   if(n < 2) {
@@ -2344,6 +2556,64 @@ static bool debuggerCondEvaluate(int num)
   }
 }
 
+char* strqtok (char* string, const char* ctrl)
+{ // quoted tokens
+  static char* nexttoken = NULL;
+  char* str;
+
+  if (string != NULL)
+    str = string;
+  else {
+    if (nexttoken == NULL)
+      return NULL;
+    str = nexttoken;
+  };
+
+  char deli [32];
+  memset (deli, 0, 32 * sizeof (char));
+  while (*ctrl)
+  {
+    deli [*ctrl >> 3] |= (1 << (*ctrl & 7));
+    ctrl++;
+  };
+  // can't allow to be set
+  deli ['"' >> 3] &= ~(1 << ('"' & 7));
+
+  // jump over leading delimiters
+  while ((deli [*str >> 3] & (1 << (*str & 7))) && *str)
+    str++;
+
+  if (*str == '"')
+  {
+    string = ++str;
+
+    // only break if another quote or end of string is found
+    while ((*str != '"') && *str)
+      str++;
+  } else {
+    string = str;
+
+    // break on delimiter
+    while (!(deli [*str >> 3] & (1 << (*str & 7))) && *str)
+      str++;
+  };
+
+  if (string == str)
+  {
+    nexttoken = NULL;
+    return NULL;
+  } else {
+    if (*str)
+    {
+      *str = 0;
+      nexttoken = str + 1;
+    } else
+      nexttoken = NULL;
+
+    return string;
+  };
+};
+
 /*extern*/ void debuggerMain()
 {
   char buffer[1024];
@@ -2361,11 +2631,11 @@ static bool debuggerCondEvaluate(int num)
     commandCount = 0;
     char *s = fgets(buffer, 1024, stdin);
 
-    commands[0] = strtok(s, " \t\n");
+    commands[0] = strqtok(s, " \t\n");
     if(commands[0] == NULL)
       continue;
     commandCount++;
-    while((s = strtok(NULL, " \t\n"))) {
+    while((s = strqtok(NULL, " \t\n"))) {
       commands[commandCount++] = s;
       if(commandCount == 10)
         break;
