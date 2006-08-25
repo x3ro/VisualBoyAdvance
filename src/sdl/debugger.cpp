@@ -2025,7 +2025,6 @@ static void debuggerCondValidate(int n,char **args,int start)
   char *address=args[start];
   char *op=args[start+1];
   char *value=args[start+2];
-  char *returnmsg="";
   char *tsize,*taddress,*tvalue;
 
   int rel=0;

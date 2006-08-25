@@ -1730,7 +1730,7 @@ void sdlPollEvents()
            (event.key.keysym.mod & KMOD_CTRL)) {
           if(emulating && emulator.emuReadMemState && rewindMemory 
              && rewindCount) {
-            rewindPos = --rewindPos & 7;
+            rewindPos = (rewindPos - 1) & 7;
             emulator.emuReadMemState(&rewindMemory[REWIND_SIZE*rewindPos], 
                                      REWIND_SIZE);
             rewindCount--;
@@ -2571,9 +2571,9 @@ int main(int argc, char **argv)
           if(emulator.emuWriteMemState &&
              emulator.emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
                                        REWIND_SIZE)) {
-            rewindPos = ++rewindPos & 7;
+            rewindPos = (rewindPos + 1) & 7;
             if(rewindCount == 8)
-              rewindTopPos = ++rewindTopPos & 7;
+              rewindTopPos = (rewindTopPos + 1) & 7;
           }
         }
 

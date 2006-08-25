@@ -4616,7 +4616,7 @@ void gbEmulate(int ticksToStop)
         if ((gbLcdLYIncrementTicks <= 0) && (!gbLYChangeHappened))
         {
           gbLYChangeHappened = true;
-          gbMemory[0xff44] = register_LY = (++register_LY) % 154;
+          gbMemory[0xff44] = register_LY = (register_LY + 1) % 154;
 
           if (register_LY == 0x91)
           {
@@ -5127,7 +5127,6 @@ void gbEmulate(int ticksToStop)
                 gbJoymask[0] = systemReadJoypad(-1);
               }             
             }
-            int newmask = gbJoymask[0] & 255;
             gbFrameCount++;
 
             systemFrame();

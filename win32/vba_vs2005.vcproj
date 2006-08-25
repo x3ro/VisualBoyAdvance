@@ -2561,6 +2561,10 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\src\win32\VisualBoyAdvance.exe.manifest"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="source"
@@ -4852,10 +4856,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\src\win32\VisualBoyAdvance.exe.manifest"
-			>
-		</File>
 	</Files>
 	<Globals>
 		<Global

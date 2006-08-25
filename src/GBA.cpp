@@ -2239,7 +2239,6 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
   int dm = d >> 24;
   int sw = 0;
   int dw = 0;
-  bool blank = false;
   int sc = c;
 
   cpuDmaCount = c;
