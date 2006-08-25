@@ -187,6 +187,7 @@ static bool rewindSaveNeeded = false;
 static int rewindTimer = 0;
 
 #define REWIND_SIZE 400000
+#define SYSMSG_BUFFER_SIZE 1024
 
 #define _stricmp strcasecmp
 
@@ -2192,6 +2193,12 @@ int main(int argc, char **argv)
 
   if(optind < argc) {
     char *szFile = argv[optind];
+    u32 len = strlen(szFile);
+    if (len > SYSMSG_BUFFER_SIZE) 
+    {
+      fprintf(stderr,"%s :%s: File name too long\n",argv[0],szFile);
+      exit(-1);
+    }
 
     utilGetBaseName(szFile, filename);
     char *p = strrchr(filename, '.');
@@ -2611,7 +2618,7 @@ int main(int argc, char **argv)
 
 void systemMessage(int num, const char *msg, ...)
 {
-  char buffer[2048];
+  char buffer[SYSMSG_BUFFER_SIZE*2];
   va_list valist;
   
   va_start(valist, msg);
