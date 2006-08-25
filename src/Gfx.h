@@ -1603,10 +1603,10 @@ inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
     int g0 = ((color2 >> 5) & 0x1F);
     int b0 = ((color2 >> 10) & 0x1F);
     
-    r = ((r * ca) >> 4) + ((r0 * cb) >> 4);
-    g = ((g * ca) >> 4) + ((g0 * cb) >> 4);
-    b = ((b * ca) >> 4) + ((b0 * cb) >> 4);
-    
+    r = ((r * ca) + (r0 * cb)) >> 4;
+    g = ((g * ca) + (g0 * cb)) >> 4;
+    b = ((b * ca) + (b0 * cb)) >> 4;
+
     if(r > 31)
       r = 31;
     if(g > 31)
@@ -1632,9 +1632,9 @@ inline void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb)
       int g0 = ((color2 >> 5) & 0x1F);
       int b0 = ((color2 >> 10) & 0x1F);
       
-      r = ((r * ca) >> 4) + ((r0 * cb) >> 4);
-      g = ((g * ca) >> 4) + ((g0 * cb) >> 4);
-      b = ((b * ca) >> 4) + ((b0 * cb) >> 4);
+      r = ((r * ca) + (r0 * cb)) >> 4;
+      g = ((g * ca) + (g0 * cb)) >> 4;
+      b = ((b * ca) + (b0 * cb)) >> 4;
       
       if(r > 31)
         r = 31;
