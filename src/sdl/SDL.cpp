@@ -3023,7 +3023,7 @@ bool systemSoundInit()
 void systemSoundShutdown()
 {
   // Patch #1382692 by deathpudding.
-  SDL_CloseAudio ();
+  SDL_CloseAudio (); //TODO: fix freeze
   SDL_DestroySemaphore (sdlBufferLock);
   SDL_DestroySemaphore (sdlBufferFull);
   SDL_DestroySemaphore (sdlBufferEmpty);
