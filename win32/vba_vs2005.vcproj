@@ -13,6 +13,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<DefaultToolFile
+			FileName="yasm.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -29,6 +32,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="YASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -118,6 +124,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="YASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -216,6 +225,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="YASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -304,6 +316,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="YASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -2530,40 +2545,32 @@
 						Name="MFC_Debug|Win32"
 						>
 						<Tool
-							Name="VCCustomBuildTool"
-							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
-							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
+							Name="YASM"
+							Defines="__DJGPP__"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="MFC_Release|Win32"
 						>
 						<Tool
-							Name="VCCustomBuildTool"
-							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
-							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
+							Name="YASM"
+							Defines="__DJGPP__"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="SDL_Debug|Win32"
 						>
 						<Tool
-							Name="VCCustomBuildTool"
-							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
-							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
+							Name="YASM"
+							Defines="__DJGPP__"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
 						Name="SDL_Release|Win32"
 						>
 						<Tool
-							Name="VCCustomBuildTool"
-							Description="Assembling $(InputFileName)..."
-							CommandLine="yasm-0.5.0-win32.exe -D __DJGPP__ --oformat=win32 --arch=x86 --dformat=cv8 --machine=x86 -X vc --objfile=&quot;$(OutDir)\$(InputName).obj&quot; &quot;$(InputPath)&quot;&#x0D;&#x0A;"
-							Outputs="&quot;$(OutDir)\$(InputName).obj&quot;"
+							Name="YASM"
+							Defines="__DJGPP__"
 						/>
 					</FileConfiguration>
 				</File>
@@ -4748,6 +4755,38 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="doc"
+			>
+			<File
+				RelativePath="..\AUTHORS"
+				>
+			</File>
+			<File
+				RelativePath="..\COPYING"
+				>
+			</File>
+			<File
+				RelativePath="..\INSTALL"
+				>
+			</File>
+			<File
+				RelativePath="..\NEWS"
+				>
+			</File>
+			<File
+				RelativePath="..\README"
+				>
+			</File>
+			<File
+				RelativePath="..\README-win.txt"
+				>
+			</File>
+			<File
+				RelativePath="..\VERSION"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\src\win32\VisualBoyAdvance.exe.manifest"

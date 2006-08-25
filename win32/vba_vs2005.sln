@@ -8,19 +8,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vba_vs2005", "vba_vs2005.vc
 		{96E945F7-0377-48DA-A5F8-1C192DE9F25F} = {96E945F7-0377-48DA-A5F8-1C192DE9F25F}
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "documentation", "documentation", "{61FD874C-E3E4-499F-B4A9-AC8A66174D5D}"
-	ProjectSection(SolutionItems) = preProject
-		..\AUTHORS = ..\AUTHORS
-		..\COPYING = ..\COPYING
-		..\INSTALL = ..\INSTALL
-		..\NEWS = ..\NEWS
-		..\README = ..\README
-		..\README-win.txt = ..\README-win.txt
-		..\VERSION = ..\VERSION
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dependencies", "dependencies", "{F78600CD-B229-4EE2-9351-A9D5D47AEA3B}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "dependencies\zlib\zlib.vcproj", "{B938FBD9-C7F9-4BF7-8C27-68865D1FA092}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "dependencies\libpng\libpng.vcproj", "{96E945F7-0377-48DA-A5F8-1C192DE9F25F}"
@@ -73,11 +60,6 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{B938FBD9-C7F9-4BF7-8C27-68865D1FA092} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
-		{96E945F7-0377-48DA-A5F8-1C192DE9F25F} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
-		{DB5C12E9-BCD3-4517-8708-475C0D1D88CE} = {F78600CD-B229-4EE2-9351-A9D5D47AEA3B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		AMDCaProjectFile = 
