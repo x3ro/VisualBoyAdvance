@@ -126,6 +126,8 @@ LRESULT SkinButton::OnLButtonUpMsg(WPARAM wParam, LPARAM lParam)
   if(region != NULL)
     inside &= PtInRegion(region, pt.x, pt.y);
   if(inside) {
+    ReleaseCapture();
+    Invalidate();
     HWND hWnd = m_hWnd;
     if(idCommand != 0)
       GetParent()->SendMessage(WM_COMMAND, idCommand, 0);
