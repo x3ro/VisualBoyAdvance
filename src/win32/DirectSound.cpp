@@ -184,7 +184,7 @@ bool DirectSound::init()
 	// Create secondary sound buffer
 	ZeroMemory( &dsbdesc, sizeof(DSBUFFERDESC) );
 	dsbdesc.dwSize = sizeof(DSBUFFERDESC);
-	dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLPOSITIONNOTIFY;
+	dsbdesc.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_GLOBALFOCUS;
 	if( theApp.dsoundDisableHardwareAcceleration ) {
 		dsbdesc.dwFlags |= DSBCAPS_LOCSOFTWARE;
 	}
