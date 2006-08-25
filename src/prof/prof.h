@@ -24,6 +24,24 @@
    profiling is what mcount checks to see if
    all the data structures are ready.  */
 
+
+typedef struct profile_segment {
+  unsigned short *froms;
+  struct tostruct *tos;
+  long  tolimit;
+
+  u32  s_lowpc;
+  u32  s_highpc;
+  unsigned long s_textsize;
+  
+  int ssiz;
+  char *sbuf;
+  int s_scale;
+  
+  struct profile_segment *next;
+
+} profile_segment;
+
 extern void profControl(int mode);
 extern void profStartup(u32 lowpc, u32 highpc);
 extern void profCleanup();

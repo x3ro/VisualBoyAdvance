@@ -104,10 +104,7 @@ int cpuTotalTicks = 0;
 #ifdef PROFILING
 int profilingTicks = 0;
 int profilingTicksReload = 0;
-static char *profilBuffer = NULL;
-static int profilSize = 0;
-static u32 profilLowPC = 0;
-static int profilScale = 0;
+static profile_segment *profilSegment = NULL;
 #endif
 
 #ifdef BKPT_SUPPORT
@@ -501,12 +498,9 @@ variable_desc saveGameStruct[] = {
 static int romSize = 0x2000000;
 
 #ifdef PROFILING
-void cpuProfil(char *buf, int size, u32 lowPC, int scale)
+void cpuProfil(profile_segment *seg)
 {
-  profilBuffer = buf;
-  profilSize = size;
-  profilLowPC = lowPC;
-  profilScale = scale;
+    profilSegment = seg;
 }
 
 void cpuEnableProfiling(int hz)
@@ -4274,12 +4268,18 @@ void CPULoop(int ticks)
       profilingTicks -= clockTicks;
       if(profilingTicks <= 0) {
         profilingTicks += profilingTicksReload;
-        if(profilBuffer && profilSize) {
-          u16 *b = (u16 *)profilBuffer;
-          int pc = ((reg[15].I - profilLowPC) * profilScale)/0x10000;
-          if(pc >= 0 && pc < profilSize) {
+        if(profilSegment) {
+	  profile_segment *seg = profilSegment;
+	  do {
+	    u16 *b = (u16 *)seg->sbuf;
+	    int pc = ((reg[15].I - seg->s_lowpc) * seg->s_scale)/0x10000;
+	    if(pc >= 0 && pc < seg->ssiz) {
             b[pc]++;
+	      break;
           }
+
+	    seg = seg->next;
+	  } while(seg);
         }
       }
 #endif

@@ -57,20 +57,14 @@
 #include "../GBA.h"
 #include "../NLS.h"
 
+#include "prof.h" /* for struct profile_segment */
+
 /*
  * froms is actually a bunch of unsigned shorts indexing tos
  */
 static int  profiling = 3;
-static unsigned short *froms;
-static struct tostruct *tos = 0;
-static long  tolimit = 0;
-static u32  s_lowpc = 0;
-static u32  s_highpc = 0;
-static unsigned long s_textsize = 0;
 
-static int ssiz;
-static char *sbuf;
-static int s_scale;
+static profile_segment *first_segment = NULL;
 
 static int hz = 0;
 static int hist_num_bins = 0;
@@ -127,13 +121,13 @@ void profControl(int mode)
   if (mode) {
     /* start */
 #ifdef PROFILING
-    cpuProfil(sbuf, ssiz, (u32)s_lowpc, s_scale);
+    cpuProfil(first_segment);
 #endif
     profiling = 0;
   } else {
     /* stop */
 #ifdef PROFILING
-    cpuProfil(NULL, 0, 0, 0);
+    cpuProfil(NULL);
 #endif
     profiling = 3;
   }
@@ -147,57 +141,65 @@ void profStartup(u32 lowpc, u32 highpc)
   int monsize;
   char *buffer;
   int o;
+  profile_segment *newseg = (profile_segment*)calloc(1,sizeof(profile_segment));
   
+  if (newseg) {
+    newseg->next = first_segment;
+    first_segment = newseg;
+  } else {
+    systemMessage(0, MSG);
+    return;
+  }
   /*
    * round lowpc and highpc to multiples of the density we're using
    * so the rest of the scaling (here and in gprof) stays in ints.
    */
   lowpc = ROUNDDOWN(lowpc, HISTFRACTION*sizeof(HISTCOUNTER));
-  s_lowpc = lowpc;
+  newseg->s_lowpc = lowpc;
   highpc = ROUNDUP(highpc, HISTFRACTION*sizeof(HISTCOUNTER));
-  s_highpc = highpc;
-  s_textsize = highpc - lowpc;
-  monsize = (s_textsize / HISTFRACTION);
+  newseg->s_highpc = highpc;
+  newseg->s_textsize = highpc - lowpc;
+  monsize = (newseg->s_textsize / HISTFRACTION);
   buffer = (char *)calloc(1, 2*monsize );
   if ( buffer == NULL ) {
     systemMessage(0, MSG);
     return;
   }
-  froms = (unsigned short *) calloc(1, 4*s_textsize / HASHFRACTION );
-  if ( froms == NULL ) {
+  newseg->froms = (unsigned short *) calloc(1, 4*newseg->s_textsize / HASHFRACTION );
+  if ( newseg->froms == NULL ) {
     systemMessage(0, MSG);
     free(buffer);
     buffer = NULL;
     return;
   }
-  tolimit = s_textsize * ARCDENSITY / 100;
-  if ( tolimit < MINARCS ) {
-    tolimit = MINARCS;
-  } else if ( tolimit > 65534 ) {
-    tolimit = 65534;
+  newseg->tolimit = newseg->s_textsize * ARCDENSITY / 100;
+  if ( newseg->tolimit < MINARCS ) {
+    newseg->tolimit = MINARCS;
+  } else if ( newseg->tolimit > 65534 ) {
+    newseg->tolimit = 65534;
   }
-  tos = (struct tostruct *) calloc(1, tolimit * sizeof( struct tostruct ) );
-  if ( tos == NULL ) {
+  newseg->tos = (struct tostruct *) calloc(1, newseg->tolimit * sizeof( struct tostruct ) );
+  if ( newseg->tos == NULL ) {
     systemMessage(0, MSG);
     
     free(buffer);
     buffer = NULL;
     
-    free(froms);
-    froms = NULL;
+    free(newseg->froms);
+    newseg->froms = NULL;
     
     return;
   }
-  tos[0].link = 0;
-  sbuf = buffer;
-  ssiz = monsize;
+  newseg->tos[0].link = 0;
+  newseg->sbuf = buffer;
+  newseg->ssiz = monsize;
   if ( monsize <= 0 )
     return;
   o = highpc - lowpc;
   if( monsize < o )
-    s_scale = (int)(( (float) monsize / o ) * SCALE_1_TO_1);
+    newseg->s_scale = (int)(( (float) monsize / o ) * SCALE_1_TO_1);
   else
-    s_scale = SCALE_1_TO_1;
+    newseg->s_scale = SCALE_1_TO_1;
   profControl(1);
 }
 
@@ -209,6 +211,7 @@ void profCleanup()
   u32 frompc;
   int toindex;
   struct gmon_hdr ghdr;
+  profile_segment *seg = first_segment;
   
   profControl(0);
   fd = fopen( "gmon.out" , "wb" );
@@ -229,11 +232,13 @@ void profCleanup()
   if(hz == 0)
     hz = 100;
 
-  hist_num_bins = ssiz;
+  while(seg) {
+
+    hist_num_bins = seg->ssiz;
   
   if(profWrite8(fd, GMON_TAG_TIME_HIST) ||
-     profWrite32(fd, (u32)s_lowpc) ||
-     profWrite32(fd, (u32)s_highpc) ||
+       profWrite32(fd, (u32)seg->s_lowpc) ||
+       profWrite32(fd, (u32)seg->s_highpc) ||
      profWrite32(fd, hist_num_bins) ||
      profWrite32(fd, hz) ||
      profWrite(fd, hist_dimension, 15) ||
@@ -242,7 +247,7 @@ void profCleanup()
     fclose(fd);
     return;
   }
-  u16 *hist_sample = (u16 *)sbuf;
+    u16 *hist_sample = (u16 *)seg->sbuf;
 
   u16 count;
   int i;
@@ -257,22 +262,24 @@ void profCleanup()
     }
   }
   
-  endfrom = s_textsize / (HASHFRACTION * sizeof(*froms));
+    endfrom = seg->s_textsize / (HASHFRACTION * sizeof(*seg->froms));
   for ( fromindex = 0 ; fromindex < endfrom ; fromindex++ ) {
-    if ( froms[fromindex] == 0 ) {
+      if ( seg->froms[fromindex] == 0 ) {
       continue;
     }
-    frompc = s_lowpc + (fromindex * HASHFRACTION * sizeof(*froms));
-    for (toindex=froms[fromindex]; toindex!=0; toindex=tos[toindex].link) {
+      frompc = seg->s_lowpc + (fromindex * HASHFRACTION * sizeof(*seg->froms));
+      for (toindex=seg->froms[fromindex]; toindex!=0; toindex=seg->tos[toindex].link) {
       if(profWrite8(fd, GMON_TAG_CG_ARC) ||
          profWrite32(fd, (u32)frompc) ||
-         profWrite32(fd, (u32)tos[toindex].selfpc) ||
-         profWrite32(fd, tos[toindex].count)) {
+	   profWrite32(fd, (u32)seg->tos[toindex].selfpc) ||
+	   profWrite32(fd, seg->tos[toindex].count)) {
         systemMessage(0, "mcount: arc");
         fclose(fd);
         return;
       }
     }
+  }
+    seg = seg->next;
   }
   fclose(fd);
 }
@@ -284,6 +291,7 @@ void profCount()
   register struct tostruct *top;
   register struct tostruct *prevtop;
   register long toindex;
+  profile_segment *seg = first_segment;
 
   /*
    * find the return address for mcount,
@@ -309,29 +317,36 @@ void profCount()
    * for example: signal catchers get called from the stack,
    *   not from text space.  too bad.
    */
-  frompcindex = (unsigned short *) ((long) frompcindex - (long) s_lowpc);
-  if ((unsigned long) frompcindex > s_textsize) {
+  while(seg) {
+    u32 index = (long)frompcindex - (long)seg->s_lowpc;
+    if (index <= seg->s_textsize) {
+      frompcindex = (unsigned short *) index;
+      break;
+    }
+    seg = seg->next;
+  }
+  if ((unsigned long) frompcindex > seg->s_textsize) {
     goto done;
   }
   frompcindex =
-    &froms[((long) frompcindex) / (HASHFRACTION * sizeof(*froms))];
+    &(seg->froms[((long) frompcindex) / (HASHFRACTION * sizeof(*seg->froms))]);
   toindex = *frompcindex;
   if (toindex == 0) {
     /*
      * first time traversing this arc
      */
-    toindex = ++tos[0].link;
-    if (toindex >= tolimit) {
+    toindex = ++seg->tos[0].link;
+    if (toindex >= seg->tolimit) {
       goto overflow;
     }
     *frompcindex = (unsigned short)toindex;
-    top = &tos[toindex];
+    top = &seg->tos[toindex];
     top->selfpc = selfpc;
     top->count = 1;
     top->link = 0;
     goto done;
   }
-  top = &tos[toindex];
+  top = &seg->tos[toindex];
   if (top->selfpc == selfpc) {
     /*
      * arc at front of chain; usual case.
@@ -353,11 +368,11 @@ void profCount()
        * so we allocate a new tostruct
        * and link it to the head of the chain.
        */
-      toindex = ++tos[0].link;
-      if (toindex >= tolimit) {
+      toindex = ++seg->tos[0].link;
+      if (toindex >= seg->tolimit) {
         goto overflow;
       }
-      top = &tos[toindex];
+      top = &seg->tos[toindex];
       top->selfpc = selfpc;
       top->count = 1;
       top->link = *frompcindex;
@@ -368,7 +383,7 @@ void profCount()
      * otherwise, check the next arc on the chain.
      */
     prevtop = top;
-    top = &tos[top->link];
+    top = &seg->tos[top->link];
     if (top->selfpc == selfpc) {
       /*
        * there it is.

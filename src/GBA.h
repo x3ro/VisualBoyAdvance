@@ -122,7 +122,8 @@ extern void CPUCheckDMA(int,int);
 extern bool CPUIsGBAImage(const char *);
 extern bool CPUIsZipFile(const char *);
 #ifdef PROFILING
-extern void cpuProfil(char *buffer, int, u32, int);
+#include "prof/prof.h"
+extern void cpuProfil(profile_segment *seg);
 extern void cpuEnableProfiling(int hz);
 #endif
 
