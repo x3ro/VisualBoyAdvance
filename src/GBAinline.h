@@ -53,7 +53,7 @@ extern int cpuTotalTicks;
 #define CPUReadMemoryQuick(addr) \
   READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))
 
-inline u32 CPUReadMemory(u32 address)
+static inline u32 CPUReadMemory(u32 address)
 {
 
 #ifdef DEV_VERSION
@@ -178,7 +178,7 @@ inline u32 CPUReadMemory(u32 address)
 
 extern u32 myROM[];
 
-inline u32 CPUReadHalfWord(u32 address)
+static inline u32 CPUReadHalfWord(u32 address)
 {
 #ifdef DEV_VERSION      
   if(address & 1) {
@@ -297,7 +297,7 @@ inline u32 CPUReadHalfWord(u32 address)
   return value;
 }
 
-inline u16 CPUReadHalfWordSigned(u32 address)
+static inline u16 CPUReadHalfWordSigned(u32 address)
 {
   u16 value = CPUReadHalfWord(address);
   if((address & 1))
@@ -305,7 +305,7 @@ inline u16 CPUReadHalfWordSigned(u32 address)
   return value;
 }
 
-inline u8 CPUReadByte(u32 address)
+static inline u8 CPUReadByte(u32 address)
 {
   switch(address >> 24) {
   case 0:
@@ -387,7 +387,7 @@ inline u8 CPUReadByte(u32 address)
   }
 }
 
-inline void CPUWriteMemory(u32 address, u32 value)
+static inline void CPUWriteMemory(u32 address, u32 value)
 {
 
 #ifdef DEV_VERSION

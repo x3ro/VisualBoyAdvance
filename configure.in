@@ -104,6 +104,8 @@ AC_C_BIGENDIAN
 
 VBA_LIBS="../gb/libgb.a"
 
+CXXFLAGS="$CXXFLAGS -DBKPT_SUPPORT"
+
 if test "x$enable_c_core" = xyes; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
 fi

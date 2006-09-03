@@ -338,6 +338,10 @@ void debuggerOutput(char *, u32)
 {
 }
 
+void debuggerBreakOnWrite(u32 address, u32 oldvalue, u32 value, int size, int t)
+{
+}
+
 void (*dbgMain)() = debuggerMain;
 void (*dbgSignal)(int, int) = debuggerSignal;
 void (*dbgOutput)(char *, u32) = debuggerOutput;

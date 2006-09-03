@@ -4,6 +4,7 @@
 #ifndef __GNUC__
 #include <io.h>
 #define isatty _isatty
+#define fileno _fileno
 #endif
 
 char *exprString;

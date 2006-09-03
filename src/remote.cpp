@@ -32,6 +32,7 @@
 # else // ! HAVE_ARPA_INET_H
 #  define socklen_t int
 # endif // ! HAVE_ARPA_INET_H
+# define SOCKET int
 #else // _WIN32
 # include <winsock.h>
 # include <io.h>

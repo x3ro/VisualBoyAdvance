@@ -25,6 +25,10 @@
 #include "elf.h"
 #include "exprNode.h"
 
+#ifndef __GNUC__
+#define strdup _strdup
+#endif
+
 extern char *yytext;
 
 #define debuggerReadMemory(addr) \
@@ -50,7 +54,7 @@ void exprNodeCleanUp()
 Node *exprNodeIdentifier()
 {
   Node *n = (Node *)calloc(1, sizeof(Node));
-  n->name = _strdup(yytext);
+  n->name = strdup(yytext);
 
   exprNodeClean(n->name);  
   exprNodeClean(n);
