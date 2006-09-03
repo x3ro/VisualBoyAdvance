@@ -163,9 +163,7 @@ EXTRA_DIST = \
 	GBA.dsw		\
 	gba.sln		\
 	GBA.vcproj	\
-	SDL-1.2.2	\
-	lib		\
-	include
+	dependencies
 
 subdir = win32
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4

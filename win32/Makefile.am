@@ -7,9 +7,7 @@ EXTRA_DIST = \
 	GBA.dsw		\
 	gba.sln		\
 	GBA.vcproj	\
-	SDL-1.2.2	\
-	lib		\
-	include
+	dependencies
 
 dist-hook:
 	rm -rf `find $(distdir) -name CVS`
