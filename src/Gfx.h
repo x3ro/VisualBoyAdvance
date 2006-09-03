@@ -28,43 +28,43 @@
 
 //#define SPRITE_DEBUG
 
-void gfxDrawTextScreen(u16, u16, u16, u32 *);
-void gfxDrawRotScreen(u16,
-                      u16, u16,
-                      u16, u16,
-                      u16, u16,
-                      u16, u16,
-                      int&, int&,
-                      int,
-                      u32*);
-void gfxDrawRotScreen16Bit(u16,
-                           u16, u16,
-                           u16, u16,
-                           u16, u16,
-                           u16, u16,
-                           int&, int&,
-                           int,
-                           u32*);
-void gfxDrawRotScreen256(u16,
-                         u16, u16,
-                         u16, u16,
-                         u16, u16,
-                         u16, u16,
-                         int&, int&,
-                         int,
-                         u32*);
-void gfxDrawRotScreen16Bit160(u16,
-                              u16, u16,
-                              u16, u16,
-                              u16, u16,
-                              u16, u16,
-                              int&, int&,
-                              int,
-                              u32*);
-void gfxDrawSprites(u32 *);
-void gfxIncreaseBrightness(u32 *line, int coeff);
-void gfxDecreaseBrightness(u32 *line, int coeff);
-void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb);
+static void gfxDrawTextScreen(u16, u16, u16, u32 *);
+static void gfxDrawRotScreen(u16,
+			     u16, u16,
+			     u16, u16,
+			     u16, u16,
+			     u16, u16,
+			     int&, int&,
+			     int,
+			     u32*);
+static void gfxDrawRotScreen16Bit(u16,
+				  u16, u16,
+				  u16, u16,
+				  u16, u16,
+				  u16, u16,
+				  int&, int&,
+				  int,
+				  u32*);
+static void gfxDrawRotScreen256(u16,
+				u16, u16,
+				u16, u16,
+				u16, u16,
+				u16, u16,
+				int&, int&,
+				int,
+				u32*);
+static void gfxDrawRotScreen16Bit160(u16,
+				     u16, u16,
+				     u16, u16,
+				     u16, u16,
+				     u16, u16,
+				     int&, int&,
+				     int,
+				     u32*);
+static void gfxDrawSprites(u32 *);
+static void gfxIncreaseBrightness(u32 *line, int coeff);
+static void gfxDecreaseBrightness(u32 *line, int coeff);
+static void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb);
 
 void mode0RenderLine();
 void mode0RenderLineNoWindow();
@@ -115,15 +115,15 @@ extern int gfxBG3LastX;
 extern int gfxBG3LastY;
 extern int gfxLastVCOUNT;
 
-inline void gfxClearArray(u32 *array)
+static inline void gfxClearArray(u32 *array)
 {
   for(int i = 0; i < 240; i++) {
     *array++ = 0x80000000;
   }
 }
 
-inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
-                              u32 *line)
+static inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
+				     u32 *line)
 {
   u16 *palette = (u16 *)paletteRAM;
   u8 *charBase = &vram[((control >> 2) & 0x03) * 0x4000];
@@ -267,14 +267,14 @@ inline void gfxDrawTextScreen(u16 control, u16 hofs, u16 vofs,
   }
 }
 
-inline void gfxDrawRotScreen(u16 control, 
-                             u16 x_l, u16 x_h,
-                             u16 y_l, u16 y_h,
-                             u16 pa,  u16 pb,
-                             u16 pc,  u16 pd,
-                             int& currentX, int& currentY,
-                             int changed,
-                             u32 *line)
+static inline void gfxDrawRotScreen(u16 control, 
+				    u16 x_l, u16 x_h,
+				    u16 y_l, u16 y_h,
+				    u16 pa,  u16 pb,
+				    u16 pc,  u16 pd,
+				    int& currentX, int& currentY,
+				    int changed,
+				    u32 *line)
 {
   u16 *palette = (u16 *)paletteRAM;
   u8 *charBase = &vram[((control >> 2) & 0x03) * 0x4000];
@@ -433,14 +433,14 @@ inline void gfxDrawRotScreen(u16 control,
   }  
 }
 
-inline void gfxDrawRotScreen16Bit(u16 control,
-                                  u16 x_l, u16 x_h,
-                                  u16 y_l, u16 y_h,
-                                  u16 pa,  u16 pb,
-                                  u16 pc,  u16 pd,
-                                  int& currentX, int& currentY,
-                                  int changed,
-                                  u32 *line)
+static inline void gfxDrawRotScreen16Bit(u16 control,
+					 u16 x_l, u16 x_h,
+					 u16 y_l, u16 y_h,
+					 u16 pa,  u16 pb,
+					 u16 pc,  u16 pd,
+					 int& currentX, int& currentY,
+					 int changed,
+					 u32 *line)
 {
   u16 *screenBase = (u16 *)&vram[0];
   int prio = ((control & 3) << 25) + 0x1000000;
@@ -530,14 +530,14 @@ inline void gfxDrawRotScreen16Bit(u16 control,
   }  
 }
 
-inline void gfxDrawRotScreen256(u16 control, 
-                                u16 x_l, u16 x_h,
-                                u16 y_l, u16 y_h,
-                                u16 pa,  u16 pb,
-                                u16 pc,  u16 pd,
-                                int &currentX, int& currentY,
-                                int changed,
-                                u32 *line)
+static inline void gfxDrawRotScreen256(u16 control, 
+				       u16 x_l, u16 x_h,
+				       u16 y_l, u16 y_h,
+				       u16 pa,  u16 pb,
+				       u16 pc,  u16 pd,
+				       int &currentX, int& currentY,
+				       int changed,
+				       u32 *line)
 {
   u16 *palette = (u16 *)paletteRAM;
   u8 *screenBase = (DISPCNT & 0x0010) ? &vram[0xA000] : &vram[0x0000];
@@ -631,14 +631,14 @@ inline void gfxDrawRotScreen256(u16 control,
   }    
 }
 
-inline void gfxDrawRotScreen16Bit160(u16 control,
-                                     u16 x_l, u16 x_h,
-                                     u16 y_l, u16 y_h,
-                                     u16 pa,  u16 pb,
-                                     u16 pc,  u16 pd,
-                                     int& currentX, int& currentY,
-                                     int changed,
-                                     u32 *line)
+static inline void gfxDrawRotScreen16Bit160(u16 control,
+					    u16 x_l, u16 x_h,
+					    u16 y_l, u16 y_h,
+					    u16 pa,  u16 pb,
+					    u16 pc,  u16 pd,
+					    int& currentX, int& currentY,
+					    int changed,
+					    u32 *line)
 {
   u16 *screenBase = (DISPCNT & 0x0010) ? (u16 *)&vram[0xa000] :
     (u16 *)&vram[0];
@@ -730,7 +730,7 @@ inline void gfxDrawRotScreen16Bit160(u16 control,
   }      
 }
 
-inline void gfxDrawSprites(u32 *lineOBJ)
+static inline void gfxDrawSprites(u32 *lineOBJ)
 {
   // lineOBJpix is used to keep track of the drawn OBJs
   // and to stop drawing them if the 'maximum number of OBJ per line'
@@ -1193,7 +1193,7 @@ inline void gfxDrawSprites(u32 *lineOBJ)
   }
 }
 
-inline void gfxDrawOBJWin(u32 *lineOBJWin)
+static inline void gfxDrawOBJWin(u32 *lineOBJWin)
 {
   gfxClearArray(lineOBJWin);
   if((layerEnable & 0x9000) == 0x9000) {
@@ -1512,7 +1512,7 @@ inline void gfxDrawOBJWin(u32 *lineOBJWin)
   }
 }
 
-inline u32 gfxIncreaseBrightness(u32 color, int coeff)
+static inline u32 gfxIncreaseBrightness(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1531,7 +1531,7 @@ inline u32 gfxIncreaseBrightness(u32 color, int coeff)
   return color;
 }
 
-inline void gfxIncreaseBrightness(u32 *line, int coeff)
+static inline void gfxIncreaseBrightness(u32 *line, int coeff)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *line;
@@ -1552,7 +1552,7 @@ inline void gfxIncreaseBrightness(u32 *line, int coeff)
   }
 }
 
-inline u32 gfxDecreaseBrightness(u32 color, int coeff)
+static inline u32 gfxDecreaseBrightness(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1572,7 +1572,7 @@ inline u32 gfxDecreaseBrightness(u32 color, int coeff)
   return color;
 }
 
-inline void gfxDecreaseBrightness(u32 *line, int coeff)
+static inline void gfxDecreaseBrightness(u32 *line, int coeff)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *line;
@@ -1593,7 +1593,7 @@ inline void gfxDecreaseBrightness(u32 *line, int coeff)
   }
 }
 
-inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
+static inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
 {
   if(color < 0x80000000) {
     int r = (color & 0x1F);
@@ -1619,7 +1619,7 @@ inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
   return color;
 }
 
-inline void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb)
+static inline void gfxAlphaBlend(u32 *ta, u32 *tb, int ca, int cb)
 {
   for(int x = 0; x < 240; x++) {
     u32 color = *ta;
