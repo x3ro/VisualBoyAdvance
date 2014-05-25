@@ -24,7 +24,7 @@ AC_ARG_ENABLE(c-core,
 
 AC_ARG_ENABLE(profiling,
   AC_HELP_STRING([--enable-profiling],[enable profiling (default is yes)]),
-  , enable_profiling=yes)
+  , enable_profiling=no)
 
 AC_ARG_WITH(mmx,
   AC_HELP_STRING([--with-mmx],[use MMX (default is yes on x86 targets)]),
