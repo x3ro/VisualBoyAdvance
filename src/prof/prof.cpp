@@ -47,6 +47,14 @@
  * SUCH DAMAGE.
  */
 
+#ifndef PROFILING
+void profSetHertz(int h) {}
+void profCleanup() {}
+void profStartup(unsigned lowpc, unsigned highpc) {}
+void profCount() {}
+void profControl(int mode) {}
+#else
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
@@ -416,3 +424,4 @@ void profSetHertz(int h)
 {
   hz = h;
 }
+#endif
