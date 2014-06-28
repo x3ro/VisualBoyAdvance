@@ -12,8 +12,11 @@ EXTRA_DIST = \
 	win32			\
 	expr.l			\
 	expr.y			\
-	CheatSearch.cpp		\
+	CheatSearch.c		\
 	CheatSearch.h
 
 dist-hook:
 	rm -rf `find $(distdir)/win32 -name CVS`
+
+expr.c: expr.y
+expr-lex.c: expr.l

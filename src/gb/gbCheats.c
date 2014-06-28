@@ -492,13 +492,13 @@ void gbCheatWrite(bool reboot)
             case 0x9C:
             case 0x9D:
             case 0x9E:
-            case 0x9F:
+            case 0x9F: {
               int oldbank = gbMemory[0xff70];
               gbWriteMemory(0xff70, gbCheatList[i].code & 0xf);
               gbWriteMemory(address, gbCheatList[i].value);
               gbWriteMemory(0xff70, oldbank);
               gbNextCheat = i+1;
-              return;
+              return; }
           }
         }
         else // These codes are only executed when the game is booted

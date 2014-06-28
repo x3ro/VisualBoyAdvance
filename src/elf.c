@@ -178,8 +178,8 @@
     case DW_TAG_enumerator:\
     case DW_TAG_reference_type
 
-struct ELFcie {
-  ELFcie *next;
+typedef struct ELFcie {
+  struct ELFcie *next;
   u32 offset;
   u8 *augmentation;
   u32 codeAlign;
@@ -187,40 +187,40 @@ struct ELFcie {
   int returnAddress;
   u8 *data;
   u32 dataLen;
-};
+} ELFcie;
 
-struct ELFfde {
-  ELFcie *cie;
+typedef struct ELFfde {
+  struct ELFcie *cie;
   u32 address;
   u32 end;
   u8 *data;
   u32 dataLen;
-};
+} ELFfde;
 
-enum ELFRegMode {
+typedef enum ELFRegMode {
   REG_NOT_SET,
   REG_OFFSET,
   REG_REGISTER
-};
+} ELFRegMode;
 
 
-struct ELFFrameStateRegister {
+typedef struct ELFFrameStateRegister {
   ELFRegMode mode;
   int reg;
   s32 offset;
-};
+} ELFFrameStateRegister;
 
-struct ELFFrameStateRegisters {
-  ELFFrameStateRegister regs[16];
-  ELFFrameStateRegisters *previous;
-};
+typedef struct ELFFrameStateRegisters {
+  struct ELFFrameStateRegister regs[16];
+  struct ELFFrameStateRegisters *previous;
+} ELFFrameStateRegisters;
 
-enum ELFCfaMode {
+typedef enum ELFCfaMode {
   CFA_NOT_SET,
   CFA_REG_OFFSET
-};
+} ELFCfaMode;
 
-struct ELFFrameState {
+typedef struct ELFFrameState {
   ELFFrameStateRegisters registers;
 
   ELFCfaMode cfaMode;
@@ -232,7 +232,7 @@ struct ELFFrameState {
   int dataAlign;
   int codeAlign;
   int returnAddress;
-};
+} ELFFrameState;
 
 extern bool cpuIsMultiBoot;
 
@@ -366,7 +366,7 @@ bool elfFindLineInModule(u32 *addr, char *name, int line)
   return false;
 }
 
-int elfFindLine(CompileUnit *unit, Function * /* func */, u32 addr, char **f)
+int elfFindLine(CompileUnit *unit, Function * unused/* func */, u32 addr, char **f)
 {
   int currentLine = -1;
   if(unit->hasLineInfo) {
@@ -713,7 +713,7 @@ void elfPrintCallChain(u32 address)
   }
 }
 
-u32 elfDecodeLocation(Function *f, ELFBlock *o, LocationType *type, u32 base)
+u32 elfDecodeLocation4(Function *f, ELFBlock *o, LocationType *type, u32 base)
 {
   u32 framebase = 0;
   if(f && f->frameBase) {
@@ -793,7 +793,7 @@ u32 elfDecodeLocation(Function *f, ELFBlock *o, LocationType *type, u32 base)
 
 u32 elfDecodeLocation(Function *f, ELFBlock *o, LocationType *type)
 {
-  return elfDecodeLocation(f, o, type, 0);
+  return elfDecodeLocation4(f, o, type, 0);
 }
 
 // reading function
@@ -1346,7 +1346,7 @@ u8 *elfParseObject(u8 *data, ELFAbbrev *abbrev, CompileUnit *unit,
                    Object **object);
 u8 *elfParseFunction(u8 *data, ELFAbbrev *abbrev, CompileUnit *unit,
                      Function **function);
-void elfCleanUp(Function *);
+void elfCleanUpF(Function *);
 
 void elfAddType(Type *type, CompileUnit *unit, u32 offset)
 {
@@ -1359,7 +1359,7 @@ void elfAddType(Type *type, CompileUnit *unit, u32 offset)
   }  
 }
 
-void elfParseType(u8 *data, u32 offset, ELFAbbrev *abbrev, CompileUnit *unit,
+void elfParseType5(u8 *data, u32 offset, ELFAbbrev *abbrev, CompileUnit *unit,
                   Type **type)
 {
   switch(abbrev->tag) {
@@ -1896,7 +1896,7 @@ Type *elfParseType(CompileUnit *unit, u32 offset)
 
   ELFAbbrev *abbrev = elfGetAbbrev(unit->abbrevs, abbrevNum);
   
-  elfParseType(data, offset, abbrev, unit, &type);
+  elfParseType5(data, offset, abbrev, unit, &type);
   return type;
 }
 
@@ -2246,7 +2246,7 @@ u8 *elfParseFunction(u8 *data, ELFAbbrev *abbrev, CompileUnit *unit,
   }
 
   if(declaration) {
-    elfCleanUp(func);
+    elfCleanUpF(func);
     free(func);
     *f = NULL;
 
@@ -2627,7 +2627,7 @@ void elfReadSymtab(u8 *data)
   //  free(symtab);
 }
 
-bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
+bool elfReadProgram(ELFHeader *eh, u8 *data, int *size, bool parseDebug)
 {
   int count = READ16LE(&eh->e_phnum);
   int i;
@@ -2637,7 +2637,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
 
   // read program headers... should probably move this code down
   u8 *p = data + READ32LE(&eh->e_phoff);
-  size = 0;
+  *size = 0;
   for(i = 0; i < count; i++) {
     ELFProgramHeader *ph = (ELFProgramHeader *)p;
     p += sizeof(ELFProgramHeader);
@@ -2654,7 +2654,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
         memcpy(&workRAM[READ32LE(&ph->paddr) & 0x3ffff],
                data + READ32LE(&ph->offset),
                READ32LE(&ph->filesz));
-        size += READ32LE(&ph->filesz);
+        *size += READ32LE(&ph->filesz);
       }      
     } else {
       if(READ32LE(&ph->paddr) >= 0x8000000 &&
@@ -2662,7 +2662,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
         memcpy(&rom[READ32LE(&ph->paddr) & 0x1ffffff],
                data + READ32LE(&ph->offset),
                READ32LE(&ph->filesz));
-        size += READ32LE(&ph->filesz);
+        *size += READ32LE(&ph->filesz);
       }
     }
   }
@@ -2704,7 +2704,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
           memcpy(&workRAM[READ32LE(&sh[i]->addr) & 0x3ffff], data +
                  READ32LE(&sh[i]->offset),
                  READ32LE(&sh[i]->size));
-                   size += READ32LE(&sh[i]->size);
+                   *size += READ32LE(&sh[i]->size);
         }      
       } else {
         if(READ32LE(&sh[i]->addr) >= 0x8000000 &&
@@ -2712,7 +2712,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
           memcpy(&rom[READ32LE(&sh[i]->addr) & 0x1ffffff],
                  data + READ32LE(&sh[i]->offset),
                  READ32LE(&sh[i]->size));
-          size += READ32LE(&sh[i]->size);
+          *size += READ32LE(&sh[i]->size);
         }
       }      
     }
@@ -2794,7 +2794,7 @@ bool elfReadProgram(ELFHeader *eh, u8 *data, int& size, bool parseDebug)
 
 extern bool parseDebug;
 
-bool elfRead(const char *name, int& siz, FILE *f)
+bool elfRead(const char *name, int *siz, FILE *f)
 {
   fseek(f, 0, SEEK_END);
   long size = ftell(f);
@@ -2823,16 +2823,16 @@ bool elfRead(const char *name, int& siz, FILE *f)
   return true;
 }
 
-void elfCleanUp(Object *o)
+void elfCleanUpO(Object *o)
 {
   free(o->location);
 }
 
-void elfCleanUp(Function *func)
+void elfCleanUpF(Function *func)
 {
   Object *o = func->parameters;
   while(o) {
-    elfCleanUp(o);
+    elfCleanUpO(o);
     Object *next = o->next;
     free(o);
     o = next;
@@ -2840,7 +2840,7 @@ void elfCleanUp(Function *func)
 
   o = func->variables;
   while(o) {
-    elfCleanUp(o);
+    elfCleanUpO(o);
     Object *next = o->next;
     free(o);
     o = next;
@@ -2848,7 +2848,7 @@ void elfCleanUp(Function *func)
   free(func->frameBase);
 }
 
-void elfCleanUp(ELFAbbrev **abbrevs)
+void elfCleanUpA(ELFAbbrev **abbrevs)
 {
   for(int i = 0; i < 121; i++) {
     ELFAbbrev *abbrev = abbrevs[i];
@@ -2863,14 +2863,14 @@ void elfCleanUp(ELFAbbrev **abbrevs)
   }
 }
 
-void elfCleanUp(Type *t)
+void elfCleanUpT(Type *t)
 {
   switch(t->type) {
   case TYPE_function:
     if(t->function) {
       Object *o = t->function->args;
       while(o) {
-        elfCleanUp(o);
+        elfCleanUpO(o);
         Object *next = o->next;
         free(o);
         o = next;
@@ -2908,27 +2908,27 @@ void elfCleanUp(Type *t)
   }
 }
 
-void elfCleanUp(CompileUnit *comp)
+void elfCleanUpC(CompileUnit *comp)
 {
-  elfCleanUp(comp->abbrevs);
+  elfCleanUpA(comp->abbrevs);
   free(comp->abbrevs);
   Function *func = comp->functions;
   while(func) {
-    elfCleanUp(func);
+    elfCleanUpF(func);
     Function *next = func->next;
     free(func);
     func = next;
   }
   Type *t = comp->types;
   while(t) {
-    elfCleanUp(t);
+    elfCleanUpT(t);
     Type *next = t->next;
     free(t);
     t = next;
   }
   Object *o = comp->variables;
   while(o) {
-    elfCleanUp(o);
+    elfCleanUpO(o);
     Object *next = o->next;
     free(o);
     o = next;
@@ -2940,12 +2940,12 @@ void elfCleanUp(CompileUnit *comp)
   }
 }
 
-void elfCleanUp()
+void elfCleanUp(void)
 {
   CompileUnit *comp = elfCompileUnits;
 
   while(comp) {
-    elfCleanUp(comp);
+    elfCleanUpC(comp);
     CompileUnit *next = comp->next;
     free(comp);
     comp = next;

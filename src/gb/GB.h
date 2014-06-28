@@ -48,7 +48,7 @@ extern void gbReset();
 extern void gbCleanUp();
 extern void gbCPUInit(const char *,bool);
 extern bool gbWriteBatteryFile(const char *);
-extern bool gbWriteBatteryFile(const char *, bool);
+extern bool gbWriteBatteryFileB(const char *, bool);
 extern bool gbReadBatteryFile(const char *);
 extern bool gbWriteSaveState(const char *);
 extern bool gbWriteMemSaveState(char *, int);

@@ -175,7 +175,7 @@ bool exprNodeDotResolve(Node *n, Function *f, CompileUnit *u)
           // found member
           n->type = m->type;
           if(tt == TYPE_struct) {
-            n->location = elfDecodeLocation(f, m->location, &n->locType,
+            n->location = elfDecodeLocation4(f, m->location, &n->locType,
                                             loc);
             n->objLocation = loc;
           } else {
@@ -237,7 +237,7 @@ bool exprNodeArrowResolve(Node *n, Function *f, CompileUnit *u)
           // found member
           n->type = m->type;
           if(tt == TYPE_struct) {
-            n->location = elfDecodeLocation(f, m->location, &n->locType,
+            n->location = elfDecodeLocation4(f, m->location, &n->locType,
                                             loc);
             n->objLocation = loc;
           } else {

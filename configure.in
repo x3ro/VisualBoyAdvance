@@ -5,16 +5,8 @@ AC_INIT(src/armdis.h)
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
-case "$target" in
-  i?86-*-*)
-    VBA_USE_C_CORE=no
-    VBA_USE_MMX=yes
-    ;;
-  *)
-    VBA_USE_C_CORE=yes
-    VBA_USE_MMX=no
-    ;;
-esac
+VBA_USE_C_CORE=yes
+VBA_USE_MMX=no
 
 AM_INIT_AUTOMAKE(VisualBoyAdvance, 1.8.0)
 
@@ -105,9 +97,11 @@ AC_C_BIGENDIAN
 VBA_LIBS="../gb/libgb.a"
 
 CXXFLAGS="$CXXFLAGS -DBKPT_SUPPORT"
+CFLAGS="$CFLAGS -DBKPT_SUPPORT -std=gnu99"
 
 if test "x$enable_c_core" = xyes; then
   CXXFLAGS="$CXXFLAGS -DC_CORE"
+  CFLAGS="$CFLAGS -DC_CORE"
 fi
 
 if test "x$enable_profiling" = xyes; then

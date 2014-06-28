@@ -1,21 +1,21 @@
 noinst_LIBRARIES = libgb.a
 
 libgb_a_SOURCES = \
-	gbCheats.cpp	\
+	gbCheats.c	\
 	gbCheats.h	\
 	gbCodesCB.h	\
 	gbCodes.h	\
-	GB.cpp		\
+	GB.c		\
 	GB.h		\
-	gbDis.cpp	\
-	gbGfx.cpp	\
-	gbGlobals.cpp	\
+	gbDis.c	\
+	gbGfx.c	\
+	gbGlobals.c	\
 	gbGlobals.h	\
-	gbMemory.cpp	\
+	gbMemory.c	\
 	gbMemory.h	\
-	gbPrinter.cpp	\
+	gbPrinter.c	\
 	gbPrinter.h	\
-	gbSGB.cpp	\
+	gbSGB.c	\
 	gbSGB.h		\
-	gbSound.cpp	\
+	gbSound.c	\
 	gbSound.h

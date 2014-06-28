@@ -2156,7 +2156,7 @@ case 0x28:
    clockTicks = codeTicksAccessSeq16(address) + codeTicksAccessSeq16(address) +
        codeTicksAccess16(address)+3;
    busPrefetchCount=0;
-   CPUSoftwareInterrupt(opcode & 0xFF);
+   CPUSoftwareInterrupt1(opcode & 0xFF);
    break;
      }
  case 0xe0:
@@ -2228,11 +2228,13 @@ case 0x28:
 #ifdef BKPT_SUPPORT
  case 0xbe:
    // BKPT #comment
+   {
    extern void (*dbgSignal)(int,int);
    reg[15].I -= 2;
    armNextPC -= 2;   
    dbgSignal(5, opcode & 255);
    return;
+   }
 #endif
  case 0xb1:
  case 0xb2:

@@ -56,17 +56,17 @@ u8  gbSgbATF[20 * 18];
 u8  gbSgbATFList[45 * 20 * 18];
 u8  gbSgbScreenBuffer[4160];
 
-inline void gbSgbDraw24Bit(u8 *p, u16 v)
+static inline void gbSgbDraw24Bit(u8 *p, u16 v)
 {
   *((u32*) p) = systemColorMap32[v];
 }
 
-inline void gbSgbDraw32Bit(u32 *p, u16 v)
+static inline void gbSgbDraw32Bit(u32 *p, u16 v)
 {
   *p = systemColorMap32[v];
 }
 
-inline void gbSgbDraw16Bit(u16 *p, u16 v)
+static inline void gbSgbDraw16Bit(u16 *p, u16 v)
 {
   *p = systemColorMap16[v];
 }
@@ -336,7 +336,7 @@ void gbSgbPicture()
     gbSgbCGBSupport = 0;
 }
 
-void gbSgbSetPalette(int a,int b,u16 *p)
+void gbSgbSetPaletteB(int a,int b,u16 *p)
 {
   u16 bit00 = READ16LE(p++);
   int i;

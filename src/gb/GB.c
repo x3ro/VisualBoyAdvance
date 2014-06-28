@@ -108,18 +108,31 @@ u8 register_SVBK  = 0;
 u8 register_IE    = 0;
 
 // ticks definition
-int GBDIV_CLOCK_TICKS          = 64;
-int GBLCD_MODE_0_CLOCK_TICKS   = 51;
-int GBLCD_MODE_1_CLOCK_TICKS   = 1140;
-int GBLCD_MODE_2_CLOCK_TICKS   = 20;
-int GBLCD_MODE_3_CLOCK_TICKS   = 43;
-int GBLY_INCREMENT_CLOCK_TICKS = 114;
-int GBTIMER_MODE_0_CLOCK_TICKS = 256;
-int GBTIMER_MODE_1_CLOCK_TICKS = 4;
-int GBTIMER_MODE_2_CLOCK_TICKS = 16;
-int GBTIMER_MODE_3_CLOCK_TICKS = 64;
-int GBSERIAL_CLOCK_TICKS       = 128;
-int GBSYNCHRONIZE_CLOCK_TICKS  = 52920;
+#define DEF_GBDIV_CLOCK_TICKS           64
+#define DEF_GBLCD_MODE_0_CLOCK_TICKS    51
+#define DEF_GBLCD_MODE_1_CLOCK_TICKS    1140
+#define DEF_GBLCD_MODE_2_CLOCK_TICKS    20
+#define DEF_GBLCD_MODE_3_CLOCK_TICKS    43
+#define DEF_GBLY_INCREMENT_CLOCK_TICKS  114
+#define DEF_GBTIMER_MODE_0_CLOCK_TICKS  256
+#define DEF_GBTIMER_MODE_1_CLOCK_TICKS  4
+#define DEF_GBTIMER_MODE_2_CLOCK_TICKS  16
+#define DEF_GBTIMER_MODE_3_CLOCK_TICKS  64
+#define DEF_GBSERIAL_CLOCK_TICKS        128
+#define DEF_GBSYNCHRONIZE_CLOCK_TICKS   52920
+
+int GBDIV_CLOCK_TICKS          = DEF_GBDIV_CLOCK_TICKS;
+int GBLCD_MODE_0_CLOCK_TICKS   = DEF_GBLCD_MODE_0_CLOCK_TICKS;
+int GBLCD_MODE_1_CLOCK_TICKS   = DEF_GBLCD_MODE_1_CLOCK_TICKS;
+int GBLCD_MODE_2_CLOCK_TICKS   = DEF_GBLCD_MODE_2_CLOCK_TICKS;
+int GBLCD_MODE_3_CLOCK_TICKS   = DEF_GBLCD_MODE_3_CLOCK_TICKS;
+int GBLY_INCREMENT_CLOCK_TICKS = DEF_GBLY_INCREMENT_CLOCK_TICKS;
+int GBTIMER_MODE_0_CLOCK_TICKS = DEF_GBTIMER_MODE_0_CLOCK_TICKS;
+int GBTIMER_MODE_1_CLOCK_TICKS = DEF_GBTIMER_MODE_1_CLOCK_TICKS;
+int GBTIMER_MODE_2_CLOCK_TICKS = DEF_GBTIMER_MODE_2_CLOCK_TICKS;
+int GBTIMER_MODE_3_CLOCK_TICKS = DEF_GBTIMER_MODE_3_CLOCK_TICKS;
+int GBSERIAL_CLOCK_TICKS       = DEF_GBSERIAL_CLOCK_TICKS;
+int GBSYNCHRONIZE_CLOCK_TICKS  = DEF_GBSYNCHRONIZE_CLOCK_TICKS;
 
 // state variables
 
@@ -145,8 +158,8 @@ int gbSerialTicks = 0;
 int gbSerialBits = 0;
 // timer
 bool gbTimerOn = false;
-int gbTimerTicks = GBTIMER_MODE_0_CLOCK_TICKS;
-int gbTimerClockTicks = GBTIMER_MODE_0_CLOCK_TICKS;
+int gbTimerTicks = DEF_GBTIMER_MODE_0_CLOCK_TICKS;
+int gbTimerClockTicks = DEF_GBTIMER_MODE_0_CLOCK_TICKS;
 int gbTimerMode = 0;
 bool gbIncreased = false;
 // The internal timer is always active, and it is
@@ -161,8 +174,8 @@ bool gbTimerOnChange = false;
 bool gbScreenOn = true;
 int gbLcdMode = 2;
 int gbLcdModeDelayed = 2;
-int gbLcdTicks = GBLCD_MODE_2_CLOCK_TICKS-1;
-int gbLcdTicksDelayed = GBLCD_MODE_2_CLOCK_TICKS;
+int gbLcdTicks = DEF_GBLCD_MODE_2_CLOCK_TICKS-1;
+int gbLcdTicksDelayed = DEF_GBLCD_MODE_2_CLOCK_TICKS;
 int gbLcdLYIncrementTicks = 114;
 int gbLcdLYIncrementTicksDelayed = 115;
 int gbScreenTicks = 0;
@@ -186,7 +199,7 @@ bool gbBlackScreen = false;
 int register_LCDCBusy = 0;
 
 // div
-int gbDivTicks = GBDIV_CLOCK_TICKS;
+int gbDivTicks = DEF_GBDIV_CLOCK_TICKS;
 // cgb
 int gbVramBank = 0;
 int gbWramBank = 1;
@@ -207,7 +220,7 @@ int gbFrameSkipCount = 0;
 u32 gbLastTime = 0;
 u32 gbElapsedTime = 0;
 u32 gbTimeNow = 0;
-int gbSynchronizeTicks = GBSYNCHRONIZE_CLOCK_TICKS;
+int gbSynchronizeTicks = DEF_GBSYNCHRONIZE_CLOCK_TICKS;
 // emulator features
 int gbBattery = 0;
 bool gbBatteryError = false;
@@ -592,7 +605,7 @@ u8 ZeroTable[256] = {
 #define GBSAVE_GAME_VERSION_11 11
 #define GBSAVE_GAME_VERSION GBSAVE_GAME_VERSION_11
 
-int inline gbGetValue(int min,int max,int v)
+static inline int gbGetValue(int min,int max,int v)
 {
   return (int)(min+(float)(max-min)*(2.0*(v/31.0)-(v/31.0)*(v/31.0)));
 }
@@ -618,7 +631,7 @@ void gbGenFilter()
   }
 }
 
-bool gbIsGameboyRom(char * file)
+bool gbIsGameboyRom(const char * file)
 {
   if(strlen(file) > 4) {
     char * p = strrchr(file,'.');
@@ -2116,7 +2129,7 @@ void gbCPUInit(const char *biosFileName, bool useBiosFile)
     if(utilLoad(biosFileName,
                 CPUIsGBBios,
                 bios,
-                size)) {
+                &size)) {
       if(size == 0x100)
         useBios = true;
       else
@@ -3224,7 +3237,7 @@ void gbInit()
   gbLineBuffer = (u16 *)malloc(160 * sizeof(u16));
 }
 
-bool gbWriteBatteryFile(const char *file, bool extendedSave)
+bool gbWriteBatteryFileB(const char *file, bool extendedSave)
 {
   if(gbBattery) {
     switch(gbRomType) {
@@ -3266,7 +3279,7 @@ bool gbWriteBatteryFile(const char *file)
 {
   if (!gbBatteryError)
   {
-    gbWriteBatteryFile(file, true);
+    gbWriteBatteryFileB(file, true);
     return true;
   }
   else return false;
@@ -3497,7 +3510,7 @@ variable_desc gbSaveGameStruct[] = {
 };
 
 
-static bool gbWriteSaveState(gzFile gzFile)
+static bool gbWriteSaveStateGz(gzFile gzFile)
 {
     
   utilWriteInt(gzFile, GBSAVE_GAME_VERSION);
@@ -3567,7 +3580,7 @@ bool gbWriteMemSaveState(char *memory, int available)
     return false;
   }
 
-  bool res = gbWriteSaveState(gzFile);
+  bool res = gbWriteSaveStateGz(gzFile);
 
   long pos = utilGzMemTell(gzFile)+8;
 
@@ -3586,13 +3599,13 @@ bool gbWriteSaveState(const char *name)
   if(gzFile == NULL)
     return false;
   
-  bool res = gbWriteSaveState(gzFile);
+  bool res = gbWriteSaveStateGz(gzFile);
   
   utilGzClose(gzFile);
   return res;
 }
 
-static bool gbReadSaveState(gzFile gzFile)
+static bool gbReadSaveStateGz(gzFile gzFile)
 {
   int version = utilReadInt(gzFile);
 
@@ -3941,7 +3954,7 @@ bool gbReadMemSaveState(char *memory, int available)
 {
   gzFile gzFile = utilMemGzOpen(memory, available, "r");
 
-  bool res = gbReadSaveState(gzFile);
+  bool res = gbReadSaveStateGz(gzFile);
 
   utilGzClose(gzFile);
 
@@ -3956,7 +3969,7 @@ bool gbReadSaveState(const char *name)
     return false;
   }
   
-  bool res = gbReadSaveState(gzFile);
+  bool res = gbReadSaveStateGz(gzFile);
   
   utilGzClose(gzFile);
   
@@ -4037,7 +4050,7 @@ bool gbLoadRom(const char *szFile)
   gbRom = utilLoad(szFile,
                    utilIsGBImage,
                    NULL,
-                   size);
+                   &size);
   if(!gbRom)
     return false;
 

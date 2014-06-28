@@ -19,11 +19,11 @@
 
 #ifndef VBA_UTIL_H
 #define VBA_UTIL_H
-enum IMAGE_TYPE {
+typedef enum IMAGE_TYPE {
   IMAGE_UNKNOWN = -1,
   IMAGE_GBA     = 0,
   IMAGE_GB      = 1
-};
+} IMAGE_TYPE;
 
 // save game
 
@@ -46,7 +46,7 @@ extern IMAGE_TYPE utilFindType(const char *);
 extern u8 *utilLoad(const char *,
                     bool (*)(const char*),
                     u8 *,
-                    int &);
+                    int *);
 
 extern void utilPutDword(u8 *, u32);
 extern void utilPutWord(u8 *, u16);

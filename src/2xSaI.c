@@ -3,9 +3,6 @@
 
 extern int RGB_LOW_BITS_MASK;
 
-extern "C"
-{
-
 #ifdef MMX
   void _2xSaILine (u8 *srcPtr, u8 *deltaPtr, u32 srcPitch,
                    u32 width, u8 *dstPtr, u32 dstPitch);
@@ -26,7 +23,6 @@ extern "C"
   
   bool cpu_mmx = 1;
 #endif
-} 
 static u32 colorMask = 0xF7DEF7DE;
 static u32 lowPixelMask = 0x08210821;
 static u32 qcolorMask = 0xE79CE79C;
@@ -83,7 +79,7 @@ int Init_2xSaI(u32 BitFormat)
 }
 
 static inline int GetResult1 (u32 A, u32 B, u32 C, u32 D,
-                              u32 /* E */)
+                              u32 unused)
 {
     int x = 0;
     int y = 0;
@@ -105,7 +101,7 @@ static inline int GetResult1 (u32 A, u32 B, u32 C, u32 D,
 }
 
 static inline int GetResult2 (u32 A, u32 B, u32 C, u32 D,
-                              u32 /* E */)
+                              u32 unused)
 {
   int x = 0;
   int y = 0;
@@ -169,7 +165,7 @@ static inline u32 Q_INTERPOLATE (u32 A, u32 B, u32 C, u32 D)
 }
 
 static inline int GetResult1_32 (u32 A, u32 B, u32 C, u32 D,
-                                 u32 /* E */)
+                                 u32 unused /* E */)
 {
     int x = 0;
     int y = 0;
@@ -191,7 +187,7 @@ static inline int GetResult1_32 (u32 A, u32 B, u32 C, u32 D,
 }
 
 static inline int GetResult2_32 (u32 A, u32 B, u32 C, u32 D,
-                                 u32 /* E */)
+                                 u32 unused/* E */)
 {
   int x = 0;
   int y = 0;
@@ -365,7 +361,7 @@ void Super2xSaI (u8 *srcPtr, u32 srcPitch,
 }
 
 void Super2xSaI32 (u8 *srcPtr, u32 srcPitch,
-                   u8 * /* deltaPtr */, u8 *dstPtr, u32 dstPitch,
+                   u8 * unused /* deltaPtr */, u8 *dstPtr, u32 dstPitch,
                    int width, int height)
 {
   u32 *bP;
@@ -937,7 +933,7 @@ void _2xSaI (u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   }
 }
 
-void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void _2xSaI32 (u8 *srcPtr, u32 srcPitch, u8 * unused/* deltaPtr */,
                u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u32  *dP;
@@ -1134,7 +1130,7 @@ static u32 Bilinear4 (u32 A, u32 B, u32 C, u32 D, u32 x,
   return (result & redblueMask) | ((result >> 16) & greenMask);
 }
 
-void Scale_2xSaI (u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void Scale_2xSaI (u8 *srcPtr, u32 srcPitch, u8 * unused /* deltaPtr */,
                   u8 *dstPtr, u32 dstPitch, 
                   u32 dstWidth, u32 dstHeight, int width, int height)
 {

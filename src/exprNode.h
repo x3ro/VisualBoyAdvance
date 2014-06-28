@@ -17,7 +17,7 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-struct Node {
+typedef struct Node {
   Type *type;
   u32 location;
   u32 objLocation;
@@ -25,11 +25,11 @@ struct Node {
   int value;
   int index;
   char *name;
-  Node *expression;
+  struct Node *expression;
   Member *member;
-  void (*print)(Node *);
-  bool (*resolve)(Node *, Function *f, CompileUnit *u);
-};
+  void (*print)(struct Node *);
+  bool (*resolve)(struct Node *, Function *f, CompileUnit *u);
+} Node;
 
 extern void exprNodeCleanUp();
 

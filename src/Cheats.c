@@ -1579,17 +1579,17 @@ u32 seed_gen(u8 upper, u8 seed, u8 *deadtable1, u8 *deadtable2) {
 	return newseed;
 }
 
-void cheatsDecryptGSACode(u32& address, u32& value, bool v3)
+void cheatsDecryptGSACode(u32 *address, u32 *value, bool v3)
 {
   u32 rollingseed = 0xC6EF3720;
   u32 *seeds = v3 ? seeds_v3 : seeds_v1;
   
   int bitsleft = 32;
   while (bitsleft > 0) {
-    value -= ((((address << 4) + seeds[2]) ^ (address + rollingseed)) ^
-              ((address >> 5) + seeds[3]));
-    address -= ((((value << 4) + seeds[0]) ^ (value + rollingseed)) ^
-                ((value >> 5) + seeds[1]));
+    *value -= ((((*address << 4) + seeds[2]) ^ (*address + rollingseed)) ^
+              ((*address >> 5) + seeds[3]));
+    *address -= ((((*value << 4) + seeds[0]) ^ (*value + rollingseed)) ^
+                ((*value >> 5) + seeds[1]));
     rollingseed -= 0x9E3779B9;
     bitsleft--;
   }
@@ -1624,7 +1624,7 @@ void cheatsAddGSACode(const char *code, const char *desc, bool v3)
   u32 value;
   sscanf(buffer, "%x", &value);
   cheatsGSAChangeEncryption(cheatsGSAGetDeadface (v3), v3);
-  cheatsDecryptGSACode(address, value, v3);
+  cheatsDecryptGSACode(&address, &value, v3);
 
   if(value == 0x1DC0DE) {
     u32 gamecode = READ32LE(((u32 *)&rom[0xac]));
@@ -2246,7 +2246,7 @@ u32 cheatsCBACalcIndex(u32 x, u32 y)
       } else break;
     }
 
-  loop:
+  loop:;
     u32 z = 0;
     if(x >= y)
       x -= y;

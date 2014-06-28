@@ -1,5 +1,5 @@
 %{
-#include "expr.cpp.h"
+#include "expr.c.h"
 
 #ifndef __GNUC__
 #include <io.h>
@@ -67,6 +67,6 @@ ADDR "&"
 
 void exprCleanBuffer()
 {
-  yy_delete_buffer(yy_current_buffer);
+  yy_delete_buffer(YY_CURRENT_BUFFER);
   yy_init = 1;
 }

@@ -49,9 +49,9 @@ extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
 
-extern void remoteInit();
-extern void remoteCleanUp();
-extern void remoteStubMain();
+extern void remoteInit(void);
+extern void remoteCleanUp(void);
+extern void remoteStubMain(void);
 extern void remoteStubSignal(int,int);
 extern void remoteOutput(char *, u32);
 extern void remoteSetProtocol(int);
@@ -91,7 +91,7 @@ bool removeIntros = false;
 
 extern void debuggerSignal(int,int);
 
-void (*dbgMain)() = debuggerMain;
+void (*dbgMain)(void) = debuggerMain;
 void (*dbgSignal)(int,int) = debuggerSignal;
 void (*dbgOutput)(char *, u32) = debuggerOutput;
 
@@ -323,16 +323,16 @@ void systemMessage(int num, const char *msg, ...)
   va_end(valist);
 }
 
-void systemDrawScreen()
+void systemDrawScreen(void)
 {
 }
 
-bool systemReadJoypads()
+bool systemReadJoypads(void)
 {
   return true;
 }
 
-u32 systemReadJoypad(int)
+u32 systemReadJoypad(int unused)
 {
   return 0;
 }
@@ -345,7 +345,7 @@ void system10Frames(int rate)
 {
 }
 
-void systemFrame()
+void systemFrame(void)
 {
 }
 
@@ -407,53 +407,53 @@ void systemScreenCapture(int a)
   systemScreenMessage("Screen capture");
 }
 
-u32 systemReadJoypadExtended()
+u32 systemReadJoypadExtended(void)
 {
   return 0;
 }
 
-void systemWriteDataToSoundBuffer()
+void systemWriteDataToSoundBuffer(void)
 {
 }
 
-bool systemSoundInit()
+bool systemSoundInit(void)
 {
   return true;
 }
 
-void systemSoundShutdown()
+void systemSoundShutdown(void)
 {
 }
 
-void systemSoundPause()
+void systemSoundPause(void)
 {
 }
 
-void systemSoundResume()
+void systemSoundResume(void)
 {
 }
 
-void systemSoundReset()
+void systemSoundReset(void)
 {
 }
 
 static int ticks = 0;
 
-u32 systemGetClock()
+u32 systemGetClock(void)
 {
   return ticks++;
 }
 
-void systemUpdateMotionSensor()
+void systemUpdateMotionSensor(void)
 {
 }
 
-int systemGetSensorX()
+int systemGetSensorX(void)
 {
   return 0;
 }
 
-int systemGetSensorY()
+int systemGetSensorY(void)
 {
   return 0;
 }
@@ -466,16 +466,16 @@ void systemScreenMessage(const char *msg)
 {
 }
 
-bool systemCanChangeSoundQuality()
+bool systemCanChangeSoundQuality(void)
 {
   return false;
 }
 
-bool systemPauseOnFrame()
+bool systemPauseOnFrame(void)
 {
   return false;
 }
 
-void systemGbBorderOn()
+void systemGbBorderOn(void)
 {
 }

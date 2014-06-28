@@ -3941,11 +3941,13 @@ if(cond_res) {
 #ifdef BKPT_SUPPORT
   case 0x127:
   case 0x7ff: // for GDB support
+    {
     extern void (*dbgSignal)(int,int);
     reg[15].I -= 4;
     armNextPC -= 4;
     dbgSignal(5, (opcode & 0x0f)|((opcode>>4) & 0xfff0));
     return;
+    }
 #endif
   case 0x320:
   case 0x321:
@@ -8660,7 +8662,7 @@ if(cond_res) {
     clockTicks += 2 + codeTicksAccess32(armNextPC) +
         codeTicksAccessSeq32(armNextPC);
     busPrefetchCount=0;
-    CPUSoftwareInterrupt(opcode & 0x00FFFFFF);  
+    CPUSoftwareInterrupt1(opcode & 0x00FFFFFF);  
 
     break;
 #ifdef GP_SUPPORT

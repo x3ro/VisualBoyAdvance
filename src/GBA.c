@@ -116,7 +116,7 @@ u8 freezeOAM[0x400];
 bool debugger_last;
 #endif
 
-int lcdTicks = (useBios && !skipBios) ? 1008 : 208;
+int lcdTicks = (DEF_USEBIOS && !DEF_SKIPBIOS) ? 1008 : 208;
 u8 timerOnOffDelay = 0;
 u16 timer0Value = 0;
 bool timer0On = false;
@@ -514,7 +514,7 @@ void cpuEnableProfiling(int hz)
 
 
 // Waitstates when accessing data
-inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
+static inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
 {
   int addr = (address>>24)&15;
   int value =  memoryWait[addr];
@@ -535,7 +535,7 @@ inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
   return value;
 }
 
-inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
+static inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
 {
   int addr = (address>>24)&15;
   int value = memoryWait32[addr];
@@ -556,7 +556,7 @@ inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
   return value;
 }
 
-inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
+static inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
 {
   int addr = (address>>24)&15;
   int value = memoryWaitSeq[addr];
@@ -577,7 +577,7 @@ inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
   return value;
 }
 
-inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
+static inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
 {
   int addr = (address>>24)&15;
   int value =  memoryWaitSeq32[addr];
@@ -600,7 +600,7 @@ inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
 
 
 // Waitstates when executing opcode
-inline int codeTicksAccess16(u32 address) // THUMB NON SEQ
+static inline int codeTicksAccess16(u32 address) // THUMB NON SEQ
 {
   int addr = (address>>24)&15;
 
@@ -629,7 +629,7 @@ inline int codeTicksAccess16(u32 address) // THUMB NON SEQ
   }
 }
 
-inline int codeTicksAccess32(u32 address) // ARM NON SEQ
+static inline int codeTicksAccess32(u32 address) // ARM NON SEQ
 {
   int addr = (address>>24)&15;
 
@@ -658,7 +658,7 @@ inline int codeTicksAccess32(u32 address) // ARM NON SEQ
   }
 }
 
-inline int codeTicksAccessSeq16(u32 address) // THUMB SEQ
+static inline int codeTicksAccessSeq16(u32 address) // THUMB SEQ
 {
   int addr = (address>>24)&15;
 
@@ -685,7 +685,7 @@ inline int codeTicksAccessSeq16(u32 address) // THUMB SEQ
   }
 }
 
-inline int codeTicksAccessSeq32(u32 address) // ARM SEQ
+static inline int codeTicksAccessSeq32(u32 address) // ARM SEQ
 {
   int addr = (address>>24)&15;
 
@@ -717,7 +717,7 @@ inline int codeTicksAccessSeq32(u32 address) // ARM SEQ
 }
 
 
-inline int CPUUpdateTicks()
+static inline int CPUUpdateTicks()
 {
   int cpuLoopTicks = lcdTicks;
   
@@ -818,7 +818,7 @@ void CPUUpdateRenderBuffers(bool force)
   }
 }
 
-static bool CPUWriteState(gzFile gzFile)
+static bool CPUWriteStateGz(gzFile gzFile)
 {
   utilWriteInt(gzFile, SAVE_GAME_VERSION);
 
@@ -864,7 +864,7 @@ bool CPUWriteState(const char *file)
     return false;
   }
   
-  bool res = CPUWriteState(gzFile);
+  bool res = CPUWriteStateGz(gzFile);
 
   utilGzClose(gzFile);
   
@@ -879,7 +879,7 @@ bool CPUWriteMemState(char *memory, int available)
     return false;
   }
 
-  bool res = CPUWriteState(gzFile);
+  bool res = CPUWriteStateGz(gzFile);
 
   long pos = utilGzMemTell(gzFile)+8;
 
@@ -891,7 +891,7 @@ bool CPUWriteMemState(char *memory, int available)
   return res;
 }
 
-static bool CPUReadState(gzFile gzFile)
+static bool CPUReadStateGz(gzFile gzFile)
 {
   int version = utilReadInt(gzFile);
 
@@ -1054,7 +1054,7 @@ bool CPUReadMemState(char *memory, int available)
 {
   gzFile gzFile = utilMemGzOpen(memory, available, "r");
 
-  bool res = CPUReadState(gzFile);
+  bool res = CPUReadStateGz(gzFile);
 
   utilGzClose(gzFile);
 
@@ -1068,7 +1068,7 @@ bool CPUReadState(const char * file)
   if(gzFile == NULL)
     return false;
   
-  bool res = CPUReadState(gzFile);
+  bool res = CPUReadStateGz(gzFile);
 
   utilGzClose(gzFile);
 
@@ -1531,7 +1531,7 @@ int CPULoadRom(const char *szFile)
       workRAM = NULL;
       return 0;
     }
-    bool res = elfRead(szFile, romSize, f);
+    bool res = elfRead(szFile, &romSize, f);
     if(!res || romSize == 0) {
       free(rom);
       rom = NULL;
@@ -1543,7 +1543,7 @@ int CPULoadRom(const char *szFile)
   } else if(!utilLoad(szFile,
                       utilIsGBAImage,
                       whereToLoad,
-                      romSize)) {
+                      &romSize)) {
     free(rom);
     rom = NULL;
     free(workRAM);
@@ -1713,7 +1713,7 @@ void CPUUpdateCPSR()
   reg[16].I = CPSR;
 }
 
-void CPUUpdateFlags(bool breakLoop)
+void CPUUpdateFlagsB(bool breakLoop)
 {
   u32 CPSR = reg[16].I;
   
@@ -1729,9 +1729,9 @@ void CPUUpdateFlags(bool breakLoop)
   }
 }
 
-void CPUUpdateFlags()
+void CPUUpdateFlags(void)
 {
-  CPUUpdateFlags(true);
+  CPUUpdateFlagsB(true);
 }
 
 #ifdef WORDS_BIGENDIAN
@@ -1750,7 +1750,7 @@ static void CPUSwap(u32 *a, u32 *b)
 }
 #endif
 
-void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
+void CPUSwitchMode3(int mode, bool saveState, bool breakLoop)
 {
   //  if(armMode == mode)
   //    return;
@@ -1860,20 +1860,20 @@ void CPUSwitchMode(int mode, bool saveState, bool breakLoop)
     break;
   }
   armMode = mode;
-  CPUUpdateFlags(breakLoop);
+  CPUUpdateFlagsB(breakLoop);
   CPUUpdateCPSR();
 }
 
 void CPUSwitchMode(int mode, bool saveState)
 {
-  CPUSwitchMode(mode, saveState, true);
+  CPUSwitchMode3(mode, saveState, true);
 }
 
 void CPUUndefinedException()
 {
   u32 PC = reg[15].I;
   bool savedArmState = armState;
-  CPUSwitchMode(0x1b, true, false);
+  CPUSwitchMode3(0x1b, true, false);
   reg[14].I = PC - (savedArmState ? 4 : 2);
   reg[15].I = 0x04;
   armState = true;
@@ -1883,11 +1883,11 @@ void CPUUndefinedException()
   reg[15].I += 4;  
 }
 
-void CPUSoftwareInterrupt()
+void CPUSoftwareInterrupt(void)
 {
   u32 PC = reg[15].I;
   bool savedArmState = armState;
-  CPUSwitchMode(0x13, true, false);
+  CPUSwitchMode3(0x13, true, false);
   reg[14].I = PC - (savedArmState ? 4 : 2);
   reg[15].I = 0x08;
   armState = true;
@@ -1897,7 +1897,7 @@ void CPUSoftwareInterrupt()
   reg[15].I += 4;
 }
 
-void CPUSoftwareInterrupt(int comment)
+void CPUSoftwareInterrupt1(int comment)
 {
   static bool disableMessage = false;
   if(armState) comment >>= 16;
@@ -2227,10 +2227,10 @@ void CPUCompareVCOUNT()
 
 }
 
-void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
+void doDMA(u32 *s, u32 *d, u32 si, u32 di, u32 c, int transfer32)
 {
-  int sm = s >> 24;
-  int dm = d >> 24;
+  int sm = *s >> 24;
+  int dm = *d >> 24;
   int sw = 0;
   int dw = 0;
   int sc = c;
@@ -2246,39 +2246,39 @@ void doDMA(u32 &s, u32 &d, u32 si, u32 di, u32 c, int transfer32)
   //    blank = (((DISPSTAT | ((DISPSTAT>>1)&1))==1) ?  true : false);
 
   if(transfer32) {
-    s &= 0xFFFFFFFC;
-    if(s < 0x02000000 && (reg[15].I >> 24)) {
+    *s &= 0xFFFFFFFC;
+    if(*s < 0x02000000 && (reg[15].I >> 24)) {
       while(c != 0) {
-        CPUWriteMemory(d, 0);
-        d += di;
+        CPUWriteMemory(*d, 0);
+        *d += di;
         c--;
       }
     } else {
       while(c != 0) {
-        cpuDmaLast = CPUReadMemory(s);
-        CPUWriteMemory(d, cpuDmaLast);
-        d += di;
-        s += si;
+        cpuDmaLast = CPUReadMemory(*s);
+        CPUWriteMemory(*d, cpuDmaLast);
+        *d += di;
+        *s += si;
         c--;
       }
     }
   } else {
-    s &= 0xFFFFFFFE;
+    *s &= 0xFFFFFFFE;
     si = (int)si >> 1;
     di = (int)di >> 1;
-    if(s < 0x02000000 && (reg[15].I >> 24)) {
+    if(*s < 0x02000000 && (reg[15].I >> 24)) {
       while(c != 0) {
-        CPUWriteHalfWord(d, 0);
-        d += di;
+        CPUWriteHalfWord(*d, 0);
+        *d += di;
         c--;
       }
     } else {
       while(c != 0) {
-        cpuDmaLast = CPUReadHalfWord(s);
-        CPUWriteHalfWord(d, cpuDmaLast);
+        cpuDmaLast = CPUReadHalfWord(*s);
+        CPUWriteHalfWord(*d, cpuDmaLast);
         cpuDmaLast |= (cpuDmaLast<<16);
-        d += di;
-        s += si;
+        *d += di;
+        *s += si;
         c--;
       }
     }
@@ -2343,7 +2343,7 @@ void CPUCheckDMA(int reason, int dmamask)
             count);
       }
 #endif
-      doDMA(dma0Source, dma0Dest, sourceIncrement, destIncrement,
+      doDMA(&dma0Source, &dma0Dest, sourceIncrement, destIncrement,
             DM0CNT_L ? DM0CNT_L : 0x4000,
             DM0CNT_H & 0x0400);
       cpuDmaHack = true;
@@ -2398,7 +2398,7 @@ void CPUCheckDMA(int reason, int dmamask)
               16);
         }
 #endif  
-        doDMA(dma1Source, dma1Dest, sourceIncrement, 0, 4,
+        doDMA(&dma1Source, &dma1Dest, sourceIncrement, 0, 4,
               0x0400);
       } else {
 #ifdef DEV_VERSION
@@ -2411,7 +2411,7 @@ void CPUCheckDMA(int reason, int dmamask)
               count);
         }
 #endif          
-        doDMA(dma1Source, dma1Dest, sourceIncrement, destIncrement,
+        doDMA(&dma1Source, &dma1Dest, sourceIncrement, destIncrement,
               DM1CNT_L ? DM1CNT_L : 0x4000,
               DM1CNT_H & 0x0400);
       }
@@ -2468,7 +2468,7 @@ void CPUCheckDMA(int reason, int dmamask)
               count);
         }
 #endif                  
-        doDMA(dma2Source, dma2Dest, sourceIncrement, 0, 4,
+        doDMA(&dma2Source, &dma2Dest, sourceIncrement, 0, 4,
               0x0400);
       } else {
 #ifdef DEV_VERSION
@@ -2481,7 +2481,7 @@ void CPUCheckDMA(int reason, int dmamask)
               count);
         }
 #endif                  
-        doDMA(dma2Source, dma2Dest, sourceIncrement, destIncrement,
+        doDMA(&dma2Source, &dma2Dest, sourceIncrement, destIncrement,
               DM2CNT_L ? DM2CNT_L : 0x4000,
               DM2CNT_H & 0x0400);
       }
@@ -2539,7 +2539,7 @@ void CPUCheckDMA(int reason, int dmamask)
             count);
       }
 #endif                
-      doDMA(dma3Source, dma3Dest, sourceIncrement, destIncrement,
+      doDMA(&dma3Source, &dma3Dest, sourceIncrement, destIncrement,
             DM3CNT_L ? DM3CNT_L : 0x10000,
             DM3CNT_H & 0x0400);
       if(DM3CNT_H & 0x4000) {
@@ -2783,8 +2783,8 @@ void CPUUpdateRegister(u32 address, u16 value)
   case 0x7c:
   case 0x80:
   case 0x84:
-    soundEvent(address&0xFF, (u8)(value & 0xFF));
-    soundEvent((address&0xFF)+1, (u8)(value>>8));
+    soundEvent8(address&0xFF, (u8)(value & 0xFF));
+    soundEvent8((address&0xFF)+1, (u8)(value>>8));
     break;
   case 0x82:
   case 0x88:
@@ -2800,7 +2800,7 @@ void CPUUpdateRegister(u32 address, u16 value)
   case 0x9a:
   case 0x9c:
   case 0x9e:    
-    soundEvent(address&0xFF, value);
+    soundEvent16(address&0xFF, value);
     break;
   case 0xB0:
     DM0SAD_L = value;
@@ -3298,7 +3298,7 @@ void CPUWriteByte(u32 address, u8 b)
       case 0x9d:
       case 0x9e:
       case 0x9f:      
-	soundEvent(address&0xFF, b);
+	soundEvent8(address&0xFF, b);
 	break;
       default:
 	if(address & 1)
@@ -3393,7 +3393,7 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
     if(utilLoad(biosFileName,
                 CPUIsGBABios,
                 bios,
-                size)) {
+                &size)) {
       if(size == 0x4000)
         useBios = true;
       else
@@ -3703,12 +3703,12 @@ void CPUReset()
   // make sure registers are correctly initialized if not using BIOS
   if(!useBios) {
     if(cpuIsMultiBoot)
-      BIOS_RegisterRamReset(0xfe);
+      BIOS_RegisterRamResetU(0xfe);
     else
-      BIOS_RegisterRamReset(0xff);
+      BIOS_RegisterRamResetU(0xff);
   } else {
     if(cpuIsMultiBoot)
-      BIOS_RegisterRamReset(0xfe);
+      BIOS_RegisterRamResetU(0xfe);
   }
 
   switch(cpuSaveType) {
@@ -3776,7 +3776,7 @@ void CPUInterrupt()
 {
   u32 PC = reg[15].I;
   bool savedState = armState;
-  CPUSwitchMode(0x12, true, false);
+  CPUSwitchMode3(0x12, true, false);
   reg[14].I = PC;
   if(!savedState)
     reg[14].I += 2;

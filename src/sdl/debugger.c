@@ -54,7 +54,7 @@ extern struct EmulatedSystem emulator;
 #define debuggerWriteByte(addr, value) \
   map[(addr)>>24].address[(addr) & map[(addr)>>24].mask] = (value)
 
-struct breakpointInfo {
+typedef struct breakpointInfo {
   u32 address;
   u32 value;
   int size;
@@ -65,14 +65,14 @@ struct breakpointInfo {
   int cond_size;
   bool ia1;
   bool ia2;
-};
+} breakpointInfo;
 
-struct DebuggerCommand {
+typedef struct DebuggerCommand {
   char *name;
   void (*function)(int,char **);
   char *help;
   char *syntax;
-};
+} DebuggerCommand;
 
 unsigned int SearchStart = 0xFFFFFFFF;
 unsigned int SearchMaxMatches = 5;
@@ -386,7 +386,7 @@ static char *debuggerPrintType(Type *t)
 }
 
 static void debuggerPrintValueInternal(Function *, Type *, ELFBlock *, int, int, u32);
-static void debuggerPrintValueInternal(Function *f, Type *t,
+static void debuggerPrintValueInternalLoc(Function *f, Type *t,
 				       int bitSize, int bitOffset,
 				       u32 objLocation, LocationType type);
 
@@ -479,7 +479,7 @@ static void debuggerPrintStructure(Function *f, Type *t, u32 objLocation)
     Member *m = &t->structure->members[i];
     printf("%s=", m->name);
     LocationType type;
-    u32 location = elfDecodeLocation(f, m->location, &type, objLocation);
+    u32 location = elfDecodeLocation4(f, m->location, &type, objLocation);
     debuggerPrintMember(f, m, objLocation, location);
     i++;
     if(i < count)
@@ -518,7 +518,7 @@ static void debuggerPrintEnum(Type *t, u32 value)
   printf("(UNKNOWN VALUE) %d", value);
 }
 
-static void debuggerPrintValueInternal(Function *f, Type *t,
+static void debuggerPrintValueInternalLoc(Function *f, Type *t,
                                        int bitSize, int bitOffset,
                                        u32 objLocation, LocationType type)
 {
@@ -566,7 +566,7 @@ static void debuggerPrintValueInternal(Function *f, Type *t, ELFBlock *loc,
   u32 location;
   if(loc) {
     if(objLocation)
-      location = elfDecodeLocation(f, loc, &type, objLocation);
+      location = elfDecodeLocation4(f, loc, &type, objLocation);
     else
       location = elfDecodeLocation(f, loc,&type);
   } else {
@@ -574,7 +574,7 @@ static void debuggerPrintValueInternal(Function *f, Type *t, ELFBlock *loc,
     type = LOCATION_memory;
   }
 
-  debuggerPrintValueInternal(f, t, bitSize, bitOffset, location, type);
+  debuggerPrintValueInternalLoc(f, t, bitSize, bitOffset, location, type);
 }
 
 static void debuggerPrintValue(Function *f, Object *o)
@@ -879,7 +879,7 @@ static void debuggerContinue(int n, char **args)
   }
 }
 
-static void debuggerBreakList(int, char **)
+static void debuggerBreakList(int unused1, char ** unused2)
 {
   printf("Num Address  Type  Symbol\n");
   printf("--- -------- ----- ------\n");
@@ -1401,7 +1401,7 @@ static void debuggerBreakChange(int n, char **args)
     debuggerUsage("bpc");
 }
 
-static void debuggerDisassembleArm(FILE *f, u32 pc, int count)
+static void debuggerDisassembleArm3(FILE *f, u32 pc, int count)
 {
   char buffer[80];
   int i = 0;
@@ -1420,7 +1420,7 @@ static void debuggerDisassembleArm(FILE *f, u32 pc, int count)
   }
 }
 
-static void debuggerDisassembleThumb(FILE *f, u32 pc, int count)
+static void debuggerDisassembleThumb3(FILE *f, u32 pc, int count)
 {
   char buffer[80];
   int i = 0;
@@ -1455,7 +1455,7 @@ static void debuggerDisassembleArm(int n, char **args)
   if(n >= 3) {
     sscanf(args[2], "%d", &count);
   }
-  debuggerDisassembleArm(stdout, pc, count); 
+  debuggerDisassembleArm3(stdout, pc, count); 
 }
 
 static void debuggerDisassembleThumb(int n, char **args)
@@ -1473,7 +1473,7 @@ static void debuggerDisassembleThumb(int n, char **args)
   if(n >= 3) {
     sscanf(args[2], "%d", &count);
   }
-  debuggerDisassembleThumb(stdout, pc, count);
+  debuggerDisassembleThumb3(stdout, pc, count);
 }
 
 static void debuggerDisassemble(int n, char **args)
@@ -1508,7 +1508,7 @@ static void debuggerFileDisassembleArm(int n, char **args)
   if(n >= 4) {
     sscanf(args[3], "%d", &count);
   }
-  debuggerDisassembleArm(f, pc, count); 
+  debuggerDisassembleArm3(f, pc, count); 
   fclose(f);
 }
 
@@ -1537,7 +1537,7 @@ static void debuggerFileDisassembleThumb(int n, char **args)
   if(n >= 4) {
     sscanf(args[3], "%d", &count);
   }
-  debuggerDisassembleThumb(f, pc, count);
+  debuggerDisassembleThumb3(f, pc, count);
   fclose(f);
 }
 
@@ -1760,7 +1760,7 @@ static void debuggerContinueAfterBreakpoint()
   debuggerAtBreakpoint = false;
 }
 
-static void debuggerRegisters(int, char **)
+static void debuggerRegisters(int unused1, char ** unused2)
 {
   char *command[3];
   char buffer[10];
@@ -2084,7 +2084,7 @@ static void debuggerMemory(int n, char **args)
     debuggerUsage("mw");    
 }
 
-static void debuggerQuit(int, char **)
+static void debuggerQuit(int unused1, char ** unused2)
 {
   char buffer[10];
   printf("Are you sure you want to quit (y/n)? ");

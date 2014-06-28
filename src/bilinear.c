@@ -80,7 +80,7 @@ static void fill_rgb_row_32(u32 *from, int src_width, u8 *row, int width)
   }
 }
 
-void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * unused /* deltaPtr */,
               u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u16 *to = (u16 *)dstPtr;
@@ -158,7 +158,7 @@ void Bilinear(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   }
 }
 
-void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * unused /* deltaPtr */,
                   u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u16 *to = (u16 *)dstPtr;
@@ -247,7 +247,7 @@ void BilinearPlus(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   }
 }
 
-void Bilinear32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void Bilinear32(u8 *srcPtr, u32 srcPitch, u8 * unused /* deltaPtr */,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u32 *to = (u32 *)dstPtr;
@@ -327,7 +327,7 @@ void Bilinear32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   }
 }
 
-void BilinearPlus32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void BilinearPlus32(u8 *srcPtr, u32 srcPitch, u8 * unused/* deltaPtr */,
                     u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u32 *to = (u32 *)dstPtr;

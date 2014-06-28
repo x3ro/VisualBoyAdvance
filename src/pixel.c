@@ -96,7 +96,7 @@ void Pixelate(u8 *srcPtr, u32 srcPitch, u8 *deltaPtr,
   while (--height);
 }
 
-void Pixelate32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void Pixelate32(u8 *srcPtr, u32 srcPitch, u8 *unused/* deltaPtr */,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;

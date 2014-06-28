@@ -26,7 +26,7 @@
 #include <time.h>
 #include <memory.h>
 
-enum RTCSTATE { IDLE, COMMAND, DATA, READDATA };
+typedef enum RTCSTATE { IDLE, COMMAND, DATA, READDATA } RTCSTATE;
 
 typedef struct {
   u8 byte0;

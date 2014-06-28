@@ -45,7 +45,9 @@ extern u32 armNextPC;
 extern int armMode;
 extern u32 stop;
 extern int saveType;
+#define DEF_USEBIOS false
 extern bool useBios;
+#define DEF_SKIPBIOS false
 extern bool skipBios;
 extern int frameSkip;
 extern bool speedup;

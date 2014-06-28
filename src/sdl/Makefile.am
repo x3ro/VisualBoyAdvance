@@ -3,76 +3,76 @@ bin_PROGRAMS = VisualBoyAdvance
 noinst_PROGRAMS = TestEmu
 
 VisualBoyAdvance_SOURCES = \
-	SDL.cpp			\
-	debugger.cpp		\
+	SDL.c			\
+	debugger.c		\
 	debugger.h		\
-	../2xSaI.cpp		\
+	../2xSaI.c		\
 	../AutoBuild.h		\
-	../Cheats.cpp		\
+	../Cheats.c		\
 	../Cheats.h		\
-	../EEprom.cpp		\
+	../EEprom.c		\
 	../EEprom.h		\
-	../Flash.cpp		\
+	../Flash.c		\
 	../Flash.h		\
-	../GBA.cpp		\
+	../GBA.c		\
 	../GBA.h		\
 	../GBAinline.h		\
-	../Gfx.cpp		\
+	../Gfx.c		\
 	../Gfx.h		\
-	../Globals.cpp		\
+	../Globals.c		\
 	../Globals.h		\
-	../Mode0.cpp		\
-	../Mode1.cpp		\
-	../Mode2.cpp		\
-	../Mode3.cpp		\
-	../Mode4.cpp		\
-	../Mode5.cpp		\
+	../Mode0.c		\
+	../Mode1.c		\
+	../Mode2.c		\
+	../Mode3.c		\
+	../Mode4.c		\
+	../Mode5.c		\
 	../NLS.h		\
 	../Port.h		\
-	../RTC.cpp		\
+	../RTC.c		\
 	../RTC.h		\
-	../Sound.cpp		\
+	../Sound.c		\
 	../Sound.h		\
-	../Sram.cpp		\
+	../Sram.c		\
 	../Sram.h		\
 	../System.h		\
-	../Text.cpp		\
+	../Text.c		\
 	../Text.h		\
-	../Util.cpp		\
+	../Util.c		\
 	../Util.h		\
-	../admame.cpp		\
-	../agbprint.cpp		\
+	../admame.c		\
+	../agbprint.c		\
 	../agbprint.h		\
 	../arm-new.h		\
-	../armdis.cpp		\
+	../armdis.c		\
 	../armdis.h		\
-	../bilinear.cpp		\
-	../bios.cpp		\
+	../bilinear.c		\
+	../bios.c		\
 	../bios.h		\
-	../elf.cpp		\
+	../elf.c		\
 	../elf.h		\
-	../expr-lex.cpp		\
-	../expr.cpp		\
-	../expr.cpp.h		\
-	../exprNode.cpp		\
+	../expr-lex.c		\
+	../expr.c		\
+	../expr.c.h		\
+	../exprNode.c		\
 	../exprNode.h		\
 	../getopt.c		\
 	../getopt.h		\
 	../getopt1.c		\
-	../hq2x.cpp		\
+	../hq2x.c		\
 	../hq2x.h		\
-	../interframe.cpp	\
+	../interframe.c	\
 	../interp.h		\
 	../lq2x.h		\
 	../memgzio.c		\
 	../memgzio.h		\
-	../motionblur.cpp	\
-	../pixel.cpp		\
-	../remote.cpp		\
-	../scanline.cpp		\
-	../simple2x.cpp		\
+	../motionblur.c	\
+	../pixel.c		\
+	../remote.c		\
+	../scanline.c		\
+	../simple2x.c		\
 	../thumb.h		\
-	../unzip.cpp		\
+	../unzip.c		\
 	../unzip.h
 
 VisualBoyAdvance_LDADD = @VBA_LIBS@ @SDL_LIBS@
@@ -80,71 +80,71 @@ VisualBoyAdvance_LDADD = @VBA_LIBS@ @SDL_LIBS@
 VisualBoyAdvance_DEPENDENCIES = @VBA_LIBS@
 
 TestEmu_SOURCES = \
-	TestEmu.cpp		\
-	debugger.cpp		\
+	TestEmu.c		\
+	debugger.c		\
 	debugger.h		\
-	../2xSaI.cpp		\
+	../2xSaI.c		\
 	../AutoBuild.h		\
-	../Cheats.cpp		\
+	../Cheats.c		\
 	../Cheats.h		\
-	../EEprom.cpp		\
+	../EEprom.c		\
 	../EEprom.h		\
-	../Flash.cpp		\
+	../Flash.c		\
 	../Flash.h		\
-	../GBA.cpp		\
+	../GBA.c		\
 	../GBA.h		\
 	../GBAinline.h		\
-	../Gfx.cpp		\
+	../Gfx.c		\
 	../Gfx.h		\
-	../Globals.cpp		\
+	../Globals.c		\
 	../Globals.h		\
-	../Mode0.cpp		\
-	../Mode1.cpp		\
-	../Mode2.cpp		\
-	../Mode3.cpp		\
-	../Mode4.cpp		\
-	../Mode5.cpp		\
+	../Mode0.c		\
+	../Mode1.c		\
+	../Mode2.c		\
+	../Mode3.c		\
+	../Mode4.c		\
+	../Mode5.c		\
 	../NLS.h		\
 	../Port.h		\
-	../RTC.cpp		\
+	../RTC.c		\
 	../RTC.h		\
-	../Sound.cpp		\
+	../Sound.c		\
 	../Sound.h		\
-	../Sram.cpp		\
+	../Sram.c		\
 	../Sram.h		\
 	../System.h		\
-	../Text.cpp		\
+	../Text.c		\
 	../Text.h		\
-	../Util.cpp		\
+	../Util.c		\
 	../Util.h		\
-	../admame.cpp		\
-	../agbprint.cpp		\
+	../admame.c		\
+	../agbprint.c		\
 	../agbprint.h		\
 	../arm-new.h		\
-	../armdis.cpp		\
+	../armdis.c		\
 	../armdis.h		\
-	../bios.cpp		\
+	../bios.c		\
 	../bios.h		\
-	../elf.cpp		\
+	../elf.c		\
 	../elf.h		\
-	../expr-lex.cpp		\
-	../expr.cpp		\
-	../expr.cpp.h		\
-	../exprNode.cpp		\
+	../expr-lex.c		\
+	../expr.c		\
+	../expr.c.h		\
+	../exprNode.c		\
 	../exprNode.h		\
-	../hq2x.cpp		\
+	../hq2x.c		\
 	../hq2x.h		\
 	../interp.h		\
 	../lq2x.h		\
 	../memgzio.c		\
 	../memgzio.h		\
-	../motionblur.cpp	\
-	../pixel.cpp		\
-	../remote.cpp		\
-	../scanline.cpp		\
-	../simple2x.cpp		\
+	../motionblur.c	\
+	../pixel.c		\
+	../remote.c		\
+	../scanline.c		\
+	../simple2x.c		\
 	../thumb.h		\
-	../unzip.cpp		\
+	../unzip.c		\
 	../unzip.h
 
 TestEmu_LDADD = @VBA_LIBS@ @SDL_LIBS@
@@ -157,3 +157,9 @@ AM_CPPFLAGS = \
 	-DSYSCONFDIR=\"$(sysconfdir)\"
 
 AM_CXXFLAGS = -fno-exceptions @SDL_CFLAGS@
+
+../expr.c: ../expr.y
+	$(YACC) -o ../expr.c ../expr.y
+../expr-lex.c: ../expr.l
+	$(LEX) -o ../expr-lex.c ../expr.l
+

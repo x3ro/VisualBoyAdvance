@@ -25,7 +25,7 @@
 
 #include "../AutoBuild.h"
 
-#include "SDL.h"
+#include <SDL/SDL.h>
 #include "../GBA.h"
 #include "../agbprint.h"
 #include "../Flash.h"
@@ -97,7 +97,7 @@ extern void MotionBlurIB32(u8*,u32,int,int);
 
 void Init_Overlay(SDL_Surface *surface, int overlaytype);
 void Quit_Overlay(void);
-void Draw_Overlay(SDL_Surface *surface, int size);
+static void Draw_Overlay(SDL_Surface *surface, int size);
 
 extern void remoteInit();
 extern void remoteCleanUp();
@@ -369,9 +369,6 @@ struct option sdlOptions[] = {
   { NULL, no_argument, NULL, 0 }
 };
 
-extern bool CPUIsGBAImage(char *);
-extern bool gbIsGameboyRom(char *);
-
 #ifndef C_CORE
 #define SDL_LONG(val) \
   *((u32 *)&sdlStretcher[sdlStretcherPos]) = val;\
@@ -607,20 +604,8 @@ void sdlMakeStretcher(int width)
     break;
   }
 }
-
-#ifdef _MSC_VER
-#define SDL_CALL_STRETCHER \
-  {\
-    __asm mov eax, stretcher\
-    __asm mov edi, dest\
-    __asm mov esi, src\
-    __asm call eax\
-  }
-#else
-#define SDL_CALL_STRETCHER \
-        asm volatile("call *%%eax"::"a" (stretcher),"S" (src),"D" (dest))
 #endif
-#else
+
 #define SDL_CALL_STRETCHER \
        sdlStretcher(src, dest)
 
@@ -798,8 +783,6 @@ void (*sdlStretcher24[4])(u8 *, u8 *) = {
   sdlStretch24x4
 };
 
-#endif
-
 u32 sdlFromHex(char *s)
 {
   u32 value;
@@ -957,7 +940,7 @@ FILE *sdlFindFile(const char *name)
   return NULL;
 }
 
-void sdlReadPreferences(FILE *f)
+void sdlReadPreferencesF(FILE *f)
 {
   char buffer[2048];
   
@@ -1225,7 +1208,7 @@ void sdlReadPreferences()
   } else
     fprintf(stderr, "Reading configuration file.\n");
 
-  sdlReadPreferences(f);
+  sdlReadPreferencesF(f);
 
   fclose(f);
 }
@@ -2922,7 +2905,7 @@ void systemScreenCapture(int a)
   systemScreenMessage("Screen capture");
 }
 
-void soundCallback(void *,u8 *stream,int len)
+void soundCallback(void * unused,u8 *stream,int len)
 {
   if (!emulating)
     return;
@@ -3177,14 +3160,14 @@ void Quit_Overlay(void)
 /* NOTE: These RGB conversion functions are not intended for speed,
    only as examples.
 */
-inline void RGBtoYUV(Uint8 *rgb, int *yuv)
+static inline void RGBtoYUV(Uint8 *rgb, int *yuv)
 {
   yuv[0] = (int)((0.257 * rgb[0]) + (0.504 * rgb[1]) + (0.098 * rgb[2]) + 16);
   yuv[1] = (int)(128 - (0.148 * rgb[0]) - (0.291 * rgb[1]) + (0.439 * rgb[2]));
   yuv[2] = (int)(128 + (0.439 * rgb[0]) - (0.368 * rgb[1]) - (0.071 * rgb[2]));
 }
 
-inline void ConvertRGBtoYV12(SDL_Overlay *o)
+static inline void ConvertRGBtoYV12(SDL_Overlay *o)
 {
   int x,y;
   int yuv[3];
@@ -3219,7 +3202,7 @@ inline void ConvertRGBtoYV12(SDL_Overlay *o)
   SDL_UnlockYUVOverlay(o);
 }
 
-inline void ConvertRGBtoIYUV(SDL_Overlay *o)
+static inline void ConvertRGBtoIYUV(SDL_Overlay *o)
 {
   int x,y;
   int yuv[3];
@@ -3254,7 +3237,7 @@ inline void ConvertRGBtoIYUV(SDL_Overlay *o)
   SDL_UnlockYUVOverlay(o);
 }
 
-inline void ConvertRGBtoUYVY(SDL_Overlay *o)
+static inline void ConvertRGBtoUYVY(SDL_Overlay *o)
 {
   int x,y;
   int yuv[3];
@@ -3281,7 +3264,7 @@ inline void ConvertRGBtoUYVY(SDL_Overlay *o)
   SDL_UnlockYUVOverlay(o);
 }
 
-inline void ConvertRGBtoYVYU(SDL_Overlay *o)
+static inline void ConvertRGBtoYVYU(SDL_Overlay *o)
 {
   int x,y;
   int yuv[3];
@@ -3310,7 +3293,7 @@ inline void ConvertRGBtoYVYU(SDL_Overlay *o)
   SDL_UnlockYUVOverlay(o);
 }
 
-inline void ConvertRGBtoYUY2(SDL_Overlay *o)
+static inline void ConvertRGBtoYUY2(SDL_Overlay *o)
 {
   int x,y;
   int yuv[3];
@@ -3339,7 +3322,7 @@ inline void ConvertRGBtoYUY2(SDL_Overlay *o)
   SDL_UnlockYUVOverlay(o);
 }
 
-inline void Convert32bit(SDL_Surface *display)
+static inline void Convert32bit(SDL_Surface *display)
 {
   switch(overlay->format) {
   case SDL_YV12_OVERLAY:
@@ -3366,7 +3349,7 @@ inline void Convert32bit(SDL_Surface *display)
 }
 
 
-inline void Draw_Overlay(SDL_Surface *display, int size)
+static inline void Draw_Overlay(SDL_Surface *display, int size)
 {
   SDL_LockYUVOverlay(overlay);
   

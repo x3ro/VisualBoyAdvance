@@ -104,11 +104,12 @@ u16 soundFinalWave[1470];
 
 int soundBufferLen = 1470;
 int soundBufferTotalLen = 14700;
-int soundQuality = 2;
+#define DEF_SOUNDQUALITY 2
+int soundQuality = DEF_SOUNDQUALITY;
 int soundPaused = 1;
 int soundPlay = 0;
-int soundTicks = soundQuality * USE_TICKS_AS;
-int SOUND_CLOCK_TICKS = soundQuality * USE_TICKS_AS;
+int soundTicks = DEF_SOUNDQUALITY * USE_TICKS_AS;
+int SOUND_CLOCK_TICKS = DEF_SOUNDQUALITY * USE_TICKS_AS;
 u32 soundNextPosition = 0;
 
 int soundLevel1 = 0;
@@ -286,7 +287,7 @@ variable_desc soundSaveStructV2[] = {
   { NULL, 0 }
 };
 
-void soundEvent(u32 address, u8 data)
+void soundEvent8(u32 address, u8 data)
 {
   int freq = 0;
 
@@ -538,7 +539,7 @@ void soundEvent(u32 address, u8 data)
   }
 }
 
-void soundEvent(u32 address, u16 data)
+void soundEvent16(u32 address, u16 data)
 {
   switch(address) {
   case SGCNT0_H:
@@ -855,14 +856,14 @@ void soundDirectSoundATimer()
     if(soundDSFifoACount <= 16) {
       CPUCheckDMA(3, 2);
       if(soundDSFifoACount <= 16) {
-        soundEvent(FIFOA_L, (u16)0);
-        soundEvent(FIFOA_H, (u16)0);
-        soundEvent(FIFOA_L, (u16)0);
-        soundEvent(FIFOA_H, (u16)0);
-        soundEvent(FIFOA_L, (u16)0);
-        soundEvent(FIFOA_H, (u16)0);
-        soundEvent(FIFOA_L, (u16)0);
-        soundEvent(FIFOA_H, (u16)0);
+        soundEvent16(FIFOA_L, (u16)0);
+        soundEvent16(FIFOA_H, (u16)0);
+        soundEvent16(FIFOA_L, (u16)0);
+        soundEvent16(FIFOA_H, (u16)0);
+        soundEvent16(FIFOA_L, (u16)0);
+        soundEvent16(FIFOA_H, (u16)0);
+        soundEvent16(FIFOA_L, (u16)0);
+        soundEvent16(FIFOA_H, (u16)0);
       }
     }
     
@@ -884,14 +885,14 @@ void soundDirectSoundBTimer()
     if(soundDSFifoBCount <= 16) {
       CPUCheckDMA(3, 4);
       if(soundDSFifoBCount <= 16) {
-        soundEvent(FIFOB_L, (u16)0);
-        soundEvent(FIFOB_H, (u16)0);
-        soundEvent(FIFOB_L, (u16)0);
-        soundEvent(FIFOB_H, (u16)0);
-        soundEvent(FIFOB_L, (u16)0);
-        soundEvent(FIFOB_H, (u16)0);
-        soundEvent(FIFOB_L, (u16)0);
-        soundEvent(FIFOB_H, (u16)0);
+        soundEvent16(FIFOB_L, (u16)0);
+        soundEvent16(FIFOB_H, (u16)0);
+        soundEvent16(FIFOB_L, (u16)0);
+        soundEvent16(FIFOB_H, (u16)0);
+        soundEvent16(FIFOB_L, (u16)0);
+        soundEvent16(FIFOB_H, (u16)0);
+        soundEvent16(FIFOB_L, (u16)0);
+        soundEvent16(FIFOB_H, (u16)0);
       }
     }
     

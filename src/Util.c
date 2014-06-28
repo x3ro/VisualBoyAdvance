@@ -21,9 +21,7 @@
 #include <string.h>
 #include <zlib.h>
 
-extern "C" {
 #include <png.h>
-}
 
 #if 0
 #include "unrarlib.h"
@@ -39,9 +37,7 @@ extern "C" {
 #include "Port.h"
 
 
-extern "C" {
 #include "memgzio.h"
-}
 
 #ifndef _MSC_VER
 #define _stricmp strcasecmp
@@ -698,7 +694,7 @@ static int utilGetSize(int size)
 static u8 *utilLoadFromZip(const char *file,
                            bool (*accept)(const char *),
                            u8 *data,
-                           int &size)
+                           int *size)
 {
   char buffer[2048];
   
@@ -755,8 +751,8 @@ static u8 *utilLoadFromZip(const char *file,
   }
   
   int fileSize = info.uncompressed_size;
-  if(size == 0)
-    size = fileSize;
+  if(*size == 0)
+    *size = fileSize;
   r = unzOpenCurrentFile(unz);
 
   if(r != UNZ_OK) {
@@ -768,7 +764,7 @@ static u8 *utilLoadFromZip(const char *file,
   u8 *image = data;
   
   if(image == NULL) {
-    image = (u8 *)malloc(utilGetSize(size));
+    image = (u8 *)malloc(utilGetSize(*size));
     if(image == NULL) {
       unzCloseCurrentFile(unz);
       unzClose(unz);
@@ -776,9 +772,9 @@ static u8 *utilLoadFromZip(const char *file,
                     "data");
       return NULL;
     }
-    size = fileSize;
+    *size = fileSize;
   }
-  int read = fileSize <= size ? fileSize : size;
+  int read = fileSize <= *size ? fileSize : *size;
   r = unzReadCurrentFile(unz,
                          image,
                          read);
@@ -794,7 +790,7 @@ static u8 *utilLoadFromZip(const char *file,
     return NULL;
   }
 
-  size = fileSize;
+  *size = fileSize;
 
   return image;
 }
@@ -802,7 +798,7 @@ static u8 *utilLoadFromZip(const char *file,
 static u8 *utilLoadGzipFile(const char *file,
                             bool (*accept)(const char *),
                             u8 *data,
-                            int &size)
+                            int *size)
 {
   FILE *f = fopen(file, "rb");
 
@@ -814,8 +810,8 @@ static u8 *utilLoadGzipFile(const char *file,
   fseek(f, -4, SEEK_END);
   int fileSize = fgetc(f) | (fgetc(f) << 8) | (fgetc(f) << 16) | (fgetc(f) << 24);
   fclose(f);
-  if(size == 0)
-    size = fileSize;
+  if(*size == 0)
+    *size = fileSize;
 
   gzFile gz = gzopen(file, "rb");
 
@@ -828,16 +824,16 @@ static u8 *utilLoadGzipFile(const char *file,
   u8 *image = data;
 
   if(image == NULL) {
-    image = (u8 *)malloc(utilGetSize(size));
+    image = (u8 *)malloc(utilGetSize(*size));
     if(image == NULL) {
       systemMessage(MSG_OUT_OF_MEMORY, N_("Failed to allocate memory for %s"),
                     "data");
       fclose(f);
       return NULL;
     }
-    size = fileSize;
+    *size = fileSize;
   }
-  int read = fileSize <= size ? fileSize : size;
+  int read = fileSize <= *size ? fileSize : *size;
   int r = gzread(gz, image, read);
   gzclose(gz);
 
@@ -849,7 +845,7 @@ static u8 *utilLoadGzipFile(const char *file,
     return NULL;
   }  
   
-  size = fileSize;
+  *size = fileSize;
 
   return image;  
 }
@@ -858,7 +854,7 @@ static u8 *utilLoadGzipFile(const char *file,
 static u8 *utilLoadRarFile(const char *file,
                            bool (*accept)(const char *),
                            u8 *data,
-                           int &size)
+                           int *size)
 {
   char buffer[2048];
 
@@ -878,7 +874,7 @@ static u8 *utilLoadRarFile(const char *file,
     if(found) {
       void *memory = NULL;
       unsigned long lsize = 0;
-      size = p->item.UnpSize;
+      *size = p->item.UnpSize;
       int r = urarlib_get((void *)&memory, &lsize, buffer, (void *)file, "");
       if(!r) {
         systemMessage(MSG_ERROR_READING_IMAGE,
@@ -888,7 +884,7 @@ static u8 *utilLoadRarFile(const char *file,
       }
       u8 *image = (u8 *)memory;
       if(data != NULL) {
-        memcpy(image, data, size);
+        memcpy(image, data, *size);
       }
       urarlib_freelist(rarList);
       return image;
@@ -906,7 +902,7 @@ static u8 *utilLoadRarFile(const char *file,
 u8 *utilLoad(const char *file,
              bool (*accept)(const char *),
              u8 *data,
-             int &size)
+             int *size)
 {
   if(utilIsZipFile(file)) {
     return utilLoadFromZip(file, accept, data, size);
@@ -932,20 +928,20 @@ u8 *utilLoad(const char *file,
   fseek(f,0,SEEK_END);
   int fileSize = ftell(f);
   fseek(f,0,SEEK_SET);
-  if(size == 0)
-    size = fileSize;
+  if(*size == 0)
+    *size = fileSize;
 
   if(image == NULL) {
-    image = (u8 *)malloc(utilGetSize(size));
+    image = (u8 *)malloc(utilGetSize(*size));
     if(image == NULL) {
       systemMessage(MSG_OUT_OF_MEMORY, N_("Failed to allocate memory for %s"),
                     "data");
       fclose(f);
       return NULL;
     }
-    size = fileSize;
+    *size = fileSize;
   }
-  size_t read = fileSize <= size ? fileSize : size;
+  size_t read = fileSize <= *size ? fileSize : *size;
   size_t r = fread(image, 1, read, f);
   fclose(f);
 
@@ -957,7 +953,7 @@ u8 *utilLoad(const char *file,
     return NULL;
   }  
 
-  size = fileSize;
+  *size = fileSize;
   
   return image;
 }

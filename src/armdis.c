@@ -27,11 +27,11 @@
 #include "armdis.h"
 #include "elf.h"
 
-struct Opcodes {
+typedef struct Opcodes {
   u32 mask;
   u32 cval;
   char *mnemonic;
-};
+} Opcodes;
 
 #define debuggerReadMemory(addr) \
   READ32LE(((u32*)&map[(addr)>>24].address[(addr) & map[(addr)>>24].mask]))

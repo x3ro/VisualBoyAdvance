@@ -20,7 +20,7 @@
 
 extern int RGB_LOW_BITS_MASK;
 
-void Scanlines (u8 *srcPtr, u32 srcPitch, u8 *,
+void Scanlines (u8 *srcPtr, u32 srcPitch, u8 * unused,
                 u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
@@ -73,7 +73,7 @@ void Scanlines (u8 *srcPtr, u32 srcPitch, u8 *,
   while (--height);
 }
 
-void Scanlines32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void Scanlines32(u8 *srcPtr, u32 srcPitch, u8 * unused/* deltaPtr */,
                  u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
@@ -122,7 +122,7 @@ void Scanlines32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   while (--height);
 }
 
-void ScanlinesTV(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void ScanlinesTV(u8 *srcPtr, u32 srcPitch, u8 *unused /* deltaPtr */,
                  u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;
@@ -180,7 +180,7 @@ void ScanlinesTV(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
   while (--height);
 }
 
-void ScanlinesTV32(u8 *srcPtr, u32 srcPitch, u8 * /* deltaPtr */,
+void ScanlinesTV32(u8 *srcPtr, u32 srcPitch, u8 *unused/* deltaPtr */,
                    u8 *dstPtr, u32 dstPitch, int width, int height)
 {
   u8 *nextLine, *finish;

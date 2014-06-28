@@ -869,7 +869,7 @@ void BIOS_ObjAffineSet()
   }
 }
 
-void BIOS_RegisterRamReset(u32 flags)
+void BIOS_RegisterRamResetU(u32 flags)
 {
   // no need to trace here. this is only called directly from GBA.cpp
   // to emulate bios initialization
@@ -945,7 +945,7 @@ void BIOS_RegisterRamReset(u32 flags)
   }
 }
 
-void BIOS_RegisterRamReset()
+void BIOS_RegisterRamReset(void)
 {
 #ifdef DEV_VERSION
   if(systemVerbose & VERBOSE_SWI) {
@@ -955,7 +955,7 @@ void BIOS_RegisterRamReset()
   }
 #endif
 
-  BIOS_RegisterRamReset(reg[0].I);
+  BIOS_RegisterRamResetU(reg[0].I);
 }
 
 void BIOS_RLUnCompVram()
