@@ -24,14 +24,8 @@
 # include <unistd.h>
 # include <sys/socket.h>
 # include <netdb.h>
-# ifdef HAVE_NETINET_IN_H
-#  include <netinet/in.h>
-# endif // HAVE_NETINET_IN_H
-# ifdef HAVE_ARPA_INET_H
-#  include <arpa/inet.h>
-# else // ! HAVE_ARPA_INET_H
-#  define socklen_t int
-# endif // ! HAVE_ARPA_INET_H
+# include <netinet/in.h>
+# include <arpa/inet.h>
 # define SOCKET int
 #else // _WIN32
 # include <winsock.h>
