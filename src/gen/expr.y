@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
  
-#include "System.h"
-#include "elf.h"
-#include "exprNode.h" 
+#include "../System.h"
+#include "../elf.h"
+#include "../exprNode.h" 
 
 extern int yyerror(char *);
 extern int yylex(); 

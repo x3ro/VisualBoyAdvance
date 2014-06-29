@@ -1,5 +1,5 @@
 %{
-#include "expr.c.h"
+#include "../expr.c.h"
 
 #ifndef __GNUC__
 #include <io.h>
