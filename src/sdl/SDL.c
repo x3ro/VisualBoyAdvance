@@ -264,12 +264,7 @@ int sdlSoundLen = 0;
 
 char *arg0;
 
-#ifndef C_CORE
-u8 sdlStretcher[16384];
-int sdlStretcherPos;
-#else
 void (*sdlStretcher)(u8 *, u8*) = NULL;
-#endif
 
 enum {
   KEY_LEFT, KEY_RIGHT,
@@ -372,243 +367,6 @@ struct option sdlOptions[] = {
   { "yuv", required_argument, 0, 'Y' },
   { NULL, no_argument, NULL, 0 }
 };
-
-#ifndef C_CORE
-#define SDL_LONG(val) \
-  *((u32 *)&sdlStretcher[sdlStretcherPos]) = val;\
-  sdlStretcherPos+=4;
-
-#define SDL_AND_EAX(val) \
-  sdlStretcher[sdlStretcherPos++] = 0x25;\
-  SDL_LONG(val);
-
-#define SDL_AND_EBX(val) \
-  sdlStretcher[sdlStretcherPos++] = 0x81;\
-  sdlStretcher[sdlStretcherPos++] = 0xe3;\
-  SDL_LONG(val);
-
-#define SDL_OR_EAX_EBX \
-  sdlStretcher[sdlStretcherPos++] = 0x09;\
-  sdlStretcher[sdlStretcherPos++] = 0xd8;
-
-#define SDL_LOADL_EBX \
-  sdlStretcher[sdlStretcherPos++] = 0x8b;\
-  sdlStretcher[sdlStretcherPos++] = 0x1f;
-
-#define SDL_LOADW \
-  sdlStretcher[sdlStretcherPos++] = 0x66;\
-  sdlStretcher[sdlStretcherPos++] = 0x8b;\
-  sdlStretcher[sdlStretcherPos++] = 0x06;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc6;\
-  sdlStretcher[sdlStretcherPos++] = 0x02;  
-
-#define SDL_LOADL \
-  sdlStretcher[sdlStretcherPos++] = 0x8b;\
-  sdlStretcher[sdlStretcherPos++] = 0x06;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc6;\
-  sdlStretcher[sdlStretcherPos++] = 0x04;  
-
-#define SDL_LOADL2 \
-  sdlStretcher[sdlStretcherPos++] = 0x8b;\
-  sdlStretcher[sdlStretcherPos++] = 0x06;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc6;\
-  sdlStretcher[sdlStretcherPos++] = 0x03;  
-
-#define SDL_STOREW \
-  sdlStretcher[sdlStretcherPos++] = 0x66;\
-  sdlStretcher[sdlStretcherPos++] = 0x89;\
-  sdlStretcher[sdlStretcherPos++] = 0x07;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc7;\
-  sdlStretcher[sdlStretcherPos++] = 0x02;  
-
-#define SDL_STOREL \
-  sdlStretcher[sdlStretcherPos++] = 0x89;\
-  sdlStretcher[sdlStretcherPos++] = 0x07;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc7;\
-  sdlStretcher[sdlStretcherPos++] = 0x04;  
-
-#define SDL_STOREL2 \
-  sdlStretcher[sdlStretcherPos++] = 0x89;\
-  sdlStretcher[sdlStretcherPos++] = 0x07;\
-  sdlStretcher[sdlStretcherPos++] = 0x83;\
-  sdlStretcher[sdlStretcherPos++] = 0xc7;\
-  sdlStretcher[sdlStretcherPos++] = 0x03;  
-
-#define SDL_RET \
-  sdlStretcher[sdlStretcherPos++] = 0xc3;
-
-#define SDL_PUSH_EAX \
-  sdlStretcher[sdlStretcherPos++] = 0x50;
-
-#define SDL_PUSH_ECX \
-  sdlStretcher[sdlStretcherPos++] = 0x51;
-
-#define SDL_PUSH_EBX \
-  sdlStretcher[sdlStretcherPos++] = 0x53;
-
-#define SDL_PUSH_ESI \
-  sdlStretcher[sdlStretcherPos++] = 0x56;
-
-#define SDL_PUSH_EDI \
-  sdlStretcher[sdlStretcherPos++] = 0x57;
-
-#define SDL_POP_EAX \
-  sdlStretcher[sdlStretcherPos++] = 0x58;
-
-#define SDL_POP_ECX \
-  sdlStretcher[sdlStretcherPos++] = 0x59;
-
-#define SDL_POP_EBX \
-  sdlStretcher[sdlStretcherPos++] = 0x5b;
-
-#define SDL_POP_ESI \
-  sdlStretcher[sdlStretcherPos++] = 0x5e;
-
-#define SDL_POP_EDI \
-  sdlStretcher[sdlStretcherPos++] = 0x5f;
-
-#define SDL_MOV_ECX(val) \
-  sdlStretcher[sdlStretcherPos++] = 0xb9;\
-  SDL_LONG(val);
-
-#define SDL_REP_MOVSB \
-  sdlStretcher[sdlStretcherPos++] = 0xf3;\
-  sdlStretcher[sdlStretcherPos++] = 0xa4;
-
-#define SDL_REP_MOVSW \
-  sdlStretcher[sdlStretcherPos++] = 0xf3;\
-  sdlStretcher[sdlStretcherPos++] = 0x66;\
-  sdlStretcher[sdlStretcherPos++] = 0xa5;
-
-#define SDL_REP_MOVSL \
-  sdlStretcher[sdlStretcherPos++] = 0xf3;\
-  sdlStretcher[sdlStretcherPos++] = 0xa5;
-
-void sdlMakeStretcher(int width)
-{
-  sdlStretcherPos = 0;
-  switch(systemColorDepth) {
-  case 16:
-    if(sizeOption) {
-      SDL_PUSH_EAX;
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      for(int i = 0; i < width; i++) {
-        SDL_LOADW;
-        SDL_STOREW;
-        SDL_STOREW;
-        if(sizeOption > 1) {
-          SDL_STOREW;
-        }
-        if(sizeOption > 2) {
-          SDL_STOREW;
-        }
-      }
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_POP_EAX;
-      SDL_RET;
-    } else {
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      SDL_PUSH_ECX;
-      SDL_MOV_ECX(width);
-      SDL_REP_MOVSW;
-      SDL_POP_ECX;
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_RET;
-    }
-    break;
-  case 24:
-    if(sizeOption) {
-      SDL_PUSH_EAX;
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      int w = width - 1;
-      for(int i = 0; i < w; i++) {
-        SDL_LOADL2;
-        SDL_STOREL2;
-        SDL_STOREL2;
-        if(sizeOption > 1) {
-          SDL_STOREL2;
-        }
-        if(sizeOption > 2) {
-          SDL_STOREL2;
-        }
-      }
-      // need to write the last one
-      SDL_LOADL2;
-      SDL_STOREL2;
-      if(sizeOption > 1) {
-        SDL_STOREL2;
-      }
-      if(sizeOption > 2) {
-        SDL_STOREL2;
-      }
-      SDL_AND_EAX(0x00ffffff);
-      SDL_PUSH_EBX;
-      SDL_LOADL_EBX;
-      SDL_AND_EBX(0xff000000);
-      SDL_OR_EAX_EBX;
-      SDL_POP_EBX;
-      SDL_STOREL2;
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_POP_EAX;
-      SDL_RET;
-    } else {
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      SDL_PUSH_ECX;
-      SDL_MOV_ECX(3*width);
-      SDL_REP_MOVSB;
-      SDL_POP_ECX;
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_RET;
-    }
-    break;
-  case 32:
-    if(sizeOption) {
-      SDL_PUSH_EAX;
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      for(int i = 0; i < width; i++) {
-        SDL_LOADL;
-        SDL_STOREL;
-        SDL_STOREL;
-        if(sizeOption > 1) {
-          SDL_STOREL;
-        }
-        if(sizeOption > 2) {
-          SDL_STOREL;
-        }
-      }
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_POP_EAX;
-      SDL_RET;
-    } else {
-      SDL_PUSH_ESI;
-      SDL_PUSH_EDI;
-      SDL_PUSH_ECX;
-      SDL_MOV_ECX(width);
-      SDL_REP_MOVSL;
-      SDL_POP_ECX;
-      SDL_POP_EDI;
-      SDL_POP_ESI;
-      SDL_RET;
-    }
-    break;
-  }
-}
-#endif
 
 #define SDL_CALL_STRETCHER \
        sdlStretcher(src, dest)
@@ -2370,9 +2128,6 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
-#ifndef C_CORE
-  sdlMakeStretcher(srcWidth);
-#else
   switch(systemColorDepth) {
   case 16:
     sdlStretcher = sdlStretcher16[sizeOption];
@@ -2387,7 +2142,6 @@ int main(int argc, char **argv)
     fprintf(stderr, "Unsupported resolution: %d\n", systemColorDepth);
     exit(-1);
   }
-#endif
 
   fprintf(stderr,"Color depth: %d\n", systemColorDepth);
   
@@ -3382,9 +3136,6 @@ void systemGbBorderOn()
   surface = SDL_SetVideoMode(destWidth, destHeight, 16,
                              SDL_ANYFORMAT|SDL_HWSURFACE|SDL_DOUBLEBUF|
                              (fullscreen ? SDL_FULLSCREEN : 0));  
-#ifndef C_CORE
-  sdlMakeStretcher(srcWidth);
-#else
   switch(systemColorDepth) {
   case 16:
     sdlStretcher = sdlStretcher16[sizeOption];
@@ -3399,7 +3150,6 @@ void systemGbBorderOn()
     fprintf(stderr, "Unsupported resolution: %d\n", systemColorDepth);
     exit(-1);
   }
-#endif
 
   if(systemColorDepth == 16) {
     if(sdlCalculateMaskWidth(surface->format->Gmask) == 6) {
