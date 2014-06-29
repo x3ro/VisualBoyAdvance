@@ -1060,6 +1060,7 @@ static void debuggerBreakArm(int n, char **args)
 
 static void debuggerBreakWriteClear(int n, char **args)
 {
+#ifdef BKPT_SUPPORT
   if(n == 3) {
     u32 address = 0;
     sscanf(args[1], "%x", &address);
@@ -1160,10 +1161,12 @@ static void debuggerBreakWriteClear(int n, char **args)
     printf("Cleared all break on write\n");
   } else
     debuggerUsage("bpwc");
+#endif
 }
 
 static void debuggerBreakWrite(int n, char **args)
 {
+#ifdef BKPT_SUPPORT
   if(n == 3) {
     if(cheatsNumber != 0) {
       printf("Cheats are enabled. Cannot continue.\n");
@@ -1230,10 +1233,12 @@ static void debuggerBreakWrite(int n, char **args)
    
   } else
     debuggerUsage("bpw");    
+#endif
 }
 
 static void debuggerBreakChangeClear(int n, char **args)
 {
+#ifdef BKPT_SUPPORT
   if(n == 3) {
     u32 address = 0;
     sscanf(args[1], "%x", &address);
@@ -1333,10 +1338,12 @@ static void debuggerBreakChangeClear(int n, char **args)
     printf("Cleared all break on change\n");
   } else
     debuggerUsage("bpcc");
+#endif
 }
 
 static void debuggerBreakChange(int n, char **args)
 {
+#ifdef BKPT_SUPPORT
   if(n == 3) {
     if(cheatsNumber != 0) {
       printf("Cheats are enabled. Cannot continue.\n");
@@ -1399,6 +1406,7 @@ static void debuggerBreakChange(int n, char **args)
 
   } else
     debuggerUsage("bpc");
+#endif
 }
 
 static void debuggerDisassembleArm3(FILE *f, u32 pc, int count)
@@ -2656,9 +2664,11 @@ char* strqtok (char* string, const char* ctrl)
 
 void debuggerLast(int n, char **args)
 {
+#ifdef BKPT_SUPPORT
 debugger_last =!debugger_last;
 if (debugger_last == true)
 printf ("Last registers will be shown\n");
 else
 printf ("Last registers wont be shown\n");
+#endif
 }
