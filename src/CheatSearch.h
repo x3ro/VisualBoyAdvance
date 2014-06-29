@@ -22,18 +22,18 @@
 
 #include "System.h"
 
-struct CheatSearchBlock {
+typedef struct CheatSearchBlock {
   int size;
   u32 offset;
   u8 *bits;
   u8 *data;
   u8 *saved;
-};
+} CheatSearchBlock;
 
-struct CheatSearchData {
+typedef struct CheatSearchData {
   int count;
   CheatSearchBlock *blocks;
-};
+} CheatSearchData;
 
 enum {
   SEARCH_EQ,
