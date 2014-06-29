@@ -2821,6 +2821,7 @@ extern void debuggerBreakOnWrite(u32 , u32, u32, int, int);
 
 static u8 cheatsGetType(u32 address)
 {
+#ifdef BKPT_SUPPORT
   switch(address >> 24) {
   case 2:
     return freezeWorkRAM[address & 0x3FFFF];
@@ -2837,6 +2838,7 @@ static u8 cheatsGetType(u32 address)
     return freezeOAM[address & 0x3FC];
   }
   return 0;
+#endif
 }
 
 void cheatsWriteMemory(u32 address, u32 value)
@@ -2873,11 +2875,7 @@ void cheatsWriteHalfWord(u32 address, u16 value)
 #endif
 }
 
-#if defined BKPT_SUPPORT && defined SDL
 void cheatsWriteByte(u32 address, u8 value)
-#else
-void cheatsWriteByte(u32, u8)
-#endif
 {
 #ifdef BKPT_SUPPORT
 #ifdef SDL
