@@ -32,7 +32,6 @@
 #include "../Util.h"
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
-#include "../getopt.h"
 
 #ifndef _WIN32
 # include <unistd.h>
