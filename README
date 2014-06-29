@@ -29,14 +29,14 @@ Features
 Compiling the sources
 ---------------------
 
-run autoreconf -i to generate the configure script,
-then ./configure, make, make install as usual.
+install zlib, sdl, libpng development packages
+
+run "make"
 
 Installing
 ----------
 
-The easiest installation is to place all files in the distribution in the
-same directory.
+run "make install"
 
 Per game settings
 -----------------
