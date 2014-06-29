@@ -68,6 +68,6 @@ int main(int argc, char **argv)
   else
     yyin = stdin;
   if(!yyparse())
-    result->print();
+    result->print(result);
 }
 #endif
