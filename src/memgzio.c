@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "memgzio.h"
 
@@ -64,6 +66,10 @@ typedef struct mem_stream {
     char     mode;    /* 'w' or 'r' */
     long     startpos; /* start of compressed data in file (header skipped) */
 } mem_stream;
+
+#define local static
+#define DEF_MEM_LEVEL 8
+#define OS_CODE  0x03  /* assume Unix */
 
 
 local gzFile gz_open      OF((char *memory, const int available, const char *mode));
@@ -468,7 +474,7 @@ int ZEXPORT memgzread (file, buf, len)
 	    uInt n = s->stream.avail_in;
 	    if (n > s->stream.avail_out) n = s->stream.avail_out;
 	    if (n > 0) {
-		zmemcpy(s->stream.next_out, s->stream.next_in, n);
+		memcpy(s->stream.next_out, s->stream.next_in, n);
 		next_out += n;
 		s->stream.next_out = next_out;
 		s->stream.next_in   += n;
