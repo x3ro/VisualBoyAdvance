@@ -39,6 +39,10 @@
 #include "../gb/GB.h"
 #include "../gb/gbGlobals.h"
 
+#ifndef SYSCONFDIR
+#define SYSCONFDIR "/etc"
+#endif
+
 #ifndef _WIN32
 # include <unistd.h>
 # define GETCWD getcwd
