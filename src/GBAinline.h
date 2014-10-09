@@ -153,25 +153,8 @@ static inline u32 CPUReadMemory(u32 address)
   }
 
   if(address & 3) {
-#ifdef C_CORE
     int shift = (address & 3) << 3;
     value = (value >> shift) | (value << (32 - shift));
-#else    
-#ifdef __GNUC__
-    asm("and $3, %%ecx;"
-        "shl $3 ,%%ecx;"
-        "ror %%cl, %0"
-        : "=r" (value)
-        : "r" (value), "c" (address));
-#else
-    __asm {
-      mov ecx, address;
-      and ecx, 3;
-      shl ecx, 3;
-      ror [dword ptr value], cl;
-    }
-#endif
-#endif
   }
   return value;
 }

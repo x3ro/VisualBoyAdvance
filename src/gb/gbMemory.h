@@ -19,7 +19,7 @@
 
 #include <time.h>
 
-struct mapperMBC1 {
+typedef struct mapperMBC1 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -27,14 +27,14 @@ struct mapperMBC1 {
   int mapperROMHighAddress;
   int mapperRAMAddress;
   int mapperRomBank0Remapping;
-};
+} mapperMBC1;
 
-struct mapperMBC2 {
+typedef struct mapperMBC2 {
   int mapperRAMEnable;
   int mapperROMBank;
-};
+} mapperMBC2;
 
-struct mapperMBC3 {
+typedef struct mapperMBC3 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -52,18 +52,18 @@ struct mapperMBC3 {
   int mapperLDays;
   int mapperLControl;
   time_t mapperLastTime;
-};
+} mapperMBC3;
 
-struct mapperMBC5 {
+typedef struct mapperMBC5 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
   int mapperROMHighAddress;
   int mapperRAMAddress;
   int isRumbleCartridge;
-};
+} mapperMBC5;
 
-struct mapperMBC7 {
+typedef struct mapperMBC7 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -78,18 +78,18 @@ struct mapperMBC7 {
   int address;
   int writeEnable;
   int value;
-};
+} mapperMBC7;
 
-struct mapperHuC1 {
+typedef struct mapperHuC1 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
   int mapperMemoryModel;
   int mapperROMHighAddress;
   int mapperRAMAddress;
-};
+} mapperHuC1;
 
-struct mapperHuC3 {
+typedef struct mapperHuC3 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -105,9 +105,9 @@ struct mapperHuC3 {
   int mapperRegister6;
   int mapperRegister7;
   int mapperRegister8;
-};
+} mapperHuC3;
 
-struct mapperTAMA5 {
+typedef struct mapperTAMA5 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -134,9 +134,9 @@ struct mapperTAMA5 {
   int mapperLYears;
   int mapperLControl;
   time_t mapperLastTime;
-};
+} mapperTAMA5;
 
-struct mapperMMM01 {
+typedef struct mapperMMM01 {
   int mapperRAMEnable;
   int mapperROMBank;
   int mapperRAMBank;
@@ -144,11 +144,11 @@ struct mapperMMM01 {
   int mapperROMHighAddress;
   int mapperRAMAddress;
   int mapperRomBank0Remapping;
-};
+} mapperMMM01;
 
-struct mapperGS3 {
+typedef struct mapperGS3 {
   int mapperROMBank;
-};
+} mapperGS3;
 
 extern mapperMBC1 gbDataMBC1;
 extern mapperMBC2 gbDataMBC2;
