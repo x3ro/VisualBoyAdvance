@@ -33,10 +33,10 @@ $(DESTDIR)$(sysconfdir)/%: src/%
 	install -D -m 644 $< $@
 
 VisualBoyAdvance: $(VBAOBJS)
-	$(CC) $(LDFLAGS) -o $@ $(VBAOBJS) -lSDL -lpng -lz
+	$(CC) $(LDFLAGS) -o $@ $(VBAOBJS) -lSDL -lpng -lz -lm
 
 TestEmu: $(TESTEMUOBJS)
-	$(CC) $(LDFLAGS) -o $@ $(TESTEMUOBJS) -lSDL -lpng -lz
+	$(CC) $(LDFLAGS) -o $@ $(TESTEMUOBJS) -lSDL -lpng -lz -lm
 
 clean:
 	rm -f $(GENSRCS)
