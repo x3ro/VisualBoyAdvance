@@ -72,13 +72,13 @@ typedef struct mem_stream {
 #define OS_CODE  0x03  /* assume Unix */
 
 
-local gzFile gz_open      OF((char *memory, const int available, const char *mode));
-local int do_flush        OF((gzFile file, int flush));
-local int    get_byte     OF((mem_stream *s));
-local void   check_header OF((mem_stream *s));
-local int    destroy      OF((mem_stream *s));
-local void   putLong      OF((MEMFILE *file, uLong x));
-local uLong  getLong      OF((mem_stream *s));
+local gzFile gz_open      (char *memory, const int available, const char *mode);
+local int do_flush        (gzFile file, int flush);
+local int    get_byte     (mem_stream *s);
+local void   check_header (mem_stream *s);
+local int    destroy      (mem_stream *s);
+local void   putLong      (MEMFILE *file, uLong x);
+local uLong  getLong      (mem_stream *s);
 
 local MEMFILE *memOpen(char *memory, int available, char mode)
 {
