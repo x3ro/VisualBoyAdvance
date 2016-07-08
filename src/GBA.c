@@ -529,7 +529,7 @@ static inline int dataTicksAccess16(u32 address) // DATA 8/16bits NON SEQ
     int waitState = value;
     if (!waitState)
       waitState = 1;
-    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
+    busPrefetchCount = ((busPrefetchCount+1)<<waitState) - 1;
   }
 
   return value;
@@ -550,7 +550,7 @@ static inline int dataTicksAccess32(u32 address) // DATA 32bits NON SEQ
     int waitState = value;
     if (!waitState)
       waitState = 1;
-    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
+    busPrefetchCount = ((busPrefetchCount+1)<<waitState) - 1;
   }
 
   return value;
@@ -571,7 +571,7 @@ static inline int dataTicksAccessSeq16(u32 address)// DATA 8/16bits SEQ
     int waitState = value;
     if (!waitState)
       waitState = 1;
-    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
+    busPrefetchCount = ((busPrefetchCount+1)<<waitState) - 1;
   }
 
   return value;
@@ -592,7 +592,7 @@ static inline int dataTicksAccessSeq32(u32 address)// DATA 32bits SEQ
     int waitState = value;
     if (!waitState)
       waitState = 1;
-    busPrefetchCount = ((++busPrefetchCount)<<waitState) - 1;
+    busPrefetchCount = ((busPrefetchCount+1)<<waitState) - 1;
   }
 
   return value;
