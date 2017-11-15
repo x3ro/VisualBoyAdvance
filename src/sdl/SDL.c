@@ -22,6 +22,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <assert.h>
 
 #include "../AutoBuild.h"
 
@@ -294,11 +295,16 @@ bool screenMessage = false;
 char screenMessageBuffer[21];
 u32  screenMessageTime = 0;
 
-// Patch #1382692 by deathpudding.
-SDL_sem *sdlBufferLock  = NULL;
-SDL_sem *sdlBufferFull  = NULL;
-SDL_sem *sdlBufferEmpty = NULL;
-u8 sdlBuffer[4096];
+SDL_mutex *sdlBufferLock = NULL;
+SDL_cond *sdlBufferAvailable = NULL;
+
+// Number of samples the SDL audio callback expects.
+#define actualSDLBufferSamples 1024
+
+// Number of samples in our pre-SDL buffer below (sdlBuffer).
+#define sdlBufferSamples (2*1024)
+#define sdlBufferSize (sdlBufferSamples*2*2) // 16-bit stereo
+u8 sdlBuffer[sdlBufferSize];
 int sdlSoundLen = 0;
 
 char *arg0;
@@ -2681,22 +2687,25 @@ void soundCallback(void * unused,u8 *stream,int len)
   if (!emulating)
     return;
 
-  // Patch #1382692 by deathpudding.
-  /* since this is running in a different thread, speedup and
-   * throttle can change at any time; save the value so locks
-   * stay in sync */
-  bool lock = (!speedup && !throttle) ? true : false;
+  SDL_LockMutex(sdlBufferLock);
 
-  if (lock)
-    SDL_SemWait (sdlBufferFull);
+  if (sdlSoundLen < len) {
+    printf("An underrun in soundCallback, %d\n", sdlSoundLen);
+    memset(stream, 0, len);
+    SDL_UnlockMutex(sdlBufferLock);
+    return;
+  }
 
-  SDL_SemWait (sdlBufferLock);
-  memcpy (stream, sdlBuffer, len);
-  sdlSoundLen = 0;
-  SDL_SemPost (sdlBufferLock);
+  assert(sdlSoundLen >= len); 
+  memcpy(stream, sdlBuffer, len);
 
-  if (lock)
-    SDL_SemPost (sdlBufferEmpty);
+  // I know about circular buffers, but simply shifting this one for now. 
+  memcpy(sdlBuffer, sdlBuffer + len, sdlSoundLen - len);
+  sdlSoundLen -= len;
+
+  SDL_CondSignal(sdlBufferAvailable);
+
+  SDL_UnlockMutex(sdlBufferLock);
 }
 
 void systemWriteDataToSoundBuffer()
@@ -2705,16 +2714,37 @@ void systemWriteDataToSoundBuffer()
   if (SDL_GetAudioStatus () != SDL_AUDIO_PLAYING)
     SDL_PauseAudio (0);
 
-  if ((sdlSoundLen + soundBufferLen) >= 2048*2) {
+  int left = soundBufferLen;
+  int copied = 0;
+
+  while (left > 0) {
+
+    SDL_LockMutex(sdlBufferLock);
+
+    int available; 
+    while ((available = sdlBufferSize - sdlSoundLen) <= 0)
+      SDL_CondWait(sdlBufferAvailable, sdlBufferLock);
+
+    int toCopy = available < left ? available : left;
+    memcpy(sdlBuffer + sdlSoundLen, (const u8*)soundFinalWave + copied, toCopy);
+    sdlSoundLen += toCopy;
+    left -= toCopy;
+    copied += toCopy; 
+
+    SDL_UnlockMutex(sdlBufferLock);
+  }
+
+#if 0
+  if ((sdlSoundLen + soundBufferLen) >= sdlBufferSize) {
     bool lock = (!speedup && !throttle) ? true : false;
 
     if (lock)
       SDL_SemWait (sdlBufferEmpty);
 
     SDL_SemWait (sdlBufferLock);
-    int copied = 2048*2 - sdlSoundLen;
+    int copied = sdlBufferSize - sdlSoundLen;
     memcpy (sdlBuffer + sdlSoundLen, soundFinalWave, copied);
-    sdlSoundLen = 2048*2;
+    sdlSoundLen = sdlBufferSize;
     SDL_SemPost (sdlBufferLock);
 
     if (lock) {
@@ -2739,9 +2769,10 @@ void systemWriteDataToSoundBuffer()
   else {
     SDL_SemWait (sdlBufferLock);
     memcpy (sdlBuffer + sdlSoundLen, soundFinalWave, soundBufferLen);
-     sdlSoundLen += soundBufferLen;
+    sdlSoundLen += soundBufferLen;
     SDL_SemPost (sdlBufferLock);
   }
+#endif
 }
 
 bool systemSoundInit()
@@ -2764,18 +2795,20 @@ bool systemSoundInit()
   }
   audio.format=AUDIO_S16SYS;
   audio.channels = 2;
-  audio.samples = 1024;
+  audio.samples = actualSDLBufferSamples;
   audio.callback = soundCallback;
   audio.userdata = NULL;
   if(SDL_OpenAudio(&audio, NULL)) {
     fprintf(stderr,"Failed to open audio: %s\n", SDL_GetError());
     return false;
   }
-  soundBufferTotalLen = soundBufferLen*10;
-  // Patch #1382692 by deathpudding.
-  sdlBufferLock  = SDL_CreateSemaphore (1);
-  sdlBufferFull  = SDL_CreateSemaphore (0);
-  sdlBufferEmpty = SDL_CreateSemaphore (1);
+
+  // aleh: soundBufferTotalLen does not seem to be actually used anywhere, commenting out.
+  //~ soundBufferTotalLen = soundBufferLen*10;
+
+  sdlBufferLock = SDL_CreateMutex();
+  sdlBufferAvailable = SDL_CreateCond();
+
   sdlSoundLen = 0;
   systemSoundOn = true;
   return true;
@@ -2783,17 +2816,11 @@ bool systemSoundInit()
 
 void systemSoundShutdown()
 {
-  SDL_SemPost (sdlBufferFull); // fix freeze by deathpudding
-
-  // Patch #1382692 by deathpudding.
   SDL_CloseAudio ();
-
-  SDL_DestroySemaphore (sdlBufferLock);
-  SDL_DestroySemaphore (sdlBufferFull);
-  SDL_DestroySemaphore (sdlBufferEmpty);
+  SDL_DestroyCond(sdlBufferAvailable);
+  SDL_DestroyMutex(sdlBufferLock);
   sdlBufferLock  = NULL;
-  sdlBufferFull  = NULL;
-  sdlBufferEmpty = NULL;
+  sdlBufferAvailable = NULL;
 }
 
 void systemSoundPause()
