@@ -2770,8 +2770,11 @@ bool systemSoundInit()
 
 void systemSoundShutdown()
 {
+  SDL_SemPost (sdlBufferFull); // fix freeze by deathpudding
+
   // Patch #1382692 by deathpudding.
-  SDL_CloseAudio (); //TODO: fix freeze
+  SDL_CloseAudio ();
+
   SDL_DestroySemaphore (sdlBufferLock);
   SDL_DestroySemaphore (sdlBufferFull);
   SDL_DestroySemaphore (sdlBufferEmpty);
