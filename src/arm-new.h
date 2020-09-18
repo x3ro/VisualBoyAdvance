@@ -1717,55 +1717,6 @@ if(cond_res) {
   switch(((opcode>>16)&0xFF0) | ((opcode>>4)&0x0F)) {
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_AND,  OP_AND, 0x000);
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_ANDS, OP_AND, 0x010);
-  case 0x009:
-    {
-      // MUL Rd, Rm, Rs
-      int dest = (opcode >> 16) & 0x0F;
-      int mult = (opcode & 0x0F);
-      clockTicks = 1; 
-      u32 rs = reg[(opcode >> 8) & 0x0F].I;
-      reg[dest].I = reg[mult].I * rs;
-      if(((s32)rs)<0)
-         rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
-
-    }
-    break;
-  case 0x019:
-    {
-      // MULS Rd, Rm, Rs
-      int dest = (opcode >> 16) & 0x0F;
-      int mult = (opcode & 0x0F);
-      clockTicks = 1;
-      u32 rs = reg[(opcode >> 8) & 0x0F].I;
-      reg[dest].I = reg[mult].I * rs;
-      N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
-      Z_FLAG = (reg[dest].I) ? false : true;
-      if(((s32)rs)<0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
-    }
-    break;
   case 0x00b:
   case 0x02b:
     {
@@ -2796,50 +2747,64 @@ if(cond_res) {
     break;
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_EOR,  OP_EOR, 0x020);
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_EORS, OP_EOR, 0x030);
+// CYCLES: base cycle count (1, 2, or 3)
+#define MUL_INSN(CYCLES)                                  \
+      clockTicks = 0; \
+      if(((s32)rs)<0) \
+         rs = ~rs; \
+      if((rs & 0xFFFFFF00) == 0) \
+        clockTicks += 0; \
+      else if ((rs & 0xFFFF0000) == 0) \
+        clockTicks += 1; \
+      else if ((rs & 0xFF000000) == 0) \
+        clockTicks += 2; \
+      else \
+        clockTicks += 3; \
+      if (!busPrefetchCount) \
+        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1; \
+      clockTicks += CYCLES + codeTicksAccess32(armNextPC) + 1;
+  case 0x009:
+    {
+      // MUL Rd, Rm, Rs
+      int dest = (opcode >> 16) & 0x0F;
+      int mult = (opcode & 0x0F);
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
+      reg[dest].I = reg[mult].I * rs;
+      MUL_INSN(1);
+    }
+    break;
+  case 0x019:
+    {
+      // MULS Rd, Rm, Rs
+      int dest = (opcode >> 16) & 0x0F;
+      int mult = (opcode & 0x0F);
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
+      reg[dest].I = reg[mult].I * rs;
+      N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
+      Z_FLAG = (reg[dest].I) ? false : true;
+      MUL_INSN(1);
+    }
+    break;
   case 0x029:
     {
       // MLA Rd, Rm, Rs, Rn
-      clockTicks = 2;
       int dest = (opcode >> 16) & 0x0F;
       int mult = (opcode & 0x0F);
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
       reg[dest].I = reg[mult].I * rs + reg[(opcode>>12)&0x0f].I;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x039:
     {
       // MLAS Rd, Rm, Rs, Rn
-      clockTicks = 2;
       int dest = (opcode >> 16) & 0x0F;
       int mult = (opcode & 0x0F);
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
       reg[dest].I = reg[mult].I * rs + reg[(opcode>>12)&0x0f].I;
       N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
       Z_FLAG = (reg[dest].I) ? false : true;
-      if(((s32)rs)<0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_SUB,  OP_SUB, 0x040);
@@ -2848,54 +2813,33 @@ if(cond_res) {
     ARITHMETIC_DATA_OPCODE(OP_RSBS, OP_RSB, 0x070);
     ARITHMETIC_DATA_OPCODE(OP_ADD,  OP_ADD, 0x080);
     ARITHMETIC_DATA_OPCODE(OP_ADDS, OP_ADD, 0x090);
+
   case 0x089:
     {
       // UMULL RdLo, RdHi, Rn, Rs
-      clockTicks = 2;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
-      u64 uTemp = ((u64)umult)*((u64)usource);
+      u64 uTemp = ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x099:
     {
       // UMULLS RdLo, RdHi, Rn, Rs
-      clockTicks = 2;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
-      u64 uTemp = ((u64)umult)*((u64)usource);
+      u64 uTemp = ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
       Z_FLAG = (uTemp) ? false : true;
       N_FLAG = (reg[destHi].I & 0x80000000) ? true : false;
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_ADC,  OP_ADC, 0x0a0);
@@ -2903,57 +2847,35 @@ if(cond_res) {
   case 0x0a9:
     {
       // UMLAL RdLo, RdHi, Rn, Rs
-      clockTicks = 3;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u64 uTemp = (u64)reg[destHi].I;
       uTemp <<= 32;
       uTemp |= (u64)reg[destLo].I;
-      uTemp += ((u64)umult)*((u64)usource);
+      uTemp += ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(3);
     }
     break;
   case 0x0b9:
     {
       // UMLALS RdLo, RdHi, Rn, Rs
-      clockTicks = 3;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u64 uTemp = (u64)reg[destHi].I;
       uTemp <<= 32;
       uTemp |= (u64)reg[destLo].I;
-      uTemp += ((u64)umult)*((u64)usource);
+      uTemp += ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
       Z_FLAG = (uTemp) ? false : true;
       N_FLAG = (reg[destHi].I & 0x80000000) ? true : false;
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(3);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_SBC,  OP_SBC, 0x0c0);
@@ -2961,7 +2883,6 @@ if(cond_res) {
   case 0x0c9:
     {
       // SMULL RdLo, RdHi, Rm, Rs
-      clockTicks = 2;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -2970,25 +2891,12 @@ if(cond_res) {
       s64 sTemp = m*s;
       reg[destLo].I = (u32)sTemp;
       reg[destHi].I = (u32)(sTemp >> 32);
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x0d9:
     {
       // SMULLS RdLo, RdHi, Rm, Rs
-      clockTicks = 2;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -2999,19 +2907,7 @@ if(cond_res) {
       reg[destHi].I = (u32)(sTemp >> 32);
       Z_FLAG = (sTemp) ? false : true;
       N_FLAG = (sTemp < 0) ? true : false;
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_RSC,  OP_RSC, 0x0e0);
@@ -3019,7 +2915,6 @@ if(cond_res) {
   case 0x0e9:
     {
       // SMLAL RdLo, RdHi, Rm, Rs
-      clockTicks = codeTicksAccess32(armNextPC) + 4;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3031,24 +2926,12 @@ if(cond_res) {
       sTemp += m*s;
       reg[destLo].I = (u32)sTemp;
       reg[destHi].I = (u32)(sTemp >> 32);
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
+      MUL_INSN(3);
     }
     break;
   case 0x0f9:
     {
       // SMLALS RdLo, RdHi, Rm, Rs
-      clockTicks = codeTicksAccess32(armNextPC) + 4;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3062,18 +2945,7 @@ if(cond_res) {
       reg[destHi].I = (u32)(sTemp >> 32);
       Z_FLAG = (sTemp) ? false : true;
       N_FLAG = (sTemp < 0) ? true : false;
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1;
+      MUL_INSN(3);
     }
     break;
     LOGICAL_DATA_OPCODE(OP_TST, OP_TST, 0x110);
