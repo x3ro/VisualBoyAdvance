@@ -164,6 +164,11 @@ static int do_yuv();
 #define VPITCH   surface->pitch
 #define VSCALE   (sizeOption+1)
 #define VHEIGHT  surface->h
+SDL_mutex *sdlBufferLock = NULL;
+SDL_cond *sdlBufferAvailable = NULL;
+u8 *sdlSoundBuffer;
+volatile u32 sdlSoundBufferPos;
+u32 sdlSoundBufferLen, sysSoundBufferLen;
 #else
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -175,6 +180,7 @@ static SDL_PixelFormat *format;
 #define VSCALE (1)
 #define VHEIGHT srcHeight
 #define do_yuv() 0
+static SDL_AudioDeviceID adevice;
 #endif
 
 int systemSpeed = 0;
@@ -293,12 +299,6 @@ bool autoFireToggle = false;
 bool screenMessage = false;
 char screenMessageBuffer[21];
 u32  screenMessageTime = 0;
-
-SDL_mutex *sdlBufferLock = NULL;
-SDL_cond *sdlBufferAvailable = NULL;
-u8 *sdlSoundBuffer;
-volatile u32 sdlSoundBufferPos;
-u32 sdlSoundBufferLen, sysSoundBufferLen;
 
 char *arg0;
 
@@ -2675,6 +2675,7 @@ void systemScreenCapture(int a)
   systemScreenMessage("Screen capture");
 }
 
+#if SDL_MAJOR_VERSION != 2
 static void soundCallback(void * unused, u8 *stream, int len)
 {
   if (!emulating) return;
@@ -2709,30 +2710,14 @@ static u32 sdlCalcSoundBuflen(u32 sdlbuflen) {
   while(n < sdlbuflen*2) n += syslen;
   return n;
 }
-
-bool systemSoundInit()
+void systemSoundPause()
 {
-  static const int qual_tab[] = {44100, 22050, 11025, 11025};
-  SDL_AudioSpec audio = {0}, ob;
-  sdlBufferLock = SDL_CreateMutex();
-  sdlBufferAvailable = SDL_CreateCond();
+  SDL_PauseAudio(1);
+}
 
-  audio.freq = qual_tab[soundQuality-1];
-  audio.format = AUDIO_S16SYS;
-  audio.channels = 2;
-  audio.samples = audio.freq/60;
-  audio.callback = soundCallback;
-  audio.userdata = NULL;
-  if(SDL_OpenAudio(&audio, &ob)) {
-    fprintf(stderr,"Failed to open audio: %s\n", SDL_GetError());
-    return false;
-  }
-  sysSoundBufferLen = ob.size;
-  sdlSoundBufferLen = sdlCalcSoundBuflen(sysSoundBufferLen);
-  sdlSoundBuffer = calloc(1, sdlSoundBufferLen);
-
-  systemSoundOn = true;
-  return true;
+void systemSoundResume()
+{
+  SDL_PauseAudio(0);
 }
 
 void systemSoundShutdown()
@@ -2745,15 +2730,65 @@ void systemSoundShutdown()
   sdlBufferLock  = NULL;
   sdlBufferAvailable = NULL;
 }
+#else
+void systemWriteDataToSoundBuffer(u32 n) {
+  if(!systemSoundOn) return;
+  int res, min = soundBufferLen*2*2;
+  res = SDL_QueueAudio(adevice, soundFinalWave, n);
+  while (res && SDL_GetQueuedAudioSize(adevice) > min)
+    SDL_Delay(1);
+}
 
 void systemSoundPause()
 {
-  SDL_PauseAudio(1);
+  if(adevice) SDL_PauseAudioDevice(adevice, 1);
 }
 
 void systemSoundResume()
 {
-  SDL_PauseAudio(0);
+  if(adevice) SDL_PauseAudioDevice(adevice, 0);
+}
+
+void systemSoundShutdown()
+{
+  if(adevice) SDL_CloseAudioDevice(adevice);
+  adevice = 0;
+}
+#endif
+
+bool systemSoundInit()
+{
+  static const int qual_tab[] = {44100, 22050, 11025, 11025};
+  SDL_AudioSpec audio = {0}, ob;
+
+  audio.freq = qual_tab[soundQuality-1];
+  audio.format = AUDIO_S16SYS;
+  audio.channels = 2;
+  audio.samples = audio.freq/60;
+  audio.userdata = NULL;
+
+#if SDL_MAJOR_VERSION != 2
+  audio.callback = soundCallback;
+
+  sdlBufferLock = SDL_CreateMutex();
+  sdlBufferAvailable = SDL_CreateCond();
+  if(SDL_OpenAudio(&audio, &ob)) {
+    fprintf(stderr,"Failed to open audio: %s\n", SDL_GetError());
+    return false;
+  }
+  sysSoundBufferLen = ob.size;
+  sdlSoundBufferLen = sdlCalcSoundBuflen(sysSoundBufferLen);
+  sdlSoundBuffer = calloc(1, sdlSoundBufferLen);
+#else
+  adevice = SDL_OpenAudioDevice(NULL, 0, &audio, &ob, 0);
+  if(!adevice) {
+    fprintf(stderr,"Failed to open audio: %s\n", SDL_GetError());
+    return false;
+  }
+#endif
+
+  systemSoundOn = true;
+  return true;
 }
 
 void systemSoundReset()
