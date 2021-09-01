@@ -1,4 +1,4 @@
-Welcome to version 1.8.0 of VisualBoyAdvance [SDL+C].
+Welcome to version 1.8.0 of VisualBoyAdvance [C+SDL1/SDL2].
 This is a GB/GBC/GBA emulator for POSIX systems.
 this version has been ported from non-idiomatic C++ to C for faster
 compilation speed and portability.
@@ -13,6 +13,7 @@ Features
 - fullscreen mode (selectable resolution)
 - video sizes 1x, 2x, 3x and 4x
 - graphic filters Normal, TV Mode, 2xSaI, Super 2xSaI and more
+  (only in SDL 1.2 mode).
 - interframe blending support
 - same emulation core as VisualBoyAdvance: GB and GBA emulation
 - built-in ARM/THUMB assembly debugger
@@ -31,7 +32,8 @@ Compiling the sources
 
 install zlib, sdl, libpng development packages
 
-run "make"
+run "make" for SDL 2 build,
+or  "make USE_SDL1=1" for SDL 1.2 build
 
 Installing
 ----------
@@ -100,6 +102,7 @@ Key combinations during emulation
 - Ctrl+P: pause
 - Ctrl+B: rewind (if enabled and available)
 - F11: enter built-in debugger
+- Alt+Enter: toggle fullscreen
 - ESC: exit emulator
 
 Emulation key settings
@@ -268,30 +271,9 @@ Command line options (override settings in configuration file)
       --flash-64k               0 -  64K Flash
       --flash-128k              1 - 128K Flash
   -T, --throttle=THROTTLE      Set the desired throttle (5...1000)
-  -Y, --yuv=TYPE               Use YUV overlay for drawing:
-                                0 - YV12
-                                1 - UYVY
-                                2 - YVYU
-                                3 - YUY2
-                                4 - IYUV
   -b, --bios=BIOS              Use given bios file
   -c, --config=FILE            Read the given configuration file
   -d, --debug                  Enter debugger
-  -f, --filter=FILTER          Select filter:
-      --filter-normal            0 - normal mode
-      --filter-tv-mode           1 - TV Mode
-      --filter-2xsai             2 - 2xSaI
-      --filter-super-2xsai       3 - Super 2xSaI
-      --filter-super-eagle       4 - Super Eagle
-      --filter-pixelate          5 - Pixelate
-      --filter-motion-blur       6 - Motion Blur
-      --filter-advmame           7 - AdvanceMAME Scale2x
-      --filter-simple2x          8 - Simple2x
-      --filter-bilinear          9 - Bilinear
-      --filter-bilinear+        10 - Bilinear Plus
-      --filter-scanlines        11 - Scanlines
-      --filter-hq2x             12 - hq2x
-      --filter-lq2x             13 - lq2x
   -h, --help                   Print this help
   -i, --ips=PATCH              Apply given IPS patch
   -p, --profile=[HERTZ]        Enable profiling
@@ -314,6 +296,31 @@ Command line options (override settings in configuration file)
                                 128 - DMA 3
                                 256 - Undefined instruction
                                 512 - AGBPrint messages
+
+
+SDL1 mode only:
+  -Y, --yuv=TYPE               Use YUV overlay for drawing:
+                                0 - YV12
+                                1 - UYVY
+                                2 - YVYU
+                                3 - YUY2
+                                4 - IYUV
+  -f, --filter=FILTER          Select filter:
+      --filter-normal            0 - normal mode
+      --filter-tv-mode           1 - TV Mode
+      --filter-2xsai             2 - 2xSaI
+      --filter-super-2xsai       3 - Super 2xSaI
+      --filter-super-eagle       4 - Super Eagle
+      --filter-pixelate          5 - Pixelate
+      --filter-motion-blur       6 - Motion Blur
+      --filter-advmame           7 - AdvanceMAME Scale2x
+      --filter-simple2x          8 - Simple2x
+      --filter-bilinear          9 - Bilinear
+      --filter-bilinear+        10 - Bilinear Plus
+      --filter-scanlines        11 - Scanlines
+      --filter-hq2x             12 - hq2x
+      --filter-lq2x             13 - lq2x
+
 
 Long options only:
       --agb-print              Enable AGBPrint support
@@ -382,7 +389,7 @@ are met:
 4. Neither the name of the University nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
-        
+
 Contact
 -------
 
