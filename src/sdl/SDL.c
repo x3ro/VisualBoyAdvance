@@ -1647,6 +1647,12 @@ void sdlPollEvents()
       case SDLK_ESCAPE:
         emulating = 0;
         break;
+      case SDLK_RETURN:
+        if(!(event.key.keysym.mod & MOD_NOALT) &&
+           (event.key.keysym.mod & KMOD_ALT)) {
+          sdlToggleFullscreen();
+        }
+        break;
       case SDLK_f:
         if(!(event.key.keysym.mod & MOD_NOCTRL) &&
            (event.key.keysym.mod & KMOD_CTRL)) {
