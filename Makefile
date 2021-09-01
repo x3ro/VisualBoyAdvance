@@ -4,8 +4,13 @@ sysconfdir=$(prefix)/etc
 
 PROGS = VisualBoyAdvance TestEmu
 CFG = src/VisualBoyAdvance.cfg
+
 GENSRCS=src/gen/expr.c src/gen/expr-lex.c
-MAINSRCS=$(sort $(wildcard src/*.c)) $(GENSRCS) 
+FILTERSRCS= \
+	src/motionblur.c src/2xSaI.c src/hq2x.c src/bilinear.c \
+	src/simple2x.c src/admame.c
+MAINSRCS=$(filter-out $(FILTERSRCS), $(sort $(wildcard src/*.c))) $(GENSRCS)
+
 GBSRCS=$(sort $(wildcard src/gb/*.c))
 SDLSRCS=src/sdl/debugger.c
 
@@ -18,6 +23,15 @@ TESTEMUOBJS=$(TESTEMUSRCS:.c=.o)
 LEX=flex
 
 -include config.mak
+
+ifneq ($(USE_SDL1),1)
+SDL=SDL2
+CPPFLAGS += -DUSE_SDL2
+else
+SDL=SDL
+MAINSRCS += $(FILTERSRCS)
+endif
+
 
 C99?=$(CC) -std=gnu99
 CPPFLAGS+=-DSDL -DBKPT_SUPPORT -DSYSCONFDIR=\"$(sysconfdir)\"
@@ -33,10 +47,10 @@ $(DESTDIR)$(sysconfdir)/%: src/%
 	install -D -m 644 $< $@
 
 VisualBoyAdvance: $(VBAOBJS)
-	$(CC) $(LDFLAGS) -o $@ $(VBAOBJS) -lSDL -lpng -lz -lm
+	$(CC) $(LDFLAGS) -o $@ $(VBAOBJS) -l$(SDL) -lpng -lz -lm
 
 TestEmu: $(TESTEMUOBJS)
-	$(CC) $(LDFLAGS) -o $@ $(TESTEMUOBJS) -lSDL -lpng -lz -lm
+	$(CC) $(LDFLAGS) -o $@ $(TESTEMUOBJS) -l$(SDL) -lpng -lz -lm
 
 clean:
 	rm -f $(GENSRCS)

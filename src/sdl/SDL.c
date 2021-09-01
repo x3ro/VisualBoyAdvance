@@ -25,7 +25,23 @@
 
 #include "../AutoBuild.h"
 
+#ifdef USE_SDL2
+#include <SDL2/SDL.h>
+#define FILTERS_ENABLED 0
+#define IFB_ENABLED 0
+#define SDLK_KP2 SDLK_KP_2
+#define SDLK_KP4 SDLK_KP_4
+#define SDLK_KP6 SDLK_KP_6
+#define SDLK_KP8 SDLK_KP_8
+#define KMOD_META KMOD_GUI
+#else
 #include <SDL/SDL.h>
+#define FILTERS_ENABLED 1
+#define IFB_ENABLED 1
+//#define FILTERS_ENABLED 0
+//#define IFB_ENABLED 0
+#endif
+
 #include "../GBA.h"
 #include "../agbprint.h"
 #include "../Flash.h"
@@ -66,13 +82,15 @@ extern "C" bool cpu_mmx;
 extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
+
+#if FILTERS_ENABLED+0 != 0
 extern int Init_2xSaI(u32);
 extern void _2xSaI(u8*,u32,u8*,u8*,u32,int,int);
-extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);  
+extern void _2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI(u8*,u32,u8*,u8*,u32,int,int);
 extern void Super2xSaI32(u8*,u32,u8*,u8*,u32,int,int);
 extern void SuperEagle(u8*,u32,u8*,u8*,u32,int,int);
-extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);  
+extern void SuperEagle32(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate(u8*,u32,u8*,u8*,u32,int,int);
 extern void Pixelate32(u8*,u32,u8*,u8*,u32,int,int);
 extern void MotionBlur(u8*,u32,u8*,u8*,u32,int,int);
@@ -93,15 +111,14 @@ extern void hq2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void hq2x32(u8*,u32,u8*,u8*,u32,int,int);
 extern void lq2x(u8*,u32,u8*,u8*,u32,int,int);
 extern void lq2x32(u8*,u32,u8*,u8*,u32,int,int);
+#endif
 
+#if IFB_ENABLED+0 != 0
 extern void SmartIB(u8*,u32,int,int);
 extern void SmartIB32(u8*,u32,int,int);
 extern void MotionBlurIB(u8*,u32,int,int);
 extern void MotionBlurIB32(u8*,u32,int,int);
-
-void Init_Overlay(SDL_Surface *surface, int overlaytype);
-void Quit_Overlay(void);
-static void Draw_Overlay(SDL_Surface *surface, int size);
+#endif
 
 extern void remoteInit();
 extern void remoteCleanUp();
@@ -132,9 +149,33 @@ struct EmulatedSystem emulator = {
   0
 };
 
-SDL_Surface *surface = NULL;
+#if SDL_MAJOR_VERSION != 2
+void Init_Overlay(SDL_Surface *surface, int overlaytype);
+void Quit_Overlay(void);
+static void Draw_Overlay(SDL_Surface *surface, int size);
 SDL_Overlay *overlay = NULL;
+SDL_Surface *surface = NULL;
 SDL_Rect overlay_rect;
+bool yuv = false;
+int yuvType = 0;
+static int do_yuv();
+#define VPFORMAT surface->format
+#define VPIXELS  surface->pixels
+#define VPITCH   surface->pitch
+#define VSCALE   (sizeOption+1)
+#define VHEIGHT  surface->h
+#else
+static SDL_Window *win;
+static SDL_Renderer *renderer;
+static SDL_Texture *texture;
+static SDL_PixelFormat *format;
+#define VPFORMAT format
+#define VPIXELS pixels
+#define VPITCH pitch
+#define VSCALE (1)
+#define VHEIGHT srcHeight
+#define do_yuv() 0
+#endif
 
 int systemSpeed = 0;
 int systemRedShift = 0;
@@ -196,7 +237,7 @@ static int rewindTimer = 0;
 #define _stricmp strcasecmp
 
 bool sdlButtons[4][12] = {
-  { false, false, false, false, false, false, 
+  { false, false, false, false, false, false,
     false, false, false, false, false, false },
   { false, false, false, false, false, false,
     false, false, false, false, false, false },
@@ -230,8 +271,6 @@ bool debugger = false;
 bool debuggerStub = false;
 int fullscreen = 0;
 bool systemSoundOn = false;
-bool yuv = false;
-int yuvType = 0;
 bool removeIntros = false;
 int sdlFlashSize = 0;
 int sdlAutoIPS = 1;
@@ -275,7 +314,7 @@ enum {
   KEY_BUTTON_SPEED, KEY_BUTTON_CAPTURE
 };
 
-u16 joypad[4][12] = {
+static u32 joypad[4][12] = {
   { SDLK_LEFT,  SDLK_RIGHT,
     SDLK_UP,    SDLK_DOWN,
     SDLK_z,     SDLK_x,
@@ -288,7 +327,7 @@ u16 joypad[4][12] = {
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
-u16 defaultJoypad[12] = {
+static u32 defaultJoypad[12] = {
   SDLK_LEFT,  SDLK_RIGHT,
   SDLK_UP,    SDLK_DOWN,
   SDLK_z,     SDLK_x,
@@ -297,20 +336,21 @@ u16 defaultJoypad[12] = {
   SDLK_SPACE, SDLK_F12
 };
 
-u16 motion[4] = {
+u32 motion[4] = {
   SDLK_KP4, SDLK_KP6, SDLK_KP8, SDLK_KP2
 };
 
-u16 defaultMotion[4] = {
+u32 defaultMotion[4] = {
   SDLK_KP4, SDLK_KP6, SDLK_KP8, SDLK_KP2
 };
 
 struct option sdlOptions[] = {
   { "agb-print", no_argument, &sdlAgbPrint, 1 },
-  { "auto-frameskip", no_argument, &autoFrameSkip, 1 },  
+  { "auto-frameskip", no_argument, &autoFrameSkip, 1 },
   { "bios", required_argument, 0, 'b' },
   { "config", required_argument, 0, 'c' },
   { "debug", no_argument, 0, 'd' },
+#if FILTERS_ENABLED+0 != 0
   { "filter", required_argument, 0, 'f' },
   { "filter-normal", no_argument, &filter, 0 },
   { "filter-tv-mode", no_argument, &filter, 1 },
@@ -326,6 +366,12 @@ struct option sdlOptions[] = {
   { "filter-scanlines", no_argument, &filter, 11 },
   { "filter-hq2x", no_argument, &filter, 12 },
   { "filter-lq2x", no_argument, &filter, 13 },
+#endif
+#if IFB_ENABLED+0 != 0
+  { "ifb-none", no_argument, &ifbType, 0 },
+  { "ifb-motion-blur", no_argument, &ifbType, 1 },
+  { "ifb-smart", no_argument, &ifbType, 2 },
+#endif
   { "flash-size", required_argument, 0, 'S' },
   { "flash-64k", no_argument, &sdlFlashSize, 0 },
   { "flash-128k", no_argument, &sdlFlashSize, 1 },
@@ -333,9 +379,6 @@ struct option sdlOptions[] = {
   { "fullscreen", no_argument, &fullscreen, 1 },
   { "gdb", required_argument, 0, 'G' },
   { "help", no_argument, &sdlPrintUsage, 1 },
-  { "ifb-none", no_argument, &ifbType, 0 },
-  { "ifb-motion-blur", no_argument, &ifbType, 1 },
-  { "ifb-smart", no_argument, &ifbType, 2 },
   { "ips", required_argument, 0, 'i' },
   { "no-agb-print", no_argument, &sdlAgbPrint, 0 },
   { "no-auto-frameskip", no_argument, &autoFrameSkip, 0 },
@@ -359,27 +402,169 @@ struct option sdlOptions[] = {
   { "show-speed-normal", no_argument, &showSpeed, 1 },
   { "show-speed-detailed", no_argument, &showSpeed, 2 },
   { "throttle", required_argument, 0, 'T' },
-  { "verbose", required_argument, 0, 'v' },  
+  { "verbose", required_argument, 0, 'v' },
   { "video-1x", no_argument, &sizeOption, 0 },
   { "video-2x", no_argument, &sizeOption, 1 },
   { "video-3x", no_argument, &sizeOption, 2 },
   { "video-4x", no_argument, &sizeOption, 3 },
+#if SDL_MAJOR_VERSION != 2
   { "yuv", required_argument, 0, 'Y' },
+#endif
   { NULL, no_argument, NULL, 0 }
 };
+
+static int sdlCalculateMaskWidth(u32 mask)
+{
+  int m = 0;
+  int mask2 = mask;
+
+  while(mask2) {
+    m++;
+    mask2 >>= 1;
+  }
+
+  int m2 = 0;
+  mask2 = mask;
+  while(!(mask2 & 1)) {
+    m2++;
+    mask2 >>= 1;
+  }
+
+  return m - m2;
+}
+
+static void sdlInitSAI2x(int bitspp, SDL_PixelFormat *format) {
+#if FILTERS_ENABLED+0 != 0
+    if(bitspp == 24) return;
+    if(bitspp == 16)
+      bitspp = (sdlCalculateMaskWidth(format->Gmask) == 6 ? 565 : 555);
+    Init_2xSaI(bitspp);
+#endif
+}
+
+static void sdlSelectFilter(void) {
+#if FILTERS_ENABLED+0 != 0
+  static void (*const filter16_func_map[])(u8*,u32,u8*,u8*,u32,int,int) = {
+    0, ScanlinesTV, _2xSaI, Super2xSaI, SuperEagle, Pixelate, MotionBlur,
+    AdMame2x, Simple2x, Bilinear, BilinearPlus, Scanlines, hq2x, lq2x,
+  };
+  static void (*const filter32_func_map[])(u8*,u32,u8*,u8*,u32,int,int) = {
+    0, ScanlinesTV32, _2xSaI32, Super2xSaI32, SuperEagle32, Pixelate32, MotionBlur32,
+    AdMame2x32, Simple2x32, Bilinear32, BilinearPlus32, Scanlines32, hq2x32, lq2x32,
+  };
+  if(systemColorDepth != 32) {
+    filterFunction = filter16_func_map[filter];
+  } else {
+    filterFunction = filter32_func_map[filter];
+  }
+#endif
+}
+
+static void sdlSelectIfb(void) {
+#if IFB_ENABLED+0 != 0
+  static void (*const ifb16_map[])(u8*,u32,int,int) =
+    { 0, MotionBlurIB, SmartIB };
+  static void (*const ifb32_map[])(u8*,u32,int,int) =
+    { 0, MotionBlurIB32, SmartIB32 };
+  if(systemColorDepth == 16) ifbFunction = ifb16_map[ifbType];
+  if(systemColorDepth == 32) ifbFunction = ifb32_map[ifbType];
+#endif
+}
+
+static void sdlInit(int soundOffFlag) {
+  int flags = SDL_INIT_VIDEO|SDL_INIT_AUDIO|
+    SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE;
+
+  if(soundOffFlag)
+    flags ^= SDL_INIT_AUDIO;
+
+  if(SDL_Init(flags)) {
+    systemMessage(0, "Failed to init SDL: %s", SDL_GetError());
+    exit(-1);
+  }
+
+  if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
+    systemMessage(0, "Failed to init joystick support: %s", SDL_GetError());
+  }
+}
+
+static void sdlToggleFullscreen(void) {
+#if SDL_MAJOR_VERSION != 2
+#if 1
+  int flags = surface->flags;
+  fullscreen = !fullscreen;
+  flags ^= SDL_FULLSCREEN;
+  SDL_Surface *old, *new = SDL_SetVideoMode(surface->w, surface->h, surface->format->BitsPerPixel, flags);
+  old = surface;
+  surface = new;
+  SDL_FreeSurface(old);
+#else
+  SDL_LockSurface(surface);
+  SDL_WM_ToggleFullScreen(surface);
+  fullscreen = !fullscreen;
+  SDL_UnlockSurface(surface);
+#endif
+#else
+  SDL_SetWindowFullscreen(win, fullscreen ? 0 : SDL_WINDOW_FULLSCREEN);
+  fullscreen = !fullscreen;
+#endif
+}
+
+static void sdlSetTitle(const char* title) {
+#if SDL_MAJOR_VERSION != 2
+  SDL_WM_SetCaption(title, NULL);
+#else
+  SDL_SetWindowTitle(win, title);
+#endif
+}
+
+static int sdlCalculateShift(u32 mask);
+static void sdlInitShift(SDL_PixelFormat *format) {
+  systemRedShift = sdlCalculateShift(format->Rmask);
+  systemGreenShift = sdlCalculateShift(format->Gmask);
+  systemBlueShift = sdlCalculateShift(format->Bmask);
+}
+
+static void sdlInitVideo(void) {
+#if SDL_MAJOR_VERSION != 2
+  surface = SDL_SetVideoMode(destWidth, destHeight, 16,
+                             SDL_ANYFORMAT|SDL_HWSURFACE|SDL_DOUBLEBUF|
+                             (fullscreen ? SDL_FULLSCREEN : 0));
+
+  if(surface == NULL) {
+    systemMessage(0, "Failed to set video mode");
+    SDL_Quit();
+    exit(-1);
+  }
+#else
+  int flags = SDL_WINDOW_OPENGL;
+  if(fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+  if (!(win = SDL_CreateWindow("VBA", SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED, destWidth, destHeight, flags))) {
+sdl_err:
+    systemMessage(0, "SDL: video setup error: %s\n", SDL_GetError());
+    SDL_Quit();
+    exit(-1);
+  }
+  renderer = SDL_CreateRenderer(win, -1,
+    SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+  if(!renderer) goto sdl_err;
+  SDL_RenderSetScale(renderer, sizeOption+1, sizeOption+1);
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGRA32,
+    SDL_TEXTUREACCESS_STREAMING, srcWidth, srcHeight);
+  format = SDL_AllocFormat(SDL_PIXELFORMAT_BGRA32);
+#endif
+}
 
 #define SDL_CALL_STRETCHER \
        sdlStretcher(src, dest)
 
-void sdlStretch16x1(u8 *src, u8 *dest)
+static void sdlStretch16x1(u8 *src, u8 *dest)
 {
-  u16 *s = (u16 *)src;
-  u16 *d = (u16 *)dest;
-  for(int i = 0; i < srcWidth; i++)
-    *d++ = *s++;
+  memcpy(dest, src, srcWidth*2);
 }
 
-void sdlStretch16x2(u8 *src, u8 *dest)
+static void sdlStretch16x2(u8 *src, u8 *dest)
 {
   u16 *s = (u16 *)src;
   u16 *d = (u16 *)dest;
@@ -389,7 +574,7 @@ void sdlStretch16x2(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch16x3(u8 *src, u8 *dest)
+static void sdlStretch16x3(u8 *src, u8 *dest)
 {
   u16 *s = (u16 *)src;
   u16 *d = (u16 *)dest;
@@ -400,7 +585,7 @@ void sdlStretch16x3(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch16x4(u8 *src, u8 *dest)
+static void sdlStretch16x4(u8 *src, u8 *dest)
 {
   u16 *s = (u16 *)src;
   u16 *d = (u16 *)dest;
@@ -412,22 +597,12 @@ void sdlStretch16x4(u8 *src, u8 *dest)
   }
 }
 
-void (*sdlStretcher16[4])(u8 *, u8 *) = {
-  sdlStretch16x1,
-  sdlStretch16x2,
-  sdlStretch16x3,
-  sdlStretch16x4
-};
-
-void sdlStretch32x1(u8 *src, u8 *dest)
+static void sdlStretch32x1(u8 *src, u8 *dest)
 {
-  u32 *s = (u32 *)src;
-  u32 *d = (u32 *)dest;
-  for(int i = 0; i < srcWidth; i++)
-    *d++ = *s++;
+  memcpy(dest, src, srcWidth*4);
 }
 
-void sdlStretch32x2(u8 *src, u8 *dest)
+static void sdlStretch32x2(u8 *src, u8 *dest)
 {
   u32 *s = (u32 *)src;
   u32 *d = (u32 *)dest;
@@ -437,7 +612,7 @@ void sdlStretch32x2(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch32x3(u8 *src, u8 *dest)
+static void sdlStretch32x3(u8 *src, u8 *dest)
 {
   u32 *s = (u32 *)src;
   u32 *d = (u32 *)dest;
@@ -448,7 +623,7 @@ void sdlStretch32x3(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch32x4(u8 *src, u8 *dest)
+static void sdlStretch32x4(u8 *src, u8 *dest)
 {
   u32 *s = (u32 *)src;
   u32 *d = (u32 *)dest;
@@ -460,25 +635,12 @@ void sdlStretch32x4(u8 *src, u8 *dest)
   }
 }
 
-void (*sdlStretcher32[4])(u8 *, u8 *) = {
-  sdlStretch32x1,
-  sdlStretch32x2,
-  sdlStretch32x3,
-  sdlStretch32x4
-};
-
-void sdlStretch24x1(u8 *src, u8 *dest)
+static void sdlStretch24x1(u8 *src, u8 *dest)
 {
-  u8 *s = src;
-  u8 *d = dest;
-  for(int i = 0; i < srcWidth; i++) {
-    *d++ = *s++;
-    *d++ = *s++;
-    *d++ = *s++;
-  }
+  memcpy(dest, src, srcWidth*3);
 }
 
-void sdlStretch24x2(u8 *src, u8 *dest)
+static void sdlStretch24x2(u8 *src, u8 *dest)
 {
   u8 *s = (u8 *)src;
   u8 *d = (u8 *)dest;
@@ -494,7 +656,7 @@ void sdlStretch24x2(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch24x3(u8 *src, u8 *dest)
+static void sdlStretch24x3(u8 *src, u8 *dest)
 {
   u8 *s = (u8 *)src;
   u8 *d = (u8 *)dest;
@@ -514,7 +676,7 @@ void sdlStretch24x3(u8 *src, u8 *dest)
   }
 }
 
-void sdlStretch24x4(u8 *src, u8 *dest)
+static void sdlStretch24x4(u8 *src, u8 *dest)
 {
   u8 *s = (u8 *)src;
   u8 *d = (u8 *)dest;
@@ -538,12 +700,12 @@ void sdlStretch24x4(u8 *src, u8 *dest)
   }
 }
 
-void (*sdlStretcher24[4])(u8 *, u8 *) = {
-  sdlStretch24x1,
-  sdlStretch24x2,
-  sdlStretch24x3,
-  sdlStretch24x4
+static  void (*const stretcher_tab[3][4])(u8 *, u8 *) = {
+  {sdlStretch16x1, sdlStretch16x2, sdlStretch16x3, sdlStretch16x4},
+  {sdlStretch24x1, sdlStretch24x2, sdlStretch24x3, sdlStretch24x4},
+  {sdlStretch32x1, sdlStretch32x2, sdlStretch32x3, sdlStretch32x4},
 };
+
 
 u32 sdlFromHex(char *s)
 {
@@ -844,7 +1006,7 @@ void sdlReadPreferencesF(FILE *f)
     } else if(!strcmp(key, "gbFrameSkip")) {
       gbFrameSkip = sdlFromHex(value);
       if(gbFrameSkip < 0 || gbFrameSkip > 9)
-        gbFrameSkip = 0;      
+        gbFrameSkip = 0;
     } else if(!strcmp(key, "video")) {
       sizeOption = sdlFromHex(value);
       if(sizeOption < 0 || sizeOption > 3)
@@ -1065,33 +1227,13 @@ static void sdlApplyPerImagePreferences()
 static int sdlCalculateShift(u32 mask)
 {
   int m = 0;
-  
+
   while(mask) {
     m++;
     mask >>= 1;
   }
 
   return m-5;
-}
-
-static int sdlCalculateMaskWidth(u32 mask)
-{
-  int m = 0;
-  int mask2 = mask;
-
-  while(mask2) {
-    m++;
-    mask2 >>= 1;
-  }
-
-  int m2 = 0;
-  mask2 = mask;
-  while(!(mask2 & 1)) {
-    m2++;
-    mask2 >>= 1;
-  }
-
-  return m - m2;
 }
 
 void sdlWriteState(int num)
@@ -1413,9 +1555,17 @@ void sdlPollEvents()
     case SDL_QUIT:
       emulating = 0;
       break;
+#if SDL_MAJOR_VERSION == 2
+    case SDL_WINDOWEVENT:
+      if(pauseWhenInactive &&
+           ((event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) ||
+            (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST))) {
+        active = event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED;
+#else
     case SDL_ACTIVEEVENT:
       if(pauseWhenInactive && (event.active.state & SDL_APPINPUTFOCUS)) {
         active = event.active.gain;
+#endif
         if(active) {
           if(!paused) {
             if(emulating)
@@ -1500,13 +1650,7 @@ void sdlPollEvents()
       case SDLK_f:
         if(!(event.key.keysym.mod & MOD_NOCTRL) &&
            (event.key.keysym.mod & KMOD_CTRL)) {
-          int flags = 0;
-          fullscreen = !fullscreen;
-          if(fullscreen)
-            flags |= SDL_FULLSCREEN;
-          SDL_SetVideoMode(destWidth, destHeight, systemColorDepth, flags);
-          //          if(SDL_WM_ToggleFullScreen(surface))
-          //            fullscreen = !fullscreen;
+          sdlToggleFullscreen();
         }
         break;
       case SDLK_F11:
@@ -1620,15 +1764,16 @@ Options:\n\
       --flash-64k               0 -  64K Flash\n\
       --flash-128k              1 - 128K Flash\n\
   -T, --throttle=THROTTLE      Set the desired throttle (5...1000)\n\
-  -Y, --yuv=TYPE               Use YUV overlay for drawing:\n\
-                                0 - YV12\n\
-                                1 - UYVY\n\
-                                2 - YVYU\n\
-                                3 - YUY2\n\
-                                4 - IYUV\n\
   -b, --bios=BIOS              Use given bios file\n\
   -c, --config=FILE            Read the given configuration file\n\
   -d, --debug                  Enter debugger\n\
+  -h, --help                   Print this help\n\
+  -i, --ips=PATCH              Apply given IPS patch\n\
+  -p, --profile=[HERTZ]        Enable profiling\n\
+  -s, --frameskip=FRAMESKIP    Set frame skip (0...9)\n\
+"
+#if FILTERS_ENABLED+0 != 0
+"\
   -f, --filter=FILTER          Select filter:\n\
       --filter-normal            0 - normal mode\n\
       --filter-tv-mode           1 - TV Mode\n\
@@ -1644,11 +1789,19 @@ Options:\n\
       --filter-scanlines        11 - Scanlines\n\
       --filter-hq2x             12 - hq2x\n\
       --filter-lq2x             13 - lq2x\n\
-  -h, --help                   Print this help\n\
-  -i, --ips=PATCH              Apply given IPS patch\n\
-  -p, --profile=[HERTZ]        Enable profiling\n\
-  -s, --frameskip=FRAMESKIP    Set frame skip (0...9)\n\
-");
+"
+#endif
+#if SDL_MAJOR_VERSION != 2
+"\
+  -Y, --yuv=TYPE               Use YUV overlay for drawing:\n\
+                                0 - YV12\n\
+                                1 - UYVY\n\
+                                2 - YVYU\n\
+                                3 - YUY2\n\
+                                4 - IYUV\n\
+"
+#endif
+);
   printf("\
   -t, --save-type=TYPE         Set the available save type\n\
       --save-auto               0 - Automatic (EEPROM, SRAM, FLASH)\n\
@@ -1672,9 +1825,6 @@ Options:\n\
 Long options only:\n\
       --agb-print              Enable AGBPrint support\n\
       --auto-frameskip         Enable auto frameskipping\n\
-      --ifb-none               No interframe blending\n\
-      --ifb-motion-blur        Interframe motion blur\n\
-      --ifb-smart              Smart interframe blending\n\
       --no-agb-print           Disable AGBPrint support\n\
       --no-auto-frameskip      Disable auto frameskipping\n\
       --no-ips                 Do not apply IPS patch\n\
@@ -1687,7 +1837,15 @@ Long options only:\n\
       --rtc                    Enable RTC support\n\
       --show-speed-normal      Show emulation speed\n\
       --show-speed-detailed    Show detailed speed data\n\
-");
+"
+#if IFB_ENABLED+0 != 0
+"\
+      --ifb-none               No interframe blending\n\
+      --ifb-motion-blur        Interframe motion blur\n\
+      --ifb-smart              Smart interframe blending\n\
+"
+#endif
+);
 }
 
 int main(int argc, char **argv)
@@ -1701,7 +1859,7 @@ int main(int argc, char **argv)
   batteryDir[0] = 0;
   ipsname[0] = 0;
   
-  int op = -1;
+  int i, j, op = -1;
 
   frameSkip = 2;
   gbBorderOn = 0;
@@ -1757,6 +1915,7 @@ int main(int argc, char **argv)
         strcpy(ipsname, optarg);
       }
       break;
+#if SDL_MAJOR_VERSION != 2
     case 'Y':
       yuv = true;
       if(optarg) {
@@ -1783,6 +1942,7 @@ int main(int argc, char **argv)
       } else
         yuvType = SDL_YV12_OVERLAY;
       break;
+#endif
     case 'G':
       dbgMain = remoteStubMain;
       dbgSignal = remoteStubSignal;
@@ -2051,22 +2211,9 @@ int main(int argc, char **argv)
   
   if(debuggerStub) 
     remoteInit();
-  
-  int flags = SDL_INIT_VIDEO|SDL_INIT_AUDIO|
-    SDL_INIT_TIMER|SDL_INIT_NOPARACHUTE;
 
-  if(soundOffFlag)
-    flags ^= SDL_INIT_AUDIO;
-  
-  if(SDL_Init(flags)) {
-    systemMessage(0, "Failed to init SDL: %s", SDL_GetError());
-    exit(-1);
-  }
+  sdlInit(soundOffFlag);
 
-  if(SDL_InitSubSystem(SDL_INIT_JOYSTICK)) {
-    systemMessage(0, "Failed to init joystick support: %s", SDL_GetError());
-  }
-  
   sdlCheckKeys();
   
   if(cartridgeType == 0) {
@@ -2080,7 +2227,7 @@ int main(int argc, char **argv)
       gbBorderLineSkip = 256;
       gbBorderColumnSkip = 48;
       gbBorderRowSkip = 40;
-    } else {      
+    } else {
       srcWidth = 160;
       srcHeight = 144;
       gbBorderLineSkip = 160;
@@ -2092,28 +2239,17 @@ int main(int argc, char **argv)
     srcWidth = 320;
     srcHeight = 240;
   }
-  
+
   destWidth = (sizeOption+1)*srcWidth;
   destHeight = (sizeOption+1)*srcHeight;
-  
-  surface = SDL_SetVideoMode(destWidth, destHeight, 16,
-                             SDL_ANYFORMAT|SDL_HWSURFACE|SDL_DOUBLEBUF|
-                             (fullscreen ? SDL_FULLSCREEN : 0));
-  
-  if(surface == NULL) {
-    systemMessage(0, "Failed to set video mode");
-    SDL_Quit();
-    exit(-1);
-  }
-  
-  systemRedShift = sdlCalculateShift(surface->format->Rmask);
-  systemGreenShift = sdlCalculateShift(surface->format->Gmask);
-  systemBlueShift = sdlCalculateShift(surface->format->Bmask);
-  
-  systemColorDepth = surface->format->BitsPerPixel;
-  if(systemColorDepth == 15)
-    systemColorDepth = 16;
 
+  sdlInitVideo();
+
+  sdlInitShift(VPFORMAT);
+
+  systemColorDepth = VPFORMAT->BitsPerPixel;
+
+#if SDL_MAJOR_VERSION != 2
   if(yuv) {
     Init_Overlay(surface, yuvType);
     systemColorDepth = 32;
@@ -2121,181 +2257,42 @@ int main(int argc, char **argv)
     systemGreenShift = 11;
     systemBlueShift =  19;
   }
-  
-  if(systemColorDepth != 16 && systemColorDepth != 24 &&
-     systemColorDepth != 32) {
+#endif
+
+  static const unsigned char supported_depths[] = {15,16,24,32,0};
+
+  for(i=j=0; supported_depths[i]; ++i)
+    if(systemColorDepth == supported_depths[i]) j = 1;
+
+  if(!j) {
     fprintf(stderr,"Unsupported color depth '%d'.\nOnly 16, 24 and 32 bit color depths are supported\n", systemColorDepth);
     exit(-1);
   }
 
-  switch(systemColorDepth) {
-  case 16:
-    sdlStretcher = sdlStretcher16[sizeOption];
-    break;
-  case 24:
-    sdlStretcher = sdlStretcher24[sizeOption];
-    break;
-  case 32:
-    sdlStretcher = sdlStretcher32[sizeOption];
-    break;
-  default:
-    fprintf(stderr, "Unsupported resolution: %d\n", systemColorDepth);
-    exit(-1);
-  }
+  static const int lowbittab[] = {0x421, 0x821, 0x010101, 0x010101};
+  RGB_LOW_BITS_MASK = lowbittab[(systemColorDepth/8)-1];
+
+  if(systemColorDepth == 15)
+    systemColorDepth = 16;
+
+  sdlStretcher = stretcher_tab[(systemColorDepth/8)-2][VSCALE-1];
 
   fprintf(stderr,"Color depth: %d\n", systemColorDepth);
-  
-  if(systemColorDepth == 16) {
-    if(sdlCalculateMaskWidth(surface->format->Gmask) == 6) {
-      Init_2xSaI(565);
-    } else {
-      Init_2xSaI(555);
-    }
-    srcPitch = srcWidth * 2+4;
-  } else {
-    if(systemColorDepth != 32)
-      filterFunction = NULL;
-    Init_2xSaI(32);
-    if(systemColorDepth == 32)
-      srcPitch = srcWidth*4 + 4;
-    else
-      srcPitch = srcWidth*3;
-  }
+
+  srcPitch = srcWidth * (systemColorDepth/8) + (systemColorDepth == 24 ? 0 : 4);
+  if(systemColorDepth == 24) filterFunction = NULL;
+  sdlInitSAI2x(systemColorDepth, VPFORMAT);
 
   utilUpdateSystemColorMaps();
 
-  if(systemColorDepth != 32) {
-    switch(filter) {
-    case 0:
-      filterFunction = NULL;
-      break;
-    case 1:
-      filterFunction = ScanlinesTV;
-      break;
-    case 2:
-      filterFunction = _2xSaI;
-      break;
-    case 3:
-      filterFunction = Super2xSaI;
-      break;
-    case 4:
-      filterFunction = SuperEagle;
-      break;
-    case 5:
-      filterFunction = Pixelate;
-      break;
-    case 6:
-      filterFunction = MotionBlur;
-      break;
-    case 7:
-      filterFunction = AdMame2x;
-      break;
-    case 8:
-      filterFunction = Simple2x;
-      break;
-    case 9:
-      filterFunction = Bilinear;
-      break;
-    case 10:
-      filterFunction = BilinearPlus;
-      break;
-    case 11:
-      filterFunction = Scanlines;
-      break;
-    case 12:
-      filterFunction = hq2x;
-      break;
-    case 13:
-      filterFunction = lq2x;
-      break;
-    default:
-      filterFunction = NULL;
-      break;
-    }
-  } else {
-    switch(filter) {
-    case 0:
-      filterFunction = NULL;
-      break;
-    case 1:
-      filterFunction = ScanlinesTV32;
-      break;
-    case 2:
-      filterFunction = _2xSaI32;
-      break;
-    case 3:
-      filterFunction = Super2xSaI32;
-      break;
-    case 4:
-      filterFunction = SuperEagle32;
-      break;
-    case 5:
-      filterFunction = Pixelate32;
-      break;
-    case 6:
-      filterFunction = MotionBlur32;
-      break;
-    case 7:
-      filterFunction = AdMame2x32;
-      break;
-    case 8:
-      filterFunction = Simple2x32;
-      break;
-    case 9:
-      filterFunction = Bilinear32;
-      break;
-    case 10:
-      filterFunction = BilinearPlus32;
-      break;
-    case 11:
-      filterFunction = Scanlines32;
-      break;
-    case 12:
-      filterFunction = hq2x32;
-      break;
-    case 13:
-      filterFunction = lq2x32;
-      break;
-    default:
-      filterFunction = NULL;
-      break;
-    }
-  }
-  
-  if(systemColorDepth == 16) {
-    switch(ifbType) {
-    case 0:
-    default:
-      ifbFunction = NULL;
-      break;
-    case 1:
-      ifbFunction = MotionBlurIB;
-      break;
-    case 2:
-      ifbFunction = SmartIB;
-      break;
-    }
-  } else if(systemColorDepth == 32) {
-    switch(ifbType) {
-    case 0:
-    default:
-      ifbFunction = NULL;
-      break;
-    case 1:
-      ifbFunction = MotionBlurIB32;
-      break;
-    case 2:
-      ifbFunction = SmartIB32;
-      break;
-    }
-  } else
-    ifbFunction = NULL;
+  sdlSelectFilter();
+  sdlSelectIfb();
 
   if(delta == NULL) {
     delta = (u8*)malloc(322*242*4);
     memset(delta, 255, 322*242*4);
   }
-  
+
   emulating = 1;
   renderedFrames = 0;
 
@@ -2303,8 +2300,8 @@ int main(int argc, char **argv)
     soundInit();
 
   autoFrameSkipLastTime = throttleLastTime = systemGetClock();
-  
-  SDL_WM_SetCaption("VisualBoyAdvance", NULL);
+
+  sdlSetTitle("VisualBoyAdvance");
 
   while(emulating) {
     if(!paused && active) {
@@ -2317,7 +2314,7 @@ int main(int argc, char **argv)
           if(rewindCount > 8)
             rewindCount = 8;
           if(emulator.emuWriteMemState &&
-             emulator.emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE], 
+             emulator.emuWriteMemState(&rewindMemory[rewindPos*REWIND_SIZE],
                                        REWIND_SIZE)) {
             rewindPos = (rewindPos + 1) & 7;
             if(rewindCount == 8)
@@ -2337,9 +2334,9 @@ int main(int argc, char **argv)
         SDL_ShowCursor(SDL_DISABLE);
     }
   }
-  
-  emulating = 0;
+
   fprintf(stderr,"Shutting down\n");
+  if(fullscreen) sdlToggleFullscreen();
   remoteCleanUp();
   soundShutdown();
 
@@ -2352,7 +2349,7 @@ int main(int argc, char **argv)
     free(delta);
     delta = NULL;
   }
-  
+
   SDL_Quit();
   return 0;
 }
@@ -2372,13 +2369,15 @@ void systemMessage(int num, const char *msg, ...)
 void systemDrawScreen()
 {
   renderedFrames++;
-  
-  if(yuv) {
-    Draw_Overlay(surface, sizeOption+1);
-    return;
-  }
-  
+
+  if(do_yuv()) return;
+
+#if SDL_MAJOR_VERSION == 2
+  int pitch; void *pixels;
+  SDL_LockTexture(texture, NULL, &pixels, &pitch);
+#else
   SDL_LockSurface(surface);
+#endif
 
   if(screenMessage) {
     if(cartridgeType == 1 && gbBorderOn) {
@@ -2387,7 +2386,7 @@ void systemDrawScreen()
     if(((systemGetClock() - screenMessageTime) < 3000) &&
        !disableStatusMessages) {
       drawText(pix, srcPitch, 10, srcHeight - 20,
-               screenMessageBuffer); 
+               screenMessageBuffer);
     } else {
       screenMessage = false;
     }
@@ -2399,33 +2398,36 @@ void systemDrawScreen()
     else
       ifbFunction(pix+destWidth*2+4, destWidth*2+4, srcWidth, srcHeight);
   }
-  
+
   if(filterFunction) {
     if(systemColorDepth == 16)
       filterFunction(pix+destWidth+4,destWidth+4, delta,
-                     (u8*)surface->pixels,surface->pitch,
+                     (u8*)VPIXELS, VPITCH,
                      srcWidth,
                      srcHeight);
     else
       filterFunction(pix+destWidth*2+4,
                      destWidth*2+4,
                      delta,
-                     (u8*)surface->pixels,
-                     surface->pitch,
+                     (u8*)VPIXELS,
+                     VPITCH,
                      srcWidth,
                      srcHeight);
   } else {
-    int destPitch = surface->pitch;
+    int destPitch = VPITCH;
     u8 *src = pix;
-    u8 *dest = (u8*)surface->pixels;
+    u8 *dest = (u8*)VPIXELS;
     int i;
     u32 *stretcher = (u32 *)sdlStretcher;
     if(systemColorDepth == 16)
       src += srcPitch;
     int option = sizeOption;
+#if SDL_MAJOR_VERSION != 2
+/* FIXME: the function begin exits early if yuv is set. why is this here ? */
     if(yuv)
       option = 0;
-    switch(sizeOption) {
+#endif
+    switch(VSCALE-1) {
     case 0:
       for(i = 0; i < srcHeight; i++) {
         SDL_CALL_STRETCHER;
@@ -2435,7 +2437,7 @@ void systemDrawScreen()
       break;
     case 1:
       for(i = 0; i < srcHeight; i++) {
-        SDL_CALL_STRETCHER;     
+        SDL_CALL_STRETCHER;
         dest += destPitch;
         SDL_CALL_STRETCHER;
         src += srcPitch;
@@ -2478,22 +2480,28 @@ void systemDrawScreen()
               systemFrameSkip,
               showRenderedFrames);
     if(showSpeedTransparent)
-      drawTextTransp((u8*)surface->pixels,
-                     surface->pitch,
+      drawTextTransp((u8*)VPIXELS,
+                     VPITCH,
                      10,
-                     surface->h-20,
+                     VHEIGHT-20,
                      buffer);
     else
-      drawText((u8*)surface->pixels,
-               surface->pitch,
+      drawText((u8*)VPIXELS,
+               VPITCH,
                10,
-               surface->h-20,
-               buffer);        
-  }  
+               VHEIGHT-20,
+               buffer);
+  }
 
+#if SDL_MAJOR_VERSION == 2
+  SDL_UnlockTexture(texture);
+  SDL_RenderCopy(renderer, texture, NULL, NULL);
+  SDL_RenderPresent(renderer);
+#else
   SDL_UnlockSurface(surface);
   //  SDL_UpdateRect(surface, 0, 0, destWidth, destHeight);
   SDL_Flip(surface);
+#endif
 }
 
 bool systemReadJoypads()
@@ -2505,9 +2513,9 @@ u32 systemReadJoypad(int which)
 {
   if(which < 0 || which > 3)
     which = sdlDefaultJoypad;
-  
+
   u32 res = 0;
-  
+
   if(sdlButtons[which][KEY_BUTTON_A])
     res |= 1;
   if(sdlButtons[which][KEY_BUTTON_B])
@@ -2546,13 +2554,12 @@ u32 systemReadJoypad(int which)
       res |= autoFire;
     autoFireToggle = !autoFireToggle;
   }
-  
+
   return res;
 }
 
-void systemSetTitle(const char *title)
-{
-  SDL_WM_SetCaption(title, NULL);
+void systemSetTitle(const char *title) {
+  sdlSetTitle(title);
 }
 
 void systemShowSpeed(int speed)
@@ -2560,7 +2567,7 @@ void systemShowSpeed(int speed)
   systemSpeed = speed;
 
   showRenderedFrames = renderedFrames;
-  renderedFrames = 0;  
+  renderedFrames = 0;
 
   if(!fullscreen && showSpeed) {
     char buffer[80];
@@ -2889,6 +2896,8 @@ bool systemPauseOnFrame()
   return false;
 }
 
+#if SDL_MAJOR_VERSION != 2 /* start SDL1.2 YUV code */
+
 // Code donated by Niels Wagenaar (BoycottAdvance)
 
 // GBA screensize.
@@ -3125,72 +3134,17 @@ static inline void Draw_Overlay(SDL_Surface *display, int size)
   SDL_UnlockYUVOverlay(overlay);
 }
 
+static int do_yuv() {
+  if(yuv) Draw_Overlay(surface, sizeOption+1);
+  return yuv;
+}
+#endif /* end SDL1.2 YUV code */
+
+
 void systemGbBorderOn()
 {
-  srcWidth = 256;
-  srcHeight = 224;
-  gbBorderLineSkip = 256;
-  gbBorderColumnSkip = 48;
-  gbBorderRowSkip = 40;
-
-  destWidth = (sizeOption+1)*srcWidth;
-  destHeight = (sizeOption+1)*srcHeight;
-  
-  surface = SDL_SetVideoMode(destWidth, destHeight, 16,
-                             SDL_ANYFORMAT|SDL_HWSURFACE|SDL_DOUBLEBUF|
-                             (fullscreen ? SDL_FULLSCREEN : 0));  
-  switch(systemColorDepth) {
-  case 16:
-    sdlStretcher = sdlStretcher16[sizeOption];
-    break;
-  case 24:
-    sdlStretcher = sdlStretcher24[sizeOption];
-    break;
-  case 32:
-    sdlStretcher = sdlStretcher32[sizeOption];
-    break;
-  default:
-    fprintf(stderr, "Unsupported resolution: %d\n", systemColorDepth);
-    exit(-1);
-  }
-
-  if(systemColorDepth == 16) {
-    if(sdlCalculateMaskWidth(surface->format->Gmask) == 6) {
-      Init_2xSaI(565);
-      RGB_LOW_BITS_MASK = 0x821;
-    } else {
-      Init_2xSaI(555);
-      RGB_LOW_BITS_MASK = 0x421;      
-    }
-    if(cartridgeType == 2) {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = (((i >> 1) & 0x1f) << systemBlueShift) |
-          (((i & 0x7c0) >> 6) << systemGreenShift) |
-          (((i & 0xf800) >> 11) << systemRedShift);  
-      }      
-    } else {
-      for(int i = 0; i < 0x10000; i++) {
-        systemColorMap16[i] = ((i & 0x1f) << systemRedShift) |
-          (((i & 0x3e0) >> 5) << systemGreenShift) |
-          (((i & 0x7c00) >> 10) << systemBlueShift);  
-      }
-    }
-    srcPitch = srcWidth * 2+4;
-  } else {
-    if(systemColorDepth != 32)
-      filterFunction = NULL;
-    RGB_LOW_BITS_MASK = 0x010101;
-    if(systemColorDepth == 32) {
-      Init_2xSaI(32);
-    }
-    for(int i = 0; i < 0x10000; i++) {
-      systemColorMap32[i] = ((i & 0x1f) << systemRedShift) |
-        (((i & 0x3e0) >> 5) << systemGreenShift) |
-        (((i & 0x7c00) >> 10) << systemBlueShift);  
-    }
-    if(systemColorDepth == 32)
-      srcPitch = srcWidth*4 + 4;
-    else
-      srcPitch = srcWidth*3;
-  }
+  fprintf(stderr,
+    "turning SGB border on at runtime not supported.\n"
+    "set it as command line option instead!\n");
+  gbBorderOn = 0;
 }
