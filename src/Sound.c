@@ -103,7 +103,6 @@ u8 soundBuffer[6][735];
 u16 soundFinalWave[1470];
 
 int soundBufferLen = 1470;
-int soundBufferTotalLen = 14700;
 #define DEF_SOUNDQUALITY 2
 int soundQuality = DEF_SOUNDQUALITY;
 int soundPaused = 1;
@@ -1120,16 +1119,13 @@ void soundTick()
       soundFinalWave[soundBufferIndex++] = 0;
       soundFinalWave[soundBufferIndex++] = 0;
     }
-  
+
     soundIndex++;
-    
-    if(2*soundBufferIndex >= soundBufferLen) {
+
+    if(soundBufferIndex >= soundBufferLen || soundIndex >= 735) {
       if(systemSoundOn) {
-        if(soundPaused) {
-          soundResume();
-        }      
-        
-        systemWriteDataToSoundBuffer();
+        if(soundPaused) soundResume();
+        systemWriteDataToSoundBuffer(soundBufferIndex*2);
       }
       soundIndex = 0;
       soundBufferIndex = 0;

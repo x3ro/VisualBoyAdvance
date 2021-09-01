@@ -92,7 +92,7 @@ extern u32 systemReadJoypad(int);
 extern u32 systemGetClock();
 extern void systemMessage(int, const char *, ...);
 extern void systemSetTitle(const char *);
-extern void systemWriteDataToSoundBuffer();
+extern void systemWriteDataToSoundBuffer(u32 bytes);
 extern void systemSoundShutdown();
 extern void systemSoundPause();
 extern void systemSoundResume();

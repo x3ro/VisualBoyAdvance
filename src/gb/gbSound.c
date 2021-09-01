@@ -746,14 +746,11 @@ void gbSoundTick()
     }
   
     soundIndex++;
-    
-    if(2*soundBufferIndex >= soundBufferLen) {
+
+    if(soundBufferIndex >= soundBufferLen || soundIndex >= 735) {
       if(systemSoundOn) {
-        if(soundPaused) {
-          soundResume();
-        }      
-        
-        systemWriteDataToSoundBuffer();
+        if(soundPaused) soundResume();
+        systemWriteDataToSoundBuffer(soundBufferIndex*2);
       }
       soundIndex = 0;
       soundBufferIndex = 0;
