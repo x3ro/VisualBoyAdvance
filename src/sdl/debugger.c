@@ -2638,6 +2638,7 @@ char* strqtok (char* string, const char* ctrl)
     systemSoundPause();
     debuggerDisableBreakpoints();
     printf("debugger> ");
+    fflush(stdout);
     commandCount = 0;
     char *s = fgets(buffer, 1024, stdin);
 
