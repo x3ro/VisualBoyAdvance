@@ -1,7 +1,7 @@
 %{
 #include "../expr.c.h"
 
-#ifndef __GNUC__
+#ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
 #define fileno _fileno
