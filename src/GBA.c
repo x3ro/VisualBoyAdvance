@@ -65,10 +65,6 @@
 #define THUMB_PREFETCH_NEXT\
   cpuPrefetch[1] = CPUReadHalfWordQuick(armNextPC+2);
 
-#ifdef __GNUC__
-#define _stricmp strcasecmp
-#endif
-
 
 extern int emulating;
 int SWITicks = 0;
@@ -1368,7 +1364,7 @@ bool CPUIsZipFile(const char * file)
     const char * p = strrchr(file,'.');
 
     if(p != NULL) {
-      if(_stricmp(p, ".zip") == 0)
+      if(strcasecmp(p, ".zip") == 0)
         return true;
     }
   }
@@ -1383,15 +1379,15 @@ bool CPUIsGBAImage(const char * file)
     const char * p = strrchr(file,'.');
 
     if(p != NULL) {
-      if(_stricmp(p, ".gba") == 0)
+      if(strcasecmp(p, ".gba") == 0)
         return true;
-      if(_stricmp(p, ".agb") == 0)
+      if(strcasecmp(p, ".agb") == 0)
         return true;
-      if(_stricmp(p, ".bin") == 0)
+      if(strcasecmp(p, ".bin") == 0)
         return true;
-      if(_stricmp(p, ".elf") == 0)
+      if(strcasecmp(p, ".elf") == 0)
         return true;
-      if(_stricmp(p, ".mb") == 0) {
+      if(strcasecmp(p, ".mb") == 0) {
         cpuIsMultiBoot = true;
         return true;
       }
@@ -1407,13 +1403,13 @@ bool CPUIsGBABios(const char * file)
     const char * p = strrchr(file,'.');
 
     if(p != NULL) {
-      if(_stricmp(p, ".gba") == 0)
+      if(strcasecmp(p, ".gba") == 0)
         return true;
-      if(_stricmp(p, ".agb") == 0)
+      if(strcasecmp(p, ".agb") == 0)
         return true;
-      if(_stricmp(p, ".bin") == 0)
+      if(strcasecmp(p, ".bin") == 0)
         return true;
-      if(_stricmp(p, ".bios") == 0)
+      if(strcasecmp(p, ".bios") == 0)
         return true;
     }
   }
@@ -1427,7 +1423,7 @@ bool CPUIsELF(const char *file)
     const char * p = strrchr(file,'.');
     
     if(p != NULL) {
-      if(_stricmp(p, ".elf") == 0)
+      if(strcasecmp(p, ".elf") == 0)
         return true;
     }
   }

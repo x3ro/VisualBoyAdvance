@@ -32,10 +32,6 @@
 #include "../unzip.h"
 #include "../Util.h"
 
-#ifdef __GNUC__
-#define _stricmp strcasecmp
-#endif
-
 extern u8 *pix;
 extern bool speedup;
 
@@ -637,14 +633,14 @@ bool gbIsGameboyRom(const char * file)
     char * p = strrchr(file,'.');
 
     if(p != NULL) {
-      if(_stricmp(p, ".gb") == 0)
+      if(strcasecmp(p, ".gb") == 0)
         return true;
-      if(_stricmp(p, ".gbc") == 0)
+      if(strcasecmp(p, ".gbc") == 0)
         return true;
-      if(_stricmp(p, ".cgb") == 0)
+      if(strcasecmp(p, ".cgb") == 0)
         return true;
-      if(_stricmp(p, ".sgb") == 0)
-        return true;      
+      if(strcasecmp(p, ".sgb") == 0)
+        return true;
     }
   }
 
@@ -2108,11 +2104,11 @@ bool CPUIsGBBios(const char * file)
     const char * p = strrchr(file,'.');
 
     if(p != NULL) {
-      if(_stricmp(p, ".gb") == 0)
+      if(strcasecmp(p, ".gb") == 0)
         return true;
-      if(_stricmp(p, ".bin") == 0)
+      if(strcasecmp(p, ".bin") == 0)
         return true;
-      if(_stricmp(p, ".bios") == 0)
+      if(strcasecmp(p, ".bios") == 0)
         return true;
     }
   }
