@@ -790,28 +790,32 @@ extern u32 line0[240];
 extern u32 line1[240];
 extern u32 line2[240];
 extern u32 line3[240];
+u32 *cleared_line;
 
-#define CLEAR_ARRAY(a) \
-  {\
-    u32 *array = (a);\
-    for(int i = 0; i < 240; i++) {\
-      *array++ = 0x80000000;\
-    }\
-  }\
+static void init_cleared_line(void) {
+  if(cleared_line) return;
+  cleared_line = malloc(240*4);
+  for(int i = 0; i < 240; i++)
+     cleared_line[i] = 0x80000000;
+}
+
+static void clear_line(u32 *line) {
+  memcpy(line, cleared_line, 240*4);
+}
 
 void CPUUpdateRenderBuffers(bool force)
 {
   if(!(layerEnable & 0x0100) || force) {
-    CLEAR_ARRAY(line0);
+    clear_line(line0);
   }
   if(!(layerEnable & 0x0200) || force) {
-    CLEAR_ARRAY(line1);
+    clear_line(line1);
   }
   if(!(layerEnable & 0x0400) || force) {
-    CLEAR_ARRAY(line2);
+    clear_line(line2);
   }
   if(!(layerEnable & 0x0800) || force) {
-    CLEAR_ARRAY(line3);
+    clear_line(line3);
   }
 }
 
@@ -1502,6 +1506,8 @@ static int try_alloc(u8 **dest, size_t m, size_t n, const char* id)
 
 int CPULoadRom(const char *szFile)
 {
+  init_cleared_line();
+
   romSize = 0x2000000;
   if(rom != NULL) {
     CPUCleanUp();
@@ -3370,6 +3376,8 @@ void CPUInit(const char *biosFileName, bool useBiosFile)
   biosProtected[1] = 0xf0;
   biosProtected[2] = 0x29;
   biosProtected[3] = 0xe1;
+
+  init_cleared_line();
 
   for(i = 0; i < 256; i++) {
     int count = 0;
