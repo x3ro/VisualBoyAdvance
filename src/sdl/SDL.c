@@ -857,10 +857,10 @@ FILE *sdlFindFile(const char *name)
   return NULL;
 }
 
-void sdlReadPreferencesF(FILE *f)
+static void sdlReadPreferencesF(FILE *f)
 {
   char buffer[2048];
-  
+
   while(1) {
     char *s = fgets(buffer, 2048, f);
 
@@ -868,10 +868,10 @@ void sdlReadPreferencesF(FILE *f)
       break;
 
     char *p  = strchr(s, '#');
-    
+
     if(p)
       *p = 0;
-    
+
     char *token = strtok(s, " \t\n\r=");
 
     if(!token)
@@ -1047,7 +1047,7 @@ void sdlReadPreferencesF(FILE *f)
       case 4:
         break;
       default:
-        fprintf(stderr, "Unknown sound quality %d. Defaulting to 22Khz\n", 
+        fprintf(stderr, "Unknown sound quality %d. Defaulting to 22Khz\n",
                 soundQuality);
         soundQuality = 2;
         break;
@@ -1115,7 +1115,7 @@ void sdlReadPreferencesF(FILE *f)
   }
 }
 
-void sdlReadPreferences()
+static void sdlReadPreferences(void)
 {
   FILE *f = sdlFindFile("VisualBoyAdvance.cfg");
 
@@ -1898,7 +1898,7 @@ int main(int argc, char **argv)
           fprintf(stderr, "File not found %s\n", optarg);
           exit(-1);
         }
-        sdlReadPreferences(f);
+        sdlReadPreferencesF(f);
         fclose(f);
       }
       break;
