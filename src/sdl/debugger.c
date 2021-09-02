@@ -1578,7 +1578,7 @@ void debuggerFindText(int n, char **args)
     
   } else
     debuggerUsage("ft");
-};
+}
 
 void debuggerFindHex(int n, char **args)
 {
@@ -1622,7 +1622,7 @@ void debuggerFindHex(int n, char **args)
     
   } else
     debuggerUsage("fh");
-};
+}
 
 void debuggerFindResume(int n, char **args)
 {
@@ -1642,7 +1642,7 @@ void debuggerFindResume(int n, char **args)
 
   } else
     debuggerUsage("fr");
-};
+}
 
 void debuggerDoSearch()
 {
@@ -1723,7 +1723,7 @@ void debuggerDoSearch()
 
     SearchStart = AddressToGBA (end + SearchLength - 1) + 1;
   };
-};
+}
 
 unsigned int AddressToGBA(u8* mem)
 {
@@ -1745,7 +1745,7 @@ unsigned int AddressToGBA(u8* mem)
     return 0x08000000 + (mem - &rom[0]);
   else
     return 0xFFFFFFFF;
-};
+}
 
 static void debuggerFileDisassemble(int n, char **args)
 {
@@ -2621,7 +2621,7 @@ char* strqtok (char* string, const char* ctrl)
 
     return string;
   };
-};
+}
 
 /*extern*/ void debuggerMain()
 {
