@@ -133,7 +133,7 @@ bool remoteTcpInit()
     SOCKET s2 = accept(s, (struct sockaddr *)&addr, &len);
     if(s2 > 0) {
       fprintf(stderr, "Got a connection from %s %d\n",
-              inet_ntoa((struct in_addr)addr.sin_addr),
+              inet_ntoa(addr.sin_addr),
               ntohs(addr.sin_port));
     } else {
 #ifdef _WIN32
