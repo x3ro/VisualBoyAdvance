@@ -857,27 +857,17 @@ void  gbWriteMemory(register u16 address, register u8 value)
 
       gbTimerModeChange = (((value & 3) != (register_TAC&3)) && (value & register_TAC & 4)) ? true : false;
       gbTimerOnChange = (((value ^ register_TAC) & 4) == 4) ? true : false;
-      
-      gbTimerOn = (value & 4) ? true : false;    
+
+      gbTimerOn = (value & 4) ? true : false;
 
       if (gbTimerOnChange || gbTimerModeChange)
       {
         gbTimerMode = value & 3;
-
-        switch(gbTimerMode) {
-          case 0:
-            gbTimerClockTicks = GBTIMER_MODE_0_CLOCK_TICKS;
-            break;
-          case 1:
-            gbTimerClockTicks = GBTIMER_MODE_1_CLOCK_TICKS;
-            break;
-          case 2:
-            gbTimerClockTicks = GBTIMER_MODE_2_CLOCK_TICKS;
-            break;
-          case 3:
-            gbTimerClockTicks = GBTIMER_MODE_3_CLOCK_TICKS;
-            break;
-        }
+        static int *const tick_tab[] = {
+          &GBTIMER_MODE_0_CLOCK_TICKS, &GBTIMER_MODE_1_CLOCK_TICKS,
+          &GBTIMER_MODE_2_CLOCK_TICKS, &GBTIMER_MODE_3_CLOCK_TICKS,
+        };
+        gbTimerClockTicks = *tick_tab[gbTimerMode];
       }
 
 
