@@ -17,15 +17,15 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-void gbSgbInit();
-void gbSgbShutdown();
-void gbSgbCommand();
-void gbSgbResetPacketState();
-void gbSgbReset();
+void gbSgbInit(void);
+void gbSgbShutdown(void);
+void gbSgbCommand(void);
+void gbSgbResetPacketState(void);
+void gbSgbReset(void);
 void gbSgbDoBitTransfer(u8);
 void gbSgbSaveGame(gzFile);
 void gbSgbReadGame(gzFile, int version);
-void gbSgbRenderBorder();
+void gbSgbRenderBorder(void);
 
 extern u8  gbSgbATF[20*18];
 extern int gbSgbMode;
