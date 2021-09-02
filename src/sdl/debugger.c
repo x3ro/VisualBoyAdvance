@@ -2625,7 +2625,8 @@ char* strqtok (char* string, const char* ctrl)
 /*extern*/ void debuggerMain()
 {
   char buffer[1024];
-  char *commands[10];
+  char *commands[10], lastCommand[32];
+  lastCommand[0] = 0;
   int commandCount = 0;
   
   if(emulator.emuUpdateCPSR)
@@ -2640,8 +2641,10 @@ char* strqtok (char* string, const char* ctrl)
     char *s = fgets(buffer, 1024, stdin);
 
     commands[0] = strqtok(s, " \t\n");
-    if(commands[0] == NULL)
-      continue;
+    if(commands[0] == NULL) {
+      if(lastCommand[0] != 0) commands[0] = lastCommand;
+      else continue;
+    }
     commandCount++;
     while((s = strqtok(NULL, " \t\n"))) {
       commands[commandCount++] = s;
@@ -2655,10 +2658,11 @@ char* strqtok (char* string, const char* ctrl)
         break;
       }
       if(!strcmp(commands[0], debuggerCommands[j].name)) {
+        if(commands[0] != lastCommand) strcpy(lastCommand, commands[0]);
         debuggerCommands[j].function(commandCount, commands);
         break;
       }
-    } 
+    }
   }
 }
 
