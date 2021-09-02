@@ -2096,8 +2096,9 @@ static void debuggerQuit(int unused1, char ** unused2)
 {
   char buffer[10];
   printf("Are you sure you want to quit (y/n)? ");
+  fflush(stdout);
   fgets(buffer, 1024, stdin);
-  
+
   if(buffer[0] == 'y' || buffer[0] == 'Y') {
     debugger = false;
     emulating = false;
