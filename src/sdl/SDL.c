@@ -67,14 +67,7 @@
 # define GETCWD _getcwd
 #endif // _WIN32
 
-#ifndef __GNUC__
-# define HAVE_DECL_GETOPT 0
-# define __STDC__ 1
-# include "../getopt.h"
-#else // ! __GNUC__
-# define HAVE_DECL_GETOPT 1
-# include "getopt.h"
-#endif // ! __GNUC__
+#include <getopt.h>
 
 #ifdef MMX
 extern "C" bool cpu_mmx;
