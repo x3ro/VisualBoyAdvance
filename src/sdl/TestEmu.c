@@ -411,7 +411,7 @@ u32 systemReadJoypadExtended(void)
   return 0;
 }
 
-void systemWriteDataToSoundBuffer(void)
+void systemWriteDataToSoundBuffer(u32 count)
 {
 }
 
