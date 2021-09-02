@@ -227,7 +227,7 @@ void flashWrite(u32 address, u8 byte)
       flashReadState = FLASH_ERASE_COMPLETE;
     } else if(byte == 0x10) {
       // CHIP ERASE
-      memset(flashSaveMemory, 0, flashSize);
+      memset(flashSaveMemory, 0, sizeof(flashSaveMemory));
       systemSaveUpdateCounter = SYSTEM_SAVE_UPDATED;
       flashReadState = FLASH_ERASE_COMPLETE;
     } else {
