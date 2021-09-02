@@ -25,10 +25,6 @@
 #include "elf.h"
 #include "exprNode.h"
 
-#ifndef __GNUC__
-#define strdup _strdup
-#endif
-
 extern char *yytext;
 
 #define debuggerReadMemory(addr) \
