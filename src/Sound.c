@@ -118,7 +118,7 @@ int soundMasterOn = 0;
 int soundIndex = 0;
 int soundBufferIndex = 0;
 int soundDebug = 0;
-bool soundOffFlag = false;
+int soundOffFlag = 0;
 
 int sound1On = 0;
 int sound1ATL = 0;

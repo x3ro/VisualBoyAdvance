@@ -69,7 +69,7 @@ void soundSetQuality(int);
 extern int SOUND_CLOCK_TICKS;
 extern int soundTicks;
 extern int soundPaused;
-extern bool soundOffFlag;
+extern int soundOffFlag;
 extern int soundQuality;
 extern int soundBufferLen;
 extern int soundBufferTotalLen;

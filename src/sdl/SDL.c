@@ -344,6 +344,7 @@ u32 defaultMotion[4] = {
 };
 
 struct option sdlOptions[] = {
+  { "sound-off", no_argument, &soundOffFlag, 1 },
   { "agb-print", no_argument, &sdlAgbPrint, 1 },
   { "auto-frameskip", no_argument, &autoFrameSkip, 1 },
   { "bios", required_argument, 0, 'b' },
@@ -1842,6 +1843,7 @@ Long options only:\n\
       --rtc                    Enable RTC support\n\
       --show-speed-normal      Show emulation speed\n\
       --show-speed-detailed    Show detailed speed data\n\
+      --sound-off              Turn off sound\n\
 "
 #if IFB_ENABLED+0 != 0
 "\

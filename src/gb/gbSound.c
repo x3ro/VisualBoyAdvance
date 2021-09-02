@@ -130,7 +130,7 @@ extern int soundEchoIndex;
 extern bool soundEcho;
 extern bool soundLowPass;
 extern bool soundReverse;
-extern bool soundOffFlag;
+extern int soundOffFlag;
 
 bool gbDigitalSound = false;
 
