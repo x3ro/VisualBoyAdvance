@@ -1,7 +1,19 @@
-Welcome to version 1.8.0 of VisualBoyAdvance [C+SDL1/SDL2].
+Welcome to version 1.8.x of VisualBoyAdvance [C+SDL1/SDL2].
 This is a GB/GBC/GBA emulator for POSIX systems.
 this version has been ported from non-idiomatic C++ to C for faster
 compilation speed and portability.
+
+Attention
+---------
+- if you experience a game showing only a white screen, it is most
+  likely due to a mismatch of the flash/type size set in your or
+  the default configuration. for example some pokemon games are known
+  to produce this effect if flash size isnt set to 128KB.
+  there's now code to mitigate this, but it might be incomplete.
+  also make sure to delete old .sav files produced with the wrong
+  setting.
+- if the emulator runs at 200% speed, you might want to set frameSkip
+  to 0.
 
 Features
 --------
