@@ -38,6 +38,7 @@
 #include "Util.h"
 #include "Port.h"
 #include "agbprint.h"
+#include "romcheck.h"
 #ifdef PROFILING
 #include "prof/prof.h"
 #endif
@@ -1606,6 +1607,8 @@ int CPULoadRom(const char *szFile)
 
   flashInit();
   eepromInit();
+  if(flashSize != 0x20000 && is_mbit_rom(rom+0xa0+12))
+    flashSetSize(0x20000);
 
   CPUUpdateRenderBuffers(true);
 
