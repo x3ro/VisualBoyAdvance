@@ -1291,22 +1291,12 @@ bool CPUImportEepromFile(const char *fileName)
       return false;
     }
     for(int i = 0; i < size;) {
-      u8 tmp = eepromData[i];
-      eepromData[i] = eepromData[7-i];
-      eepromData[7-i] = tmp;
-      i++;
-      tmp = eepromData[i];
-      eepromData[i] = eepromData[7-i];
-      eepromData[7-i] = tmp;
-      i++;
-      tmp = eepromData[i];
-      eepromData[i] = eepromData[7-i];
-      eepromData[7-i] = tmp;
-      i++;      
-      tmp = eepromData[i];
-      eepromData[i] = eepromData[7-i];
-      eepromData[7-i] = tmp;
-      i++;      
+      for(int j = 0; j < 4; ++j) {
+        u8 tmp = eepromData[i];
+        eepromData[i] = eepromData[7-i];
+        eepromData[7-i] = tmp;
+        i++;
+      }
       i += 4;
     }
   } else
