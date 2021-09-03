@@ -1309,63 +1309,26 @@ void doMirroring (bool b)
 
 void CPUUpdateRender()
 {
-  switch(DISPCNT & 7) {
-  case 0:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode0RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode0RenderLineNoWindow;
-    else 
-      renderLine = mode0RenderLineAll;
-    break;
-  case 1:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode1RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode1RenderLineNoWindow;
-    else
-      renderLine = mode1RenderLineAll;
-    break;
-  case 2:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode2RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode2RenderLineNoWindow;
-    else
-      renderLine = mode2RenderLineAll;
-    break;
-  case 3:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode3RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode3RenderLineNoWindow;
-    else
-      renderLine = mode3RenderLineAll;
-    break;
-  case 4:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode4RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode4RenderLineNoWindow;
-    else
-      renderLine = mode4RenderLineAll;
-    break;
-  case 5:
-    if((!fxOn && !windowOn && !(layerEnable & 0x8000)) ||
-       cpuDisableSfx)
-      renderLine = mode5RenderLine;
-    else if(fxOn && !windowOn && !(layerEnable & 0x8000))
-      renderLine = mode5RenderLineNoWindow;
-    else
-      renderLine = mode5RenderLineAll;
-  default:
-    break;
-  }
+  static const struct {
+    void (*renderLine)();
+    void (*renderLineNoWindow)();
+    void (*renderLineAll)();
+  } render_dispatch[] = {
+    [0] = { mode0RenderLine, mode0RenderLineNoWindow, mode0RenderLineAll},
+    [1] = { mode1RenderLine, mode1RenderLineNoWindow, mode1RenderLineAll},
+    [2] = { mode2RenderLine, mode2RenderLineNoWindow, mode2RenderLineAll},
+    [3] = { mode3RenderLine, mode3RenderLineNoWindow, mode3RenderLineAll},
+    [4] = { mode4RenderLine, mode4RenderLineNoWindow, mode4RenderLineAll},
+    [5] = { mode5RenderLine, mode5RenderLineNoWindow, mode5RenderLineAll},
+  };
+  u32 mode = DISPCNT & 7;
+  if(mode > 5) return;
+  if((!fxOn && !windowOn && !(layerEnable & 0x8000)) || cpuDisableSfx)
+    renderLine = render_dispatch[mode].renderLine;
+  else if(fxOn && !windowOn && !(layerEnable & 0x8000))
+    renderLine = render_dispatch[mode].renderLineNoWindow;
+  else
+    renderLine = render_dispatch[mode].renderLineAll;
 }
 
 void CPUUpdateCPSR()
