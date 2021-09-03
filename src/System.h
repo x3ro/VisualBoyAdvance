@@ -22,6 +22,11 @@
 
 #include "unzip.h"
 #include <stdbool.h>
+#include "endianness.h"
+
+#if ENDIANNESS_BE +0 == 1
+#define WORDS_BIGENDIAN
+#endif
 
 #ifndef NULL
 #define NULL 0
