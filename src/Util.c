@@ -476,97 +476,42 @@ void utilApplyIPS(const char *ips, u8 **r, int *s)
   fclose(f);
 }
 
+/* checks if file extension is in filter list. filter list
+   needs to look like "\x02.foo\0.bar\0" where the first
+   byte is the binary value for the number of filter items */
+bool utilFileMatchFilter(const char* file, const char* filter)
+{
+  const char *ext = strrchr(file, '.');
+  char n = *(filter++);
+  while(ext && n--) {
+    if(!strcasecmp(filter, ext)) return 1;
+    while(*(filter++));
+  }
+  return 0;
+}
+
 extern bool cpuIsMultiBoot;
 
 bool utilIsGBAImage(const char * file)
 {
-  cpuIsMultiBoot = false;
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(_stricmp(p, ".gba") == 0)
-        return true;
-      if(_stricmp(p, ".agb") == 0)
-        return true;
-      if(_stricmp(p, ".bin") == 0)
-        return true;
-      if(_stricmp(p, ".elf") == 0)
-        return true;
-      if(_stricmp(p, ".mb") == 0) {
-        cpuIsMultiBoot = true;
-        return true;
-      }
-    }
-  }
-
-  return false;
+  cpuIsMultiBoot = utilFileMatchFilter(file, "\001.mb");
+  if(cpuIsMultiBoot) return true;
+  return utilFileMatchFilter(file, "\004.gba\0.agb\0.bin\0.elf");
 }
 
 bool utilIsGBImage(const char * file)
 {
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(_stricmp(p, ".gb") == 0)
-        return true;
-      if(_stricmp(p, ".gbc") == 0)
-        return true;
-      if(_stricmp(p, ".cgb") == 0)
-        return true;
-      if(_stricmp(p, ".sgb") == 0)
-        return true;      
-    }
-  }
-
-  return false;
+  return utilFileMatchFilter(file, "\004.gb\0.gbc\0.cgb\0.sgb");
 }
 
 bool utilIsZipFile(const char *file)
 {
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(_stricmp(p, ".zip") == 0)
-        return true;
-    }
-  }
-
-  return false;  
+  return utilFileMatchFilter(file, "\001.zip");
 }
-
-#if 0
-bool utilIsRarFile(const char *file)
-{
-  if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(_stricmp(p, ".rar") == 0)
-        return true;
-    }
-  }
-
-  return false;  
-}
-#endif
 
 bool utilIsGzipFile(const char *file)
 {
-  if(strlen(file) > 3) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(_stricmp(p, ".gz") == 0)
-        return true;
-      if(_stricmp(p, ".z") == 0)
-        return true;
-    }
-  }
-
-  return false;  
+  return utilFileMatchFilter(file, "\002.gz\0.z");
 }
 
 void utilGetBaseName(const char *file, char *buffer)

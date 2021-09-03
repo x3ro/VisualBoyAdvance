@@ -40,7 +40,6 @@ extern bool gbLoadRom(const char *);
 extern void gbEmulate(int);
 extern void gbWriteMemory(register u16, register u8);
 extern void gbDrawLine();
-extern bool gbIsGameboyRom(const char *);
 extern void gbSoundReset();
 extern void gbSoundSetQuality(int);
 extern void gbGetHardwareType();

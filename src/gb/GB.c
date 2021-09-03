@@ -608,26 +608,6 @@ void gbGenFilter()
   }
 }
 
-bool gbIsGameboyRom(const char * file)
-{
-  if(strlen(file) > 4) {
-    char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(strcasecmp(p, ".gb") == 0)
-        return true;
-      if(strcasecmp(p, ".gbc") == 0)
-        return true;
-      if(strcasecmp(p, ".cgb") == 0)
-        return true;
-      if(strcasecmp(p, ".sgb") == 0)
-        return true;
-    }
-  }
-
-  return false;
-}
-
 void gbCopyMemory(u16 d, u16 s, int count)
 {
   while(count) {
@@ -2069,22 +2049,9 @@ void gbSpeedSwitch()
   gbDmaTicks += (134)*GBLY_INCREMENT_CLOCK_TICKS + (37<<(gbSpeed ? 1 : 0));
 }
 
-bool CPUIsGBBios(const char * file)
+static bool CPUIsGBBios(const char * file)
 {
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(strcasecmp(p, ".gb") == 0)
-        return true;
-      if(strcasecmp(p, ".bin") == 0)
-        return true;
-      if(strcasecmp(p, ".bios") == 0)
-        return true;
-    }
-  }
-  
-  return false;
+  return utilFileMatchFilter(file, "\003.gb\0.bin\0.bios");
 }
 
 void gbCPUInit(const char *biosFileName, bool useBiosFile)

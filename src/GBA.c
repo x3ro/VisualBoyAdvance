@@ -1363,76 +1363,14 @@ bool CPUWriteBMPFile(const char *fileName)
   return utilWriteBMPFile(fileName, 240, 160, pix);
 }
 
-bool CPUIsZipFile(const char * file)
+static bool CPUIsGBABios(const char * file)
 {
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(strcasecmp(p, ".zip") == 0)
-        return true;
-    }
-  }
-
-  return false;
+  return utilFileMatchFilter(file, "\004.gba\0.agb\0.bin\0.bios");
 }
 
-bool CPUIsGBAImage(const char * file)
+static bool CPUIsELF(const char *file)
 {
-  cpuIsMultiBoot = false;
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(strcasecmp(p, ".gba") == 0)
-        return true;
-      if(strcasecmp(p, ".agb") == 0)
-        return true;
-      if(strcasecmp(p, ".bin") == 0)
-        return true;
-      if(strcasecmp(p, ".elf") == 0)
-        return true;
-      if(strcasecmp(p, ".mb") == 0) {
-        cpuIsMultiBoot = true;
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-bool CPUIsGBABios(const char * file)
-{
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-
-    if(p != NULL) {
-      if(strcasecmp(p, ".gba") == 0)
-        return true;
-      if(strcasecmp(p, ".agb") == 0)
-        return true;
-      if(strcasecmp(p, ".bin") == 0)
-        return true;
-      if(strcasecmp(p, ".bios") == 0)
-        return true;
-    }
-  }
-  
-  return false;
-}
-
-bool CPUIsELF(const char *file)
-{
-  if(strlen(file) > 4) {
-    const char * p = strrchr(file,'.');
-    
-    if(p != NULL) {
-      if(strcasecmp(p, ".elf") == 0)
-        return true;
-    }
-  }
-  return false;
+  return utilFileMatchFilter(file, "\001.elf");
 }
 
 void CPUCleanUp()

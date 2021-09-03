@@ -159,7 +159,7 @@ int main(int argc, char **argv)
   if(argc == 2) {
     char *szFile = argv[optind];
     bool failed = false;
-    if(CPUIsZipFile(szFile)) {
+    if(utilIsZipFile(szFile)) {
       unzFile unz = unzOpen(szFile);
       
       if(unz == NULL) {
