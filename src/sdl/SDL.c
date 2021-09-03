@@ -28,7 +28,7 @@
 #ifdef USE_SDL2
 #include <SDL2/SDL.h>
 #define FILTERS_ENABLED 0
-#define IFB_ENABLED 0
+#define IFB_ENABLED 1
 #define SDLK_KP2 SDLK_KP_2
 #define SDLK_KP4 SDLK_KP_4
 #define SDLK_KP6 SDLK_KP_6
