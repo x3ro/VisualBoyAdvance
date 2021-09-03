@@ -2392,12 +2392,8 @@ void systemDrawScreen()
     }
   }
 
-  if(ifbFunction) {
-    if(systemColorDepth == 16)
+  if(ifbFunction)
       ifbFunction(pix+destWidth+4, destWidth+4, srcWidth, srcHeight);
-    else
-      ifbFunction(pix+destWidth*2+4, destWidth*2+4, srcWidth, srcHeight);
-  }
 
   if(filterFunction) {
     if(systemColorDepth == 16)
