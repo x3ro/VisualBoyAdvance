@@ -27,6 +27,7 @@
 
 #ifdef USE_SDL2
 #include <SDL2/SDL.h>
+#define USE_SDL_SOUND_PULL_MODEL 0
 #define FILTERS_ENABLED 0
 #define IFB_ENABLED 1
 #define SDLK_KP2 SDLK_KP_2
@@ -36,6 +37,7 @@
 #define KMOD_META KMOD_GUI
 #else
 #include <SDL/SDL.h>
+#define USE_SDL_SOUND_PULL_MODEL 1
 #define FILTERS_ENABLED 1
 #define IFB_ENABLED 1
 //#define FILTERS_ENABLED 0
@@ -157,11 +159,6 @@ static int do_yuv();
 #define VPITCH   surface->pitch
 #define VSCALE   (sizeOption+1)
 #define VHEIGHT  surface->h
-SDL_mutex *sdlBufferLock = NULL;
-SDL_cond *sdlBufferAvailable = NULL;
-u8 *sdlSoundBuffer;
-volatile u32 sdlSoundBufferPos;
-u32 sdlSoundBufferLen, sysSoundBufferLen;
 #else
 static SDL_Window *win;
 static SDL_Renderer *renderer;
@@ -173,6 +170,15 @@ static SDL_PixelFormat *format;
 #define VSCALE (1)
 #define VHEIGHT srcHeight
 #define do_yuv() 0
+#endif
+
+#if USE_SDL_SOUND_PULL_MODEL
+SDL_mutex *sdlBufferLock = NULL;
+SDL_cond *sdlBufferAvailable = NULL;
+u8 *sdlSoundBuffer;
+volatile u32 sdlSoundBufferPos;
+u32 sdlSoundBufferLen, sysSoundBufferLen;
+#else
 static SDL_AudioDeviceID adevice;
 #endif
 
@@ -2666,7 +2672,7 @@ void systemScreenCapture(int a)
   systemScreenMessage("Screen capture");
 }
 
-#if SDL_MAJOR_VERSION != 2
+#if USE_SDL_SOUND_PULL_MODEL
 static void soundCallback(void * unused, u8 *stream, int len)
 {
   if (!emulating) return;
@@ -2758,7 +2764,7 @@ bool systemSoundInit()
   audio.samples = audio.freq/60;
   audio.userdata = NULL;
 
-#if SDL_MAJOR_VERSION != 2
+#if USE_SDL_SOUND_PULL_MODEL
   audio.callback = soundCallback;
 
   sdlBufferLock = SDL_CreateMutex();
