@@ -22,15 +22,13 @@
 
 void mode4RenderLine()
 {
-  u16 *palette = (u16 *)paletteRAM;
-
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
+
+  u16 *palette = (u16 *)paletteRAM;
 
   if(layerEnable & 0x400) {
     int changed = gfxBG2Changed;
@@ -98,15 +96,13 @@ void mode4RenderLine()
 
 void mode4RenderLineNoWindow()
 {
-  u16 *palette = (u16 *)paletteRAM;
-
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;        
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
+
+  u16 *palette = (u16 *)paletteRAM;
 
   if(layerEnable & 0x400) {
     int changed = gfxBG2Changed;
@@ -215,15 +211,13 @@ void mode4RenderLineNoWindow()
 
 void mode4RenderLineAll()
 {
-  u16 *palette = (u16 *)paletteRAM;
-
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;        
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
+
+  u16 *palette = (u16 *)paletteRAM;
 
   bool inWindow0 = false;
   bool inWindow1 = false;

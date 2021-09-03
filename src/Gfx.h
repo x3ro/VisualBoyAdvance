@@ -90,6 +90,8 @@ void mode5RenderLine();
 void mode5RenderLineNoWindow();
 void mode5RenderLineAll();
 
+void lineMix_clear(void);
+
 extern int coeff[32];
 extern u32 line0[240];
 extern u32 line1[240];

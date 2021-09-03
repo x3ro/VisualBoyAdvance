@@ -23,10 +23,8 @@
 void mode5RenderLine()
 {
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
 
@@ -100,10 +98,8 @@ void mode5RenderLine()
 void mode5RenderLineNoWindow()
 {
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
 
@@ -218,10 +214,8 @@ void mode5RenderLineNoWindow()
 void mode5RenderLineAll()
 {
   if(DISPCNT & 0x0080) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
 

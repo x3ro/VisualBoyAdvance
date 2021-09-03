@@ -45,3 +45,16 @@ int gfxBG3Y = 0;
 int gfxBG3LastX = 0;
 int gfxBG3LastY = 0;
 int gfxLastVCOUNT = 0;
+
+static u32 *lineMix_cleared;
+
+#include <stdlib.h>
+#include <string.h>
+void lineMix_clear(void) {
+	if(!lineMix_cleared) {
+		lineMix_cleared = malloc(240*4);
+		for (int i = 0; i < 240; ++i)
+			lineMix_cleared[i] = 0x7fff;
+	}
+	memcpy(lineMix, lineMix_cleared, 240*4);
+}

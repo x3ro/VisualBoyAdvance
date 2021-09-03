@@ -23,12 +23,10 @@
 void mode1RenderLine()
 {
   u16 *palette = (u16 *)paletteRAM;
-  
+
   if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
 
@@ -123,15 +121,13 @@ void mode1RenderLine()
 
 void mode1RenderLineNoWindow()
 {
-  u16 *palette = (u16 *)paletteRAM;
-  
   if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
+
+  u16 *palette = (u16 *)paletteRAM;
 
   if(layerEnable & 0x0100) {
     gfxDrawTextScreen(BG0CNT, BG0HOFS, BG0VOFS, line0);
@@ -278,15 +274,13 @@ void mode1RenderLineNoWindow()
 
 void mode1RenderLineAll()
 {
-  u16 *palette = (u16 *)paletteRAM;
-  
   if(DISPCNT & 0x80) {
-    for(int x = 0; x < 240; x++) {
-      lineMix[x] = 0x7fff;
-    }
-    gfxLastVCOUNT = VCOUNT;    
+    lineMix_clear();
+    gfxLastVCOUNT = VCOUNT;
     return;
   }
+
+  u16 *palette = (u16 *)paletteRAM;
 
   bool inWindow0 = false;
   bool inWindow1 = false;
