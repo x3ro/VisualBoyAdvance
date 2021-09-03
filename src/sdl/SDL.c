@@ -2730,9 +2730,9 @@ void systemSoundShutdown()
 #else
 void systemWriteDataToSoundBuffer(u32 n) {
   if(!systemSoundOn) return;
-  int res, min = soundBufferLen*2*2;
-  res = SDL_QueueAudio(adevice, soundFinalWave, n);
-  while (res && SDL_GetQueuedAudioSize(adevice) > min)
+  int min = soundBufferLen*2*2;
+  SDL_QueueAudio(adevice, soundFinalWave, n);
+  while(SDL_GetQueuedAudioSize(adevice) > min)
     SDL_Delay(1);
 }
 
