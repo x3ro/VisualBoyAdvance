@@ -1331,7 +1331,7 @@ void CPUUpdateRender()
     renderLine = render_dispatch[mode].renderLineAll;
 }
 
-void CPUUpdateCPSR()
+static inline void CPUUpdateCPSR(void)
 {
   u32 CPSR = reg[16].I & 0x40;
   if(N_FLAG)
@@ -1349,6 +1349,8 @@ void CPUUpdateCPSR()
   CPSR |= (armMode & 0x1F);
   reg[16].I = CPSR;
 }
+
+void CPUUpdateCPSR_extern(void) { return CPUUpdateCPSR(); }
 
 void CPUUpdateFlagsB(bool breakLoop)
 {

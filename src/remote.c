@@ -39,7 +39,7 @@
 #include "GBA.h"
 
 extern bool debugger;
-extern void CPUUpdateCPSR();
+extern void CPUUpdateCPSR_extern();
 #ifdef SDL
 extern void (*dbgMain)();
 extern void (*dbgSignal)(int,int);
@@ -327,7 +327,7 @@ void remoteSendStatus()
           (v >> 16) & 255,
           (v >> 24) & 255);
   s += 12;
-  CPUUpdateCPSR();
+  CPUUpdateCPSR_extern();
   v = reg[16].I;
   sprintf(s, "19:%02x%02x%02x%02x;", (v & 255),
           (v >> 8) & 255,
@@ -504,7 +504,7 @@ void remoteReadRegisters(char *p)
   sprintf(s, "00000000");
   s += 8;
   // CPSR
-  CPUUpdateCPSR();
+  CPUUpdateCPSR_extern();
   u32 v = reg[16].I;
   sprintf(s, "%02x%02x%02x%02x",  v & 255, (v >> 8) & 255,
           (v >> 16) & 255, (v >> 24) & 255);
