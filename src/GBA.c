@@ -1363,6 +1363,8 @@ static bool CPUIsELF(const char *file)
   return utilFileMatchFilter(file, "\001.elf");
 }
 
+#define FREEANDNULL(X) do { if(X) free(X); X = 0; } while(0)
+
 void CPUCleanUp()
 {
 #ifdef PROFILING
@@ -1370,56 +1372,18 @@ void CPUCleanUp()
     profCleanup();
   }
 #endif
-  
-  if(rom != NULL) {
-    free(rom);
-    rom = NULL;
-  }
+  FREEANDNULL(rom);
+  FREEANDNULL(vram);
+  FREEANDNULL(paletteRAM);
+  FREEANDNULL(internalRAM);
+  FREEANDNULL(workRAM);
+  FREEANDNULL(bios);
+  FREEANDNULL(pix);
+  FREEANDNULL(oam);
+  FREEANDNULL(ioMem);
 
-  if(vram != NULL) {
-    free(vram);
-    vram = NULL;
-  }
-
-  if(paletteRAM != NULL) {
-    free(paletteRAM);
-    paletteRAM = NULL;
-  }
-  
-  if(internalRAM != NULL) {
-    free(internalRAM);
-    internalRAM = NULL;
-  }
-
-  if(workRAM != NULL) {
-    free(workRAM);
-    workRAM = NULL;
-  }
-
-  if(bios != NULL) {
-    free(bios);
-    bios = NULL;
-  }
-
-  if(pix != NULL) {
-    free(pix);
-    pix = NULL;
-  }
-
-  if(oam != NULL) {
-    free(oam);
-    oam = NULL;
-  }
-
-  if(ioMem != NULL) {
-    free(ioMem);
-    ioMem = NULL;
-  }
-  
   elfCleanUp();
-
   systemSaveUpdateCounter = SYSTEM_SAVE_NOT_UPDATED;
-
   emulating = 0;
 }
 
@@ -1454,18 +1418,14 @@ int CPULoadRom(const char *szFile)
     if(!f) {
       systemMessage(MSG_ERROR_OPENING_IMAGE, N_("Error opening image %s"),
                     szFile);
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
+      FREEANDNULL(rom);
+      FREEANDNULL(workRAM);
       return 0;
     }
     bool res = elfRead(szFile, &romSize, f);
     if(!res || romSize == 0) {
-      free(rom);
-      rom = NULL;
-      free(workRAM);
-      workRAM = NULL;
+      FREEANDNULL(rom);
+      FREEANDNULL(workRAM);
       elfCleanUp();
       return 0;
     }
@@ -1473,10 +1433,8 @@ int CPULoadRom(const char *szFile)
                       utilIsGBAImage,
                       whereToLoad,
                       &romSize)) {
-    free(rom);
-    rom = NULL;
-    free(workRAM);
-    workRAM = NULL;
+    FREEANDNULL(rom);
+    FREEANDNULL(workRAM);
     return 0;
   }
 
