@@ -159,11 +159,9 @@ static inline u32 CPUReadMemory(u32 address)
   return value;
 }
 
-extern u32 myROM[];
-
 static inline u32 CPUReadHalfWord(u32 address)
 {
-#ifdef DEV_VERSION      
+#ifdef DEV_VERSION
   if(address & 1) {
     if(systemVerbose & VERBOSE_UNALIGNED_MEMORY) {
       log("Unaligned halfword read: %08x at %08x\n", address, armMode ?

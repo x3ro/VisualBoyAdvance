@@ -157,30 +157,30 @@ int capture = 0;
 int capturePrevious = 0;
 int captureNumber = 0;
 
-const int TIMER_TICKS[4] = {
+static const int TIMER_TICKS[4] = {
   0,
   6,
   8,
   10
 };
 
-const u32  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
-const u8 gamepakRamWaitState[4] = { 4, 3, 2, 8 };
-const u8 gamepakWaitState[4] =  { 4, 3, 2, 8 };
-const u8 gamepakWaitState0[2] = { 2, 1 };
-const u8 gamepakWaitState1[2] = { 4, 1 };
-const u8 gamepakWaitState2[2] = { 8, 1 };
-const bool isInRom [16]=
+static const u32  objTilesAddress [3] = {0x010000, 0x014000, 0x014000};
+static const u8 gamepakRamWaitState[4] = { 4, 3, 2, 8 };
+static const u8 gamepakWaitState[4] =  { 4, 3, 2, 8 };
+static const u8 gamepakWaitState0[2] = { 2, 1 };
+static const u8 gamepakWaitState1[2] = { 4, 1 };
+static const u8 gamepakWaitState2[2] = { 8, 1 };
+static const bool isInRom [16] =
   { false, false, false, false, false, false, false, false,
-    true, true, true, true, true, true, false, false };              
+    true, true, true, true, true, true, false, false };
 
-u8 memoryWait[16] =
+static u8 memoryWait[16] =
   { 0, 0, 2, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0 };
-u8 memoryWait32[16] =
+static u8 memoryWait32[16] =
   { 0, 0, 5, 0, 0, 1, 1, 0, 7, 7, 9, 9, 13, 13, 4, 0 };
-u8 memoryWaitSeq[16] =
+static u8 memoryWaitSeq[16] =
   { 0, 0, 2, 0, 0, 0, 0, 0, 2, 2, 4, 4, 8, 8, 4, 0 };
-u8 memoryWaitSeq32[16] =
+static u8 memoryWaitSeq32[16] =
   { 0, 0, 5, 0, 0, 1, 1, 0, 5, 5, 9, 9, 17, 17, 4, 0 };
 
 // The videoMemoryWait constants are used to add some waitstates
@@ -197,7 +197,7 @@ u8 biosProtected[4];
 bool cpuBiosSwapped = false;
 #endif
 
-u32 myROM[] = {
+static const u32 myROM[] = {
 0xEA000006,
 0xEA000093,
 0xEA000006,
@@ -373,7 +373,7 @@ u32 myROM[] = {
 0x03007FE0
 };
 
-variable_desc saveGameStruct[] = {
+static variable_desc saveGameStruct[] = {
   { &DISPCNT  , sizeof(u16) },
   { &DISPSTAT , sizeof(u16) },
   { &VCOUNT   , sizeof(u16) },
@@ -489,7 +489,7 @@ variable_desc saveGameStruct[] = {
   { &armNextPC , sizeof(u32) },
   { &armMode , sizeof(int) },
   { &saveType , sizeof(int) },
-  { NULL, 0 } 
+  { NULL, 0 }
 };
 
 static int romSize = 0x2000000;
