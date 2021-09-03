@@ -1352,7 +1352,7 @@ static inline void CPUUpdateCPSR(void)
 
 void CPUUpdateCPSR_extern(void) { return CPUUpdateCPSR(); }
 
-void CPUUpdateFlagsB(bool breakLoop)
+static void CPUUpdateFlagsB(bool breakLoop)
 {
   u32 CPSR = reg[16].I;
   
@@ -1368,7 +1368,7 @@ void CPUUpdateFlagsB(bool breakLoop)
   }
 }
 
-void CPUUpdateFlags(void)
+static void CPUUpdateFlags(void)
 {
   CPUUpdateFlagsB(true);
 }
@@ -1389,7 +1389,7 @@ static void CPUSwap(u32 *a, u32 *b)
 }
 #endif
 
-void CPUSwitchMode3(int mode, bool saveState, bool breakLoop)
+static void CPUSwitchMode3(int mode, bool saveState, bool breakLoop)
 {
   //  if(armMode == mode)
   //    return;
@@ -1503,12 +1503,12 @@ void CPUSwitchMode3(int mode, bool saveState, bool breakLoop)
   CPUUpdateCPSR();
 }
 
-void CPUSwitchMode(int mode, bool saveState)
+static void CPUSwitchMode(int mode, bool saveState)
 {
   CPUSwitchMode3(mode, saveState, true);
 }
 
-void CPUUndefinedException()
+static void CPUUndefinedException()
 {
   u32 PC = reg[15].I;
   bool savedArmState = armState;
@@ -1519,10 +1519,10 @@ void CPUUndefinedException()
   armIrqEnable = false;
   armNextPC = 0x04;
   ARM_PREFETCH;
-  reg[15].I += 4;  
+  reg[15].I += 4;
 }
 
-void CPUSoftwareInterrupt(void)
+static inline void CPUSoftwareInterrupt(void)
 {
   u32 PC = reg[15].I;
   bool savedArmState = armState;
@@ -1536,7 +1536,7 @@ void CPUSoftwareInterrupt(void)
   reg[15].I += 4;
 }
 
-void CPUSoftwareInterrupt1(int comment)
+static void CPUSoftwareInterrupt1(int comment)
 {
   static bool disableMessage = false;
   if(armState) comment >>= 16;
@@ -1843,7 +1843,7 @@ void CPUSoftwareInterrupt1(int comment)
   }
 }
 
-void CPUCompareVCOUNT()
+static inline void CPUCompareVCOUNT()
 {
   if(VCOUNT == (DISPSTAT >> 8)) {
     DISPSTAT |= 4;
@@ -1866,7 +1866,7 @@ void CPUCompareVCOUNT()
 
 }
 
-void doDMA(u32 *s, u32 *d, u32 si, u32 di, u32 c, int transfer32)
+static void doDMA(u32 *s, u32 *d, u32 si, u32 di, u32 c, int transfer32)
 {
   int sm = *s >> 24;
   int dm = *d >> 24;
@@ -1880,7 +1880,7 @@ void doDMA(u32 *s, u32 *d, u32 si, u32 di, u32 c, int transfer32)
       sm=15;
   if (dm>15)
       dm=15;
-  
+
   //if ((sm>=0x05) && (sm<=0x07) || (dm>=0x05) && (dm <=0x07))
   //    blank = (((DISPSTAT | ((DISPSTAT>>1)&1))==1) ?  true : false);
 
@@ -1924,7 +1924,7 @@ void doDMA(u32 *s, u32 *d, u32 si, u32 di, u32 c, int transfer32)
   }
 
   cpuDmaCount = 0;
-  
+
   int totalTicks = 0;
 
   if(transfer32) {
