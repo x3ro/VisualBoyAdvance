@@ -2,7 +2,7 @@ prefix=/usr/local
 bindir=$(prefix)/bin
 sysconfdir=$(prefix)/etc
 
-PROGS = VisualBoyAdvance TestEmu
+PROGS = TestEmu
 CFG = src/VisualBoyAdvance.cfg
 
 GENSRCS=src/gen/expr.c src/gen/expr-lex.c
@@ -14,7 +14,7 @@ MAINSRCS=$(filter-out $(FILTERSRCS), $(sort $(wildcard src/*.c))) $(GENSRCS)
 GBSRCS=$(sort $(wildcard src/gb/*.c))
 SDLSRCS=src/sdl/debugger.c
 
-VBASRCS=$(MAINSRCS) $(GBSRCS) $(SDLSRCS) src/sdl/SDL.c
+VBASRCS=$(MAINSRCS) $(GBSRCS) $(SDLSRCS)
 VBAOBJS=$(VBASRCS:.c=.o)
 
 TESTEMUSRCS=$(MAINSRCS) $(GBSRCS) $(SDLSRCS) src/sdl/TestEmu.c
@@ -27,9 +27,13 @@ LEX=flex
 ifneq ($(USE_SDL1),1)
 SDL=SDL2
 CPPFLAGS += -DUSE_SDL2
+VBAOBJS += src/sdl/SDL2.o
+PROGS += VisualBoyAdvanceSDL2
 else
 SDL=SDL
 MAINSRCS += $(FILTERSRCS)
+VBAOBJS += src/sdl/SDL1.o
+PROGS += VisualBoyAdvanceSDL1
 endif
 
 
@@ -46,7 +50,7 @@ $(DESTDIR)$(bindir)/%: ./%
 $(DESTDIR)$(sysconfdir)/%: src/%
 	install -D -m 644 $< $@
 
-VisualBoyAdvance: $(VBAOBJS)
+VisualBoyAdvanceSDL%: $(VBAOBJS)
 	$(CC) $(LDFLAGS) -o $@ $(VBAOBJS) -l$(SDL) -lpng -lz -lm
 
 TestEmu: $(TESTEMUOBJS)
@@ -56,6 +60,12 @@ clean:
 	rm -f $(GENSRCS)
 	rm -f $(PROGS)
 	rm -f $(VBAOBJS)
+
+src/sdl/%2.o: src/sdl/%.c
+	$(C99) $(CPPFLAGS) $(CFLAGS) $(INC) -c -o $@ $<
+
+src/sdl/%1.o: src/sdl/%.c
+	$(C99) $(CPPFLAGS) $(CFLAGS) $(INC) -c -o $@ $<
 
 %.o: %.c
 	$(C99) $(CPPFLAGS) $(CFLAGS) $(INC) -c -o $@ $<
