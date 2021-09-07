@@ -14,6 +14,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
 #include "memgzio.h"
 
@@ -65,14 +67,18 @@ typedef struct mem_stream {
     long     startpos; /* start of compressed data in file (header skipped) */
 } mem_stream;
 
+#define local static
+#define DEF_MEM_LEVEL 8
+#define OS_CODE  0x03  /* assume Unix */
 
-local gzFile gz_open      OF((char *memory, const int available, const char *mode));
-local int do_flush        OF((gzFile file, int flush));
-local int    get_byte     OF((mem_stream *s));
-local void   check_header OF((mem_stream *s));
-local int    destroy      OF((mem_stream *s));
-local void   putLong      OF((MEMFILE *file, uLong x));
-local uLong  getLong      OF((mem_stream *s));
+
+local gzFile gz_open      (char *memory, const int available, const char *mode);
+local int do_flush        (gzFile file, int flush);
+local int    get_byte     (mem_stream *s);
+local void   check_header (mem_stream *s);
+local int    destroy      (mem_stream *s);
+local void   putLong      (MEMFILE *file, uLong x);
+local uLong  getLong      (mem_stream *s);
 
 local MEMFILE *memOpen(char *memory, int available, char mode)
 {
@@ -468,7 +474,7 @@ int ZEXPORT memgzread (file, buf, len)
 	    uInt n = s->stream.avail_in;
 	    if (n > s->stream.avail_out) n = s->stream.avail_out;
 	    if (n > 0) {
-		zmemcpy(s->stream.next_out, s->stream.next_in, n);
+		memcpy(s->stream.next_out, s->stream.next_in, n);
 		next_out += n;
 		s->stream.next_out = next_out;
 		s->stream.next_in   += n;

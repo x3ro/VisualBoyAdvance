@@ -22,12 +22,12 @@
 
 #include "../System.h"
 
-struct gbXxCheat {
+typedef struct gbXxCheat {
   char cheatDesc[100];
   char cheatCode[20];
-};
+} gbXxCheat;
 
-struct gbCheat {
+typedef struct gbCheat {
   char cheatCode[20];
   char cheatDesc[32];
   u16 address;
@@ -35,7 +35,7 @@ struct gbCheat {
   u8 compare;
   u8 value;
   bool enabled;
-};
+} gbCheat;
 
 extern void gbCheatsSaveGame(gzFile);
 extern void gbCheatsReadGame(gzFile, int);

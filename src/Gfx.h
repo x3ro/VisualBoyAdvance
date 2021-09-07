@@ -34,7 +34,7 @@ static void gfxDrawRotScreen(u16,
 			     u16, u16,
 			     u16, u16,
 			     u16, u16,
-			     int&, int&,
+			     int*, int*,
 			     int,
 			     u32*);
 static void gfxDrawRotScreen16Bit(u16,
@@ -42,7 +42,7 @@ static void gfxDrawRotScreen16Bit(u16,
 				  u16, u16,
 				  u16, u16,
 				  u16, u16,
-				  int&, int&,
+				  int*, int*,
 				  int,
 				  u32*);
 static void gfxDrawRotScreen256(u16,
@@ -50,7 +50,7 @@ static void gfxDrawRotScreen256(u16,
 				u16, u16,
 				u16, u16,
 				u16, u16,
-				int&, int&,
+				int*, int*,
 				int,
 				u32*);
 static void gfxDrawRotScreen16Bit160(u16,
@@ -58,7 +58,7 @@ static void gfxDrawRotScreen16Bit160(u16,
 				     u16, u16,
 				     u16, u16,
 				     u16, u16,
-				     int&, int&,
+				     int*, int*,
 				     int,
 				     u32*);
 static void gfxDrawSprites(u32 *);
@@ -89,6 +89,8 @@ void mode4RenderLineAll();
 void mode5RenderLine();
 void mode5RenderLineNoWindow();
 void mode5RenderLineAll();
+
+void lineMix_clear(void);
 
 extern int coeff[32];
 extern u32 line0[240];
@@ -272,7 +274,7 @@ static inline void gfxDrawRotScreen(u16 control,
 				    u16 y_l, u16 y_h,
 				    u16 pa,  u16 pb,
 				    u16 pc,  u16 pd,
-				    int& currentX, int& currentY,
+				    int *currentX, int *currentY,
 				    int changed,
 				    u32 *line)
 {
@@ -314,23 +316,23 @@ static inline void gfxDrawRotScreen(u16 control,
     changed = 3;
 
   if(changed & 1) {
-    currentX = (x_l) | ((x_h & 0x07FF)<<16);
+    *currentX = (x_l) | ((x_h & 0x07FF)<<16);
     if(x_h & 0x0800)
-      currentX |= 0xF8000000;
+      *currentX |= 0xF8000000;
   } else {
-    currentX += dmx;
+    *currentX += dmx;
   }
 
   if(changed & 2) {
-    currentY = (y_l) | ((y_h & 0x07FF)<<16);
+    *currentY = (y_l) | ((y_h & 0x07FF)<<16);
     if(y_h & 0x0800)
-      currentY |= 0xF8000000;
+      *currentY |= 0xF8000000;
   } else {
-    currentY += dmy;
+    *currentY += dmy;
   }  
   
-  int realX = currentX;
-  int realY = currentY;
+  int realX = *currentX;
+  int realY = *currentY;
 
   if(control & 0x40) {
     int mosaicY = ((MOSAIC & 0xF0)>>4) + 1;
@@ -438,7 +440,7 @@ static inline void gfxDrawRotScreen16Bit(u16 control,
 					 u16 y_l, u16 y_h,
 					 u16 pa,  u16 pb,
 					 u16 pc,  u16 pd,
-					 int& currentX, int& currentY,
+					 int *currentX, int *currentY,
 					 int changed,
 					 u32 *line)
 {
@@ -471,22 +473,22 @@ static inline void gfxDrawRotScreen16Bit(u16 control,
     changed = 3;
   
   if(changed & 1) {
-    currentX = (x_l) | ((x_h & 0x07FF)<<16);
+    *currentX = (x_l) | ((x_h & 0x07FF)<<16);
     if(x_h & 0x0800)
-      currentX |= 0xF8000000;
+      *currentX |= 0xF8000000;
   } else
-    currentX += dmx;
+    *currentX += dmx;
 
   if(changed & 2) {
-    currentY = (y_l) | ((y_h & 0x07FF)<<16);
+    *currentY = (y_l) | ((y_h & 0x07FF)<<16);
     if(y_h & 0x0800)
-      currentY |= 0xF8000000;
+      *currentY |= 0xF8000000;
   } else {
-    currentY += dmy;
+    *currentY += dmy;
   }  
   
-  int realX = currentX;
-  int realY = currentY;
+  int realX = *currentX;
+  int realY = *currentY;
 
   if(control & 0x40) {
     int mosaicY = ((MOSAIC & 0xF0)>>4) + 1;
@@ -535,7 +537,7 @@ static inline void gfxDrawRotScreen256(u16 control,
 				       u16 y_l, u16 y_h,
 				       u16 pa,  u16 pb,
 				       u16 pc,  u16 pd,
-				       int &currentX, int& currentY,
+				       int *currentX, int* currentY,
 				       int changed,
 				       u32 *line)
 {
@@ -569,23 +571,23 @@ static inline void gfxDrawRotScreen256(u16 control,
     changed = 3;
 
   if(changed & 1) {
-    currentX = (x_l) | ((x_h & 0x07FF)<<16);
+    *currentX = (x_l) | ((x_h & 0x07FF)<<16);
     if(x_h & 0x0800)
-      currentX |= 0xF8000000;
+      *currentX |= 0xF8000000;
   } else {
-    currentX += dmx;
+    *currentX += dmx;
   }
 
   if(changed & 2) {
-    currentY = (y_l) | ((y_h & 0x07FF)<<16);
+    *currentY = (y_l) | ((y_h & 0x07FF)<<16);
     if(y_h & 0x0800)
-      currentY |= 0xF8000000;
+      *currentY |= 0xF8000000;
   } else {
-    currentY += dmy;
+    *currentY += dmy;
   }  
   
-  int realX = currentX;
-  int realY = currentY;
+  int realX = *currentX;
+  int realY = *currentY;
 
   if(control & 0x40) {
     int mosaicY = ((MOSAIC & 0xF0)>>4) + 1;
@@ -636,7 +638,7 @@ static inline void gfxDrawRotScreen16Bit160(u16 control,
 					    u16 y_l, u16 y_h,
 					    u16 pa,  u16 pb,
 					    u16 pc,  u16 pd,
-					    int& currentX, int& currentY,
+					    int *currentX, int *currentY,
 					    int changed,
 					    u32 *line)
 {
@@ -670,23 +672,23 @@ static inline void gfxDrawRotScreen16Bit160(u16 control,
     changed = 3;
 
   if(changed & 1) {
-    currentX = (x_l) | ((x_h & 0x07FF)<<16);
+    *currentX = (x_l) | ((x_h & 0x07FF)<<16);
     if(x_h & 0x0800)
-      currentX |= 0xF8000000;
+      *currentX |= 0xF8000000;
   } else {
-    currentX += dmx;
+    *currentX += dmx;
   }
 
   if(changed & 2) {
-    currentY = (y_l) | ((y_h & 0x07FF)<<16);
+    *currentY = (y_l) | ((y_h & 0x07FF)<<16);
     if(y_h & 0x0800)
-      currentY |= 0xF8000000;
+      *currentY |= 0xF8000000;
   } else {
-    currentY += dmy;
+    *currentY += dmy;
   }  
   
-  int realX = currentX;
-  int realY = currentY;
+  int realX = *currentX;
+  int realY = *currentY;
 
   if(control & 0x40) {
     int mosaicY = ((MOSAIC & 0xF0)>>4) + 1;
@@ -1512,7 +1514,7 @@ static inline void gfxDrawOBJWin(u32 *lineOBJWin)
   }
 }
 
-static inline u32 gfxIncreaseBrightness(u32 color, int coeff)
+static inline u32 gfxIncreaseBrightnessU(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1552,7 +1554,7 @@ static inline void gfxIncreaseBrightness(u32 *line, int coeff)
   }
 }
 
-static inline u32 gfxDecreaseBrightness(u32 color, int coeff)
+static inline u32 gfxDecreaseBrightnessU(u32 color, int coeff)
 {
   int r = (color & 0x1F);
   int g = ((color >> 5) & 0x1F);
@@ -1593,7 +1595,7 @@ static inline void gfxDecreaseBrightness(u32 *line, int coeff)
   }
 }
 
-static inline u32 gfxAlphaBlend(u32 color, u32 color2, int ca, int cb)
+static inline u32 gfxAlphaBlendU(u32 color, u32 color2, int ca, int cb)
 {
   if(color < 0x80000000) {
     int r = (color & 0x1F);

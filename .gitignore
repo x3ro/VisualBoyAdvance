@@ -1,0 +1,11 @@
+*.m4
+configure
+configure.lineno
+config.*
+Makefile.in
+.deps
+autom4te.cache
+*.o
+*.a
+TestEmu
+VisualBoyAdvance

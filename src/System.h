@@ -21,11 +21,18 @@
 #define VBA_SYSTEM_H
 
 #include "unzip.h"
+#include <stdbool.h>
+#include "endianness.h"
+
+#if ENDIANNESS_BE +0 == 1
+#define WORDS_BIGENDIAN
+#endif
 
 #ifndef NULL
 #define NULL 0
 #endif
 
+typedef unsigned long ulong;
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
@@ -77,7 +84,8 @@ struct EmulatedSystem {
   int emuCount;
 };
 
-extern void log(const char *,...);
+extern void logg(const char *,...);
+#define log logg
 
 extern bool systemPauseOnFrame();
 extern void systemGbPrint(u8 *,int,int,int,int);
@@ -90,7 +98,7 @@ extern u32 systemReadJoypad(int);
 extern u32 systemGetClock();
 extern void systemMessage(int, const char *, ...);
 extern void systemSetTitle(const char *);
-extern void systemWriteDataToSoundBuffer();
+extern void systemWriteDataToSoundBuffer(u32 bytes);
 extern void systemSoundShutdown();
 extern void systemSoundPause();
 extern void systemSoundResume();

@@ -1,5 +1,19 @@
-Welcome to version 1.8.0 of VisualBoyAdvance [SDL].
-This is a GB/GBC/GBA emulator for Windows, Linux, MacOS X and BeOS.
+Welcome to version 1.8.x of VisualBoyAdvance [C+SDL1/SDL2].
+This is a GB/GBC/GBA emulator for POSIX systems.
+this version has been ported from non-idiomatic C++ to C for faster
+compilation speed and portability.
+
+Attention
+---------
+- if you experience a game showing only a white screen, it is most
+  likely due to a mismatch of the flash/type size set in your or
+  the default configuration. for example some pokemon games are known
+  to produce this effect if flash size isnt set to 128KB.
+  there's now code to mitigate this, but it might be incomplete.
+  also make sure to delete old .sav files produced with the wrong
+  setting.
+- if the emulator runs at 200% speed, you might want to set frameSkip
+  to 0.
 
 Features
 --------
@@ -11,6 +25,7 @@ Features
 - fullscreen mode (selectable resolution)
 - video sizes 1x, 2x, 3x and 4x
 - graphic filters Normal, TV Mode, 2xSaI, Super 2xSaI and more
+  (only in SDL 1.2 mode).
 - interframe blending support
 - same emulation core as VisualBoyAdvance: GB and GBA emulation
 - built-in ARM/THUMB assembly debugger
@@ -27,21 +42,15 @@ Features
 Compiling the sources
 ---------------------
 
-See the INSTALL file for compiling instructions. Please note the following
-requisites to compile:
+install zlib, sdl, libpng development packages
 
-- GCC must be 3.x or greater in order to compile GBA.cpp with -O2. Earlier
-  versions have a problem during optimization that requires an absurd
-  ammount of memory and usually ends up crashing the compiler/computer
-- On Windows, Microsoft Visual C++ 6 or later is needed. Please note that
-  some of the source code will not compile with the shipped header files.
-  You will need to install the most recent Platform SDK from Microsoft.
+run "make" for SDL 2 build,
+or  "make USE_SDL1=1" for SDL 1.2 build
 
 Installing
 ----------
 
-The easiest installation is to place all files in the distribution in the
-same directory.
+run "make install"
 
 Per game settings
 -----------------
@@ -105,6 +114,7 @@ Key combinations during emulation
 - Ctrl+P: pause
 - Ctrl+B: rewind (if enabled and available)
 - F11: enter built-in debugger
+- Alt+Enter: toggle fullscreen
 - ESC: exit emulator
 
 Emulation key settings
@@ -241,67 +251,6 @@ file):
 - fixes to some breakpoint handling problems
 - fixes to break on write function
 
-Profiling
----------
-
-VisualBoyAdvance has profiling support. It produces output in the format
-supported by GPROF. You need a cross-compiled binary of GPROF (binutils
-GNU package) compiled with --target=arm-thumb-elf (or similar).
-
-The output will always contain the histogram of PC positions at the specified
-frequency even if the code is not compiled with call graph support.
-
-In order to enable profiling, you need to add a call inside your code
-to start it (download vba.s for a ready to use file for GCC):
-
-void monstartup(u32 lowPC, 32 highPC)
-
-This will start profiling for the given address region. If the code was also
-compiled with -pg, call graphs will be recorded.
-
-Other calls for fine grain control:
-
-// control profiling
-// 0 - stops profiling
-// anyother value starts it
-void moncontrol(int mode)
-
-// stop profiling and output gmon.out file
-void moncleanup()
-
-// record call graph (used by GCC)
-// r12 contains previous caller
-// r14 contains function that was called
-void mcount()
-
-GCC bugs
---------
-
-All versions of GCC previous to the working version 3.3 have bugs when
-generating profiling for thumb functions.
-
-The errors are:
-- mov\tip,lr not a valid instruction (typo in gcc/config/arm/arm.h)
-- LPxx undefined when linking (missing . before LP causes the problem)
-
-You can fix these problems by either recompiling GCC (recommended) or by
-modifying cc1.exe to fix the problems.
-
-In the first option, find the given code in gcc/config/arm/arm.h and fix
-the typos (remove the extra blackslash from the mov ip,lr instruction and
-add the missing dot before LP%d) or change THUMB_FUNCTION_PROFILER to call
-ARM_FUNCTION_PROFILER (the recent changes that were performed in CVS).
-
-If you don't want to compile your own GCC, then you can use an hex editor
-to fix the problems. Locate cc1.exe under <dir>/lib/gcc-lib/<config>/<version>
-and find the mov\tip,lr instruction. Change the extra backslash to a space.
-Locate the .LP string just before the mov instruction and change it to
-.P instead (make sure to place 0 after the P). Then find the text .word
-LP%d and change it to .word .P%d.
-
-Histograms will be output even if the code is not compiled with call graph
-support.
-
 Options configuration
 ---------------------
 
@@ -334,30 +283,9 @@ Command line options (override settings in configuration file)
       --flash-64k               0 -  64K Flash
       --flash-128k              1 - 128K Flash
   -T, --throttle=THROTTLE      Set the desired throttle (5...1000)
-  -Y, --yuv=TYPE               Use YUV overlay for drawing:
-                                0 - YV12
-                                1 - UYVY
-                                2 - YVYU
-                                3 - YUY2
-                                4 - IYUV
   -b, --bios=BIOS              Use given bios file
   -c, --config=FILE            Read the given configuration file
   -d, --debug                  Enter debugger
-  -f, --filter=FILTER          Select filter:
-      --filter-normal            0 - normal mode
-      --filter-tv-mode           1 - TV Mode
-      --filter-2xsai             2 - 2xSaI
-      --filter-super-2xsai       3 - Super 2xSaI
-      --filter-super-eagle       4 - Super Eagle
-      --filter-pixelate          5 - Pixelate
-      --filter-motion-blur       6 - Motion Blur
-      --filter-advmame           7 - AdvanceMAME Scale2x
-      --filter-simple2x          8 - Simple2x
-      --filter-bilinear          9 - Bilinear
-      --filter-bilinear+        10 - Bilinear Plus
-      --filter-scanlines        11 - Scanlines
-      --filter-hq2x             12 - hq2x
-      --filter-lq2x             13 - lq2x
   -h, --help                   Print this help
   -i, --ips=PATCH              Apply given IPS patch
   -p, --profile=[HERTZ]        Enable profiling
@@ -380,6 +308,31 @@ Command line options (override settings in configuration file)
                                 128 - DMA 3
                                 256 - Undefined instruction
                                 512 - AGBPrint messages
+
+
+SDL1 mode only:
+  -Y, --yuv=TYPE               Use YUV overlay for drawing:
+                                0 - YV12
+                                1 - UYVY
+                                2 - YVYU
+                                3 - YUY2
+                                4 - IYUV
+  -f, --filter=FILTER          Select filter:
+      --filter-normal            0 - normal mode
+      --filter-tv-mode           1 - TV Mode
+      --filter-2xsai             2 - 2xSaI
+      --filter-super-2xsai       3 - Super 2xSaI
+      --filter-super-eagle       4 - Super Eagle
+      --filter-pixelate          5 - Pixelate
+      --filter-motion-blur       6 - Motion Blur
+      --filter-advmame           7 - AdvanceMAME Scale2x
+      --filter-simple2x          8 - Simple2x
+      --filter-bilinear          9 - Bilinear
+      --filter-bilinear+        10 - Bilinear Plus
+      --filter-scanlines        11 - Scanlines
+      --filter-hq2x             12 - hq2x
+      --filter-lq2x             13 - lq2x
+
 
 Long options only:
       --agb-print              Enable AGBPrint support
@@ -448,7 +401,7 @@ are met:
 4. Neither the name of the University nor the names of its contributors
    may be used to endorse or promote products derived from this software
    without specific prior written permission.
-        
+
 Contact
 -------
 

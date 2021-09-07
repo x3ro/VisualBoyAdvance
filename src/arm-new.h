@@ -47,7 +47,7 @@
       N_FLAG = (reg[dest].I & 0x80000000) ? true : false;\
       Z_FLAG = (reg[dest].I) ? false : true;\
       C_FLAG = C_OUT;
-#ifdef C_CORE
+
 #define NEG(i) ((i) >> 31)
 #define POS(i) ((~(i)) >> 31)
 #define ADDCARRY(a, b, c) \
@@ -266,757 +266,6 @@
      value = ((value >> 1) |\
               (shift << 31));\
    }
-#else
-#ifdef __GNUC__
-        #ifdef __POWERPC__
-            #define OP_SUB \
-                {\
-                reg[dest].I = reg[base].I - value;\
-                }
-            #define OP_SUBS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("subco. %0, %2, %3\n"              \
-                            "mcrxr cr1\n"                       \
-                            "mfcr %1\n"                         \
-                            : "=r" (Result),                    \
-                              "=r" (Flags)                      \
-                            : "r" (reg[base].I),                \
-                              "r" (value)                       \
-                            );                                  \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_RSB \
-                {\
-                reg[dest].I = value - reg[base].I;\
-                }
-            #define OP_RSBS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("subfco. %0, %2, %3\n"             \
-                            "mcrxr cr1\n"                       \
-                            "mfcr %1\n"                         \
-                            : "=r" (Result),                    \
-                              "=r" (Flags)                      \
-                            : "r" (reg[base].I),                \
-                              "r" (value)                       \
-                            );                                  \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_ADD \
-                {\
-                reg[dest].I = reg[base].I + value;\
-                }
-
-            #define OP_ADDS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("addco. %0, %2, %3\n"              \
-                            "mcrxr cr1\n"                       \
-                            "mfcr %1\n"                         \
-                            : "=r" (Result),                    \
-                              "=r" (Flags)                      \
-                            : "r" (reg[base].I),                \
-                              "r" (value)                       \
-                            );                                  \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_ADC \
-            {\
-                reg[dest].I = reg[base].I + value + (u32)C_FLAG;\
-            }
-            #define OP_ADCS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("mtspr xer, %4\n"                  \
-                             "addeo. %0, %2, %3\n"              \
-                             "mcrxr cr1\n"                      \
-                             "mfcr      %1\n"                   \
-                             : "=r" (Result),                   \
-                               "=r" (Flags)                     \
-                             : "r" (reg[base].I),               \
-                               "r" (value),                     \
-                               "r" (C_FLAG << 29)               \
-                             );                                 \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_SBC \
-                {\
-                reg[dest].I = reg[base].I - value - (C_FLAG^1);\
-                }
-            #define OP_SBCS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("mtspr xer, %4\n"                  \
-                             "subfeo. %0, %3, %2\n"             \
-                             "mcrxr cr1\n"                      \
-                             "mfcr      %1\n"                   \
-                             : "=r" (Result),                   \
-                               "=r" (Flags)                     \
-                             : "r" (reg[base].I),               \
-                               "r" (value),                     \
-                               "r" (C_FLAG << 29)               \
-                             );                                 \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_RSC \
-                {\
-                reg[dest].I = value - reg[base].I - (C_FLAG^1);\
-                }
-            #define OP_RSCS \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("mtspr xer, %4\n"                  \
-                             "subfeo. %0, %2, %3\n"             \
-                             "mcrxr cr1\n"                      \
-                             "mfcr      %1\n"                   \
-                             : "=r" (Result),                   \
-                               "=r" (Flags)                     \
-                             : "r" (reg[base].I),               \
-                               "r" (value),                     \
-                               "r" (C_FLAG << 29)               \
-                             );                                 \
-                reg[dest].I = Result;                           \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_CMP \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("subco. %0, %2, %3\n"              \
-                            "mcrxr cr1\n"                       \
-                            "mfcr %1\n"                         \
-                            : "=r" (Result),                    \
-                              "=r" (Flags)                      \
-                            : "r" (reg[base].I),                \
-                              "r" (value)                       \
-                            );                                  \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            #define OP_CMN \
-            {\
-                register int Flags;                             \
-                register int Result;                            \
-                asm volatile("addco. %0, %2, %3\n"              \
-                            "mcrxr cr1\n"                       \
-                            "mfcr %1\n"                         \
-                            : "=r" (Result),                    \
-                              "=r" (Flags)                      \
-                            : "r" (reg[base].I),                \
-                              "r" (value)                       \
-                            );                                  \
-                Z_FLAG = (Flags >> 29) & 1;                     \
-                N_FLAG = (Flags >> 31) & 1;                     \
-                C_FLAG = (Flags >> 25) & 1;                     \
-                V_FLAG = (Flags >> 26) & 1;                     \
-            }
-            
-            #define LOGICAL_LSL_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                C_OUT = (v >> (32 - shift)) & 1 ? true : false;\
-                value = v << shift;\
-            }
-            #define LOGICAL_LSR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
-                value = v >> shift;\
-            }
-            #define LOGICAL_ASR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                C_OUT = ((s32)v >> (int)(shift - 1)) & 1 ? true : false;\
-                value = (s32)v >> (int)shift;\
-            }
-            #define LOGICAL_ROR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
-                value = ((v << (32 - shift)) |\
-                        (v >> shift));\
-            }
-            #define LOGICAL_RRX_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                shift = (int)C_FLAG;\
-                C_OUT = (v  & 1) ? true : false;\
-                value = ((v >> 1) |\
-                        (shift << 31));\
-            }
-            #define LOGICAL_ROR_IMM \
-            {\
-                u32 v = opcode & 0xff;\
-                C_OUT = (v >> (shift - 1)) & 1 ? true : false;\
-                value = ((v << (32 - shift)) |\
-                        (v >> shift));\
-            }
-            #define ARITHMETIC_LSL_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                value = v << shift;\
-            }
-            #define ARITHMETIC_LSR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                value = v >> shift;\
-            }
-            #define ARITHMETIC_ASR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                value = (s32)v >> (int)shift;\
-            }
-            #define ARITHMETIC_ROR_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                value = ((v << (32 - shift)) |\
-                        (v >> shift));\
-            }
-            #define ARITHMETIC_RRX_REG \
-            {\
-                u32 v = reg[opcode & 0x0f].I;\
-                shift = (int)C_FLAG;\
-                value = ((v >> 1) |\
-                        (shift << 31));\
-            }
-            #define ARITHMETIC_ROR_IMM \
-            {\
-                u32 v = opcode & 0xff;\
-                value = ((v << (32 - shift)) |\
-                        (v >> shift));\
-            }
-            #define ROR_IMM_MSR \
-            {\
-                u32 v = opcode & 0xff;\
-                value = ((v << (32 - shift)) |\
-                        (v >> shift));\
-            }
-            #define ROR_VALUE \
-            {\
-                value = ((value << (32 - shift)) |\
-                        (value >> shift));\
-            }
-            #define RCR_VALUE \
-            {\
-                shift = (int)C_FLAG;\
-                value = ((value >> 1) |\
-                        (shift << 31));\
-            }
-#else
-#define OP_SUB \
-     asm ("sub %1, %%ebx;"\
-                  : "=b" (reg[dest].I)\
-                  : "r" (value), "b" (reg[base].I));
-
-#define OP_SUBS \
-     asm ("sub %1, %%ebx;"\
-          "setsb N_FLAG;"\
-          "setzb Z_FLAG;"\
-          "setncb C_FLAG;"\
-          "setob V_FLAG;"\
-                  : "=b" (reg[dest].I)\
-                  : "r" (value), "b" (reg[base].I));
-
-#define OP_RSB \
-            asm  ("sub %1, %%ebx;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (reg[base].I), "b" (value));
-
-#define OP_RSBS \
-            asm  ("sub %1, %%ebx;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setncb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (reg[base].I), "b" (value));
-
-#define OP_ADD \
-            asm  ("add %1, %%ebx;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-
-#define OP_ADDS \
-            asm  ("add %1, %%ebx;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setcb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-
-#define OP_ADC \
-            asm  ("bt $0, C_FLAG;"\
-                  "adc %1, %%ebx;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-
-#define OP_ADCS \
-            asm  ("bt $0, C_FLAG;"\
-                  "adc %1, %%ebx;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setcb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-
-#define OP_SBC \
-            asm  ("bt $0, C_FLAG;"\
-                  "cmc;"\
-                  "sbb %1, %%ebx;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-
-#define OP_SBCS \
-            asm  ("bt $0, C_FLAG;"\
-                  "cmc;"\
-                  "sbb %1, %%ebx;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setncb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (value), "b" (reg[base].I));
-#define OP_RSC \
-            asm  ("bt $0, C_FLAG;"\
-                  "cmc;"\
-                  "sbb %1, %%ebx;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (reg[base].I), "b" (value));
-
-#define OP_RSCS \
-            asm  ("bt $0, C_FLAG;"\
-                  "cmc;"\
-                  "sbb %1, %%ebx;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setncb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : "=b" (reg[dest].I)\
-                 : "r" (reg[base].I), "b" (value));
-#define OP_CMP \
-            asm  ("sub %0, %1;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setncb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 :\
-                 : "r" (value), "r" (reg[base].I));
-
-#define OP_CMN \
-            asm  ("add %0, %1;"\
-                  "setsb N_FLAG;"\
-                  "setzb Z_FLAG;"\
-                  "setcb C_FLAG;"\
-                  "setob V_FLAG;"\
-                 : \
-                 : "r" (value), "r" (reg[base].I));
-#define LOGICAL_LSL_REG \
-       asm("shl %%cl, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define LOGICAL_LSR_REG \
-       asm("shr %%cl, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define LOGICAL_ASR_REG \
-       asm("sar %%cl, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define LOGICAL_ROR_REG \
-       asm("ror %%cl, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));       
-
-#define LOGICAL_RRX_REG \
-       asm("bt $0, C_FLAG;"\
-           "rcr $1, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (reg[opcode & 0x0f].I));       
-
-#define LOGICAL_ROR_IMM \
-       asm("ror %%cl, %%eax;"\
-           "setcb %%cl;"\
-           : "=a" (value), "=c" (C_OUT)\
-           : "a" (opcode & 0xff), "c" (shift));
-#define ARITHMETIC_LSL_REG \
-       asm("\
-             shl %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define ARITHMETIC_LSR_REG \
-       asm("\
-             shr %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define ARITHMETIC_ASR_REG \
-       asm("\
-             sar %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));
-
-#define ARITHMETIC_ROR_REG \
-       asm("\
-             ror %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (reg[opcode & 0x0f].I), "c" (shift));       
-
-#define ARITHMETIC_RRX_REG \
-       asm("\
-             bt $0, C_FLAG;\
-             rcr $1, %%eax;"\
-           : "=a" (value)\
-           : "a" (reg[opcode & 0x0f].I));       
-
-#define ARITHMETIC_ROR_IMM \
-       asm("\
-             ror %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (opcode & 0xff), "c" (shift));
-#define ROR_IMM_MSR \
-      asm ("ror %%cl, %%eax;"\
-           : "=a" (value)\
-           : "a" (opcode & 0xFF), "c" (shift));
-#define ROR_VALUE \
-      asm("ror %%cl, %0"\
-          : "=r" (value)\
-          : "r" (value), "c" (shift));
-#define RCR_VALUE \
-      asm("bt $0, C_FLAG;"\
-          "rcr $1, %0"\
-          : "=r" (value)\
-          : "r" (value));
-#endif
-#else
-#define OP_SUB \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm sub ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-      }
-
-#define OP_SUBS \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm sub ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setnc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-
-#define OP_RSB \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm mov eax, value\
-        __asm sub eax, ebx\
-        __asm mov ebx, dest\
-        __asm mov dword ptr [OFFSET reg+4*ebx], eax\
-      }
-
-#define OP_RSBS \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm mov eax, value\
-        __asm sub eax, ebx\
-        __asm mov ebx, dest\
-        __asm mov dword ptr [OFFSET reg+4*ebx], eax\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setnc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-
-#define OP_ADD \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm add ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-      }
-
-#define OP_ADDS \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm add ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-
-#define OP_ADC \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm bt word ptr C_FLAG, 0\
-        __asm adc ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-      }
-
-#define OP_ADCS \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg+4*ebx]\
-        __asm bt word ptr C_FLAG, 0\
-        __asm adc ebx, value\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg+4*eax], ebx\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-
-#define OP_SBC \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg + 4*ebx]\
-        __asm mov eax, value\
-        __asm bt word ptr C_FLAG, 0\
-        __asm cmc\
-        __asm sbb ebx, eax\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg + 4*eax], ebx\
-      }
-
-#define OP_SBCS \
-      {\
-        __asm mov ebx, base\
-        __asm mov ebx, dword ptr [OFFSET reg + 4*ebx]\
-        __asm mov eax, value\
-        __asm bt word ptr C_FLAG, 0\
-        __asm cmc\
-        __asm sbb ebx, eax\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg + 4*eax], ebx\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setnc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-#define OP_RSC \
-      {\
-        __asm mov ebx, value\
-        __asm mov eax, base\
-        __asm mov eax, dword ptr[OFFSET reg + 4*eax]\
-        __asm bt word ptr C_FLAG, 0\
-        __asm cmc\
-        __asm sbb ebx, eax\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg + 4*eax], ebx\
-      }
-
-#define OP_RSCS \
-      {\
-        __asm mov ebx, value\
-        __asm mov eax, base\
-        __asm mov eax, dword ptr[OFFSET reg + 4*eax]\
-        __asm bt word ptr C_FLAG, 0\
-        __asm cmc\
-        __asm sbb ebx, eax\
-        __asm mov eax, dest\
-        __asm mov dword ptr [OFFSET reg + 4*eax], ebx\
-        __asm sets byte ptr N_FLAG\
-        __asm setz byte ptr Z_FLAG\
-        __asm setnc byte ptr C_FLAG\
-        __asm seto byte ptr V_FLAG\
-      }
-#define OP_CMP \
-     {\
-       __asm mov eax, base\
-       __asm mov ebx, dword ptr [OFFSET reg+4*eax]\
-       __asm sub ebx, value\
-       __asm sets byte ptr N_FLAG\
-       __asm setz byte ptr Z_FLAG\
-       __asm setnc byte ptr C_FLAG\
-       __asm seto byte ptr V_FLAG\
-     }
-
-#define OP_CMN \
-     {\
-       __asm mov eax, base\
-       __asm mov ebx, dword ptr [OFFSET reg+4*eax]\
-       __asm add ebx, value\
-       __asm sets byte ptr N_FLAG\
-       __asm setz byte ptr Z_FLAG\
-       __asm setc byte ptr C_FLAG\
-       __asm seto byte ptr V_FLAG\
-     }
-#define LOGICAL_LSL_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm shl eax, cl\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-
-#define LOGICAL_LSR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm shr eax, cl\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-
-#define LOGICAL_ASR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm sar eax, cl\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-
-#define LOGICAL_ROR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0F\
-        __asm mov eax, dword ptr [OFFSET reg + 4*eax]\
-        __asm mov cl, byte ptr shift\
-        __asm ror eax, cl\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-
-#define LOGICAL_RRX_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0F\
-        __asm mov eax, dword ptr [OFFSET reg + 4*eax]\
-        __asm bt word ptr C_OUT, 0\
-        __asm rcr eax, 1\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-
-#define LOGICAL_ROR_IMM \
-        __asm mov eax, opcode\
-        __asm and eax, 0xff\
-        __asm mov cl, byte ptr shift\
-        __asm ror eax, cl\
-        __asm mov value, eax\
-        __asm setc byte ptr C_OUT
-#define ARITHMETIC_LSL_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm shl eax, cl\
-        __asm mov value, eax
-
-#define ARITHMETIC_LSR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm shr eax, cl\
-        __asm mov value, eax
-
-#define ARITHMETIC_ASR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0f\
-        __asm mov eax, dword ptr [OFFSET reg + 4 * eax]\
-        __asm mov cl, byte ptr shift\
-        __asm sar eax, cl\
-        __asm mov value, eax
-
-#define ARITHMETIC_ROR_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0F\
-        __asm mov eax, dword ptr [OFFSET reg + 4*eax]\
-        __asm mov cl, byte ptr shift\
-        __asm ror eax, cl\
-        __asm mov value, eax
-
-#define ARITHMETIC_RRX_REG \
-        __asm mov eax, opcode\
-        __asm and eax, 0x0F\
-        __asm mov eax, dword ptr [OFFSET reg + 4*eax]\
-        __asm bt word ptr C_FLAG, 0\
-        __asm rcr eax, 1\
-        __asm mov value, eax
-
-#define ARITHMETIC_ROR_IMM \
-        __asm mov eax, opcode\
-        __asm and eax, 0xff\
-        __asm mov cl, byte ptr shift\
-        __asm ror eax, cl\
-        __asm mov value, eax
-#define ROR_IMM_MSR \
-      {\
-        __asm mov eax, opcode\
-        __asm and eax, 0xff\
-        __asm mov cl, byte ptr shift\
-        __asm ror eax, CL\
-        __asm mov value, eax\
-      }
-#define ROR_VALUE \
-      {\
-        __asm mov cl, byte ptr shift\
-        __asm ror dword ptr value, cl\
-      }
-#define RCR_VALUE \
-      {\
-        __asm mov cl, byte ptr shift\
-        __asm bt word ptr C_FLAG, 0\
-        __asm rcr dword ptr value, 1\
-      }
-#endif
-#endif
 
 #define OP_TST \
       u32 res = reg[base].I & value;\
@@ -2468,55 +1717,6 @@ if(cond_res) {
   switch(((opcode>>16)&0xFF0) | ((opcode>>4)&0x0F)) {
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_AND,  OP_AND, 0x000);
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_ANDS, OP_AND, 0x010);
-  case 0x009:
-    {
-      // MUL Rd, Rm, Rs
-      int dest = (opcode >> 16) & 0x0F;
-      int mult = (opcode & 0x0F);
-      clockTicks = 1; 
-      u32 rs = reg[(opcode >> 8) & 0x0F].I;
-      reg[dest].I = reg[mult].I * rs;
-      if(((s32)rs)<0)
-         rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
-
-    }
-    break;
-  case 0x019:
-    {
-      // MULS Rd, Rm, Rs
-      int dest = (opcode >> 16) & 0x0F;
-      int mult = (opcode & 0x0F);
-      clockTicks = 1;
-      u32 rs = reg[(opcode >> 8) & 0x0F].I;
-      reg[dest].I = reg[mult].I * rs;
-      N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
-      Z_FLAG = (reg[dest].I) ? false : true;
-      if(((s32)rs)<0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
-    }
-    break;
   case 0x00b:
   case 0x02b:
     {
@@ -3547,50 +2747,64 @@ if(cond_res) {
     break;
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_EOR,  OP_EOR, 0x020);
     LOGICAL_DATA_OPCODE_WITHOUT_base(OP_EORS, OP_EOR, 0x030);
+// CYCLES: base cycle count (1, 2, or 3)
+#define MUL_INSN(CYCLES)                                  \
+      clockTicks = 0; \
+      if(((s32)rs)<0) \
+         rs = ~rs; \
+      if((rs & 0xFFFFFF00) == 0) \
+        clockTicks += 0; \
+      else if ((rs & 0xFFFF0000) == 0) \
+        clockTicks += 1; \
+      else if ((rs & 0xFF000000) == 0) \
+        clockTicks += 2; \
+      else \
+        clockTicks += 3; \
+      if (!busPrefetchCount) \
+        busPrefetchCount = ((busPrefetchCount+1)<<clockTicks) - 1; \
+      clockTicks += CYCLES + codeTicksAccess32(armNextPC) + 1;
+  case 0x009:
+    {
+      // MUL Rd, Rm, Rs
+      int dest = (opcode >> 16) & 0x0F;
+      int mult = (opcode & 0x0F);
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
+      reg[dest].I = reg[mult].I * rs;
+      MUL_INSN(1);
+    }
+    break;
+  case 0x019:
+    {
+      // MULS Rd, Rm, Rs
+      int dest = (opcode >> 16) & 0x0F;
+      int mult = (opcode & 0x0F);
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
+      reg[dest].I = reg[mult].I * rs;
+      N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
+      Z_FLAG = (reg[dest].I) ? false : true;
+      MUL_INSN(1);
+    }
+    break;
   case 0x029:
     {
       // MLA Rd, Rm, Rs, Rn
-      clockTicks = 2;
       int dest = (opcode >> 16) & 0x0F;
       int mult = (opcode & 0x0F);
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
       reg[dest].I = reg[mult].I * rs + reg[(opcode>>12)&0x0f].I;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x039:
     {
       // MLAS Rd, Rm, Rs, Rn
-      clockTicks = 2;
       int dest = (opcode >> 16) & 0x0F;
       int mult = (opcode & 0x0F);
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
       reg[dest].I = reg[mult].I * rs + reg[(opcode>>12)&0x0f].I;
       N_FLAG = (reg[dest].I & 0x80000000) ? true : false;
       Z_FLAG = (reg[dest].I) ? false : true;
-      if(((s32)rs)<0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_SUB,  OP_SUB, 0x040);
@@ -3599,54 +2813,33 @@ if(cond_res) {
     ARITHMETIC_DATA_OPCODE(OP_RSBS, OP_RSB, 0x070);
     ARITHMETIC_DATA_OPCODE(OP_ADD,  OP_ADD, 0x080);
     ARITHMETIC_DATA_OPCODE(OP_ADDS, OP_ADD, 0x090);
+
   case 0x089:
     {
       // UMULL RdLo, RdHi, Rn, Rs
-      clockTicks = 2;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
-      u64 uTemp = ((u64)umult)*((u64)usource);
+      u64 uTemp = ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x099:
     {
       // UMULLS RdLo, RdHi, Rn, Rs
-      clockTicks = 2;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
-      u64 uTemp = ((u64)umult)*((u64)usource);
+      u64 uTemp = ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
       Z_FLAG = (uTemp) ? false : true;
       N_FLAG = (reg[destHi].I & 0x80000000) ? true : false;
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_ADC,  OP_ADC, 0x0a0);
@@ -3654,57 +2847,35 @@ if(cond_res) {
   case 0x0a9:
     {
       // UMLAL RdLo, RdHi, Rn, Rs
-      clockTicks = 3;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u64 uTemp = (u64)reg[destHi].I;
       uTemp <<= 32;
       uTemp |= (u64)reg[destLo].I;
-      uTemp += ((u64)umult)*((u64)usource);
+      uTemp += ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(3);
     }
     break;
   case 0x0b9:
     {
       // UMLALS RdLo, RdHi, Rn, Rs
-      clockTicks = 3;
       u32 umult = reg[(opcode & 0x0F)].I;
-      u32 usource = reg[(opcode >> 8) & 0x0F].I;
+      u32 rs = reg[(opcode >> 8) & 0x0F].I;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u64 uTemp = (u64)reg[destHi].I;
       uTemp <<= 32;
       uTemp |= (u64)reg[destLo].I;
-      uTemp += ((u64)umult)*((u64)usource);
+      uTemp += ((u64)umult)*((u64)rs);
       reg[destLo].I = (u32)uTemp;
       reg[destHi].I = (u32)(uTemp >> 32);
       Z_FLAG = (uTemp) ? false : true;
       N_FLAG = (reg[destHi].I & 0x80000000) ? true : false;
-      if ((usource & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if ((usource & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if ((usource & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(3);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_SBC,  OP_SBC, 0x0c0);
@@ -3712,7 +2883,6 @@ if(cond_res) {
   case 0x0c9:
     {
       // SMULL RdLo, RdHi, Rm, Rs
-      clockTicks = 2;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3721,25 +2891,12 @@ if(cond_res) {
       s64 sTemp = m*s;
       reg[destLo].I = (u32)sTemp;
       reg[destHi].I = (u32)(sTemp >> 32);
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
   case 0x0d9:
     {
       // SMULLS RdLo, RdHi, Rm, Rs
-      clockTicks = 2;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3750,19 +2907,7 @@ if(cond_res) {
       reg[destHi].I = (u32)(sTemp >> 32);
       Z_FLAG = (sTemp) ? false : true;
       N_FLAG = (sTemp < 0) ? true : false;
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
-      clockTicks += codeTicksAccess32(armNextPC) + 1;
+      MUL_INSN(2);
     }
     break;
     ARITHMETIC_DATA_OPCODE(OP_RSC,  OP_RSC, 0x0e0);
@@ -3770,7 +2915,6 @@ if(cond_res) {
   case 0x0e9:
     {
       // SMLAL RdLo, RdHi, Rm, Rs
-      clockTicks = codeTicksAccess32(armNextPC) + 4;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3782,24 +2926,12 @@ if(cond_res) {
       sTemp += m*s;
       reg[destLo].I = (u32)sTemp;
       reg[destHi].I = (u32)(sTemp >> 32);
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
+      MUL_INSN(3);
     }
     break;
   case 0x0f9:
     {
       // SMLALS RdLo, RdHi, Rm, Rs
-      clockTicks = codeTicksAccess32(armNextPC) + 4;
       int destLo = (opcode >> 12) & 0x0F;         
       int destHi = (opcode >> 16) & 0x0F;
       u32 rs = reg[(opcode >> 8) & 0x0F].I;
@@ -3813,18 +2945,7 @@ if(cond_res) {
       reg[destHi].I = (u32)(sTemp >> 32);
       Z_FLAG = (sTemp) ? false : true;
       N_FLAG = (sTemp < 0) ? true : false;
-      if(((s32)rs) < 0)
-        rs = ~rs;
-      if((rs & 0xFFFFFF00) == 0)
-        clockTicks += 0;
-      else if((rs & 0xFFFF0000) == 0)
-        clockTicks += 1;
-      else if((rs & 0xFF000000) == 0)
-        clockTicks += 2;
-      else
-        clockTicks += 3;
-      if (!busPrefetchCount)
-        busPrefetchCount = ((++busPrefetchCount)<<clockTicks) - 1;
+      MUL_INSN(3);
     }
     break;
     LOGICAL_DATA_OPCODE(OP_TST, OP_TST, 0x110);
@@ -3941,11 +3062,13 @@ if(cond_res) {
 #ifdef BKPT_SUPPORT
   case 0x127:
   case 0x7ff: // for GDB support
+    {
     extern void (*dbgSignal)(int,int);
     reg[15].I -= 4;
     armNextPC -= 4;
     dbgSignal(5, (opcode & 0x0f)|((opcode>>4) & 0xfff0));
     return;
+    }
 #endif
   case 0x320:
   case 0x321:
@@ -8660,7 +7783,7 @@ if(cond_res) {
     clockTicks += 2 + codeTicksAccess32(armNextPC) +
         codeTicksAccessSeq32(armNextPC);
     busPrefetchCount=0;
-    CPUSoftwareInterrupt(opcode & 0x00FFFFFF);  
+    CPUSoftwareInterrupt1(opcode & 0x00FFFFFF);  
 
     break;
 #ifdef GP_SUPPORT

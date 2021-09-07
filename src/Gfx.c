@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // VisualBoyAdvance - Nintendo Gameboy/GameboyAdvance (TM) emulator.
 // Copyright (C) 1999-2003 Forgotten
 // Copyright (C) 2004 Forgotten and the VBA development team
@@ -17,23 +16,45 @@
 // along with this program; if not, write to the Free Software Foundation,
 // Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
-void gbSgbInit(void);
-void gbSgbShutdown(void);
-void gbSgbCommand(void);
-void gbSgbResetPacketState(void);
-void gbSgbReset(void);
-void gbSgbDoBitTransfer(u8);
-void gbSgbSaveGame(gzFile);
-void gbSgbReadGame(gzFile, int version);
-void gbSgbRenderBorder(void);
+#include "System.h"
 
-extern u8  gbSgbATF[20*18];
-extern int gbSgbMode;
-extern int gbSgbMask;
-extern int gbSgbMultiplayer;
-extern u8  gbSgbNextController;
-extern int gbSgbPacketTimeout;
-extern u8  gbSgbReadingController;
-extern int gbSgbFourPlayers;
+int coeff[32] = {
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+  16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16};
 
+u32 line0[240];
+u32 line1[240];
+u32 line2[240];
+u32 line3[240];
+u32 lineOBJ[240];
+u32 lineOBJWin[240];
+u32 lineMix[240];
+bool gfxInWin0[240];
+bool gfxInWin1[240];
+int lineOBJpixleft[128];
 
+int gfxBG2Changed = 0;
+int gfxBG3Changed = 0;
+
+int gfxBG2X = 0;
+int gfxBG2Y = 0;
+int gfxBG2LastX = 0;
+int gfxBG2LastY = 0;
+int gfxBG3X = 0;
+int gfxBG3Y = 0;
+int gfxBG3LastX = 0;
+int gfxBG3LastY = 0;
+int gfxLastVCOUNT = 0;
+
+static u32 *lineMix_cleared;
+
+#include <stdlib.h>
+#include <string.h>
+void lineMix_clear(void) {
+	if(!lineMix_cleared) {
+		lineMix_cleared = malloc(240*4);
+		for (int i = 0; i < 240; ++i)
+			lineMix_cleared[i] = 0x7fff;
+	}
+	memcpy(lineMix, lineMix_cleared, 240*4);
+}

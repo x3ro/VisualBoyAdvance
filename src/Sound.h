@@ -61,15 +61,15 @@ int  soundGetEnable();
 void soundReset();
 void soundSaveGame(gzFile);
 void soundReadGame(gzFile, int);
-void soundEvent(u32, u8);
-void soundEvent(u32, u16);
+void soundEvent8(u32, u8);
+void soundEvent16(u32, u16);
 void soundTimerOverflow(int);
 void soundSetQuality(int);
 
 extern int SOUND_CLOCK_TICKS;
 extern int soundTicks;
 extern int soundPaused;
-extern bool soundOffFlag;
+extern int soundOffFlag;
 extern int soundQuality;
 extern int soundBufferLen;
 extern int soundBufferTotalLen;

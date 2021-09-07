@@ -20,7 +20,7 @@
 #ifndef GBA_CHEATS_H
 #define GBA_CHEATS_H
 
-struct CheatsData {
+typedef struct CheatsData {
   int code;
   int size;
   int status;
@@ -31,7 +31,7 @@ struct CheatsData {
   u32 oldValue;
   char codestring[20];
   char desc[32];
-};
+} CheatsData;
 
 extern void cheatsAdd(const char *,const char *,u32, u32,u32,int,int);
 extern void cheatsAddCheatCode(const char *code, const char *desc);

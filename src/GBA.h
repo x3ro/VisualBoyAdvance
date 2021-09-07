@@ -91,7 +91,7 @@ extern u8 freezeVRAM[0x18000];
 extern u8 freezeOAM[0x400];
 extern u8 freezePRAM[0x400];
 extern bool debugger_last;
-extern int  oldreg[17];
+extern int  oldreg[18];
 extern char oldbuffer[10];
 #endif
 
@@ -119,8 +119,6 @@ extern void CPUInit(const char *,bool);
 extern void CPUReset();
 extern void CPULoop(int);
 extern void CPUCheckDMA(int,int);
-extern bool CPUIsGBAImage(const char *);
-extern bool CPUIsZipFile(const char *);
 #ifdef PROFILING
 #include "prof/prof.h"
 extern void cpuProfil(profile_segment *seg);
